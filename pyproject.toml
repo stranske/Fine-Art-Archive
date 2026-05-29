@@ -3,7 +3,7 @@ requires = ["setuptools>=82.0.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "my-project"
+name = "fine-art-archive"
 version = "0.1.0"
 description = "Template Python project with stranske/Workflows CI integration"
 readme = "README.md"
@@ -32,8 +32,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/stranske/Template"
-Repository = "https://github.com/stranske/Template"
+Homepage = "https://github.com/stranske/Fine-Art-Archive"
+Repository = "https://github.com/stranske/Fine-Art-Archive"
 
 [tool.setuptools.packages.find]
 where = ["src"]
