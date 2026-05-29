@@ -357,10 +357,7 @@ def add_dependencies_to_pyproject(missing: set[str], fix: bool = False) -> bool:
         return False
 
     if TOMLKIT_ERROR is not None:
-        raise SystemExit(
-            "tomlkit is required to update pyproject.toml automatically. "
-            "Install the dev dependencies (pip install -e .[dev]) and retry."
-        ) from TOMLKIT_ERROR
+        return _add_dependencies_with_text_fallback(missing)
 
     document = tomlkit.parse(PYPROJECT_FILE.read_text(encoding="utf-8"))
 
@@ -387,6 +384,43 @@ def add_dependencies_to_pyproject(missing: set[str], fix: bool = False) -> bool:
         PYPROJECT_FILE.write_text(tomlkit.dumps(document), encoding="utf-8")
 
     return added
+
+
+def _add_dependencies_with_text_fallback(missing: set[str]) -> bool:
+    """Update pyproject.toml without tomlkit when dev dependency list exists."""
+    text = PYPROJECT_FILE.read_text(encoding="utf-8")
+    block_pattern = re.compile(
+        r"(^\[project\.optional-dependencies\]\n(?:.*\n)*?^dev\s*=\s*\[\n)(.*?)(^\])",
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    match = block_pattern.search(text)
+    if not match:
+        raise SystemExit(
+            "Unable to auto-update pyproject.toml without tomlkit: "
+            "expected [project.optional-dependencies] with a dev = [ ... ] list."
+        ) from TOMLKIT_ERROR
+
+    dev_entries = match.group(2)
+    existing_raw = re.findall(r'"([^"]+)"', dev_entries)
+    existing_normalised = {
+        _normalise_package_name(_extract_requirement_name(entry) or entry) for entry in existing_raw
+    }
+
+    additions: list[str] = []
+    for package in sorted(missing):
+        normalised = _normalise_package_name(package)
+        if normalised in existing_normalised:
+            continue
+        additions.append(f'    "{package}",\n')
+        existing_normalised.add(normalised)
+
+    if not additions:
+        return False
+
+    updated_entries = dev_entries + "".join(additions)
+    updated_text = text[: match.start(2)] + updated_entries + text[match.end(2) :]
+    PYPROJECT_FILE.write_text(updated_text, encoding="utf-8")
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
