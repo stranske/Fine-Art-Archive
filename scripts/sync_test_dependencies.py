@@ -31,7 +31,7 @@ except ImportError as exc:  # pragma: no cover - exercised via CLI messaging.
 else:
     TOMLKIT_ERROR = None
 
-PYPROJECT_FILE = Path("pyproject.toml")
+PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
 DEV_EXTRA = "dev"
 
 # Stdlib modules that don't need to be installed. Prefer Python's runtime
@@ -155,7 +155,7 @@ def _detect_local_project_modules() -> set[str]:
     in standard source locations to prevent false positives on first-party imports.
     """
     detected: set[str] = set()
-    source_dirs = [Path("src"), Path(".")]
+    source_dirs = [REPO_ROOT / "src", REPO_ROOT]
 
     for source_dir in source_dirs:
         if not source_dir.is_dir():
@@ -178,7 +178,7 @@ def _detect_local_project_modules() -> set[str]:
             if item.is_dir() and (item / "__init__.py").exists():
                 detected.add(item.name)
             # Check for standalone .py modules (but not in root .)
-            elif source_dir != Path(".") and item.suffix == ".py":
+            elif source_dir != REPO_ROOT and item.suffix == ".py":
                 detected.add(item.stem)
 
     return detected
@@ -289,7 +289,7 @@ def extract_imports_from_file(file_path: Path) -> set[str]:
 
 def get_all_test_imports() -> set[str]:
     """Get all imports used across all test files."""
-    test_dir = Path("tests")
+    test_dir = REPO_ROOT / "tests"
     if not test_dir.exists():
         return set()
 
