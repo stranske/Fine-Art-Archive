@@ -1,0 +1,399 @@
+# Source Quality Seed List — Fine Art Archive
+#
+# Tier-ranked starter list of art-historical information sources. Loaded by
+# the future src/fine_art_archive/score/source_quality.py module as the
+# cold-start prior for the pairwise preference model. Sources earn promotion
+# or demotion through user pairwise judgments over time; this file is just
+# the initial calibration.
+#
+# Tier 1: peer-reviewed or curatorially-edited; the default "send-here-first"
+#         universe. Long-form narrative typically available.
+# Tier 2: institutional but lighter editorial; academic open-access; high-
+#         signal podcasts and lectures.
+# Tier 3: independent but reliably substantive; some paywall friction.
+# Tier 4: surfaces a candidate can come from but must earn placement
+#         through pairwise wins against a Tier 2 baseline.
+#
+# Each entry carries scoring metadata used at ingest:
+#   rigor   — peer review + citation provenance + ORCID-author identity (0-1)
+#   voice   — long-form narrative vs. short labels (0-1)
+#   richness — IIIF / image / interactive content (0-1)
+#
+# These start at the same value for all sources in a tier; user pairwise
+# judgments adjust per-source. Per the design in design_space.md §III.
+
+schema_version: "1.0"
+last_updated: "2026-05-16"
+
+tier_1:
+  - id: smarthistory
+    name: Smarthistory
+    url: https://smarthistory.org/
+    license: CC BY-NC-SA 4.0
+    peer_reviewed: true
+    domain_focus: [global, painting, sculpture, architecture, non-western]
+    notes: |
+      Open peer review. ~800 PhD-credentialed contributors. Two-voice
+      walk-through video format. Best free single source for the canon
+      plus a significant non-Western slice. Pair with Reframing Art History
+      open textbook.
+    rigor: 0.85
+    voice: 0.95
+    richness: 0.80
+
+  - id: heilbrunn
+    name: The Met's Heilbrunn Timeline of Art History
+    url: https://www.metmuseum.org/met-publications/heilbrunn-timeline-of-art-history
+    license: free, no API
+    peer_reviewed: false  # curatorially-edited
+    domain_focus: [european-painting, decorative-arts, asian, ancient]
+    notes: |
+      Met curators writing about Met objects + period/theme essays. ~1000
+      essays. Best curatorial-authority surface for any Met-held work and
+      strong on context/period essays.
+    rigor: 0.85
+    voice: 0.95
+    richness: 0.85
+
+  - id: nga_online_editions
+    name: NGA Online Editions
+    url: https://www.nga.gov/research/online-editions.html
+    license: free (works in PD)
+    peer_reviewed: true  # curatorial systematic catalogue
+    domain_focus: [european-painting, american-painting]
+    notes: |
+      Catalogue-raisonné-quality entries on NGA holdings — full provenance,
+      technical examination, conservation notes, exhibition history. The
+      deepest scholarly surface for works the NGA owns.
+    rigor: 0.95
+    voice: 0.90
+    richness: 0.95
+
+  - id: artic_curatorial
+    name: Art Institute of Chicago — curatorial descriptions
+    url: https://www.artic.edu/
+    license: CC BY (for descriptions; CC0 for images)
+    peer_reviewed: false
+    domain_focus: [european-painting, american-painting, asian, decorative]
+    notes: |
+      Longest curatorial descriptions of any major US museum. CC-BY-licensed
+      narrative text usable directly in archive sidecars. Primary target for
+      Phase 5 collector.
+    rigor: 0.85
+    voice: 0.95
+    richness: 0.90
+
+  - id: rijksmuseum
+    name: Rijksmuseum
+    url: https://www.rijksmuseum.nl/en/research
+    license: CC0 (PD images), free metadata
+    peer_reviewed: true  # systematic catalogue
+    domain_focus: [dutch-golden-age, european-painting, prints]
+    notes: |
+      Multi-paragraph English+Dutch descriptions with provenance, IIIF, +800K
+      objects. Strong systematic catalogue tradition. Tier-1 collector source.
+    rigor: 0.95
+    voice: 0.90
+    richness: 0.95
+
+  - id: cleveland
+    name: Cleveland Museum of Art
+    url: https://openaccess-api.clevelandart.org/
+    license: CC0
+    peer_reviewed: false  # curatorially-edited
+    domain_focus: [european, asian, american]
+    notes: |
+      `wall_description` and `tombstone` fields per work, often essay-length.
+      Encyclopedic with strong Asian holdings.
+    rigor: 0.85
+    voice: 0.85
+    richness: 0.85
+
+  - id: burlington
+    name: The Burlington Magazine
+    url: https://www.burlington.org.uk/
+    license: paywall (JSTOR access via institution)
+    peer_reviewed: true
+    domain_focus: [european-painting, attribution, connoisseurship]
+    notes: |
+      Founded 1903. World's leading monthly on fine and decorative arts.
+      Attribution arguments and rediscoveries land here. Authoritative for
+      connoisseurship.
+    rigor: 0.98
+    voice: 0.90
+    richness: 0.60
+
+  - id: art_bulletin
+    name: The Art Bulletin (CAA)
+    url: https://www.collegeart.org/publications/art-bulletin
+    license: paywall (JSTOR)
+    peer_reviewed: true
+    domain_focus: [academic-art-history]
+    notes: |
+      Quarterly since 1913. Flagship English-language academic art-history
+      journal. Density is high; not a first stop but the canonical endpoint.
+    rigor: 0.98
+    voice: 0.85
+    richness: 0.55
+
+  - id: tate_terms_etc
+    name: Tate (Art Terms + Tate Etc.)
+    url: https://www.tate.org.uk/
+    license: free
+    peer_reviewed: false  # curatorially-edited
+    domain_focus: [british-modern, contemporary, european-modern]
+    notes: |
+      ~450 Art Terms definitions plus curator entries on every Tate work.
+      Best for definitional anchoring and 20th-century British/international
+      modern.
+    rigor: 0.85
+    voice: 0.85
+    richness: 0.80
+
+  - id: moma_learning
+    name: MoMA Learning
+    url: https://www.moma.org/learn/moma_learning/
+    license: free
+    peer_reviewed: false  # curatorially-edited
+    domain_focus: [modern, contemporary]
+    notes: |
+      Thematic units on modern/contemporary movements with object-level
+      entries. MOOC partnership with Coursera adds structured beginner path.
+    rigor: 0.85
+    voice: 0.90
+    richness: 0.80
+
+  - id: getty_publications
+    name: Getty Publications (free PDFs and digital catalogues)
+    url: https://www.getty.edu/publications/
+    license: free
+    peer_reviewed: true
+    domain_focus: [classical, manuscripts, european-painting, photography]
+    notes: |
+      Backlist titles as free PDFs and digital catalogues with zoomable
+      images and linked footnotes. AAT/ULAN vocabularies are first-class.
+    rigor: 0.95
+    voice: 0.90
+    richness: 0.95
+
+  - id: brooklyn_rail_conversations
+    name: Brooklyn Rail — "In Conversation"
+    url: https://brooklynrail.org/section/in-conversation
+    license: free
+    peer_reviewed: false
+    domain_focus: [contemporary, artist-voice]
+    notes: |
+      Long unhurried artist-to-artist or critic-to-artist dialogues. The
+      strongest working-artist voice in the corpus. Tier 1 for living artists.
+    rigor: 0.70
+    voice: 0.95
+    richness: 0.50
+
+  - id: smarthistory_yt
+    name: Smarthistory YouTube
+    url: https://www.youtube.com/@smarthistoryvideos
+    license: CC BY-NC-SA
+    peer_reviewed: true
+    domain_focus: [global, video]
+    notes: |
+      Video versions of Smarthistory essays. Two-voice walk-through. Strong
+      candidate for lecture-to-go matching.
+    rigor: 0.85
+    voice: 0.95
+    richness: 0.95
+
+tier_2:
+  - id: open_yale_courses
+    name: Open Yale Courses (art history + architecture)
+    url: https://oyc.yale.edu/
+    license: free
+    domain_focus: [classical-architecture, modern-architecture]
+    rigor: 0.95
+    voice: 0.90
+    richness: 0.70
+
+  - id: courtauld_research
+    name: The Courtauld Research Forum
+    url: https://courtauld.ac.uk/research/the-research-forum/
+    license: free
+    domain_focus: [european-painting, conservation]
+    rigor: 0.95
+    voice: 0.85
+    richness: 0.75
+
+  - id: harvard_project_zero
+    name: Harvard Project Zero — thinking routines
+    url: https://pz.harvard.edu/thinking-routines-all
+    license: CC
+    domain_focus: [pedagogy, slow-looking]
+    rigor: 0.90
+    voice: 0.85
+    richness: 0.60
+    notes: |
+      Not a content source — a pedagogy. VTS-style prompts built into the
+      archive's annotation surface.
+
+  - id: nineteenthc_art_worldwide
+    name: Nineteenth-Century Art Worldwide
+    url: https://www.19thc-artworldwide.org/
+    license: open-access
+    domain_focus: [19th-century-painting]
+    rigor: 0.90
+    voice: 0.85
+    richness: 0.70
+
+  - id: british_art_studies
+    name: British Art Studies (Paul Mellon Centre)
+    url: https://www.britishartstudies.ac.uk/
+    license: open-access
+    domain_focus: [british-art]
+    rigor: 0.90
+    voice: 0.90
+    richness: 0.85
+
+  - id: riha_journal
+    name: RIHA Journal
+    url: https://journals.ub.uni-heidelberg.de/index.php/riha/
+    license: open-access
+    domain_focus: [european-art-history, multilingual]
+    rigor: 0.90
+    voice: 0.85
+    richness: 0.65
+
+  - id: getty_research_journal
+    name: Getty Research Journal
+    url: https://www.getty.edu/publications/getty-research-journal/
+    license: free
+    domain_focus: [scholarship, museum-studies]
+    rigor: 0.95
+    voice: 0.85
+    richness: 0.70
+
+  - id: man_podcast
+    name: Modern Art Notes Podcast (Tyler Green)
+    url: https://manpodcast.com/
+    license: free
+    domain_focus: [contemporary, american-art, museum-news]
+    rigor: 0.80
+    voice: 0.95
+    richness: 0.30
+
+  - id: great_art_explained
+    name: Great Art Explained (YouTube)
+    url: https://www.youtube.com/@GreatArtExplained
+    license: free (YT)
+    domain_focus: [single-work-deep-dive, video]
+    rigor: 0.75
+    voice: 0.95
+    richness: 0.90
+    notes: |
+      ~15-minute single-work videos by James Payne. Reliably accurate,
+      well-edited, free of art-speak. Format to imitate.
+
+  - id: a_brush_with
+    name: A brush with… (The Art Newspaper)
+    url: https://www.theartnewspaper.com/series/a-brush-with
+    license: free
+    domain_focus: [contemporary, artist-voice]
+    rigor: 0.80
+    voice: 0.95
+    richness: 0.30
+
+  - id: lonely_palette
+    name: The Lonely Palette
+    url: https://www.thelonelypalette.com/
+    license: free
+    domain_focus: [single-work-deep-dive, museum-visitors]
+    rigor: 0.85
+    voice: 0.95
+    richness: 0.30
+    notes: |
+      Begins each episode with vox-pop interviews of museum visitors then
+      opens into context. The audio analogue of Great Art Explained.
+
+tier_3:
+  - id: artforum
+    name: Artforum (archive)
+    url: https://www.artforum.com/
+    license: paywall for archive
+    domain_focus: [contemporary, theory, criticism]
+    rigor: 0.80
+    voice: 0.85
+    richness: 0.50
+    notes: |
+      Reviews are uneven; long features and historical archive
+      (Fried, Krauss, Owens, Buchloh) are excellent.
+
+  - id: hyperallergic
+    name: Hyperallergic
+    url: https://hyperallergic.com/
+    license: free (membership-supported)
+    domain_focus: [contemporary, labor, politics]
+    rigor: 0.70
+    voice: 0.90
+    richness: 0.50
+
+  - id: frieze
+    name: Frieze Magazine
+    url: https://www.frieze.com/
+    license: metered paywall
+    domain_focus: [contemporary-international]
+    rigor: 0.75
+    voice: 0.90
+    richness: 0.50
+
+  - id: october_journal
+    name: October (MIT Press)
+    url: https://direct.mit.edu/octo
+    license: paywall
+    domain_focus: [theory, post-1960, criticism]
+    rigor: 0.95
+    voice: 0.80
+    richness: 0.50
+    notes: |
+      Theory-heavy; sometimes opaque; indispensable for postwar/contemporary
+      theory. Krauss's "Sculpture in the Expanded Field" lives here.
+
+  - id: jstor_daily
+    name: JSTOR Daily — Arts coverage
+    url: https://daily.jstor.org/category/arts/art-art-history/
+    license: free
+    domain_focus: [scholarship-entry-ramp]
+    rigor: 0.85
+    voice: 0.85
+    richness: 0.50
+
+  - id: wikipedia_with_refs
+    name: Wikipedia (references + further reading)
+    url: https://www.wikipedia.org/
+    license: CC BY-SA
+    domain_focus: [hub]
+    rigor: 0.50  # body
+    voice: 0.60
+    richness: 0.40
+    notes: |
+      Use the References + Further reading sections, not the body. Tier-3
+      hub for citation harvesting via OpenAlex.
+
+tier_4:
+  # Tier-4 sources are admitted to the rotation only after winning pairwise
+  # judgments against tier-2 baselines on relevant works. This list is
+  # informational — examples of where the collector might surface candidates
+  # from. The user (or any rater) earns them placement.
+  - id: substack_general
+    name: Substack art newsletters (various)
+    url: https://substack.com/category/art
+    notes: Variable quality. Admitted via pairwise wins.
+  - id: researchgate_preprints
+    name: ResearchGate / Academia.edu preprints
+    notes: Mixed quality. High recall for paywalled scholarly authors.
+  - id: blogs_general
+    name: Independent art-history blogs
+    notes: Smarthistory was tier-4 once. Admitted via pairwise wins.
+
+deny_list:
+  # Sources that automatically score 0 regardless of pairwise judgments.
+  # Reserved for SEO doorways, content farms, AI-generated junk, and any
+  # source caught with verified hallucinated attribution.
+  - id: example_seo_farm
+    note: "placeholder; real entries added when detected"

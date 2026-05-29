@@ -1,0 +1,262 @@
+# Host Registry — durable knowledge of image-bytes source capabilities
+#
+# See host_registry_design.md for the design pattern. Each entry below
+# captures what we've learned about a digital-art host so the acquisition
+# pipeline doesn't re-discover it on every request. Update fields when a
+# host's behavior changes; the next acquisition reflects the update.
+
+schema_version: "1.0"
+last_updated: "2026-05-17"
+
+hosts:
+
+  # ----------------------------------------------------------------------
+  # Tier-1 museums with verified working acquisition routes
+  # ----------------------------------------------------------------------
+
+  rijksmuseum:
+    name: Rijksmuseum
+    wikidata_q: Q190804
+    ror: 04w5znc06
+    homepage: https://www.rijksmuseum.nl/
+    rights_default: public-domain
+    primary_acquisition:
+      adapter: rijksmuseum
+      notes: |
+        Micrio IIIF. The Micrio ID is NOT the object number; resolve via
+        og:image meta tag from the object's HTML page. /full/max/0/default.jpg
+        delivers the full resolution single-request.
+    discovery:
+      accession_property: P350
+      accession_lookup_url: "https://www.rijksmuseum.nl/en/collection/{accession}"
+      iiif_pattern: "https://iiif.micr.io/{micrio_id}/full/max/0/default.jpg"
+      quirks:
+        - "P350 in Wikidata sometimes stores internal numeric DB ID instead of canonical alphanumeric accession (e.g., '52501' instead of 'SK-A-2860'); fall back to search by Q-ID title if direct lookup 404s."
+        - "Multiple Micrio IDs per page (main work + 'more by this artist' carousel). Use og:image, not the first grep match."
+    fallback_chain:
+      - wikimedia_commons
+    known_issues:
+      - date: "2026-05-17"
+        description: "QkOGy/Milkmaid surfaced for SK-A-2860/Little Street when scraping page for any iiif.micr.io URL."
+        workaround: "Always use og:image meta tag, documented in source module."
+    last_verified: "2026-05-17"
+    verification_test_work_q: Q586035  # The Little Street
+    source_tier: 1
+
+  met:
+    name: The Metropolitan Museum of Art
+    wikidata_q: Q160236
+    ror: 01xtbq813
+    homepage: https://www.metmuseum.org/
+    rights_default: mixed   # check isPublicDomain per work
+    primary_acquisition:
+      adapter: met
+      notes: |
+        Open Access API at collectionapi.metmuseum.org returns primaryImage
+        URL. This is the actual maximum the Met serves digitally — typically
+        2000-4000 px on the long edge, 1-10 MP total. For large canvases
+        this yields low px/cm; quality assessment correctly flags.
+    discovery:
+      accession_property: P3634   # Met object ID (numeric)
+      accession_lookup_url: "https://collectionapi.metmuseum.org/public/collection/v1/objects/{accession}"
+      iiif_pattern: null   # Met has no public IIIF for most works
+      quirks:
+        - "primaryImage often includes mat/frame surrounding the canvas — verify aspect ratio against catalogued cm dimensions before promoting."
+        - "isPublicDomain field is the gate; never bulk-ingest without checking."
+    fallback_chain:
+      - wikimedia_commons
+      - google_arts_culture
+    known_issues:
+      - date: "2026-05-17"
+        description: "Sargent Madame X (12127) delivered at 2336x4000 with mat/frame inclusive; 19 px/cm for a 208 cm canvas."
+        workaround: "Accept lower fitness for high-end displays; use Commons or GAC if higher resolution becomes available later."
+    last_verified: "2026-05-17"
+    verification_test_work_q: Q2664039  # Madame X
+    source_tier: 1
+
+  national_gallery_london:
+    name: The National Gallery, London
+    wikidata_q: Q180788
+    ror: 03dn21404
+    homepage: https://www.nationalgallery.org.uk/
+    rights_default: commercial-only   # for direct museum access
+    primary_acquisition:
+      adapter: google_arts_culture   # NOT the museum direct
+      notes: |
+        NGL removed public zoom from its paintings pages in 2024 and shifted
+        high-res to paid commercial licensing via nationalgalleryimages.co.uk
+        (Capture DAM platform). The public IIIF server (media.ng-london.org.uk)
+        survives but exposes ~7 sample images at 629x800 max with opaque IDs
+        not queryable by accession number.
+
+        For works on Google Arts & Culture (active NGL partnership covers
+        ~100+ major works), GAC + dezoomify-rs delivers museum-quality
+        high-res (~30-50 MP for many works). When GAC doesn't have a specific
+        work, Wikimedia Commons is the fallback.
+    discovery:
+      accession_property: null   # NGL accession numbers (NG1207 etc.) don't resolve via public API
+      accession_lookup_url: null
+      iiif_pattern: null
+      quirks:
+        - "Public IIIF server (media.ng-london.org.uk) is curtailed; do not attempt accession-keyed lookups."
+        - "Research IIIF (research.ng-london.org.uk) covers only specific publications/exhibitions, not the full collection."
+        - "Not all NGL works are on GAC. The finished Hay Wain (NG1207) is NOT; only the V&A's full-scale study is."
+    fallback_chain:
+      - wikimedia_commons
+      - commercial_licensing
+    known_issues:
+      - date: "2024"
+        description: "Public zoom infrastructure removed from nationalgallery.org.uk paintings pages; dezoomify against those URLs no longer works (nothing to scrape)."
+        workaround: "Route via google_arts_culture for works that have GAC presence."
+    last_verified: "2026-05-17"
+    verification_test_work_q: Q257580  # The Fighting Temeraire (confirmed on GAC)
+    source_tier: 1   # via GAC; museum direct is unusable
+
+  national_gallery_of_art_us:
+    name: National Gallery of Art (Washington, DC)
+    wikidata_q: Q214867
+    ror: 045zgvw78
+    homepage: https://www.nga.gov/
+    rights_default: public-domain
+    primary_acquisition:
+      adapter: nga   # TODO: build adapter; for now collected via direct page scrape
+      notes: |
+        CC0 release; full-size direct download per object. No live REST API
+        for object metadata (a CSV bulk dataset exists at
+        github.com/NationalGalleryOfArt/opendata). Object pages serve
+        direct high-res JPEGs (no IIIF) at nga.gov/api/.../iiif/... — verify
+        the current URL pattern when building the adapter.
+    discovery:
+      accession_property: P4625   # NGA object ID
+      accession_lookup_url: "https://www.nga.gov/artworks/{accession}"
+      iiif_pattern: null
+      quirks:
+        - "Strong bibliography and provenance fields per object."
+    fallback_chain:
+      - wikimedia_commons
+    last_verified: "2026-05-17"   # via design dossier; adapter not yet built
+    source_tier: 1
+
+  art_institute_chicago:
+    name: Art Institute of Chicago
+    wikidata_q: Q239303
+    ror: 03kyqs312
+    homepage: https://www.artic.edu/
+    rights_default: mixed   # CC0 for many works; check is_public_domain
+    primary_acquisition:
+      adapter: artic   # TODO: build adapter
+      notes: |
+        Open Access API at api.artic.edu with IIIF Image API 2.0 endpoint.
+        Image IDs (UUIDs) returned from the search/object endpoint resolve
+        to https://www.artic.edu/iiif/2/{image_id}/full/max/0/default.jpg.
+
+        Critically, ARTIC has the longest curatorial descriptions of any
+        major US museum (CC-BY licensed); the descriptions feed
+        description_long in the sidecar directly.
+    discovery:
+      accession_property: P9173
+      accession_lookup_url: "https://api.artic.edu/api/v1/artworks/{accession}"
+      iiif_pattern: "https://www.artic.edu/iiif/2/{image_id}/full/max/0/default.jpg"
+      quirks:
+        - "image_id is a UUID from the object record, not the accession number."
+    fallback_chain:
+      - wikimedia_commons
+    last_verified: "2026-05-17"
+    source_tier: 1
+
+  cleveland_museum_of_art:
+    name: Cleveland Museum of Art
+    wikidata_q: Q657415
+    ror: 04em7w569
+    homepage: https://www.clevelandart.org/
+    rights_default: public-domain
+    primary_acquisition:
+      adapter: cleveland
+      notes: |
+        Open Access API at openaccess-api.clevelandart.org with IIIF support.
+        Object records include 'images.web', 'images.print', and IIIF tile
+        endpoints. CC0 metadata and images. Primary acquisition path:
+        request the accession_number form (e.g. "1965.233"), prefer
+        images.print.url (largest variant; ~7 MP typical), fall back to
+        images.web.url (~2 MP).
+    discovery:
+      accession_property: P9092
+      accession_lookup_url: "https://openaccess-api.clevelandart.org/api/artworks/{accession}"
+      iiif_pattern: "https://openaccess-cdn.clevelandart.org/{accession}/{accession}_print.jpg"
+      quirks:
+        - "P9092 in Wikidata is unreliable: sometimes stores an internal numeric ID (e.g. '58478'), sometimes the canonical accession number ('1965.233'). The API only accepts the canonical accession_number form. Fallback: search the Cleveland API by title + artist when the direct lookup 404s."
+    fallback_chain:
+      - wikimedia_commons
+    known_issues:
+      - date: "2026-05-17"
+        description: "Wikidata Q56879420 (Church 'Twilight in the Wilderness') has P9092='58478' but Cleveland's API requires '1965.233'."
+        workaround: "When P9092 lookup 404s, fall back to Cleveland API search by title + artist before failing."
+    last_verified: "2026-05-17"
+    verification_test_work_q: Q56879420  # Church Twilight in the Wilderness
+    source_tier: 1
+
+  # ----------------------------------------------------------------------
+  # Tier-2 aggregators and references
+  # ----------------------------------------------------------------------
+
+  wikimedia_commons:
+    name: Wikimedia Commons
+    wikidata_q: Q565
+    homepage: https://commons.wikimedia.org/
+    rights_default: mixed   # always check per-file license
+    primary_acquisition:
+      adapter: wikimedia_commons   # TODO: build adapter
+      notes: |
+        Used in two roles: (a) acquisition fallback when museum-direct fails
+        or is low-resolution; (b) verify Layer 2 reference image via
+        Wikidata P18 + Special:FilePath?width=1024.
+
+        Coverage is uneven: some works have full-resolution Google Art
+        Project scans uploaded by editors (8000+ px); others have only
+        thumbnail-quality copies. Always check imageinfo.size before
+        committing to acquisition.
+    discovery:
+      accession_property: P18   # File: name in Wikidata
+      accession_lookup_url: "https://commons.wikimedia.org/wiki/Special:FilePath/{filename}"
+      iiif_pattern: null   # Commons doesn't expose IIIF; serves direct file URL
+      quirks:
+        - "Multiple files per work common; preferred filename is in Wikidata P18 but Commons search may surface higher-res variants under different names."
+    fallback_chain: []
+    last_verified: "2026-05-17"
+    source_tier: 2
+
+  google_arts_culture:
+    name: Google Arts & Culture
+    wikidata_q: Q15966540
+    homepage: https://artsandculture.google.com/
+    rights_default: mixed   # depends on the contributing partner museum
+    primary_acquisition:
+      adapter: google_arts_culture
+      notes: |
+        Deep-zoom tile pyramid. Acquisition via dezoomify-rs (requires
+        local install: brew install dezoomify-rs). Asset URL pattern:
+        https://artsandculture.google.com/asset/<slug>/<asset-id>
+
+        Levels go from ~430 px (level 0) to ~5000-10000 px (level 4 or 5),
+        depending on the partner museum's scan. Always use --largest to
+        avoid the interactive prompt.
+
+        Critical: NOT all works are on GAC. The discovery step should verify
+        a work has a GAC asset before committing to this adapter.
+    discovery:
+      accession_property: null   # No Wikidata property directly maps to GAC URLs
+      accession_lookup_url: null
+      iiif_pattern: null
+      quirks:
+        - "dezoomify-rs is interactive by default; must pass --largest or -l <level>."
+        - "GAC asset URLs are not present in Wikidata. Discovery requires a separate search step (Google site:artsandculture.google.com) or a manual seed in the work's preset."
+        - "GAC sometimes changes its tile delivery URL scheme; keep dezoomify-rs up to date."
+    fallback_chain:
+      - wikimedia_commons
+    known_issues:
+      - date: "2026-05-17"
+        description: "Some major works (e.g. Hay Wain NG1207) are absent from GAC even though the holding museum is a partner."
+        workaround: "Per-work GAC asset URL must be verified in the preset; not all NGL works are reachable via GAC."
+    last_verified: "2026-05-17"
+    verification_test_work_q: Q257580   # Fighting Temeraire confirmed on GAC
+    source_tier: 1   # for works that ARE present

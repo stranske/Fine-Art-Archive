@@ -1,0 +1,520 @@
+schema_version: '1.0'
+generated_at: '2026-05-24T21:15:17+00:00'
+warmup_days: 30
+composite_weights:
+  verify_pass_rate: 0.4
+  attribution_agreement: 0.25
+  link_health_30d: 0.15
+  metadata_completeness: 0.15
+confidence_floor_weight: 0.05
+n_sidecars_scanned: 3294
+n_with_signals: 2603
+n_legacy_bucket_recovered: 2603
+n_prior_only_rows: 24
+n_real_sources: 8
+n_legacy_buckets: 3
+sources:
+  art_institute_chicago:
+    western-painting-19c:
+      source: art_institute_chicago
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: art_institute_chicago
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: art_institute_chicago
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  cleveland_museum_of_art:
+    western-painting-19c:
+      source: cleveland_museum_of_art
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: cleveland_museum_of_art
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: cleveland_museum_of_art
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  google_arts_culture:
+    western-painting-19c:
+      source: google_arts_culture
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: google_arts_culture
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: google_arts_culture
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  met:
+    western-painting-19c:
+      source: met
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: met
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: met
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  national_gallery_london:
+    western-painting-19c:
+      source: national_gallery_london
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: national_gallery_london
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: national_gallery_london
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  national_gallery_of_art_us:
+    western-painting-19c:
+      source: national_gallery_of_art_us
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: national_gallery_of_art_us
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: national_gallery_of_art_us
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  rijksmuseum:
+    western-painting-19c:
+      source: rijksmuseum
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-modern:
+      source: rijksmuseum
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+    western-painting-pre1800:
+      source: rijksmuseum
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 1
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.95
+        attribution_agreement: 0.95
+        link_health_30d: 0.98
+        metadata_completeness: 0.85
+      composite_score: 0.892
+  wikimedia_commons:
+    western-painting-19c:
+      source: wikimedia_commons
+      work_class: western-painting-19c
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 2
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.8
+        attribution_agreement: 0.8
+        link_health_30d: 0.95
+        metadata_completeness: 0.65
+      composite_score: 0.76
+    western-painting-modern:
+      source: wikimedia_commons
+      work_class: western-painting-modern
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 2
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.8
+        attribution_agreement: 0.8
+        link_health_30d: 0.95
+        metadata_completeness: 0.65
+      composite_score: 0.76
+    western-painting-pre1800:
+      source: wikimedia_commons
+      work_class: western-painting-pre1800
+      n_acquired: 0
+      first_seen: null
+      last_seen: null
+      host_tier: 2
+      empirical:
+        verify_pass_rate: null
+        attribution_agreement: null
+        link_health_30d: null
+        metadata_completeness: null
+      blended:
+        verify_pass_rate: 0.8
+        attribution_agreement: 0.8
+        link_health_30d: 0.95
+        metadata_completeness: 0.65
+      composite_score: 0.76
+archive_composition:
+  legacy-landscape:
+    western-painting-19c:
+      source: legacy-landscape
+      work_class: western-painting-19c
+      n_acquired: 473
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:19:18+00:00'
+    western-painting-modern:
+      source: legacy-landscape
+      work_class: western-painting-modern
+      n_acquired: 146
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:19:18+00:00'
+    western-painting-pre1800:
+      source: legacy-landscape
+      work_class: western-painting-pre1800
+      n_acquired: 300
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:19:19+00:00'
+    western-painting-unknown-period:
+      source: legacy-landscape
+      work_class: western-painting-unknown-period
+      n_acquired: 190
+      first_seen: '2026-05-24T05:15:36+00:00'
+      last_seen: '2026-05-24T05:17:48+00:00'
+  legacy-others-photos:
+    western-painting-modern:
+      source: legacy-others-photos
+      work_class: western-painting-modern
+      n_acquired: 2
+      first_seen: '2026-05-24T05:16:09+00:00'
+      last_seen: '2026-05-24T05:17:40+00:00'
+    western-painting-unknown-period:
+      source: legacy-others-photos
+      work_class: western-painting-unknown-period
+      n_acquired: 8
+      first_seen: '2026-05-24T05:15:35+00:00'
+      last_seen: '2026-05-24T05:17:42+00:00'
+  legacy-portrait:
+    western-painting-19c:
+      source: legacy-portrait
+      work_class: western-painting-19c
+      n_acquired: 394
+      first_seen: '2026-05-24T05:15:28+00:00'
+      last_seen: '2026-05-24T05:19:18+00:00'
+    western-painting-modern:
+      source: legacy-portrait
+      work_class: western-painting-modern
+      n_acquired: 247
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:19:18+00:00'
+    western-painting-pre1800:
+      source: legacy-portrait
+      work_class: western-painting-pre1800
+      n_acquired: 519
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:19:18+00:00'
+    western-painting-unknown-period:
+      source: legacy-portrait
+      work_class: western-painting-unknown-period
+      n_acquired: 324
+      first_seen: '2026-05-24T05:15:27+00:00'
+      last_seen: '2026-05-24T05:17:48+00:00'

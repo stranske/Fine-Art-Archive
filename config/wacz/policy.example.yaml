@@ -1,0 +1,24 @@
+# Per-host WACZ snapshot policy (template)
+# Each entry corresponds to a host in config/host_registry.yaml.
+# Override defaults selectively; unspecified keys fall back to:
+#   max_depth: 1
+#   include_assets: true
+#   js_render: false
+#   refresh_days: 90
+#   max_size_mb: 100
+
+hosts:
+  artic.edu:
+    js_render: true        # IIIF viewer needs JS to register the manifest
+    refresh_days: 180      # ARTIC pages stable; quarterly is overkill
+  www.metmuseum.org:
+    js_render: true
+    refresh_days: 90
+  www.wikidata.org:
+    max_depth: 0           # API responses only; no page chrome
+    refresh_days: 30
+    include_assets: false
+  artsandculture.google.com:
+    js_render: true
+    refresh_days: 60       # GAC tends to refactor pages
+    max_size_mb: 250       # GAC pages are heavy

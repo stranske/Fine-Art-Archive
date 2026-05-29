@@ -1,0 +1,613 @@
+artist_q: Q43270
+display_name: Pieter Bruegel the Elder
+n_works: 75
+n_per_source:
+  wikidata: 0
+  wikipedia: 62
+  met: 14
+fetched_at: '2026-05-24T23:31:25+00:00'
+works:
+- title: Beach Scene with Boats
+  year: 1500
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP800558.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '370467'
+- title: Euntes in Emaus (Landscape with Pilgrims at Emmaus), from "The Large Landscapes"
+  year: 1550
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP826023.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '362229'
+- title: Landscape with Christ and the Apostles at the Sea of Tiberias
+  year: 1553
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Seascape with Ships and a Burning City
+  year: 1553
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Faith (Fides), from "The Virtues"
+  year: 1554
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818265.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '383066'
+- title: The Adoration of the Kings
+  year: 1556
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Parable of the Sower (Bruegel)
+  year: 1557
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Avarice (Avaritia), from the series The Seven Deadly Sins
+  year: 1558
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818268.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '383074'
+- title: The Alchemist
+  year: 1558
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP826009.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '366817'
+- title: Twelve Proverbs
+  year: 1558
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Netherlandish Proverbs
+  year: 1559
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Fight Between Carnival and Lent
+  year: 1559
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Children's Games (Bruegel)
+  year: 1560
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Naval Battle in the Gulf of Naples
+  year: 1560
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Rabbit Hunt
+  year: 1560
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818235.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '366870'
+- title: Four-master and Two Three-masters Anchored near a Fortified Island, from
+    "The Sailing Vessels"
+  year: 1561
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818244.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '338712'
+- title: The Dirty Bride or The Wedding of Mopsus and Nisa
+  year: 1561
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP372869.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '338710'
+- title: Three Caravels in a Rising Squall with Arion on a Dolphin from "The Sailing
+    Vessels"
+  year: 1561
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818246.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '338713'
+- title: Dull Gret
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Landscape with the Fall of Icarus
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Fall of the Rebel Angels (Bruegel)
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Suicide of Saul
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Triumph of Death
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Two Monkeys (Bruegel)
+  year: 1562
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Adoration of the Magi in the Snow
+  year: 1563
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Landscape with the Flight into Egypt (Bruegel)
+  year: 1563
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Portrait of an Old Woman
+  year: 1563
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Tower of Babel (Bruegel)
+  year: 1563
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Yawning Man
+  year: 1563
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Adoration of the Kings (Bruegel)
+  year: 1564
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Death of the Virgin (Bruegel)
+  year: 1564
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Procession to Calvary (Bruegel)
+  year: 1564
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Christ and the Woman Taken in Adultery (Bruegel)
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Massacre of the Innocents (Bruegel)
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Gloomy Day
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Harvesters
+  year: 1565
+  image_url: https://images.metmuseum.org/CRDImages/ep/original/DP119115.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - wikipedia
+  - met
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+    met: '435809'
+- title: The Harvesters (painting)
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Hay Harvest
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Hunters in the Snow
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Return of the Herd
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Wine of Saint Martin's Day
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Winter Landscape with a Bird Trap
+  year: 1565
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Census at Bethlehem
+  year: 1566
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Land of Cockaigne (Bruegel)
+  year: 1566
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Sermon of Saint John the Baptist
+  year: 1566
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Wedding Dance
+  year: 1566
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Conversion of Paul (Bruegel)
+  year: 1567
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Beggars (Bruegel)
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Blind Leading the Blind
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Drunkard pushed into the Pigsty
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Magpie on the Gallows
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Misanthrope (Bruegel)
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Peasant Dance
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Peasant Wedding
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Peasant and the Nest Robber
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Three Soldiers
+  year: 1568
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Storm at Sea
+  year: 1569
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Festival of Fools
+  year: 1570
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP835346.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '432632'
+- title: The Dirty Bride or the Marriage of Mopsus and Nisa
+  year: 1570
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP818327.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '338701'
+- title: Interior of a Gothic Church at Night
+  year: 1635
+  image_url: https://images.metmuseum.org/CRDImages/ep/original/ep30.58.21.bw.R.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '437188'
+- title: Interior of a Gothic Church by Day
+  year: 1635
+  image_url: https://images.metmuseum.org/CRDImages/ep/original/ep30.58.20.bw.R.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '437187'
+- title: Children's Games
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Christ and the Woman Taken in Adultery
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Conversion of Paul
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Death of the Virgin
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Landscape with the Flight into Egypt
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Massacre of the Innocents
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Parable of the Sower
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Beggars
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Fall of the Rebel Angels
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Land of Cockaigne
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Misanthrope
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Procession to Calvary
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: The Tower of Babel
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder
+- title: Two Monkeys
+  year: null
+  image_url: null
+  holder: null
+  sources:
+  - wikipedia
+  source_ids:
+    wikipedia: List of paintings by Pieter Bruegel the Elder

@@ -1,1 +1,1 @@
-"""Test package for my_project."""
+"""Test package for fine_art_archive."""

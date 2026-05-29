@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fine Art Archive — Companion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+  <style>
+    :root { --bg: #fafaf7; --ink: #222; --muted: #777; --accent: #5b3a1f;
+            --love: #2a7a2a; --like: #6aa86a; --neutral: #aaa;
+            --dislike: #c98a55; --hate: #a8453b; --selected: #5b3a1f; }
+    body { font: 16px/1.5 -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--ink); margin: 0; }
+    header { padding: 24px 32px; border-bottom: 1px solid #e7e2d8; display: flex; justify-content: space-between; align-items: baseline; }
+    h1 { margin: 0 0 4px; font-size: 22px; font-weight: 500; }
+    .sub { color: var(--muted); font-size: 14px; }
+    main { padding: 24px 32px; max-width: 1100px; margin: 0 auto; }
+    input[type=search] { padding: 8px 12px; font-size: 16px; width: 360px; border: 1px solid #ccc; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { color: var(--muted); font-weight: 500; }
+    tr:hover td { background: #f1ede4; cursor: pointer; }
+    .pill { display: inline-block; padding: 1px 8px; border-radius: 12px; background: #ece6da; color: var(--accent); font-size: 12px; }
+    .qid { color: var(--muted); font-family: ui-monospace, monospace; font-size: 12px; }
+    #detail { margin-top: 24px; padding: 20px; background: white; border: 1px solid #e7e2d8; border-radius: 8px; display: none; }
+    #detail.open { display: block; }
+    pre { background: #f5f1e8; padding: 12px; overflow: auto; font-size: 12px; border-radius: 4px; max-height: 320px; }
+    .rate-panel { margin: 16px 0; padding: 14px; background: #f6f2e7; border-radius: 6px; border: 1px solid #e7e2d8; }
+    .rate-panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+    .rate-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rate-buttons button { padding: 8px 14px; font: inherit; font-size: 14px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; min-width: 70px; }
+    .rate-buttons button:hover { background: #efe9da; }
+    .rate-buttons button.selected { color: white; border-color: var(--selected); }
+    .rate-buttons button[data-rating="-2"].selected { background: var(--hate); border-color: var(--hate); }
+    .rate-buttons button[data-rating="-1"].selected { background: var(--dislike); border-color: var(--dislike); }
+    .rate-buttons button[data-rating="0"].selected  { background: var(--neutral); border-color: var(--neutral); }
+    .rate-buttons button[data-rating="1"].selected  { background: var(--like); border-color: var(--like); }
+    .rate-buttons button[data-rating="2"].selected  { background: var(--love); border-color: var(--love); }
+    .axis-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
+    .axis-label { min-width: 150px; font-size: 14px; color: var(--ink); font-weight: 500; }
+    .axis-help { color: var(--muted); font-size: 12px; font-weight: 400; display: block; margin-top: 2px; }
+    .axis-buttons { display: flex; gap: 6px; }
+    .axis-buttons button { padding: 6px 8px; font: inherit; font-size: 14px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; min-width: 30px; }
+    .axis-buttons button:hover { background: #efe9da; }
+    .axis-buttons button.on { background: var(--accent); border-color: var(--accent); color: white; }
+    .rate-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+    .rate-row select, .rate-row input { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font: inherit; font-size: 14px; }
+    .rate-row input { flex: 1; min-width: 200px; }
+    .rating-badge { display: inline-block; padding: 0 6px; border-radius: 10px; font-size: 11px; font-weight: 600; color: white; vertical-align: middle; margin-left: 4px; }
+    .rating-badge[data-r="2"]  { background: var(--love); }
+    .rating-badge[data-r="1"]  { background: var(--like); }
+    .rating-badge[data-r="0"]  { background: var(--neutral); }
+    .rating-badge[data-r="-1"] { background: var(--dislike); }
+    .rating-badge[data-r="-2"] { background: var(--hate); }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 16px; background: var(--accent); color: white; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    #summary-link { font-size: 14px; color: var(--accent); text-decoration: none; }
+    #summary-link:hover { text-decoration: underline; }
+    .chips-area { margin-top: 12px; }
+    .chip-group { margin-bottom: 10px; }
+    .chip-group-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { padding: 4px 10px; font: inherit; font-size: 13px; border: 1px solid #ccc; background: white; border-radius: 14px; cursor: pointer; color: #444; }
+    .chip:hover { background: #efe9da; }
+    .chip.on { background: var(--accent); border-color: var(--accent); color: white; }
+    /* Subject panel */
+    .subject-panel { margin-top: 14px; padding: 14px; background: #f1ede4; border-radius: 6px; border: 1px solid #e7e2d8; }
+    .subject-panel h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+    .subject-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 14px; font-size: 12px; margin: 2px 4px 2px 0; background: white; border: 1px solid #ccc; }
+    .subject-tag.confirmed { background: #d9ead0; border-color: #6aa86a; color: #1f4a1f; }
+    .subject-tag.rejected { background: #ece6da; color: #888; text-decoration: line-through; border-color: #ccc; }
+    .subject-tag.proposed { background: white; border-color: #ccc; }
+    .subject-tag.added { background: #d6dbed; border-color: #5b6a99; color: #2b3460; }
+    .subject-tag .src { color: var(--muted); font-size: 10px; margin-left: 2px; }
+    .subject-tag button { border: none; background: transparent; padding: 0 2px; cursor: pointer; font-size: 14px; line-height: 1; color: inherit; }
+    .subject-tag button:hover { color: #000; font-weight: bold; }
+    .filter-tag { background: #fce8d8; border-color: #c98a55; color: #6b3a18; font-weight: 500; }
+    .filter-tag.confirmed { background: #fcd8b8; border-color: #c98a55; }
+    /* Focused rating view layout: image left, rating right.
+       When body.detail-mode is set, the list is hidden and the detail
+       panel takes the full viewport width. */
+    body.detail-mode #list-view { display: none; }
+    body:not(.detail-mode) #detail { display: none; }
+    #detail.open { display: block; }
+    .detail-toolbar { display: flex; align-items: center; gap: 12px; padding: 8px 0 16px; border-bottom: 1px solid #e7e2d8; margin-bottom: 16px; }
+    .detail-toolbar button { padding: 6px 12px; font: inherit; font-size: 14px; background: white; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; }
+    .detail-toolbar button:hover { background: #efe9da; }
+    .detail-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .detail-toolbar .spacer { flex: 1; }
+    .detail-toolbar .pos { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+    /* Active-queue badge: shows the named queue's name + an ✕ exit button.
+       Surfaced in the detail toolbar so it remains visible in fullscreen
+       (where the page-header queue-picker is hidden). */
+    .queue-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 6px 3px 10px;
+      background: #f1ede4;
+      border: 1px solid #d4cbb2;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .queue-badge .queue-exit {
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.2;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .queue-badge .queue-exit:hover { background: #e3dac0; color: #333; }
+    body.fullscreen .queue-badge { background: #2a2a2a; border-color: #555; color: #d4a878; }
+    body.fullscreen .queue-badge .queue-exit { color: #aaa; }
+    body.fullscreen .queue-badge .queue-exit:hover { background: #444; color: #fff; }
+    .detail-split { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 24px; }
+    @media (max-width: 900px) { .detail-split { grid-template-columns: 1fr; } }
+    .image-pane { background: #111; border-radius: 8px; min-height: 480px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .image-pane img { max-width: 100%; max-height: 78vh; display: block; object-fit: contain; }
+    .image-pane .placeholder { color: #aaa; padding: 24px; text-align: center; font-size: 14px; }
+    .image-pane a.fullres { position: absolute; }
+    .image-meta { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; gap: 12px; align-items: center; }
+    .image-meta a { color: var(--accent); text-decoration: none; }
+    .image-meta a:hover { text-decoration: underline; }
+    .rating-pane { min-width: 0; }
+    /* Fullscreen / focus mode: takes over the viewport, hides chrome,
+       lets the image fill as much space as possible while keeping the
+       rating panel on the right. Triggered via the Fullscreen API
+       (document.documentElement.requestFullscreen). The .only-fullscreen
+       affordances (Full-res toggle) only appear in this mode. */
+    .only-fullscreen { display: none; }
+    body.fullscreen { background: #1a1a1a; color: #eee; }
+    body.fullscreen header { display: none; }
+    body.fullscreen main { padding: 0; margin: 0; max-width: 100%; }
+    /* Make the detail container a flex column in fullscreen so the
+       toolbar takes its natural height and the detail-split flexes to
+       fill the remainder — independent of how many buttons / how
+       much text wraps in the toolbar. This is what fixes the earlier
+       "image only uses partial screen" symptom: the previous
+       calc(100vh - 56px) underestimated the toolbar when buttons
+       wrapped, which squeezed the rating-pane to zero height. */
+    body.fullscreen #detail {
+      margin: 0; padding: 8px 12px;
+      background: #1a1a1a; border: none; border-radius: 0;
+      display: flex; flex-direction: column;
+      height: 100vh; box-sizing: border-box;
+    }
+    body.fullscreen .detail-toolbar { padding: 4px 0 6px; margin-bottom: 6px; border-color: #333; color: #ccc; flex-shrink: 0; }
+    body.fullscreen .detail-toolbar button { background: #2a2a2a; color: #eee; border-color: #444; }
+    body.fullscreen .detail-toolbar button:hover { background: #3a3a3a; }
+    body.fullscreen .detail-toolbar .pos { color: #aaa; }
+    body.fullscreen .detail-toolbar .sub { color: #888; }
+    body.fullscreen .detail-toolbar .only-fullscreen { display: inline-block; }
+    body.fullscreen .detail-split {
+      grid-template-columns: minmax(0, 1fr) var(--panel-right-w, 440px);
+      grid-template-rows: minmax(0, 1fr);
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 900px) { body.fullscreen .detail-split { grid-template-columns: 1fr; height: auto; } }
+    /* Viewport tiers: applied at fullscreen entry (and on resize) by
+       detectTier(). Each tier picks panel sizes that the right-layout
+       (--panel-right-w) and bottom-layout (--panel-bottom-h) CSS read.
+       The JS layout picker uses the same numbers in its area math, so
+       what CSS draws and what JS plans stay in lockstep. Common screens:
+         tier-small : laptops up to ~1366×768 / 1440×900
+         tier-medium: 1920×1080 standard
+         tier-large : 2560×1440+ and 4K displays. */
+    body.fullscreen.tier-small  { --panel-right-w: 380px; --panel-bottom-h: 320px; }
+    body.fullscreen.tier-medium { --panel-right-w: 440px; --panel-bottom-h: 360px; }
+    /* tier-large bottom panel is taller because chips default OPEN there
+       (laid out as a 4-col + Affect-spans-all-cols grid). The trade is
+       ~140px of image height for a panel that fits the title strip,
+       primary controls, full chip taxonomy, and subject summary
+       without internal scrolling. */
+    body.fullscreen.tier-large  { --panel-right-w: 480px; --panel-bottom-h: 560px; }
+    /* tier-small compaction: trim the right-layout panel so its content
+       fits comfortably even after collapsibles expand. */
+    body.fullscreen.tier-small .rating-pane > h2 { margin: 0 0 2px; font-size: 16px; }
+    body.fullscreen.tier-small .rate-panel { padding: 12px; margin: 10px 0; }
+    body.fullscreen.tier-small .chip-group { margin-bottom: 6px; }
+    body.fullscreen.tier-small .subject-panel { padding: 10px 12px; margin-top: 10px; }
+    /* Collapsible sections (chips + subject). Default: summary hidden,
+       content visible — i.e. the section behaves like a plain <div> when
+       there's room. We surface the summary chips and default to
+       collapsed whenever the panel can't fit the 1810px natural content:
+         - layout-bottom at any tier (height-capped strip)
+         - tier-small / tier-medium at any layout (column too short)
+       applyCollapseDefaults() in JS sets the `open` attribute to match. */
+    details.rate-section { margin: 0; padding: 0; }
+    details.rate-section > summary { display: none; }
+    body.fullscreen.tier-small  details.rate-section > summary,
+    body.fullscreen.tier-medium details.rate-section > summary,
+    body.fullscreen.layout-bottom details.rate-section > summary {
+      display: list-item;
+      cursor: pointer;
+      padding: 8px 10px;
+      margin-top: 10px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #ddd;
+      letter-spacing: 0.02em;
+      user-select: none;
+    }
+    body.fullscreen.tier-small  details.rate-section > summary:hover,
+    body.fullscreen.tier-medium details.rate-section > summary:hover,
+    body.fullscreen.layout-bottom details.rate-section > summary:hover {
+      background: #333;
+    }
+    body.fullscreen.tier-small  details.rate-section[open] > summary,
+    body.fullscreen.tier-medium details.rate-section[open] > summary,
+    body.fullscreen.layout-bottom details.rate-section[open] > summary {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    /* Hide the inner h3 of the subject-panel and the inline "Quick tags"
+       label when the summary chip takes their role. */
+    body.fullscreen.tier-small  details.rate-section .subject-panel > h3,
+    body.fullscreen.tier-medium details.rate-section .subject-panel > h3,
+    body.fullscreen.layout-bottom details.rate-section .subject-panel > h3,
+    body.fullscreen.tier-small  .chips-inline-label,
+    body.fullscreen.tier-medium .chips-inline-label,
+    body.fullscreen.layout-bottom .chips-inline-label {
+      display: none;
+    }
+    /* When the subject details is open under the summary-chip mode, drop
+       the subject-panel's redundant top margin so it sits flush. */
+    body.fullscreen.tier-small  details.rate-section[open] .subject-panel,
+    body.fullscreen.tier-medium details.rate-section[open] .subject-panel,
+    body.fullscreen.layout-bottom details.rate-section[open] .subject-panel {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+    /* min-width:0 and min-height:0 are load-bearing — without them the
+       grid item refuses to shrink below its content's intrinsic size,
+       which makes the image-pane balloon to the image's natural pixel
+       dimensions and overflow the viewport. */
+    body.fullscreen .image-pane { height: 100%; min-height: 0; min-width: 0; background: #000; border-radius: 4px; }
+    body.fullscreen .image-pane img { max-width: 100%; max-height: 100%; width: auto; height: auto; }
+    body.fullscreen .image-meta { color: #aaa; }
+    body.fullscreen .image-meta a { color: #d4a878; }
+    body.fullscreen .rating-pane { overflow-y: auto; height: 100%; min-height: 0; padding-right: 8px; background: #1a1a1a; color: #eee; }
+    body.fullscreen .rate-panel { background: #2a2a2a; border-color: #444; }
+    body.fullscreen .axis-buttons button { background: #2a2a2a; color: #ccc; border-color: #555; }
+    body.fullscreen .axis-buttons button:hover { background: #3a3a3a; }
+    /* High-contrast .on state for the dark fullscreen palette. The base
+       --accent (#5b3a1f) reads as "almost-the-same-color" against #2a2a2a
+       and was being mis-read as "click did nothing". Use a bright amber
+       with a glow ring so selection is unmistakable. */
+    body.fullscreen .axis-buttons button.on {
+      background: #f0a850;
+      border-color: #f0a850;
+      color: #1a1a1a;
+      font-weight: 700;
+      box-shadow: 0 0 0 2px rgba(240, 168, 80, 0.35);
+    }
+    body.fullscreen .chip { background: #2a2a2a; color: #ccc; border-color: #555; }
+    body.fullscreen .chip:hover { background: #3a3a3a; }
+    body.fullscreen .chip.on {
+      background: #f0a850;
+      border-color: #f0a850;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+    body.fullscreen .chip-freetext, body.fullscreen textarea, body.fullscreen input[type=text] { background: #2a2a2a; color: #eee; border-color: #444; }
+    body.fullscreen .subject-panel { background: #2a2a2a; border-color: #444; }
+    body.fullscreen .subject-tag { background: #1a1a1a; color: #ddd; border-color: #555; }
+    body.fullscreen .subject-tag.confirmed { background: #2a4520; border-color: #6aa86a; color: #c6e0ba; }
+    body.fullscreen .subject-tag.rejected { background: #2a2a2a; color: #777; border-color: #444; }
+    body.fullscreen .subject-tag.added { background: #2a3050; color: #c8d0eb; border-color: #5b6a99; }
+    body.fullscreen .filter-tag { background: #4a2a18; color: #f0c8a0; border-color: #c98a55; }
+    body.fullscreen pre { background: #2a2a2a; color: #ddd; }
+    body.fullscreen.full-res-on .image-pane { cursor: zoom-out; }
+    /* Layout variants inside fullscreen. Goal: maximize image area while
+       keeping the rating panel fully visible. Auto-selected on entry by
+       autoSelectLayout(), which picks whichever layout yields the largest
+       image area at the current viewport tier; cyclable via the Layout
+       toolbar button or the "L" key. The old "aspect >= 1.7" heuristic
+       was wrong on small/medium viewports — it pushed 16:9 images into
+       layout-bottom, which on a 1366×768 screen left only ~220px of
+       panel and hid Save & Next below the fold.
+         - layout-right    : panel on the right (wins for portrait, square,
+                             and mild-landscape including 16:9 at every
+                             tier; crossover into bottom is ~aspect 2.0+)
+         - layout-bottom   : panel under the image (panoramas / very wide)
+         - layout-overlay  : panel floats on top-right, image fills viewport
+         - layout-image-only : panel hidden, image fills viewport; rate via keyboard, HUD shows Q/F
+    */
+    body.fullscreen.layout-bottom .detail-split {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+    body.fullscreen.layout-bottom .rating-pane { max-height: var(--panel-bottom-h, 360px); padding-right: 0; padding-top: 4px; }
+    body.fullscreen.layout-bottom .image-pane { height: 100%; min-height: 0; }
+    /* Bottom layout panel structure. The strip below the image is laid
+       out as a deliberate three-column CSS Grid so the primary rating
+       controls have a clear visual hierarchy:
+
+         +-----------+----------------+-------------------+
+         | RATE THIS WORK (h3, spans columns)             |
+         +-----------+----------------+-------------------+
+         | Quality   | What strikes   | [Save]            |
+         |  1..10    | you? (textarea | [Save & Next →]   |
+         | Fit       | spans 2 rows)  | Surface: [select] |
+         |  1..10    |                |                   |
+         +-----------+----------------+-------------------+
+         | ▼ Quick tags  (chips section, full width)      |
+         |   [Image Q] [Affect] [Familiarity] [Next] [...]|
+         +------------------------------------------------+
+         | ▸ Subject tags (collapsed by default)          |
+         +------------------------------------------------+
+
+       Each chip-group becomes its own column in a flex row so the wide
+       horizontal strip is actually used. The title block above the
+       grid is hidden in bottom mode (it's redundant with the image
+       overlay/queue badge). */
+    /* Show work title / artist / year as a compact inline strip above the
+       rate-panel in bottom mode. Previously hidden entirely. */
+    body.fullscreen.layout-bottom .rating-pane > h2 {
+      display: inline-block;
+      margin: 0;
+      padding: 6px 0 0 14px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #eee;
+    }
+    body.fullscreen.layout-bottom .rating-pane > h2 + div {
+      display: inline-block;
+      margin: 0 0 0 10px;
+      color: #ccc;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+    body.fullscreen.layout-bottom .rating-pane > h2 + div .qid,
+    body.fullscreen.layout-bottom .rating-pane > h2 + div .pill {
+      display: none;
+    }
+    body.fullscreen.layout-bottom .rating-pane > .sub {
+      display: inline-block;
+      margin: 0 0 0 10px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.2;
+    }
+    body.fullscreen.layout-bottom .rate-panel {
+      display: grid;
+      /* 4 columns: axes (auto) | notes (capped 460px) | save (auto) | spacer (eats extra)
+         The spacer keeps the controls clustered on the left so Save sits
+         adjacent to notes instead of pinned to the far right of a 2600px
+         panel. The chips section (declared grid-column 1/-1) spans the
+         full width regardless. */
+      grid-template-columns: max-content minmax(280px, 460px) max-content 1fr;
+      grid-auto-rows: auto;
+      column-gap: 20px;
+      row-gap: 6px;
+      align-items: start;
+      margin: 0;
+      padding: 10px 14px;
+    }
+    body.fullscreen.layout-bottom .rate-panel > h3 {
+      grid-column: 1 / -1;
+      margin: 0;
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+    /* Axes in column 1, each on its own row. */
+    body.fullscreen.layout-bottom .rate-panel .axis-row {
+      grid-column: 1;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    body.fullscreen.layout-bottom .rate-panel .axis-row .axis-label {
+      font-size: 12px;
+      min-width: 0;
+    }
+    body.fullscreen.layout-bottom .rate-panel .axis-row .axis-help { display: none; }
+    /* Notes block fills column 2 and spans the two axis rows so the
+       textarea is as tall as the stacked axes are. */
+    body.fullscreen.layout-bottom .rate-panel .notes-block {
+      grid-column: 2;
+      grid-row: 2 / span 2;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    body.fullscreen.layout-bottom .rate-panel .notes-block label {
+      margin-bottom: 4px;
+    }
+    body.fullscreen.layout-bottom .rate-panel .notes-block textarea {
+      flex: 1;
+      min-height: 64px;
+      max-height: 84px;
+      resize: none;
+    }
+    /* Save / Save & Next / Surface stacked in column 3, also spanning
+       both axis rows. */
+    body.fullscreen.layout-bottom .rate-panel .rate-row {
+      grid-column: 3;
+      grid-row: 2 / span 2;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      min-width: 170px;
+    }
+    body.fullscreen.layout-bottom .rate-panel .rate-row button {
+      width: 100%;
+      text-align: center;
+    }
+    body.fullscreen.layout-bottom .rate-panel .rate-row label {
+      margin: 4px 0 0;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    body.fullscreen.layout-bottom .rate-panel .rate-row select {
+      width: 100%;
+      padding: 4px 6px;
+      font: inherit; font-size: 12px;
+      background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 4px;
+    }
+    /* The chips collapsible takes the full grid width below the primary row.
+       The last-rated marker is hidden in bottom mode — the saved chip
+       selections are already visible (amber-highlighted in their groups),
+       so the timestamp/repeat-of-chips string is redundant clutter. */
+    body.fullscreen.layout-bottom .rate-panel details.rate-section {
+      grid-column: 1 / -1;
+      margin: 6px 0 0;
+    }
+    body.fullscreen.layout-bottom .rate-panel > .last-rated-sub {
+      display: none;
+    }
+    /* Hide the raw-sidecar disclosure in bottom mode — it's a debug
+       affordance, not a primary surface, and the strip is precious. */
+    body.fullscreen.layout-bottom .rating-pane > details:not(.rate-section) {
+      display: none;
+    }
+    /* Chips area open in bottom mode: a 2-row CSS Grid.
+         Row 1: Image Quality | Familiarity | What to do next | Data concern  (4 columns, equal)
+         Row 2: Affect / Mood (18 chips) spans all 4 columns
+       This gives Affect — the only oversized group — the horizontal room
+       to fit its chips in 1–2 rows instead of scrolling. The other four
+       groups, all small, fit a single chip-row each. Net result: full
+       chip taxonomy visible without internal scrolling. */
+    body.fullscreen.layout-bottom details.rate-section[open] .chips-area {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 18px;
+      row-gap: 10px;
+      margin-top: 6px;
+    }
+    body.fullscreen.layout-bottom details.rate-section[open] .chip-group {
+      margin: 0;
+      min-width: 0;
+    }
+    body.fullscreen.layout-bottom details.rate-section[open] .chip-group[data-group-key="affect"] {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    body.fullscreen.layout-bottom details.rate-section[open] .chip-group-label {
+      font-size: 11px;
+    }
+    body.fullscreen.layout-bottom details.rate-section[open] .chip-row {
+      gap: 4px;
+    }
+    /* Compact subject-panel layout when open in bottom mode. */
+    body.fullscreen.layout-bottom details.rate-section[open] .subject-panel {
+      margin: 0;
+      padding: 10px 14px;
+    }
+    /* Slightly denser summary chip in bottom mode (saves vertical
+       budget for the open chip area). */
+    body.fullscreen.layout-bottom details.rate-section > summary {
+      padding: 5px 10px;
+      font-size: 12px;
+      margin-top: 0;
+    }
+    body.fullscreen.layout-overlay .detail-split {
+      grid-template-columns: 1fr;
+      position: relative;
+    }
+    body.fullscreen.layout-overlay .image-pane { height: 100%; }
+    body.fullscreen.layout-overlay .rating-pane {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 420px;
+      height: auto;
+      max-height: calc(100% - 16px);
+      overflow-y: auto;
+      background: rgba(20, 20, 20, 0.88);
+      border: 1px solid #555;
+      border-radius: 8px;
+      padding: 10px 12px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    body.fullscreen.layout-image-only .detail-split { grid-template-columns: 1fr; }
+    body.fullscreen.layout-image-only .rating-pane { display: none; }
+    body.fullscreen.layout-image-only .image-pane { height: 100%; }
+    /* HUD shown in image-only mode so the user still sees in-flight rating state */
+    #rating-hud {
+      position: fixed; bottom: 18px; right: 18px;
+      padding: 8px 14px;
+      background: rgba(20, 20, 20, 0.85);
+      color: #fff;
+      border-radius: 8px;
+      font-family: ui-monospace, monospace;
+      font-size: 16px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      pointer-events: none;
+      z-index: 100;
+      display: none;
+    }
+    body.fullscreen.layout-image-only #rating-hud { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Fine Art Archive — Companion</h1>
+      <div class="sub">Browse + rate. Ratings feed the preference model.</div>
+    </div>
+    <div>
+      <select id="queue-picker" onchange="loadQueueFromPicker()" style="margin-right:12px;font:inherit;font-size:14px;padding:4px 8px;border:1px solid #ccc;border-radius:4px">
+        <option value="">All works (browse)</option>
+      </select>
+      <a id="upgrades-link" href="#" onclick="loadUpgrades(); return false;" style="margin-right: 16px;">Variant upgrades →</a>
+      <a id="summary-link" href="#" onclick="loadSummary(); return false;">Ratings summary →</a>
+    </div>
+  </header>
+  <main>
+    <div id="list-view">
+      <input type="search" name="q" placeholder="Search title or artist…"
+             hx-get="/works" hx-trigger="keyup changed delay:300ms"
+             hx-target="#results" hx-include="this" hx-swap="innerHTML"
+             hx-vals='{"limit": 50}'>
+      <div id="results"
+           hx-get="/works?limit=50" hx-trigger="load" hx-swap="innerHTML">
+        Loading…
+      </div>
+    </div>
+    <div id="detail"></div>
+    <div id="toast" class="toast"></div>
+    <div id="rating-hud" aria-hidden="true">Q— · F—</div>
+  </main>
+
+  <script>
+    // ----- state -----
+    // Active rating scheme. Today: two-axis-10. When the per-rater precision
+    // picker lands (task #105's natural follow-on), this gets read from the
+    // user's settings instead of being hardcoded.
+    const RATING_SCHEME = "two-axis-10";
+    const RATING_MAX = 10;
+
+    let currentWorkId = null;
+    let detailOpenedAt = null;   // for dwell tracking (signal, not ground truth)
+    let selectedChips = new Set(); // "group:chip" ids
+    let ratingTaxonomy = null;   // fetched once on load
+    let currentQuality = null;   // 1..5
+    let currentFit = null;       // 1..5
+
+    // ----- queue: ordered list of work_ids from the latest list view -----
+    // Whenever the list re-renders (page load, search, filter), this is
+    // refreshed. Prev/Next in the detail view walks this queue.
+    let workQueue = [];          // [wid, wid, ...]
+    let queueIndex = -1;         // index of currentWorkId in workQueue, or -1
+    let currentQueueName = null; // name of the named queue loaded, or null
+                                 // for the default "All works" browse list.
+                                 // Persisted in localStorage so the picker
+                                 // remembers across reloads.
+
+    const LS_KEY_QUEUE = "faa_active_queue";
+
+    // ----- helpers -----
+    function ratingLabel(r) {
+      return ({"-2": "—", "-1": "−", "0": "○", "1": "+", "2": "★"})[String(r)] || "";
+    }
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 1600);
+    }
+    function dbg(where, info) {
+      // Fire-and-forget; we don't await so it never blocks the UI.
+      try {
+        fetch("/debug/log", {method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({where, info: info||{}})});
+      } catch(e) {}
+    }
+
+    // ----- axis click (1..5 on quality / fit) -----
+    function setAxis(axis, value) {
+      if (axis === "quality") currentQuality = value;
+      else if (axis === "fit") currentFit = value;
+      document.querySelectorAll(`.axis-buttons[data-axis="${axis}"] button`).forEach(b => {
+        b.classList.toggle("on", parseInt(b.dataset.value) === value);
+      });
+      // Keep the image-only HUD in sync (no-op in other layouts).
+      updateRatingHud();
+    }
+
+    // ----- rating submit -----
+    // Sends both axes together. Submit is explicit (Save button) so I'm not
+    // logging an event on every axis tap; otherwise a five-star quality pick
+    // would emit four discarded events on the way to landing on 5.
+    async function submitRating(workId, advance) {
+      if (currentQuality == null && currentFit == null) {
+        toast("pick a quality or fit value first");
+        return;
+      }
+      const notes = document.getElementById("rate_notes")?.value || "";
+      const dwell = detailOpenedAt
+          ? Math.round((Date.now() - detailOpenedAt) / 100) / 10
+          : null;
+      // Collect any per-group freetext (e.g. affect: "ironic, sublime")
+      const freetextByGroup = {};
+      document.querySelectorAll(".chip-freetext").forEach(el => {
+        const v = (el.value || "").trim();
+        if (v) freetextByGroup[el.dataset.groupKey] = v;
+      });
+      const body = {
+        quality: currentQuality,
+        fit: currentFit,
+        rater: "tim",
+        scheme: RATING_SCHEME,
+        surface: document.getElementById("surface_select")?.value || "companion-app",
+        selected_reasons: Array.from(selectedChips),
+        freetext_by_group: freetextByGroup,
+        dwell_seconds: dwell,
+        notes
+      };
+      const r = await fetch(`/works/${workId}/rate`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) { toast("rating failed: " + r.status); return; }
+      const data = await r.json();
+      const qStr = currentQuality != null ? `Q${currentQuality}` : "—";
+      const fStr = currentFit != null ? `F${currentFit}` : "—";
+      toast(`saved ${qStr}·${fStr} (${data.total_ratings_for_work}× total${selectedChips.size ? ", "+selectedChips.size+" chips" : ""})`);
+      // Refresh just the badge in the list row (don't tear down the table).
+      const row = document.querySelector(`tr[data-wid="${workId}"]`);
+      if (row) {
+        const cell = row.querySelector(".rating-cell");
+        if (cell) {
+          const n = data.total_ratings_for_work;
+          cell.innerHTML = `<span class="rating-badge two-axis" title="Quality × Fit">${qStr}·${fStr}</span>${n>1?`<span class="sub" style="margin-left:6px">×${n}</span>`:""}`;
+        }
+      }
+      // If "Save & Next" was used, advance to the next work in the queue.
+      if (advance && queueIndex >= 0 && queueIndex + 1 < workQueue.length) {
+        setTimeout(() => nextWork(), 250); // brief delay so the user sees the toast
+      } else if (advance) {
+        toast("end of queue");
+      }
+    }
+
+    // ----- subject reviewer panel -----
+    function renderSubjectPanel(data) {
+      const subj = data.subject;
+      if (!subj) {
+        return `<div class="subject-panel">
+          <h3>Subject</h3>
+          <div class="sub">No subject tags yet.
+          <button onclick="runTagger('${data.work_id}')" style="margin-left:8px;padding:3px 10px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:12px">Propose tags now</button></div>
+        </div>`;
+      }
+      const tags = subj.content_tags || [];
+      const genre = subj.genre || "unknown";
+      const gsrc = subj.genre_source || "";
+      // Group tags by namespace for readability
+      const groups = {filter:[], subject:[], theme:[], setting:[], palette:[], "era-depicted":[], other:[]};
+      for (const t of tags) {
+        const ns = (t.id.split(":")[0] || "other");
+        (groups[ns] || groups.other).push(t);
+      }
+      const wid = data.work_id;
+      const tagChip = (t) => {
+        const isFilter = t.id.startsWith("filter:");
+        const cls = (t.state || "proposed") + (isFilter ? " filter-tag" : "");
+        const srcAbbr = (t.source || "")
+            .replace("title-heuristic", "title")
+            .replace("clip-vit-large-patch14", "clip")
+            .replace("wikidata:", "wd:")
+            .replace("tag-fallback", "fallback");
+        const safeTag = t.id.replace(/'/g, "\\'");
+        const showState = t.state && t.state !== "proposed" ? ` ·${t.state}` : "";
+        // ✓ accept, ✗ reject buttons only on proposed tags
+        const ctrls = (t.state || "proposed") === "proposed" ?
+            `<button title="confirm" onclick="subjectAction('${wid}','confirm','${safeTag}')">✓</button>
+             <button title="reject" onclick="subjectAction('${wid}','reject','${safeTag}')">✗</button>` :
+            `<button title="reset" onclick="subjectAction('${wid}','reset','${safeTag}')">↺</button>`;
+        return `<span class="subject-tag ${cls}">${t.id}${ctrls}<span class="src">${srcAbbr}</span></span>`;
+      };
+      let html = `<div class="subject-panel">
+        <h3>Subject — ${subj.needs_review ? "needs review" : "all reviewed"}</h3>
+        <div style="margin-bottom:8px"><strong>Genre:</strong>
+          <span class="subject-tag ${(gsrc.includes("clip") || gsrc.includes("wikidata") || gsrc.includes("heuristic")) ? "proposed" : "confirmed"}">${genre}<span class="src">${gsrc.replace("title-heuristic","title").replace("clip-vit-large-patch14","clip")}</span></span>
+        </div>`;
+      const groupLabels = {filter: "Filter (rotation exclusions)", subject: "Subject", theme: "Theme", setting: "Setting", palette: "Palette", "era-depicted": "Era depicted", other: "Other"};
+      for (const ns of ["filter","subject","theme","setting","palette","era-depicted","other"]) {
+        if (groups[ns].length === 0) continue;
+        html += `<div style="margin-bottom:6px"><div class="sub" style="margin-bottom:2px">${groupLabels[ns]}</div>`;
+        for (const t of groups[ns]) html += tagChip(t);
+        html += `</div>`;
+      }
+      html += `<div style="margin-top:8px;display:flex;gap:6px">
+        <input type="text" id="subj-add-${wid}" placeholder="Add custom tag (e.g. theme:domestic-quiet)"
+          style="flex:1;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font:inherit;font-size:13px">
+        <button onclick="subjectAddCustom('${wid}')" style="padding:4px 10px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:13px">Add</button>
+      </div>
+      <div style="margin-top:8px">
+        <label class="sub" style="display:block;margin-bottom:4px">Reviewer notes about subject (free text):</label>
+        <textarea id="subj-freetext-${wid}" rows="2" maxlength="1000" placeholder="Anything the tagger missed, got wrong, etc. Stored for future LLM-assisted re-tagging."
+          style="width:100%;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font:inherit;font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+        <button onclick="subjectSaveFreetext('${wid}')" style="margin-top:4px;padding:3px 10px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:12px">Save note</button>
+      </div>
+      </div>`;
+      return html;
+    }
+
+    async function subjectAction(wid, action, tag) {
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(wid)}/subject_action`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({action, tag, reviewer: "tim"}),
+        });
+        if (!r.ok) { toast("action failed: " + r.status); return; }
+        toast(`${action} ${tag}`);
+        // Re-fetch the work and surgically swap ONLY the subject-panel
+        // contents. A full renderDetail() rebuild would wipe in-flight
+        // (unsaved) chip selections, freetext, notes, and reset the
+        // <img> to the thumbnail URL — surfacing as "tags removed my
+        // ratings and dropped me back to lower-res."
+        const r2 = await fetch(`/works/${encodeURIComponent(wid)}`);
+        const d = await r2.json();
+        const subjDetails = document.getElementById("rs-subject");
+        if (subjDetails) {
+          const oldPanel = subjDetails.querySelector(".subject-panel");
+          const tmp = document.createElement("div");
+          tmp.innerHTML = renderSubjectPanel(d);
+          const newPanel = tmp.querySelector(".subject-panel");
+          if (oldPanel && newPanel) {
+            oldPanel.replaceWith(newPanel);
+          } else if (newPanel) {
+            // No existing subject-panel (e.g. first acceptance from the
+            // "Propose tags now" empty state) — append fresh.
+            subjDetails.appendChild(newPanel);
+          }
+        }
+      } catch (e) { toast("error: " + e.message); }
+    }
+
+    async function subjectAddCustom(wid) {
+      const el = document.getElementById(`subj-add-${wid}`);
+      const tag = (el?.value || "").trim();
+      if (!tag || !tag.includes(":")) {
+        toast("tag must be group:id, e.g. 'theme:domestic-quiet'");
+        return;
+      }
+      await subjectAction(wid, "add", tag);
+    }
+
+    async function subjectSaveFreetext(wid) {
+      const el = document.getElementById(`subj-freetext-${wid}`);
+      const text = (el?.value || "").trim();
+      if (!text) return;
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(wid)}/subject_action`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({action: "freetext_review", text, reviewer: "tim"}),
+        });
+        if (!r.ok) { toast("save failed: " + r.status); return; }
+        toast("note saved");
+        if (el) el.value = "";
+      } catch (e) { toast("error: " + e.message); }
+    }
+
+    async function runTagger(wid) {
+      toast("tagger run not yet wired — use the CLI for now");
+    }
+
+    // ----- queue navigation -----
+    function prevWork() {
+      if (queueIndex > 0) openWork(workQueue[queueIndex - 1]);
+    }
+    function nextWork() {
+      if (queueIndex >= 0 && queueIndex + 1 < workQueue.length) {
+        openWork(workQueue[queueIndex + 1]);
+      }
+    }
+    function closeDetail() {
+      // Belt-and-suspenders: if the user exited via Back-to-list while
+      // still in fullscreen, drop fullscreen too. Also clear any lingering
+      // full-res state so we don't return to the list with a multi-MB src
+      // primed for the next openWork.
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      fullResOn = false;
+      document.body.classList.remove("detail-mode", "fullscreen", "full-res-on");
+      const btn = document.getElementById("fullres-toggle");
+      if (btn) btn.textContent = "Full-res";
+      document.getElementById("detail").classList.remove("open");
+      currentWorkId = null;
+      queueIndex = -1;
+      history.replaceState(null, "", location.pathname);
+    }
+
+    // ----- viewport tier detection -----
+    // Three tiers cover the screen sizes Tim's likely to use. The JS
+    // numbers here MUST match the CSS variables in `body.fullscreen.tier-*`
+    // — the layout picker uses these in its area math, and CSS uses the
+    // matching tier class to size the panel. Drift between the two will
+    // cause the math to disagree with what gets drawn.
+    const TIERS = {
+      small:  { name: "small",  panelRight: 380, panelBottom: 320 },
+      medium: { name: "medium", panelRight: 440, panelBottom: 360 },
+      large:  { name: "large",  panelRight: 480, panelBottom: 420 },
+    };
+    function detectTier() {
+      const W = window.innerWidth, H = window.innerHeight;
+      // Large requires both dimensions — a wide-but-short window (e.g.
+      // 2560×900 on a side monitor) is still small for our purposes.
+      if (W >= 2400 && H >= 1100) return TIERS.large;
+      if (W < 1500 || H < 850) return TIERS.small;
+      return TIERS.medium;
+    }
+    function applyTier() {
+      const t = detectTier();
+      for (const k of Object.keys(TIERS)) {
+        document.body.classList.toggle("tier-" + k, t.name === k);
+      }
+      return t;
+    }
+
+    function applyCollapseDefaults() {
+      // Chips and Subject open/close defaults differ:
+      //   chips   — primary tagging surface. Default OPEN at tier-large
+      //             in both layouts (panel has room). Closed at smaller
+      //             tiers where vertical/horizontal space is tight.
+      //   subject — secondary review surface, taller content with its
+      //             own internal sub-sections. Default OPEN only at
+      //             tier-large in layout-right (long column). Closed
+      //             everywhere else, including tier-large bottom where
+      //             the strip can't comfortably hold both sections open.
+      // Outside fullscreen, summary chips are CSS-hidden so "open"
+      // just preserves the classic detail-view appearance.
+      const inFs = document.body.classList.contains("fullscreen");
+      const tier = inFs ? detectTier().name : "large";
+      const layout = currentLayout || "right";
+      const chipsClose = inFs && (tier === "small" || tier === "medium");
+      const subjClose  = inFs && (tier === "small" || tier === "medium" || layout === "bottom");
+      const chipsEl = document.getElementById("rs-chips");
+      const subjEl  = document.getElementById("rs-subject");
+      if (chipsEl) {
+        if (chipsClose) chipsEl.removeAttribute("open");
+        else chipsEl.setAttribute("open", "");
+      }
+      if (subjEl) {
+        if (subjClose) subjEl.removeAttribute("open");
+        else subjEl.setAttribute("open", "");
+      }
+    }
+
+    // ----- layout (fullscreen panel placement) -----
+    // Four structures, picked to maximize image area while keeping the
+    // rating panel fully visible:
+    //   right        — panel on the right (tier-aware width)
+    //   bottom       — panel below the image (tier-aware height)
+    //   overlay      — panel floats top-right; image fills viewport
+    //   image-only   — panel hidden; rate via keyboard, HUD shows Q/F
+    // Auto-select runs on fullscreenchange + each openWork once the image
+    // has loaded, and on resize while in fullscreen. Users can override
+    // with the Layout button or L key; that sticks for the rest of the
+    // fullscreen session.
+    const LAYOUTS = ["right", "bottom", "overlay", "image-only"];
+    let currentLayout = "right";
+    let layoutManuallyChosen = false; // sticky once the user clicks/L's
+
+    function applyLayout(name) {
+      if (!LAYOUTS.includes(name)) return;
+      currentLayout = name;
+      for (const l of LAYOUTS) document.body.classList.remove("layout-" + l);
+      document.body.classList.add("layout-" + name);
+      const btn = document.getElementById("layout-toggle");
+      if (btn) btn.textContent = "Layout: " + name;
+      updateRatingHud();
+      // Re-evaluate collapse state: switching from right->bottom needs to
+      // close the chips/subject, and switching back to right at tier-large
+      // should re-open them.
+      applyCollapseDefaults();
+    }
+
+    function cycleLayout() {
+      const i = LAYOUTS.indexOf(currentLayout);
+      const next = LAYOUTS[(i + 1) % LAYOUTS.length];
+      layoutManuallyChosen = true;
+      applyLayout(next);
+      toast("layout: " + next);
+    }
+
+    function imageAreaIn(aspect, boxW, boxH) {
+      // Largest image of the given aspect that fits inside (boxW, boxH).
+      // Returns pixel area. 0 if box is degenerate.
+      if (boxW <= 0 || boxH <= 0) return 0;
+      // If the box is wider than the image's aspect, the image is
+      // height-bounded (its width = aspect * boxH). Otherwise it's
+      // width-bounded (its height = boxW / aspect).
+      if (boxW / boxH >= aspect) return aspect * boxH * boxH;
+      return (boxW * boxW) / aspect;
+    }
+
+    function autoSelectLayout() {
+      // Pick whichever layout produces the larger image area for this
+      // viewport+aspect combination. The old "aspect >= 1.7" heuristic
+      // mis-picked "bottom" for 16:9 images on small/medium viewports —
+      // bottom's wide-but-short box wasted vertical room AND capped the
+      // panel at a height that hid Save & Next.
+      const img = document.querySelector("#image-pane img");
+      if (!img || !img.naturalWidth) return "right";
+      const aspect = img.naturalWidth / img.naturalHeight;
+      const tier = detectTier();
+      const W = window.innerWidth, H = window.innerHeight;
+      // Allowances match the fullscreen CSS: #detail has 8px 12px padding
+      // (24 horizontal), .detail-toolbar plus its margin is roughly 56px,
+      // and there's a 16px gap between the image and the panel.
+      const sidePad = 24, toolbar = 56, gap = 16;
+      const rightW  = W - sidePad - tier.panelRight - gap;
+      const rightH  = H - toolbar;
+      const bottomW = W - sidePad;
+      const bottomH = H - toolbar - tier.panelBottom - gap;
+      const rightArea  = imageAreaIn(aspect, rightW,  rightH);
+      const bottomArea = imageAreaIn(aspect, bottomW, bottomH);
+      return rightArea >= bottomArea ? "right" : "bottom";
+    }
+
+    function maybeApplyAutoLayout() {
+      // Auto-pick while in fullscreen (real API or CSS fallback) and only
+      // if the user hasn't overridden in this fullscreen session.
+      if (!document.body.classList.contains("fullscreen") || layoutManuallyChosen) return;
+      const img = document.querySelector("#image-pane img");
+      if (!img) return;
+      if (img.complete && img.naturalWidth) {
+        applyLayout(autoSelectLayout());
+      } else {
+        img.addEventListener("load", () => {
+          if (document.body.classList.contains("fullscreen") && !layoutManuallyChosen) {
+            applyLayout(autoSelectLayout());
+          }
+        }, {once: true});
+      }
+    }
+
+    // Re-apply tier + layout on viewport resize while in fullscreen, so
+    // moving between a laptop screen and an external 4K (or just toggling
+    // OS-level zoom) re-picks correctly without a fullscreen exit/re-enter.
+    window.addEventListener("resize", () => {
+      if (!document.body.classList.contains("fullscreen")) return;
+      applyTier();
+      if (!layoutManuallyChosen) maybeApplyAutoLayout();
+    });
+
+    function updateRatingHud() {
+      const hud = document.getElementById("rating-hud");
+      if (!hud) return;
+      const q = currentQuality != null ? currentQuality : "—";
+      const f = currentFit != null ? currentFit : "—";
+      hud.textContent = `Q${q} · F${f}`;
+    }
+
+    // ----- fullscreen / focus mode -----
+    // Uses the browser Fullscreen API so the OS chrome (tab bar, dock) gets
+    // out of the way. The fullscreenchange listener flips body.fullscreen,
+    // which the CSS uses to hide the page header, shrink the rating-pane
+    // gutter, and switch to a dark palette. Esc exits automatically.
+    let fullResOn = false; // toggled by Full-res button; reset on exit
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        const p = document.documentElement.requestFullscreen?.();
+        if (p && p.catch) {
+          p.catch(e => {
+            // Permission denied or unsupported — fall back to a CSS-only
+            // focus mode so the user still gets the immersive layout.
+            document.body.classList.add("fullscreen");
+            applyTier();
+            applyCollapseDefaults();
+            maybeApplyAutoLayout();
+            toast("focus mode (fullscreen API: " + e.message + ")");
+          });
+        }
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    document.addEventListener("fullscreenchange", () => {
+      const on = !!document.fullscreenElement;
+      document.body.classList.toggle("fullscreen", on);
+      if (on) {
+        // Fresh fullscreen session: clear any per-work manual override,
+        // pick the viewport tier (sets --panel-* vars + tier-* class),
+        // and auto-pick a layout for the current image. Also auto-load
+        // the full-res image so it scales up cleanly to the larger
+        // viewport instead of staying at the 1600px thumbnail.
+        layoutManuallyChosen = false;
+        applyTier();
+        applyCollapseDefaults();
+        maybeApplyAutoLayout();
+        if (!fullResOn) {
+          fullResOn = true;
+          updateImageSrc();
+          document.body.classList.add("full-res-on");
+          const btn = document.getElementById("fullres-toggle");
+          if (btn) btn.textContent = "↺ Thumb";
+        }
+      } else {
+        // Leaving fullscreen: drop layout + tier classes (they only apply
+        // in fullscreen anyway) and revert the full-res image src.
+        for (const l of LAYOUTS) document.body.classList.remove("layout-" + l);
+        for (const k of Object.keys(TIERS)) document.body.classList.remove("tier-" + k);
+        if (fullResOn) {
+          fullResOn = false;
+          updateImageSrc();
+          document.body.classList.remove("full-res-on");
+          const btn = document.getElementById("fullres-toggle");
+          if (btn) btn.textContent = "Full-res";
+        }
+      }
+    });
+
+    function toggleFullRes() {
+      fullResOn = !fullResOn;
+      updateImageSrc();
+      document.body.classList.toggle("full-res-on", fullResOn);
+      const btn = document.getElementById("fullres-toggle");
+      if (btn) btn.textContent = fullResOn ? "↺ Thumb" : "Full-res";
+      if (fullResOn) toast("loading full-resolution image…");
+    }
+
+    function updateImageSrc() {
+      const img = document.querySelector("#image-pane img");
+      if (!img || !currentWorkId) return;
+      const wid = encodeURIComponent(currentWorkId);
+      img.src = fullResOn ? `/works/${wid}/full` : `/works/${wid}/image?max=1600`;
+    }
+
+    // ----- chip toggle -----
+    function toggleChip(chipId, groupKey, exclusive) {
+      if (exclusive) {
+        // Remove any other chip from same group, then either add or remove this one
+        const wasOn = selectedChips.has(chipId);
+        for (const id of Array.from(selectedChips)) {
+          if (id.startsWith(groupKey + ":")) selectedChips.delete(id);
+        }
+        if (!wasOn) selectedChips.add(chipId);
+      } else {
+        if (selectedChips.has(chipId)) selectedChips.delete(chipId);
+        else selectedChips.add(chipId);
+      }
+      // Repaint chips in DOM
+      document.querySelectorAll(".chip").forEach(b => {
+        b.classList.toggle("on", selectedChips.has(b.dataset.chipId));
+      });
+    }
+
+    async function loadUpgrades() {
+      const r = await fetch("/variant_upgrades");
+      const d = await r.json();
+      const det = document.getElementById("detail");
+      det.classList.add("open");
+      if (!d.candidates || d.candidates.length === 0) {
+        det.innerHTML = `<h2>Variant upgrade candidates</h2>
+          <p class="sub">No candidates right now. The detector found no
+          staged file that's materially larger (≥1.5×) than an existing
+          master with the same title/artist.</p>`;
+        window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
+        return;
+      }
+      let html = `<h2>Variant upgrade candidates</h2>
+        <p class="sub">For each row: candidate file is ≥1.5× larger than
+        the current master. Accept logs intent; the actual master swap
+        is gated behind a per-decision grant in <code>permissions.md</code>.</p>
+        <table><thead><tr>
+          <th>Work</th><th>Current</th><th>Candidate</th><th>Ratio</th>
+          <th>Quarantined?</th><th>Decision</th><th></th>
+        </tr></thead><tbody>`;
+      for (const c of d.candidates) {
+        const wid = c.existing_wid;
+        const dec = c.decision || "—";
+        html += `<tr>
+          <td><strong>${c.title}</strong> <span class="sub">(${c.artist})</span><br>
+              <span class="qid">${wid}</span></td>
+          <td>${c.existing_master_mb} MB</td>
+          <td>${c.candidate_master_mb} MB</td>
+          <td><span class="pill">${c.ratio}×</span></td>
+          <td>${c.candidate_quarantined}</td>
+          <td>${dec}${c.decision_ts ? `<br><span class="sub">${c.decision_ts}</span>` : ""}</td>
+          <td>
+            <button onclick="upgradeDecide('${wid}', 'accept')">Accept</button>
+            <button onclick="upgradeDecide('${wid}', 'reject')">Reject</button>
+            <button onclick="upgradeDecide('${wid}', 'defer')">Defer</button>
+          </td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      det.innerHTML = html;
+      window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
+    }
+
+    async function upgradeDecide(wid, decision) {
+      const r = await fetch(`/variant_upgrades/${wid}/decision`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision, note: ""}),
+      });
+      if (!r.ok) { toast("failed: " + r.status); return; }
+      const d = await r.json();
+      toast(`${decision} logged for ${wid.slice(0,7)}…`);
+      loadUpgrades();
+    }
+
+    async function loadSummary() {
+      const r = await fetch("/ratings/summary");
+      const d = await r.json();
+      const det = document.getElementById("detail");
+      det.classList.add("open");
+      det.innerHTML =
+        `<h2>Ratings summary</h2>
+         <div class="sub">${d.n_events} events · ${d.n_works_rated} works rated</div>
+         <h3 style="margin-top:16px">Distribution</h3>
+         <pre>${JSON.stringify(d.rating_distribution, null, 2)}</pre>
+         <h3>By surface</h3>
+         <pre>${JSON.stringify(d.by_surface, null, 2)}</pre>
+         <h3>Most-rated works</h3>
+         <pre>${JSON.stringify(d.most_rated_works, null, 2)}</pre>`;
+      window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
+    }
+
+    // ----- detail view (vanilla fetch — no htmx race) -----
+    async function openWork(wid) {
+      dbg("openWork.start", {wid});
+      currentWorkId = wid;
+      selectedChips = new Set();
+      currentQuality = null;
+      currentFit = null;
+      detailOpenedAt = Date.now();
+      // Update queue index — wid may or may not be in the current queue
+      queueIndex = workQueue.indexOf(wid);
+      // Switch to detail mode (hides list) and update URL hash
+      document.body.classList.add("detail-mode");
+      history.replaceState(null, "", "#wid=" + encodeURIComponent(wid));
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(wid)}`);
+        if (!r.ok) { toast("load failed: " + r.status); dbg("openWork.http_fail", {status: r.status}); return; }
+        const data = await r.json();
+        dbg("openWork.loaded", {wid, title: data.title});
+        renderDetail(data);
+      } catch (e) {
+        toast("load error: " + e.message);
+        dbg("openWork.error", {wid, error: String(e)});
+      }
+    }
+
+    function renderDetail(data) {
+      const last = data._latest_rating || null;
+      // Last values may be on either schema: two-axis (quality+fit) or legacy
+      // single-axis (rating). Show whatever was recorded.
+      const lastQ = last && last.quality != null ? last.quality : null;
+      const lastF = last && last.fit != null ? last.fit : null;
+      const lastR = last && last.rating != null ? last.rating : null;
+      currentQuality = lastQ;  // pre-select if the user rated before
+      currentFit = lastF;
+      // Rehydrate the rest of the rating state so reopening a previously
+      // rated work shows the user's prior chip/notes/freetext/surface
+      // choices instead of a blank slate. Ratings are stored in
+      // ratings_log.jsonl regardless of UI display — this is just the
+      // display side. Without this rehydration the chips appear "not
+      // saved" on reopen, which is what Tim hit on the first two works
+      // of subject_sample_100.
+      selectedChips = new Set((last && last.selected_reasons) || []);
+      const lastFreetext = (last && last.freetext_by_group) || {};
+      const lastNotes = (last && last.notes) || "";
+      const lastSurface = (last && last.surface) || "companion-app";
+      const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const escText = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const det = document.getElementById("detail");
+      det.classList.add("open");
+
+      // Build chip groups from the taxonomy fetched at page load.
+      let chipsHtml = "";
+      if (ratingTaxonomy) {
+        for (const g of ratingTaxonomy.groups) {
+          chipsHtml += `<div class="chip-group" data-group-key="${g.key}">
+            <div class="chip-group-label">${g.label}<span class="sub" style="margin-left:8px">${g.help}${g.exclusive ? " · pick one" : ""}</span></div>
+            <div class="chip-row">`;
+          for (const c of g.chips) {
+            const cid = `${g.key}:${c.id}`;
+            const onCls = selectedChips.has(cid) ? " on" : "";
+            chipsHtml += `<button type="button" class="chip${onCls}" data-chip-id="${cid}"
+              onclick="toggleChip('${cid}', '${g.key}', ${g.exclusive ? "true" : "false"})">${c.label}</button>`;
+          }
+          chipsHtml += `</div>`;
+          if (g.has_freetext) {
+            const ph = (g.freetext_placeholder || "Free text").replace(/"/g, "&quot;");
+            const ftVal = escAttr(lastFreetext[g.key] || "");
+            chipsHtml += `<input type="text" class="chip-freetext" data-group-key="${g.key}"
+              placeholder="${ph}" maxlength="500" value="${ftVal}"
+              style="width:100%;margin-top:6px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font:inherit;font-size:13px;box-sizing:border-box">`;
+          }
+          chipsHtml += `</div>`;
+        }
+      } else {
+        chipsHtml = `<div class="sub">Loading reason chips…</div>`;
+      }
+
+      const surfaces = ["companion-app","eink-tela-285","eink-inky-13",
+                        "frame-tv-65","frame-tv-55","ipad","sd-card-batch","review"];
+      const surfaceOptions = surfaces.map(s =>
+        `<option value="${s}"${s===lastSurface?" selected":""}>${s}</option>`).join("");
+
+      // Build the two axis rows. Button count comes from the active scheme.
+      const axisRow = (axis, label, help, current) => {
+        let h = `<div class="axis-row">
+          <div class="axis-label">${label}<span class="axis-help">${help}</span></div>
+          <div class="axis-buttons" data-axis="${axis}">`;
+        for (let v = 1; v <= RATING_MAX; v++) {
+          h += `<button type="button" class="${current === v ? "on" : ""}" data-value="${v}" onclick="setAxis('${axis}', ${v})">${v}</button>`;
+        }
+        h += `</div></div>`;
+        return h;
+      };
+
+      const wid = data.work_id;
+      // Queue position display
+      const pos = (queueIndex >= 0 && workQueue.length > 0)
+          ? `${queueIndex + 1} of ${workQueue.length}` : "—";
+      const canPrev = queueIndex > 0;
+      const canNext = queueIndex >= 0 && queueIndex + 1 < workQueue.length;
+
+      // Queue badge in the toolbar so the user can see which queue they're
+      // walking (esp. in fullscreen where the page-header picker is hidden).
+      // Clicking the ✕ exits the queue back to the default browse list
+      // without leaving fullscreen.
+      const queueBadge = currentQueueName
+        ? `<span class="queue-badge" title="Active queue. Click ✕ to exit.">queue: ${currentQueueName}
+             <button class="queue-exit" onclick="exitQueue()" title="Exit queue (back to All works)">✕</button>
+           </span>`
+        : "";
+      det.innerHTML =
+        `<div class="detail-toolbar">
+           <button onclick="closeDetail()">← Back to list</button>
+           <button onclick="prevWork()" ${canPrev ? "" : "disabled"} title="Prev (←)">← Prev</button>
+           <button onclick="nextWork()" ${canNext ? "" : "disabled"} title="Next (→)">Next →</button>
+           <span class="pos">${pos}</span>
+           ${queueBadge}
+           <div class="spacer"></div>
+           <button onclick="toggleFullscreen()" title="Focus / full-screen (shift+F)">⛶ Focus</button>
+           <button id="layout-toggle" class="only-fullscreen" onclick="cycleLayout()" title="Cycle panel layout (L)">Layout: right</button>
+           <button id="fullres-toggle" class="only-fullscreen" onclick="toggleFullRes()" title="Toggle full-resolution image (R)">${fullResOn ? "↺ Thumb" : "Full-res"}</button>
+           <span class="sub">Keys: ←/→ nav · q1-q9/q0 quality · f1-f9/f0 fit (0 = ${RATING_MAX}) · Enter Save & Next · Esc back · shift+F focus · L layout · R full-res</span>
+         </div>
+
+         <div class="detail-split">
+           <div>
+             <div class="image-pane" id="image-pane">
+               <img src="${fullResOn ? `/works/${encodeURIComponent(wid)}/full` : `/works/${encodeURIComponent(wid)}/image?max=1600`}"
+                    alt="${(data.title || "").replace(/"/g,"&quot;")}"
+                    onerror="this.outerHTML='<div class=&quot;placeholder&quot;>No image available for this work (${wid})</div>'">
+             </div>
+             <div class="image-meta">
+               <span>${(data.files?.master?.dimensions_px || []).join(" × ") || ""}</span>
+               <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>
+               <a href="/works/${encodeURIComponent(wid)}/full" target="_blank" rel="noopener">Open full-res ↗</a>
+             </div>
+           </div>
+
+           <div class="rating-pane">
+             <h2 style="margin:0 0 4px">${data.title || "(untitled)"}</h2>
+             <div><strong>${data.artist?.name || ""}</strong>
+               ${data.artist?.wikidata_q ? `<span class="qid">${data.artist.wikidata_q}</span>` : ""}
+               ${data.artist?.relation && data.artist.relation !== "self"
+                   ? `<span class="pill">${data.artist.relation}</span>` : ""}
+             </div>
+             <div class="sub">${data.year || ""} ${data.medium ? " · " + data.medium : ""} · ${(data.files?.variants || []).length} variants · <span class="qid">${wid}</span></div>
+
+             <div class="rate-panel">
+               <h3 style="margin-top:0">Rate this work</h3>
+               ${axisRow("quality", "Quality", "How good a piece of art is this? (somewhat objective)", currentQuality)}
+               ${axisRow("fit", "Fit-for-me", "How much do I want to see this in rotation right now?", currentFit)}
+
+               <div class="notes-block" style="margin-top:10px">
+                 <label class="sub" style="display:block;margin-bottom:4px">What strikes you? (optional)</label>
+                 <textarea id="rate_notes" rows="2" maxlength="1000"
+                   placeholder="e.g., 'kinetic energy of the city' · 'just enjoyable, no specific mood' · 'reminds me of…' · skip if nothing comes to mind"
+                   style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font:inherit;font-size:14px;resize:vertical;box-sizing:border-box">${escText(lastNotes)}</textarea>
+               </div>
+
+               <div class="rate-row" style="margin-top:10px">
+                 <button onclick="submitRating('${wid}', false)" style="padding:8px 14px;background:white;color:var(--accent);border:1px solid var(--accent);border-radius:6px;font:inherit;cursor:pointer">Save</button>
+                 <button onclick="submitRating('${wid}', true)" style="padding:8px 14px;background:var(--accent);color:white;border:none;border-radius:6px;font:inherit;cursor:pointer">Save & Next →</button>
+                 <label class="sub" style="margin-left:auto">Surface
+                   <select id="surface_select">${surfaceOptions}</select>
+                 </label>
+               </div>
+
+               <!-- Chips + subject are wrapped in <details class="rate-section">
+                    so applyCollapseDefaults() can collapse them when the
+                    viewport is too short to fit the full 1810px panel.
+                    Default state is open; collapsed only at fullscreen
+                    tier-small / tier-medium (see CSS).
+                    The inline .chips-inline-label preserves the original
+                    "Quick tags (...)" affordance everywhere except those
+                    two tiers, where the summary chip takes its role. -->
+               <div class="sub chips-inline-label" style="margin-top:14px">Quick tags (all optional — skip if nothing applies)</div>
+               <details class="rate-section" id="rs-chips" open>
+                 <summary class="rate-section-summary">Quick tags <span class="sub">(all optional — skip if nothing applies)</span></summary>
+                 <div class="chips-area">${chipsHtml}</div>
+               </details>
+
+               ${last ? `<div class="sub last-rated-sub" style="margin-top:8px">Last rated ${last.ts} · ${lastQ != null || lastF != null ? `Q${lastQ ?? "—"}·F${lastF ?? "—"}` : (lastR != null ? "(legacy) " + ratingLabel(lastR) : "")}${last.selected_reasons?.length ? " · " + last.selected_reasons.join(", ") : ""}${last.notes ? ` · "${last.notes.replace(/"/g,'&quot;').slice(0,80)}"` : ""}</div>` : ""}
+             </div>
+
+             <details class="rate-section" id="rs-subject" open>
+               <summary class="rate-section-summary">Subject tags</summary>
+               ${renderSubjectPanel(data)}
+             </details>
+
+             <details style="margin-top:8px">
+               <summary class="sub">Raw sidecar JSON</summary>
+               <pre>${JSON.stringify(data, null, 2)}</pre>
+             </details>
+           </div>
+         </div>`;
+
+      window.scrollTo({top: 0, behavior: "instant"});
+
+      // If we're already in fullscreen and the user is navigating between
+      // works, re-evaluate the auto-layout against the new image's aspect.
+      // (Skipped if the user has manually chosen a layout this session.)
+      // Also re-collapse rate-sections for the freshly-rendered work.
+      maybeApplyAutoLayout();
+      applyCollapseDefaults();
+      updateRatingHud();
+    }
+
+    // ----- keyboard shortcuts -----
+    // In detail mode:
+    //   ← / →           prev / next in queue
+    //   q1-q5           set quality (two-keystroke gesture)
+    //   f1-f5           set fit
+    //   Enter           submit "Save & Next" (the fast queue gesture)
+    //   shift+Enter     submit "Save" without advancing
+    //   Esc             back to list
+    let keyPrefix = null;
+    let keyPrefixAt = 0;
+    document.addEventListener("keydown", (e) => {
+      if (!document.body.classList.contains("detail-mode") || !currentWorkId) return;
+      const tag = (e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+      // Reset prefix if held too long
+      if (keyPrefix && Date.now() - keyPrefixAt > 1500) keyPrefix = null;
+
+      if (e.key === "Escape") {
+        // In fullscreen, let the browser handle Esc (exits fullscreen) and
+        // keep the detail panel intact. Otherwise, close the detail panel.
+        if (document.fullscreenElement) {
+          keyPrefix = null;
+          return;
+        }
+        e.preventDefault();
+        closeDetail();
+        keyPrefix = null;
+        return;
+      }
+      if (e.key === "ArrowLeft") { e.preventDefault(); prevWork(); return; }
+      if (e.key === "ArrowRight") { e.preventDefault(); nextWork(); return; }
+      // Shift+F → focus / fullscreen toggle. Must come before the "f"
+      // fit-prefix check below, because plain "f" sends key "f" and
+      // shift+f sends "F" — we only want the uppercase one as the
+      // fullscreen toggle.
+      if (e.key === "F" && e.shiftKey) {
+        e.preventDefault();
+        toggleFullscreen();
+        keyPrefix = null;
+        return;
+      }
+      // R → toggle full-res image (only when already in fullscreen)
+      if ((e.key === "r" || e.key === "R") && document.fullscreenElement) {
+        e.preventDefault();
+        toggleFullRes();
+        keyPrefix = null;
+        return;
+      }
+      // L → cycle panel layout (only meaningful in fullscreen)
+      if ((e.key === "l" || e.key === "L") && document.fullscreenElement) {
+        e.preventDefault();
+        cycleLayout();
+        keyPrefix = null;
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitRating(currentWorkId, !e.shiftKey);  // Enter = save&next, shift+Enter = save only
+        return;
+      }
+      if (e.key === "q" || e.key === "Q") {
+        keyPrefix = "quality"; keyPrefixAt = Date.now(); return;
+      }
+      if (e.key === "f" || e.key === "F") {
+        keyPrefix = "fit"; keyPrefixAt = Date.now(); return;
+      }
+      // Digit follows the prefix. On a 10-point scale, "0" means 10
+      // (ten-key style: 1234567890 maps to 1..10). Two-digit (e.g. "10")
+      // would require a longer hold and is intentionally not supported —
+      // ten-key is faster.
+      if (keyPrefix && /^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        const v = e.key === "0" ? 10 : parseInt(e.key);
+        if (v <= RATING_MAX) setAxis(keyPrefix, v);
+        keyPrefix = null;
+      }
+    });
+
+    // ----- URL hash handling: #wid=<id> opens that work on load -----
+    function _widFromHash() {
+      const m = location.hash.match(/wid=([^&]+)/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+      const wid = _widFromHash();
+      if (wid) {
+        // Wait briefly for the list to load so queueIndex resolves
+        setTimeout(() => openWork(wid), 600);
+      }
+    });
+    // Also react to in-session hash changes (e.g. someone pastes a wid URL
+    // into the address bar while the app is already loaded — same-page
+    // fragment change does NOT re-fire DOMContentLoaded).
+    window.addEventListener("hashchange", () => {
+      const wid = _widFromHash();
+      if (wid && wid !== currentWorkId) openWork(wid);
+    });
+
+    // ----- initial taxonomy fetch + works list (htmx for the list only) -----
+    (async () => {
+      try {
+        const r = await fetch("/rating_taxonomy");
+        ratingTaxonomy = await r.json();
+        dbg("taxonomy.loaded", {n_groups: ratingTaxonomy.groups.length});
+      } catch (e) {
+        dbg("taxonomy.error", {error: String(e)});
+      }
+    })();
+
+    // ----- queue picker: populate on load, load queue on selection -----
+    // The picker's selection is persisted in localStorage so reloads
+    // resume the active queue. Otherwise reload-and-Focus loses the
+    // curated set the user is walking through (e.g., the 100-work
+    // subject-tagger sample).
+    (async () => {
+      try {
+        const r = await fetch("/queues");
+        const d = await r.json();
+        const picker = document.getElementById("queue-picker");
+        for (const q of (d.queues || [])) {
+          const opt = document.createElement("option");
+          opt.value = q.name;
+          opt.textContent = `${q.name} (${q.n_works})`;
+          opt.title = q.description;
+          picker.appendChild(opt);
+        }
+        // Restore the user's last-loaded queue, if any. Skipped silently
+        // when the stored name no longer exists on disk.
+        let saved = "";
+        try { saved = localStorage.getItem(LS_KEY_QUEUE) || ""; } catch (e) {}
+        if (saved && Array.from(picker.options).some(o => o.value === saved)) {
+          picker.value = saved;
+          // Defer one tick so the default htmx list-load doesn't race
+          // and overwrite the queue-loaded list.
+          setTimeout(() => loadQueueFromPicker(), 50);
+        }
+      } catch (e) {
+        dbg("queues.fetch.error", {error: String(e)});
+      }
+    })();
+
+    function exitQueue() {
+      // Reset the picker + state to the default browse list. Reachable
+      // from inside fullscreen via the ✕ on the queue badge.
+      const picker = document.getElementById("queue-picker");
+      if (picker) picker.value = "";
+      currentQueueName = null;
+      try { localStorage.removeItem(LS_KEY_QUEUE); } catch (e) {}
+      htmx.ajax("GET", "/works?limit=50", "#results");
+      toast("exited queue · loaded All works");
+      // Re-render the current detail view so the badge disappears.
+      if (currentWorkId) openWork(currentWorkId);
+    }
+
+    async function loadQueueFromPicker() {
+      const picker = document.getElementById("queue-picker");
+      const name = picker.value;
+      currentQueueName = name || null;
+      try { localStorage.setItem(LS_KEY_QUEUE, name || ""); } catch (e) {}
+      if (!name) {
+        // Reset to default list
+        htmx.ajax("GET", "/works?limit=50", "#results");
+        return;
+      }
+      try {
+        const r = await fetch(`/queues/${encodeURIComponent(name)}`);
+        if (!r.ok) { toast("queue load failed: " + r.status); return; }
+        const d = await r.json();
+        // Reuse the existing list renderer by feeding it a synthetic
+        // /works-shaped response.
+        renderListPayload(d);
+        // Auto-open the first work so the user can start rating immediately.
+        if (d.works && d.works.length > 0) {
+          setTimeout(() => openWork(d.works[0].work_id), 200);
+        }
+        toast(`loaded queue "${name}" · ${d.total} works`);
+      } catch (e) {
+        toast("queue load error: " + e.message);
+      }
+    }
+
+    // Renderer factored out so both the htmx list handler and the queue
+    // loader can use it. Takes a {total, works:[...]} payload.
+    function renderListPayload(d) {
+      workQueue = d.works.map(w => w.work_id);
+      if (currentWorkId) queueIndex = workQueue.indexOf(currentWorkId);
+      let html = `<div class="sub">${d.total} works · showing ${d.works.length}</div>
+                  <table><thead><tr>
+                    <th>Title</th><th>Artist</th><th>Year</th><th>Variants</th><th>Rating</th>
+                  </tr></thead><tbody>`;
+      for (const w of d.works) {
+        const wid = w.work_id;
+        let rcell = "";
+        if (w._last_quality != null || w._last_fit != null) {
+          const q = w._last_quality != null ? w._last_quality : "—";
+          const f = w._last_fit != null ? w._last_fit : "—";
+          rcell = `<span class="rating-badge two-axis" title="Quality × Fit" style="background:var(--accent)">Q${q}·F${f}</span>`;
+        } else if (w._last_rating != null) {
+          rcell = `<span class="rating-badge" data-r="${w._last_rating}" title="legacy single-axis">${ratingLabel(w._last_rating)}</span>`;
+        }
+        if (rcell && w._n_ratings > 1) rcell += `<span class="sub" style="margin-left:6px">×${w._n_ratings}</span>`;
+        const safeWid = wid.replace(/'/g, "\\'");
+        html += `<tr data-wid="${wid}" onclick="openWork('${safeWid}')">
+          <td>${w.title || ""}</td>
+          <td>${w.artist_name || ""}
+            ${w.artist_wikidata_q ? `<span class="qid">${w.artist_wikidata_q}</span>` : ""}</td>
+          <td>${w.year || ""}</td>
+          <td>${w.n_variants || 0}</td>
+          <td class="rating-cell">${rcell}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      document.getElementById("results").innerHTML = html;
+    }
+
+    document.body.addEventListener("htmx:afterRequest", (e) => {
+      const xhr = e.detail.xhr;
+      if (!xhr.responseText) return;
+      const path = e.detail.requestConfig.path || "";
+      // We only use htmx for the works list now; detail uses vanilla fetch.
+      if (!(path === "/works" || path.startsWith("/works?"))) return;
+      try {
+        const data = JSON.parse(xhr.responseText);
+        renderListPayload(data);
+        dbg("list.rendered", {n: data.works.length, total: data.total});
+      } catch (err) {
+        dbg("list.render_error", {error: String(err)});
+      }
+    });
+  </script>
+</body>
+</html>
