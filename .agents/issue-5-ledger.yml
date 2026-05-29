@@ -1,0 +1,184 @@
+version: 1
+issue: 5
+base: main
+branch: codex/issue-5
+tasks:
+  - id: task-01
+    title: Create `scripts/run_companion_app.sh` that launches the FastAPI app from
+      `src/fine_art_archive/api/main.py` via `uvicorn`, reads `HOST` and `PORT` environment
+      variables (with defaults `127.0.0.1` and `8000`)
+    status: doing
+    started_at: '2026-05-29T18:33:34Z'
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-02
+    title: Update the README to reference `scripts/run_companion_app.sh` as the supported
+      way to run the Companion App API locally
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: Add smoke tests for the `/works` endpoint to `tests/test_companion_api.py`
+      to verify it returns a list of works
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: Add smoke tests for the `/works/{wid}` endpoint to `tests/test_companion_api.py`
+      to verify it returns a single work by ID
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-05
+    title: Add smoke tests for the `/works/{wid}/image` endpoint to `tests/test_companion_api.py`
+      to verify it returns image data
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-06
+    title: Add smoke tests for the `/queues` endpoint to `tests/test_companion_api.py`
+      to verify queue operations
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-07
+    title: Add smoke tests for the ratings endpoints to `tests/test_companion_api.py`
+      to verify rating functionality
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-08
+    title: Implement the main Focus-mode layout structure in `ui/index.html` according
+      to `companion_app_design.md`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-09
+    title: Add the artwork display component for Focus-mode in `ui/index.html` as
+      specified in `companion_app_design.md`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-10
+    title: Implement the rating controls interface for Focus-mode in `ui/index.html`
+      as specified in `companion_app_design.md`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-11
+    title: Add navigation controls for Focus-mode in `ui/index.html` as specified
+      in `companion_app_design.md`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-12
+    title: Integrate API calls in `ui/index.html` to fetch and display works in Focus-mode
+      UI
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-13
+    title: '`scripts/run_companion_app.sh` exists and running it starts the FastAPI
+      service on the configured host/port, with the service responding to health check
+      requests (e.g., root endpoint returns 200 status)'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-14
+    title: README contains instructions referencing `scripts/run_companion_app.sh`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-15
+    title: '`tests/test_companion_api.py` includes smoke tests for `/works` endpoint'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-16
+    title: '`tests/test_companion_api.py` includes smoke tests for `/works/{wid}`
+      endpoint'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-17
+    title: '`tests/test_companion_api.py` includes smoke tests for `/works/{wid}/image`
+      endpoint'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-18
+    title: '`tests/test_companion_api.py` includes smoke tests for `/queues` endpoint'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-19
+    title: '`tests/test_companion_api.py` includes smoke tests for ratings endpoints'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-20
+    title: All tests in `tests/test_companion_api.py` pass
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-21
+    title: '`ui/index.html` includes all Focus-mode UI components listed in `companion_app_design.md`
+      (artwork display, rating controls, navigation controls)'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-22
+    title: '`ui/index.html` successfully renders when served by the FastAPI app'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-23
+    title: '`pr-00-gate` passes'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
