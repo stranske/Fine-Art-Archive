@@ -1,0 +1,13 @@
+# Operational dependencies for the DINOv2 visual-identity stage of the D017 dedup
+# cascade (scripts/visual_dedupe.py). These are HEAVY ML wheels and are deliberately
+# kept OUT of pyproject.toml / requirements.lock so the importable library and the
+# Gate stay light. Install them only into the run venv (.faa-venv) when running the
+# vision pass:
+#
+#     python -m venv .faa-venv && source .faa-venv/bin/activate
+#     pip install -e . && pip install -r scripts/requirements-dedup.txt
+#     python scripts/visual_dedupe.py smoketest
+#
+# perceptual_dedupe.py needs none of these (Pillow only, already a core dependency).
+torch>=2.0
+transformers>=4.40
