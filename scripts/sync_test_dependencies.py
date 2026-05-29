@@ -247,6 +247,9 @@ def _normalise_package_name(package: str) -> str:
 
 
 _SPECIFIER_PATTERN = re.compile(r"[!=<>~]")
+_DEV_ARRAY_PATTERN = re.compile(
+    r"(?ms)^dev\s*=\s*\[(?P<body>.*?)^\]\s*$"
+)
 
 
 def _extract_requirement_name(entry: str) -> str | None:
@@ -357,10 +360,8 @@ def add_dependencies_to_pyproject(missing: set[str], fix: bool = False) -> bool:
         return False
 
     if TOMLKIT_ERROR is not None:
-        raise SystemExit(
-            "tomlkit is required to update pyproject.toml automatically. "
-            "Install the dev dependencies (pip install -e .[dev]) and retry."
-        ) from TOMLKIT_ERROR
+        print("ℹ️  tomlkit unavailable; using fallback pyproject updater")
+        return _add_dependencies_without_tomlkit(missing)
 
     document = tomlkit.parse(PYPROJECT_FILE.read_text(encoding="utf-8"))
 
@@ -387,6 +388,51 @@ def add_dependencies_to_pyproject(missing: set[str], fix: bool = False) -> bool:
         PYPROJECT_FILE.write_text(tomlkit.dumps(document), encoding="utf-8")
 
     return added
+
+
+def _add_dependencies_without_tomlkit(missing: set[str]) -> bool:
+    """Best-effort fallback when tomlkit is unavailable in CI."""
+    text = PYPROJECT_FILE.read_text(encoding="utf-8")
+    section_header = "[project.optional-dependencies]"
+    section_index = text.find(section_header)
+    if section_index == -1:
+        raise SystemExit(
+            "Cannot auto-fix dependencies without tomlkit: "
+            "[project.optional-dependencies] section is missing."
+        ) from TOMLKIT_ERROR
+
+    next_section = text.find("\n[", section_index + len(section_header))
+    if next_section == -1:
+        next_section = len(text)
+    section = text[section_index:next_section]
+
+    match = _DEV_ARRAY_PATTERN.search(section)
+    if match is None:
+        raise SystemExit(
+            "Cannot auto-fix dependencies without tomlkit: "
+            "dev dependency group is missing."
+        ) from TOMLKIT_ERROR
+
+    body = match.group("body")
+    existing = {
+        _normalise_package_name(_extract_requirement_name(line.strip().strip(",").strip('"')) or "")
+        for line in body.splitlines()
+        if line.strip().startswith('"')
+    }
+    to_add = [dep for dep in sorted(missing) if _normalise_package_name(dep) not in existing]
+    if not to_add:
+        return False
+
+    inserted = "".join(f'    "{dep}",\n' for dep in to_add)
+    new_body = body
+    if new_body and not new_body.endswith("\n"):
+        new_body += "\n"
+    new_body += inserted
+
+    updated_section = section[: match.start("body")] + new_body + section[match.end("body") :]
+    updated_text = text[:section_index] + updated_section + text[next_section:]
+    PYPROJECT_FILE.write_text(updated_text, encoding="utf-8")
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
