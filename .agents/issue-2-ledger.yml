@@ -5,10 +5,10 @@ branch: codex/issue-2
 tasks:
   - id: task-01
     title: Remove the template placeholder directory `src/my_project`
-    status: doing
+    status: done
     started_at: '2026-05-29T14:05:31Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-29T14:05:46Z'
+    commit: 9e9523fa5639d9ee8fae14c0b1c63566afe91d92
     notes: []
   - id: task-02
     title: Update `pyproject.toml` to keep the package/project name as `fine-art-archive`
