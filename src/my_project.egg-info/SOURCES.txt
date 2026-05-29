@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+src/my_project/__init__.py
+src/my_project.egg-info/PKG-INFO
+src/my_project.egg-info/SOURCES.txt
+src/my_project.egg-info/dependency_links.txt
+src/my_project.egg-info/requires.txt
+src/my_project.egg-info/top_level.txt
+tests/test_dependency_version_alignment.py
+tests/test_main.py

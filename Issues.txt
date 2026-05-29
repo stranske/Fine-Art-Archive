@@ -1,0 +1,56 @@
+# Issues.txt - Agent Issue Queue
+# ===============================
+# Format: Numbered issues with structured sections
+# 
+# Each issue should have:
+# - Numbered title (e.g., "1) Issue title")
+# - Labels: line with comma-separated labels
+# - Why: Explanation of the need
+# - Scope: What's included/excluded
+# - Tasks: Checkboxes for work items
+# - Acceptance criteria: Verification checkboxes
+# - Implementation notes: Technical details
+#
+# Issues with "agent:codex" label will be picked up by agent automation.
+# 
+# Example format below:
+
+1) Set up initial project structure and tests
+Labels: agent:codex, enhancement, setup
+
+Why
+The project needs a solid foundation with proper testing, linting, and CI integration.
+This establishes the patterns that all future development will follow.
+
+Scope
+- Create minimal Python package structure
+- Set up pytest with coverage reporting
+- Configure ruff for linting
+- Configure mypy for type checking
+- Ensure all CI checks pass
+
+Non-Goals
+- Complex business logic (future issues)
+- Documentation site (separate issue)
+
+Tasks
+- [ ] Create src/my_project/__init__.py with version
+- [ ] Create src/my_project/main.py with sample function
+- [ ] Create tests/test_main.py with basic tests
+- [ ] Configure pyproject.toml with all tools
+- [ ] Verify ruff check passes
+- [ ] Verify mypy check passes
+- [ ] Verify pytest passes with >80% coverage
+
+Acceptance criteria
+- [ ] Package can be installed with pip install -e .
+- [ ] Running pytest shows all tests passing
+- [ ] Running ruff check shows no issues
+- [ ] Running mypy shows no errors
+- [ ] Coverage report shows >80% coverage
+
+Implementation notes
+- Use modern pyproject.toml format (no setup.py)
+- Target Python 3.11+ 
+- Use src layout for package
+- Follow strict mypy configuration
