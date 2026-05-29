@@ -90,6 +90,12 @@ ignore = [
     "E501",  # line too long (handled by formatter)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Operational dedup CLIs: short-lived scripts that load/dump JSON caches and exit;
+# the context-manager / suppress idioms (SIM105/SIM115) add noise without value here.
+"scripts/perceptual_dedupe.py" = ["SIM105", "SIM115"]
+"scripts/visual_dedupe.py" = ["SIM105", "SIM115"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["fine_art_archive", "tools"]
 
