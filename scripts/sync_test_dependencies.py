@@ -247,9 +247,7 @@ def _normalise_package_name(package: str) -> str:
 
 
 _SPECIFIER_PATTERN = re.compile(r"[!=<>~]")
-_DEV_ARRAY_PATTERN = re.compile(
-    r"(?ms)^dev\s*=\s*\[(?P<body>.*?)^\]\s*$"
-)
+_DEV_ARRAY_PATTERN = re.compile(r"(?ms)^\s*dev\s*=\s*\[(?P<body>.*?)^\s*\]\s*$")
 
 
 def _extract_requirement_name(entry: str) -> str | None:
