@@ -7,10 +7,10 @@ tasks:
     title: 'Create `collect/acquisition_flow.py` module with the `run_acquisition_flow(source:
       str, *, max_items: int | None = None) -> list[...]` function signature and basic
       structure'
-    status: doing
+    status: done
     started_at: '2026-05-29T18:34:01Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-29T18:34:14Z'
+    commit: 0e2caf101cb361315592175be94ea591a83ad622
     notes: []
   - id: task-02
     title: Implement source module selection logic in `run_acquisition_flow` that
