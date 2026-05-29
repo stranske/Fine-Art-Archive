@@ -7,10 +7,10 @@ tasks:
     title: Create `scripts/run_companion_app.sh` that launches the FastAPI app from
       `src/fine_art_archive/api/main.py` via `uvicorn`, reads `HOST` and `PORT` environment
       variables (with defaults `127.0.0.1` and `8000`)
-    status: doing
+    status: done
     started_at: '2026-05-29T18:33:34Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-29T18:33:45Z'
+    commit: 72a65897aeeb5ee34c186523547a34248926ce54
     notes: []
   - id: task-02
     title: Update the README to reference `scripts/run_companion_app.sh` as the supported
