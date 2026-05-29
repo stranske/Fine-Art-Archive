@@ -100,6 +100,8 @@ scipy==1.17.1
     # via imagehash
 starlette==1.2.0
     # via fastapi
+tomlkit==0.13.2
+    # via fine-art-archive (pyproject.toml)
 typing-extensions==4.15.0
     # via
     #   anyio
