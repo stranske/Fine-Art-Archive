@@ -1,0 +1,156 @@
+version: 1
+issue: 2
+base: main
+branch: codex/issue-2
+tasks:
+  - id: task-01
+    title: Remove the template placeholder directory `src/my_project`
+    status: doing
+    started_at: '2026-05-29T14:05:31Z'
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-02
+    title: Update `pyproject.toml` to keep the package/project name as `fine-art-archive`
+      (do not rename it)
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: Copy the sidecar module from the source workspace to `src/fine_art_archive/sidecar/`
+      following `MANIFEST.md` specifications
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: Copy the parsers module from the source workspace to `src/fine_art_archive/parsers/`
+      following `MANIFEST.md` specifications
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-05
+    title: Copy the collect module from the source workspace to `src/fine_art_archive/collect/`
+      following `MANIFEST.md` specifications
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-06
+    title: Copy the display module from the source workspace to `src/fine_art_archive/display/`
+      following `MANIFEST.md` specifications
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-07
+    title: Apply the EXCLUDES rules from `consumer_repo_handoff` to remove any excluded
+      files from the copied modules
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-08
+    title: Copy `schemas/meta.schema.json` from the source workspace to `schemas/meta.schema.json`
+      in this repo
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-09
+    title: Copy all test files from the source workspace `tests/` directory to the
+      repository `tests/` directory
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-10
+    title: Apply the EXCLUDES rules from `consumer_repo_handoff` to remove any excluded
+      test files
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-11
+    title: Verify that all copied test files maintain their original directory structure
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-12
+    title: '`src/my_project` does not exist in the repository'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-13
+    title: '`pyproject.toml` contains `name = "fine-art-archive"` (not renamed)'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-14
+    title: '`src/fine_art_archive/` directory exists with subdirectories: `sidecar/`,
+      `parsers/`, `collect/`, `display/`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-15
+    title: '`python -c "import fine_art_archive"` executes without ImportError'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-16
+    title: '`schemas/meta.schema.json` file exists at `schemas/meta.schema.json`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-17
+    title: '`tests/` directory exists and contains test files'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-18
+    title: '`pytest` command discovers and runs all test files without collection
+      errors'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-19
+    title: All test dependencies are listed in `pyproject.toml`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-20
+    title: '`pr-00-gate` workflow executes without import errors'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
