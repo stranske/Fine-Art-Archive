@@ -25,6 +25,7 @@ from pathlib import Path
 
 # Default paths (can be overridden for testing)
 PIN_FILE = Path(".github/workflows/autofix-versions.env")
+PIN_FILE_FALLBACK = Path("autofix-versions.env")
 PYPROJECT_FILE = Path("pyproject.toml")
 LOCKFILE_FILE = Path("requirements.lock")
 
@@ -74,6 +75,23 @@ def parse_env_file(path: Path) -> dict[str, str]:
         values[key.strip()] = value.strip()
 
     return values
+
+
+def resolve_pin_file(explicit: Path | None = None) -> Path | None:
+    """Resolve the most appropriate pin file path.
+
+    Priority:
+    1. User-supplied --pin-file path (must exist or returns None).
+    2. Default workflow pin path.
+    3. Root-level fallback path used by some consumer checkouts.
+    """
+    if explicit is not None and explicit != PIN_FILE:
+        return explicit if explicit.exists() else None
+    if PIN_FILE.exists():
+        return PIN_FILE
+    if PIN_FILE_FALLBACK.exists():
+        return PIN_FILE_FALLBACK
+    return None
 
 
 def find_dev_dependencies_section(content: str) -> tuple[int, int, str] | None:
@@ -408,9 +426,17 @@ def main(argv: list[str] | None = None) -> int:
 
     use_exact_pins = not args.use_minimum_pins
 
-    pins = parse_env_file(args.pin_file)
+    pin_file = resolve_pin_file(args.pin_file)
+    if pin_file is None:
+        print(
+            "Warning: No autofix pin file found "
+            f"(checked '{args.pin_file}' and '{PIN_FILE_FALLBACK}'). Skipping sync."
+        )
+        return 0
+
+    pins = parse_env_file(pin_file)
     if not pins:
-        print("Error: No pins found in env file", file=sys.stderr)
+        print(f"Error: No pins found in env file: {pin_file}", file=sys.stderr)
         return 2
 
     changes, errors = sync_pyproject(
