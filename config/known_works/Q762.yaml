@@ -1,0 +1,71 @@
+artist_q: Q762
+display_name: Leonardo da Vinci
+n_works: 7
+n_per_source:
+  wikidata: 0
+  wikipedia: 0
+  met: 7
+fetched_at: '2026-05-24T23:29:58+00:00'
+works:
+- title: A Bear Walking
+  year: 1477
+  image_url: https://images.metmuseum.org/CRDImages/rl/original/DP324213.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '459184'
+- title: Compositional Sketches for the Virgin Adoring the Christ Child, with and
+    without the Infant St. John the Baptist; Diagram of a Perspectival Projection
+    (recto); Slight Doodles (verso)
+  year: 1480
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP832657.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '337494'
+- title: Head of a Man in Profile Facing to the Left
+  year: 1490
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP810248.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '339116'
+- title: Allegory on the Fidelity of the Lizard (recto); Design for a Stage Setting
+    (verso)
+  year: 1496
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DT232678.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '339130'
+- title: Studies for Hercules Holding a Club Seen in Frontal View, Male Nude Unsheathing
+    a Sword, and the Movements of Water (recto); Study for Hercules Holding a Club
+    Seen in Rear View (verso)
+  year: 1501
+  image_url: null
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '341703'
+- title: The Head of the Virgin in Three-Quarter View Facing Right
+  year: 1510
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP102382.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '337496'
+- title: Portrait of Leonardo da Vinci, from "Characaturas by Leonardo da Vinci, from
+    Drawings by Wincelslaus Hollar, out of the Portland Museum"
+  year: 1786
+  image_url: https://images.metmuseum.org/CRDImages/dp/original/DP824104.jpg
+  holder: The Metropolitan Museum of Art
+  sources:
+  - met
+  source_ids:
+    met: '411913'

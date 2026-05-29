@@ -1,0 +1,712 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stranske.io/fine-art-archive/meta.schema.json",
+  "title": "Fine Art Archive Sidecar (meta.json)",
+  "description": "Per-work sidecar for the canonical archive. One file per work_id directory.",
+  "type": "object",
+  "required": [
+    "work_id",
+    "schema_version",
+    "artist",
+    "title",
+    "files",
+    "history"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "work_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7}-[a-z0-9-]+$",
+      "description": "Stable identifier: 7-char SHA-256 prefix of the master plus a Title-cased slug."
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "category": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Top-level work category written by the acquisition pipeline (e.g. 'painting', 'photography', 'print', 'drawing', 'sculpture')."
+    },
+    "subject": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "CLIP subject-reviewer output (Companion App): genre, genre_confidence/source/evidence, and content_tags[]. Shape kept open while the tagger evolves."
+    },
+    "artist": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display string as it appears in the source (e.g., 'Workshop of Rembrandt', 'After Caravaggio', 'Unknown artist'). The structured attribution fields below carry the resolved relationship."
+        },
+        "given": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lifespan": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. '1844-1926'"
+        },
+        "nationality": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wikidata_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$",
+          "description": "When relation='self' or omitted: the personal Q-ID of the artist. When relation is 'workshop'/'circle'/'after'/'follower'/'attributed': the Q-ID of the REFERENCE artist (e.g., Q5598 for 'Workshop of Rembrandt'). When relation='anonymous': null (and 'attribution_anchor' carries Q4233718)."
+        },
+        "ulan": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "relation": {
+          "description": "Art-historical attribution relation. Defaults to 'self' (the named artist created the work). Other values follow museum-cataloging conventions and Wikidata's P1773 (object has role) statement qualifiers. 'unknown' is for when the source filename doesn't carry enough information to decide; web-search recovery may upgrade it later.",
+          "enum": [
+            "self",
+            "workshop",
+            "circle",
+            "after",
+            "follower",
+            "attributed",
+            "school",
+            "anonymous",
+            "unknown"
+          ],
+          "default": "self"
+        },
+        "attribution_confidence": {
+          "description": "How firm the relation is. 'scholarly_consensus' = a museum or catalogue raisonné says so; 'attributed' = current attribution but not unanimous; 'inferred' = derived from filename or weak source signal; 'uncertain' = best guess.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "scholarly_consensus",
+            "attributed",
+            "inferred",
+            "uncertain",
+            null
+          ]
+        },
+        "attribution_anchor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID that classifies the attribution kind itself. Q4233718 (anonymous), Q23807 (workshop), Q3343150 (school of art), etc. Used when relation != 'self' to make the entry machine-queryable beyond the relation enum."
+        },
+        "canonical": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Resolver output: canonical identity for the raw artist.name string. Lets the UI group spelling variants ('Brueghel' ↔ 'Bruegel'). artist.name stays as the raw source attribution for provenance.",
+          "properties": {
+            "wikidata_q": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^Q[0-9]+$"
+            },
+            "display_name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "lifespan": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "family_key": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "confidence": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "resolved_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "notes": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title_alternate": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "year": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Year as it appears in the source"
+    },
+    "year_min": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "year_max": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "medium": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dimensions_original": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "h_cm": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "w_cm": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "raw": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "holder": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wikidata_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$"
+        },
+        "ror": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "accession": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
+      }
+    },
+    "rights": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "public-domain",
+            "rights-reserved",
+            "unclear",
+            "fair-use"
+          ]
+        },
+        "evidence_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "evidence_wacz": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "description": "Evidence supporting the rights determination (string or structured)."
+        }
+      }
+    },
+    "description_short": {
+      "type": "string",
+      "default": "",
+      "description": "Short form; lossless reproduction of the original Meural-style filename string."
+    },
+    "description_long": {
+      "type": "string",
+      "default": ""
+    },
+    "stable_identifiers": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "wikidata_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$"
+        },
+        "ulan_for_artist": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "museum_accession": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "museum_institution_ror": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "iiif_manifest_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "doi": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ark": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commons_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Wikimedia Commons File: name for the work image."
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "master"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "variants": {
+          "type": "array",
+          "description": "Other files representing the same work, prepared for different display surfaces (e.g., a Meural-framed crop or a TV-resolution master). These are NOT duplicates: each is fit for a specific device. The migration planner populates this from variant_groups.csv during Phase 3. The master is excluded; variants reference each other from their own sidecars.",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": [
+              "rel_path",
+              "role"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "rel_path": {
+                "type": "string",
+                "description": "Path relative to <archive_root>/Art/ — the variant's location."
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "tv-master",
+                  "meural-framed",
+                  "portrait-crop",
+                  "landscape-crop",
+                  "eink-render",
+                  "thumbnail",
+                  "duplicate-copy",
+                  "unknown"
+                ],
+                "description": "What display surface this variant is prepared for. 'duplicate-copy' means a bit-identical or near-identical second copy (e.g., '(1)' suffix) with no obvious surface specialization."
+              },
+              "size_bytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "dimensions_px": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "source_cluster_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ID of the variant cluster this came from in variant_groups.csv. Provenance only."
+              },
+              "filename": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Variant filename within the work dir (e.g. variant-landscape-crop.jpeg)."
+              },
+              "legacy_rel_path": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Pre-Phase-3 path relative to Art/; source of rel_path until migration rewrites it."
+              }
+            }
+          }
+        },
+        "master": {
+          "type": "object",
+          "required": [
+            "filename",
+            "sha256",
+            "size_bytes",
+            "ingested_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "filename": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "size_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "dimensions_px": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "color_profile": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "captured_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "ingested_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "ingested_from": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "display_hints": {
+      "type": "object",
+      "description": "Per-device rendering metadata. Adding a new device key here triggers re-render.",
+      "additionalProperties": true,
+      "properties": {
+        "orientation_allowed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "landscape",
+              "portrait",
+              "square"
+            ]
+          },
+          "minItems": 1
+        },
+        "orientation_natural": {
+          "type": "string",
+          "enum": [
+            "landscape",
+            "portrait",
+            "square"
+          ]
+        }
+      }
+    },
+    "ratings": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": [
+          "rater",
+          "scheme",
+          "ts"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "rater": {
+            "type": "string"
+          },
+          "scheme": {
+            "type": "string",
+            "enum": [
+              "five-star",
+              "ten-point",
+              "up-down",
+              "two-axis"
+            ]
+          },
+          "quality": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "feedback_notes": {
+      "type": "string",
+      "default": ""
+    },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "actor",
+          "op"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "op": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Output of the identity verification stack (see acquisition_quality_design.md)"
+    },
+    "quality": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Output of the display-quality assessment (see display_quality_design.md)"
+    },
+    "fitness": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Per-target-device fitness assessment (fit / borderline / unfit)"
+    },
+    "acquisition_provenance": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Candidate sources considered + selected; supports re-evaluation when sources change"
+    }
+  }
+}
