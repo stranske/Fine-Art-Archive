@@ -1,0 +1,158 @@
+version: 1
+issue: 4
+base: main
+branch: codex/issue-4
+tasks:
+  - id: task-01
+    title: 'Create `collect/acquisition_flow.py` module with the `run_acquisition_flow(source:
+      str, *, max_items: int | None = None) -> list[...]` function signature and basic
+      structure'
+    status: doing
+    started_at: '2026-05-29T18:34:01Z'
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-02
+    title: Implement source module selection logic in `run_acquisition_flow` that
+      maps source names (`"rijksmuseum"`, `"met"`, `"cleveland"`, `"artic"`, `"google_arts_culture"`)
+      to the appropriate collector functions in `collect/sources/`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: Integrate `collect.verify` into `run_acquisition_flow` to filter collected
+      items through aspect ratio and pHash identity checks
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: Integrate `collect.quality` into `run_acquisition_flow` to apply per-device
+      fitness scoring to verified items
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-05
+    title: Add type hints to all functions in `collect/acquisition_flow.py` and ensure
+      the module passes `mypy` type checking on Python 3.12 and 3.13
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-06
+    title: Format `collect/acquisition_flow.py` to pass `ruff` and `black` checks
+      with no violations
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-07
+    title: Create `tests/test_acquisition_flow.py` with test fixtures following patterns
+      from `tests/test_verify.py` and `tests/test_quality.py`
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-08
+    title: Add test case verifying source selection works for each supported source
+      (`rijksmuseum`, `met`, `cleveland`, `artic`, `google_arts_culture`)
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-09
+    title: Add test case verifying items failing `collect.verify` checks are filtered
+      out of the final result
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-10
+    title: Add test case verifying items failing `collect.quality` checks are filtered
+      out of the final result
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-11
+    title: Add test case verifying the complete flow returns only items passing both
+      verification and quality checks
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-12
+    title: Update `collect/__init__.py` to export `run_acquisition_flow` if not already
+      exported
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-13
+    title: Fix any typing or lint issues introduced by the wiring to ensure `ruff`,
+      `black`, and `mypy` succeed under Python 3.12 and 3.13
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-14
+    title: The `collect/acquisition_flow.py` module exists and successfully imports
+      and calls functions from at least one source module, `collect.verify`, and `collect.quality`,
+      with the output of each stage feeding into the next
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-15
+    title: '`tests/test_acquisition_flow.py` exists and includes tests that verify:
+      (1) source selection works for each supported source, (2) items failing verification
+      are filtered out, (3) items failing quality checks are filtered out, (4) the
+      complete flow returns only items passing both checks'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-16
+    title: '`pytest` passes on Python 3.12 and 3.13 with no test failures'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-17
+    title: '`ruff` passes with zero reported violations'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-18
+    title: '`black` passes with zero formatting changes required'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-19
+    title: '`mypy` passes with zero type errors on Python 3.12 and 3.13'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
