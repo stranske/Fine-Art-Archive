@@ -34,7 +34,7 @@ Non-Goals
 - Documentation site (separate issue)
 
 Tasks
-- [ ] Create src/my_project/__init__.py with version
+- [x] Create src/my_project/__init__.py with version
 - [ ] Create src/my_project/main.py with sample function
 - [ ] Create tests/test_main.py with basic tests
 - [ ] Configure pyproject.toml with all tools
