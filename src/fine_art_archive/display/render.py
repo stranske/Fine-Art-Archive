@@ -102,11 +102,7 @@ def render_for_device(
         resized = src.convert("RGB").resize(native_size, Image.Resampling.LANCZOS)
     rgb = np.asarray(resized, dtype=np.uint8)
 
-    rendered = (
-        _ordered_dither(rgb)
-        if dither_mode == "ordered"
-        else _floyd_steinberg_dither(rgb)
-    )
+    rendered = _ordered_dither(rgb) if dither_mode == "ordered" else _floyd_steinberg_dither(rgb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(rendered, mode="RGB").save(out_path)
