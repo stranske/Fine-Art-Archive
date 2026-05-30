@@ -1,0 +1,174 @@
+version: 1
+issue: 18
+base: main
+branch: codex/issue-18
+tasks:
+  - id: task-01
+    title: Add `from fine_art_archive.quality import source_quality` to `collect/acquisition_flow.py`
+      (imports currently at `acquisition_flow.py:27-42`)
+    status: done
+    started_at: '2026-05-30T01:19:46Z'
+    finished_at: '2026-05-30T01:19:56Z'
+    commit: 7999f2693cc528f5a107f9e6052b33bf90fb6440
+    notes: []
+  - id: task-02
+    title: 'Create the `rank_sources(work_class: str, candidate_sources: list[str],
+      aggregates: dict) -> list[tuple[str, float]]` function signature with type hints
+      in `collect/acquisition_flow.py`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: Implement the loop in `rank_sources` that calls `source_quality.score_for(src,
+      work_class, aggregates=aggregates)` for each candidate source with the provided
+      aggregates
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: Add the sorting logic to `rank_sources` to return sources ordered by score
+      descending as tuples of source name and score
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-05
+    title: 'Create the `select_source(work_class: str, candidate_sources: list[str],
+      aggregates: dict) -> tuple[str, str]` function signature with type hints in
+      `collect/acquisition_flow.py`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-06
+    title: Implement the margin calculation logic in `select_source` to compare the
+      top two ranked sources using a 0.10 threshold
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-07
+    title: Add the conditional return logic to `select_source` that returns the chosen
+      source with reason `"margin"` or `"tied-fallback"` based on the threshold
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-08
+    title: Add the optional `candidate_sources` parameter with type hint `list[str]
+      | None = None` to the `run_acquisition_flow` function signature (around `acquisition_flow.py:114`)
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-09
+    title: Implement conditional logic in `run_acquisition_flow` to call `select_source`
+      when `candidate_sources` is provided and extract the chosen source
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-10
+    title: Verify that existing behavior in `run_acquisition_flow` is preserved by
+      maintaining the current code path when `candidate_sources` is None
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-11
+    title: Create the test file `tests/test_acquisition_routing.py` with necessary
+      imports and fixture setup for synthetic aggregates
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-12
+    title: Implement `test_rank_sources_orders_by_score` in `tests/test_acquisition_routing.py`
+      to verify sources are ordered by descending composite score
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-13
+    title: Implement `test_select_source_margin_rule` in `tests/test_acquisition_routing.py`
+      to verify both margin and tied-fallback scenarios with different score gaps
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-14
+    title: '`tests/test_acquisition_routing.py::test_rank_sources_orders_by_score`
+      passes: with a synthetic `aggregates` where `"rijksmuseum"` composite_score
+      is 0.90 and `"met"` is 0.70 for work_class `"western-painting-19c"`, `rank_sources(...)`
+      returns `"rijksmuseum"` before `"met"`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-15
+    title: The test `test_rank_sources_orders_by_score` asserts that the first returned
+      source is `"rijksmuseum"` when rijksmuseum has score 0.90 and met has score
+      0.70
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-16
+    title: A comment exists in `test_rank_sources_orders_by_score` documenting that
+      reversing the sort order in `rank_sources` will cause the assertion to fail,
+      demonstrating the test validates sort direction
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-17
+    title: '`tests/test_acquisition_routing.py::test_select_source_margin_rule` passes:
+      0.90 vs 0.70 returns `("rijksmuseum","margin")`; 0.90 vs 0.85 returns the top
+      source with reason `"tied-fallback"`'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-18
+    title: 'Regression anchor passes: `tests/test_source_quality.py::test_verify_pass_all_gates_required`
+      (`tests/test_source_quality.py:48`, assertion at line 66) still passes'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-19
+    title: '`pr-00-gate` is green'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-20
+    title: 'Run the deliberate-break verification: temporarily reverse the sort order
+      in `rank_sources(...)` (ascending), run `pytest` to confirm `tests/test_acquisition_routing.py::test_rank_sources_orders_by_score`
+      fails (returns `"met"` first), then revert the sort and confirm the test passes
+      again'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []

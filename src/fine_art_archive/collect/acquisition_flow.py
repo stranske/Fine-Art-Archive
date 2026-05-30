@@ -40,6 +40,7 @@ from fine_art_archive.collect.sources import (
     rijksmuseum,
 )
 from fine_art_archive.collect.verify import verify
+from fine_art_archive.quality import source_quality
 
 # Source name -> collector module. Each collector exposes acquire_shell_script().
 SOURCE_COLLECTORS: dict[str, ModuleType] = {
@@ -49,6 +50,34 @@ SOURCE_COLLECTORS: dict[str, ModuleType] = {
     "artic": artic,
     "google_arts_culture": google_arts_culture,
 }
+
+
+def rank_sources(
+    work_class: str, candidate_sources: list[str], aggregates: dict
+) -> list[tuple[str, float]]:
+    """Return candidate sources sorted by descending source-quality score."""
+    ranked: list[tuple[str, float]] = []
+    for src in candidate_sources:
+        ranked.append((src, source_quality.score_for(src, work_class, aggregates=aggregates)))
+    ranked.sort(key=lambda item: item[1], reverse=True)
+    return ranked
+
+
+def select_source(
+    work_class: str, candidate_sources: list[str], aggregates: dict
+) -> tuple[str, str]:
+    """Pick a source by margin rule: >=0.10 gap wins, else tied-fallback."""
+    if not candidate_sources:
+        raise ValueError("candidate_sources must not be empty")
+
+    ranked = rank_sources(work_class, candidate_sources, aggregates)
+    if len(ranked) == 1:
+        return ranked[0][0], "margin"
+
+    margin = ranked[0][1] - ranked[1][1]
+    if margin >= 0.10:
+        return ranked[0][0], "margin"
+    return ranked[0][0], "tied-fallback"
 
 
 def get_collector(source: str) -> ModuleType:
@@ -116,6 +145,9 @@ def run_acquisition_flow(
     work_dirs: list[Path],
     *,
     max_items: int | None = None,
+    candidate_sources: list[str] | None = None,
+    work_class: str = "western-painting-19c",
+    aggregates: dict | None = None,
     archive: Sequence[ArchiveEntry] | None = None,
     dino_hook=None,
 ) -> list[AcquisitionAssessment]:
@@ -128,7 +160,13 @@ def run_acquisition_flow(
     optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The
     source name is validated first; directories without a master are skipped.
     """
-    get_collector(source)  # validate the source up front
+    chosen_source = source
+    if candidate_sources:
+        chosen_source, _reason = select_source(
+            work_class, candidate_sources, aggregates=aggregates or {}
+        )
+
+    get_collector(chosen_source)  # validate the source up front
     selected = work_dirs if max_items is None else work_dirs[:max_items]
     results: list[AcquisitionAssessment] = []
     for raw in selected:
@@ -142,7 +180,7 @@ def run_acquisition_flow(
             meta = json.loads(meta_p.read_text())
         dim = meta.get("dimensions_original") or {}
         assessment = assess_master(
-            master, source=source, h_cm=dim.get("h_cm"), w_cm=dim.get("w_cm")
+            master, source=chosen_source, h_cm=dim.get("h_cm"), w_cm=dim.get("w_cm")
         )
         if archive is not None:
             assessment.dedup = dedup_check(
