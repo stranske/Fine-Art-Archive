@@ -99,3 +99,10 @@ def test_run_acquisition_flow_selects_candidate_source_by_scores(tmp_path: Path)
     )
     assert len(results) == 1
     assert results[0].source == "rijksmuseum"
+
+
+def test_run_acquisition_flow_ignores_empty_candidate_sources(tmp_path: Path) -> None:
+    work = _work(tmp_path / "w0")
+    results = af.run_acquisition_flow("met", [work], candidate_sources=[])
+    assert len(results) == 1
+    assert results[0].source == "met"

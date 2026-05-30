@@ -161,7 +161,7 @@ def run_acquisition_flow(
     source name is validated first; directories without a master are skipped.
     """
     chosen_source = source
-    if candidate_sources is not None:
+    if candidate_sources:
         chosen_source, _reason = select_source(
             work_class, candidate_sources, aggregates=aggregates or {}
         )
