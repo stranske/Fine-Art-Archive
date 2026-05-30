@@ -23,7 +23,7 @@ def _write_gradient(path: Path, *, size: tuple[int, int] = (96, 64)) -> Path:
     return path
 
 
-def test_output_uses_only_palette(tmp_path: Path):
+def test_output_uses_only_palette(tmp_path: Path) -> None:
     master = _write_gradient(tmp_path / "gradient.png")
     out = tmp_path / "rendered.png"
 
@@ -40,7 +40,7 @@ def test_output_uses_only_palette(tmp_path: Path):
     assert bool(np.all(np.any(matches, axis=1)))
 
 
-def test_render_is_deterministic(tmp_path: Path):
+def test_render_is_deterministic(tmp_path: Path) -> None:
     master = _write_gradient(tmp_path / "gradient.png")
     out1 = tmp_path / "rendered1.png"
     out2 = tmp_path / "rendered2.png"
@@ -54,7 +54,7 @@ def test_render_is_deterministic(tmp_path: Path):
     assert out1.read_bytes() == out2.read_bytes()
 
 
-def test_unquantized_resize_would_fail_palette_gate(tmp_path: Path):
+def test_unquantized_resize_would_fail_palette_gate(tmp_path: Path) -> None:
     """Demonstrate the deliberate-break condition without mutating source code."""
     master = _write_gradient(tmp_path / "gradient.png")
     native_size = (80, 48)
