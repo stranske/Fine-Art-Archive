@@ -17,6 +17,7 @@ testable without network access.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -24,6 +25,12 @@ from types import ModuleType
 from PIL import Image
 
 from fine_art_archive.collect import discovery
+from fine_art_archive.collect.dedup_cascade import (
+    ArchiveEntry,
+    DedupVerdict,
+    build_candidate,
+    dedup_check,
+)
 from fine_art_archive.collect.quality import quality_report
 from fine_art_archive.collect.sources import (
     artic,
@@ -68,6 +75,7 @@ class AcquisitionAssessment:
     verification: dict
     quality: dict
     fitness: dict
+    dedup: DedupVerdict | None = None
 
 
 def assess_master(
@@ -108,11 +116,16 @@ def run_acquisition_flow(
     work_dirs: list[Path],
     *,
     max_items: int | None = None,
+    archive: Sequence[ArchiveEntry] | None = None,
+    dino_hook=None,
 ) -> list[AcquisitionAssessment]:
-    """Assess a batch of ``source`` acquisitions through verify + quality.
+    """Assess a batch of ``source`` acquisitions through verify + quality, and —
+    when an ``archive`` index is supplied — gate each through the D017 dedup
+    cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2
+    ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.
 
     Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an
-    optional ``meta.json`` carrying ``dimensions_original`` (h_cm/w_cm). The
+    optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The
     source name is validated first; directories without a master are skipped.
     """
     get_collector(source)  # validate the source up front
@@ -123,11 +136,17 @@ def run_acquisition_flow(
         master = wd / "master.jpg"
         if not master.exists():
             continue
-        h_cm: float | None = None
-        w_cm: float | None = None
+        meta: dict = {}
         meta_p = wd / "meta.json"
         if meta_p.exists():
-            dim = json.loads(meta_p.read_text()).get("dimensions_original") or {}
-            h_cm, w_cm = dim.get("h_cm"), dim.get("w_cm")
-        results.append(assess_master(master, source=source, h_cm=h_cm, w_cm=w_cm))
+            meta = json.loads(meta_p.read_text())
+        dim = meta.get("dimensions_original") or {}
+        assessment = assess_master(
+            master, source=source, h_cm=dim.get("h_cm"), w_cm=dim.get("w_cm")
+        )
+        if archive is not None:
+            assessment.dedup = dedup_check(
+                build_candidate(master, meta), archive, dino_hook=dino_hook
+            )
+        results.append(assessment)
     return results
