@@ -8,10 +8,10 @@ tasks:
       `GET /works/any-wid/ratings` returns 200 with `body["work_id"] == "any-wid"`
       and `body["ratings"] == []` on an empty archive (mirror `test_ratings_summary_empty`,
       `tests/test_companion_app_api.py:65`).
-    status: doing
+    status: done
     started_at: '2026-05-30T01:19:29Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-30T01:19:43Z'
+    commit: 76d466a082b513a88e94c7b671071f6ce7fcc055
     notes: []
   - id: task-02
     title: Update `ui/index.html` `renderDetail` (near the "Last rated" sub at `index.html:1339`)
