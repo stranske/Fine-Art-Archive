@@ -155,7 +155,7 @@ def _detect_local_project_modules() -> set[str]:
     in standard source locations to prevent false positives on first-party imports.
     """
     detected: set[str] = set()
-    source_dirs = [Path("src"), Path("scripts"), Path("tools"), Path(".")]
+    source_dirs = [Path("src"), Path(".")]
 
     for source_dir in source_dirs:
         if not source_dir.is_dir():
@@ -177,7 +177,7 @@ def _detect_local_project_modules() -> set[str]:
             # Check for packages (directories with __init__.py)
             if item.is_dir() and (item / "__init__.py").exists():
                 detected.add(item.name)
-            # Check for standalone .py modules (but not in repo root .)
+            # Check for standalone .py modules (but not in root .)
             elif source_dir != Path(".") and item.suffix == ".py":
                 detected.add(item.stem)
 
