@@ -8,10 +8,10 @@ tasks:
       (6 fixed RGB triplets: black/white/red/green/blue/yellow) and `render_for_device(master_path:
       Path, hints: dict, device_key: str, out_path: Path, *, native_size: tuple[int,
       int]) -> Path`.'
-    status: doing
+    status: done
     started_at: '2026-05-30T01:20:05Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-30T01:20:18Z'
+    commit: f9207c5ab84f5228e47948b4699055030bd6be1d
     notes: []
   - id: task-02
     title: Implement nearest-palette quantization in `src/fine_art_archive/display/render.py`
