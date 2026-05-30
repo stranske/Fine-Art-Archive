@@ -1155,6 +1155,26 @@
       window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
     }
 
+    // Fetch + render the full per-work rating history into the detail view.
+    async function loadRatingHistory(wid) {
+      const el = document.getElementById("rating-history");
+      if (!el) return;
+      try {
+        const r = await fetch("/works/" + encodeURIComponent(wid) + "/ratings");
+        const d = await r.json();
+        const rows = d.ratings || [];
+        if (!rows.length) { el.textContent = "No ratings yet."; return; }
+        el.innerHTML = rows.map(function(ev) {
+          const q = ev.quality != null ? "Q" + ev.quality : "";
+          const f = ev.fit != null ? "F" + ev.fit : "";
+          const axes = [q, f].filter(Boolean).join("·")
+            || (ev.rating != null ? "(legacy) " + ev.rating : "");
+          return '<div class="sub">' + (ev.ts || "") + " · " + axes
+            + (ev.surface ? " · " + ev.surface : "") + "</div>";
+        }).join("");
+      } catch (e) { el.textContent = "(rating history unavailable)"; }
+    }
+
     // ----- detail view (vanilla fetch — no htmx race) -----
     async function openWork(wid) {
       dbg("openWork.start", {wid});
@@ -1339,6 +1359,11 @@
                ${last ? `<div class="sub last-rated-sub" style="margin-top:8px">Last rated ${last.ts} · ${lastQ != null || lastF != null ? `Q${lastQ ?? "—"}·F${lastF ?? "—"}` : (lastR != null ? "(legacy) " + ratingLabel(lastR) : "")}${last.selected_reasons?.length ? " · " + last.selected_reasons.join(", ") : ""}${last.notes ? ` · "${last.notes.replace(/"/g,'&quot;').slice(0,80)}"` : ""}</div>` : ""}
              </div>
 
+             <details class="rate-section" id="rs-history">
+               <summary class="rate-section-summary">Rating history</summary>
+               <div id="rating-history" class="sub">…</div>
+             </details>
+
              <details class="rate-section" id="rs-subject" open>
                <summary class="rate-section-summary">Subject tags</summary>
                ${renderSubjectPanel(data)}
@@ -1360,6 +1385,7 @@
       maybeApplyAutoLayout();
       applyCollapseDefaults();
       updateRatingHud();
+      loadRatingHistory(data.work_id);
     }
 
     // ----- keyboard shortcuts -----
