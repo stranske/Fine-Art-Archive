@@ -155,7 +155,7 @@ def _detect_local_project_modules() -> set[str]:
     in standard source locations to prevent false positives on first-party imports.
     """
     detected: set[str] = set()
-    source_dirs = [Path("src"), Path(".")]
+    source_dirs = [Path("src"), Path("scripts"), Path(".")]
 
     for source_dir in source_dirs:
         if not source_dir.is_dir():
