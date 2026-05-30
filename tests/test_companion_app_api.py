@@ -66,3 +66,12 @@ def test_ratings_summary_empty(client: TestClient) -> None:
     r = client.get("/ratings/summary")
     assert r.status_code == 200
     assert r.json()["n_events"] == 0
+
+
+def test_work_ratings_shape(client: TestClient) -> None:
+    # Per-work rating history endpoint (surfaced in the detail view).
+    r = client.get("/works/any-wid/ratings")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["work_id"] == "any-wid"
+    assert body["ratings"] == []
