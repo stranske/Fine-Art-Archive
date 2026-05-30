@@ -1,0 +1,142 @@
+version: 1
+issue: 19
+base: main
+branch: codex/issue-19
+tasks:
+  - id: task-01
+    title: Add `tests/test_companion_app_api.py::test_work_ratings_shape` asserting
+      `GET /works/any-wid/ratings` returns 200 with `body["work_id"] == "any-wid"`
+      and `body["ratings"] == []` on an empty archive (mirror `test_ratings_summary_empty`,
+      `tests/test_companion_app_api.py:65`).
+    status: doing
+    started_at: '2026-05-30T01:19:29Z'
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-02
+    title: Update `ui/index.html` `renderDetail` (near the "Last rated" sub at `index.html:1339`)
+      to fetch `'/works/'+wid+'/ratings'` and render each rating event (timestamp
+      + axes) as rows within the detail `<details>` region.
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: Test the deliberate-break gate by temporarily changing `api/main.py:607`
+      response key `"work_id"` to `"wid"`, run `tests/test_companion_app_api.py::test_work_ratings_shape`
+      to confirm failure, then revert the change.
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: '`tests/test_companion_app_api.py::test_work_ratings_shape` passes (200;
+      `work_id` echoed; `ratings == []` on empty archive).'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-05
+    title: "Deliberate-break gate is verifiable: changing `api/main.py:607` response\
+      \ key `\"work_id\"` \u2192 `\"wid\"` makes `::test_work_ratings_shape` fail\
+      \ due to missing `body[\"work_id\"]` (e.g., `KeyError`); reverting restores\
+      \ pass."
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-06
+    title: "UI smoke gate is verifiable: with the service running via `scripts/run_companion_app.sh`,\
+      \ rating one work twice in the UI and reopening it (`#wid=<wid>`) shows \u2265\
+      2 history rows in the detail panel (not only the single \"Last rated\" line)."
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-07
+    title: '`pr-00-gate` is green.'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-08
+    title: "Add `tests/test_companion_app_api.py::test_work_ratings_shape`: `GET /works/any-wid/ratings`\
+      \ \u2192 200 with `body[\"work_id\"]==\"any-wid\"` and `body[\"ratings\"]==[]`\
+      \ on the empty archive (mirror `test_ratings_summary_empty`, `tests/test_companion_app_api.py:65`)."
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-09
+    title: In `ui/index.html` `renderDetail` (near the "Last rated" sub at `index.html:1339`),
+      add `fetch('/works/'+wid+'/ratings')` and render each event (timestamp + axes)
+      as rows in the detail `<details>` region.
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-10
+    title: Run the deliberate-break verification, capture the FAIL, then revert.
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-11
+    title: '`tests/test_companion_app_api.py::test_work_ratings_shape` passes (200;
+      `work_id` echoed; `ratings == []` on empty archive).'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-12
+    title: "**Deliberate-break gate:** temporarily change `api/main.py:607` response\
+      \ key `\"work_id\"` \u2192 `\"wid\"`. `::test_work_ratings_shape` **must FAIL**\
+      \ (`body[\"work_id\"]` KeyError). Revert after capturing the failure."
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-13
+    title: "**UI smoke gate (captured in PR):** with the service running (`scripts/run_companion_app.sh`),\
+      \ rate one work twice in the UI, reopen it (`#wid=<wid>`); the detail panel\
+      \ renders \u22652 history rows (not only the single \"Last rated\" line). Capture\
+      \ before/after."
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-14
+    title: '`pr-00-gate` green.'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-15
+    title: "Test the deliberate-break gate by temporarily changing `api/main.py:607`\
+      \ response key `\"work_id\"` to `\"wid\"`, run `tests/test_companion_app_api.py::test_work_ratings_shape`\
+      \ to confirm failure, then revert the change. (Agent cannot verify the deliberate-break\
+      \ gate because it requires intentionally breaking code, running tests to observe\
+      \ failure, and then reverting. This multi-step verification process with intentional\
+      \ failure is a validation activity, not a development task. | Move this to acceptance\
+      \ criteria as a human-verified gate: 'Deliberate-break gate is verifiable: changing\
+      \ `api/main.py:607` response key `\"work_id\"` \u2192 `\"wid\"` makes `::test_work_ratings_shape`\
+      \ fail due to missing `body[\"work_id\"]` (e.g., `KeyError`); reverting restores\
+      \ pass.' Remove from Tasks section.)"
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
