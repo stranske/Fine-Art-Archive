@@ -52,3 +52,19 @@ def test_render_is_deterministic(tmp_path: Path):
     render_for_device(master, hints, "inkposter_tela_28_5", out2, native_size=native_size)
 
     assert out1.read_bytes() == out2.read_bytes()
+
+
+def test_unquantized_resize_would_fail_palette_gate(tmp_path: Path):
+    """Demonstrate the deliberate-break condition without mutating source code."""
+    master = _write_gradient(tmp_path / "gradient.png")
+    native_size = (80, 48)
+
+    with Image.open(master) as src:
+        unquantized = np.asarray(
+            src.convert("RGB").resize(native_size, Image.Resampling.LANCZOS), dtype=np.uint8
+        )
+
+    palette = np.asarray(SPECTRA6_PALETTE, dtype=np.uint8)
+    flat = unquantized.reshape(-1, 3)
+    matches = np.all(flat[:, None, :] == palette[None, :, :], axis=2)
+    assert not bool(np.all(np.any(matches, axis=1)))
