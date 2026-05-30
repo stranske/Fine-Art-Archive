@@ -80,3 +80,22 @@ def test_run_acquisition_flow_skips_missing_master(tmp_path: Path) -> None:
 def test_run_acquisition_flow_unknown_source(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="unknown source"):
         af.run_acquisition_flow("nope", [tmp_path])
+
+
+def test_run_acquisition_flow_selects_candidate_source_by_scores(tmp_path: Path) -> None:
+    work = _work(tmp_path / "w0")
+    aggregates = {
+        "sources": {
+            "rijksmuseum": {"western-painting-19c": {"composite_score": 0.90}},
+            "met": {"western-painting-19c": {"composite_score": 0.70}},
+        }
+    }
+    results = af.run_acquisition_flow(
+        "met",
+        [work],
+        candidate_sources=["met", "rijksmuseum"],
+        work_class="western-painting-19c",
+        aggregates=aggregates,
+    )
+    assert len(results) == 1
+    assert results[0].source == "rijksmuseum"

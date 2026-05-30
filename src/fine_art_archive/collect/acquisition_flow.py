@@ -146,6 +146,8 @@ def run_acquisition_flow(
     *,
     max_items: int | None = None,
     candidate_sources: list[str] | None = None,
+    work_class: str = "western-painting-19c",
+    aggregates: dict | None = None,
     archive: Sequence[ArchiveEntry] | None = None,
     dino_hook=None,
 ) -> list[AcquisitionAssessment]:
@@ -161,7 +163,7 @@ def run_acquisition_flow(
     chosen_source = source
     if candidate_sources is not None:
         chosen_source, _reason = select_source(
-            "western-painting-19c", candidate_sources, aggregates={}
+            work_class, candidate_sources, aggregates=aggregates or {}
         )
 
     get_collector(chosen_source)  # validate the source up front
