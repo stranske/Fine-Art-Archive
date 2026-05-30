@@ -6,10 +6,10 @@ tasks:
   - id: task-01
     title: Add `from fine_art_archive.quality import source_quality` to `collect/acquisition_flow.py`
       (imports currently at `acquisition_flow.py:27-42`)
-    status: doing
+    status: done
     started_at: '2026-05-30T01:19:46Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-05-30T01:19:56Z'
+    commit: 7999f2693cc528f5a107f9e6052b33bf90fb6440
     notes: []
   - id: task-02
     title: 'Create the `rank_sources(work_class: str, candidate_sources: list[str],
