@@ -1,0 +1,5 @@
+# Local first-party script modules imported directly by tests.
+finalize_acquisition
+perceptual_dedupe
+propose_subject_tags
+visual_dedupe
