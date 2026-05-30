@@ -1,0 +1,138 @@
+"""Tests for the D017 dedup cascade (collect/dedup_cascade.py) and its wiring into
+the acquire path. The cheap layers (sha256 / pHash / artist-Q-ID / metadata) are
+exercised directly; the DINOv2 layer is exercised via an injected stub hook (the
+real vision pass needs torch + the archive embedding cache, run operationally).
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from PIL import Image
+
+from fine_art_archive.collect.dedup_cascade import (
+    ArchiveEntry,
+    Candidate,
+    dedup_check,
+    hamming,
+    load_archive_index,
+    perceptual_hashes,
+)
+
+_FAR = (1 << 256) - 1  # max Hamming distance from 0 → never a pHash match
+
+
+def _ramp(path: Path, *, reverse: bool = False) -> Path:
+    img = Image.new("L", (256, 256))
+    px = img.load()
+    for y in range(256):
+        for x in range(256):
+            px[x, y] = (255 - x) if reverse else x
+    img.save(path)
+    return path
+
+
+def test_hamming() -> None:
+    assert hamming(0, 0) == 0
+    assert hamming(0b1010, 0b1011) == 1
+    assert hamming(0, (1 << 256) - 1) == 256
+
+
+def test_perceptual_hashes_identity_and_sensitivity(tmp_path: Path) -> None:
+    a, b, rev = (
+        _ramp(tmp_path / "a.png"),
+        _ramp(tmp_path / "b.png"),
+        _ramp(tmp_path / "r.png", reverse=True),
+    )
+    da, _ = perceptual_hashes(a)
+    db, _ = perceptual_hashes(b)
+    dr, _ = perceptual_hashes(rev)
+    assert hamming(da, db) == 0
+    assert hamming(da, dr) > 200
+
+
+def test_layer1_sha256_exact() -> None:
+    cand = Candidate(sha256="deadbeef", dhash=_FAR, artist_qid="Q1", title="X")
+    archive = [ArchiveEntry(wid="w1", sha256="deadbeef", dhash=0)]
+    v = dedup_check(cand, archive)
+    assert v.is_duplicate and v.layer == "sha256" and v.matched_wid == "w1"
+
+
+def test_layer2_phash_near() -> None:
+    cand = Candidate(dhash=0b1010)
+    archive = [ArchiveEntry(wid="w2", dhash=0b1011)]  # Hamming 1
+    v = dedup_check(cand, archive)
+    assert v.is_duplicate and v.layer == "phash" and v.distance == 1
+
+
+def test_layer4_metadata_same_artist_needs_review() -> None:
+    cand = Candidate(dhash=0, artist_qid="Q762", title="Mona Lisa")
+    archive = [ArchiveEntry(wid="w3", dhash=_FAR, artist_qid="Q762", title="Mona Lisa")]
+    v = dedup_check(cand, archive)
+    assert v.status == "needs_review" and v.layer == "metadata" and v.matched_wid == "w3"
+
+
+def test_unrelated_is_new() -> None:
+    cand = Candidate(dhash=0, artist_qid="Q762", title="Mona Lisa")
+    archive = [ArchiveEntry(wid="w4", dhash=_FAR, artist_qid="Q999", title="Sunflowers")]
+    assert dedup_check(cand, archive).status == "new"
+
+
+def test_layer5_dino_hook() -> None:
+    cand = Candidate(dhash=0, artist_qid="Q762", title="X")
+    archive = [ArchiveEntry(wid="w5", dhash=_FAR, artist_qid="Q762", title="Y")]
+
+    def hook(_c: Candidate, block: list[ArchiveEntry]) -> tuple[str, float]:
+        return block[0].wid, 0.95
+
+    v = dedup_check(cand, archive, dino_hook=hook)
+    assert v.is_duplicate and v.layer == "dinov2" and v.matched_wid == "w5"
+
+
+def test_load_archive_index(tmp_path: Path) -> None:
+    cache = {
+        "w1": {"dhash": format(15, "064x"), "ahash": format(0, "064x"), "title": "T"},
+        "w2": {"err": "no-master"},  # entries without a dhash are skipped
+    }
+    p = tmp_path / "archive_phash_cache.json"
+    p.write_text(json.dumps(cache))
+    idx = load_archive_index(p, artist_qids={"w1": "Q1"})
+    assert len(idx) == 1
+    assert idx[0].wid == "w1" and idx[0].dhash == 15 and idx[0].artist_qid == "Q1"
+
+
+def test_acquisition_flow_attaches_dedup_verdict(tmp_path: Path) -> None:
+    from fine_art_archive.collect import acquisition_flow as af
+
+    work = tmp_path / "cand-mona"
+    work.mkdir()
+    master = work / "master.jpg"
+    img = Image.new("RGB", (400, 300))
+    px = img.load()
+    for y in range(300):
+        for x in range(400):
+            px[x, y] = (x % 256, y % 256, (x + y) % 256)
+    img.save(master, "JPEG", quality=88)
+    (work / "meta.json").write_text(
+        json.dumps(
+            {
+                "artist": {"wikidata_q": "Q762"},
+                "title": "Mona Lisa",
+                "dimensions_original": {"h_cm": 77.0, "w_cm": 53.0},
+            }
+        )
+    )
+
+    dh, ah = perceptual_hashes(master)
+    archive = [
+        ArchiveEntry(wid="existing-mona", dhash=dh, ahash=ah, artist_qid="Q762", title="Mona Lisa")
+    ]
+
+    [res] = af.run_acquisition_flow("met", [work], archive=archive)
+    assert res.dedup is not None
+    assert res.dedup.is_duplicate and res.dedup.matched_wid == "existing-mona"
+
+    # Without an archive the flow skips the dedup gate.
+    [res2] = af.run_acquisition_flow("met", [work])
+    assert res2.dedup is None
