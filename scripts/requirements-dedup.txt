@@ -9,5 +9,5 @@
 #     python scripts/visual_dedupe.py smoketest
 #
 # perceptual_dedupe.py needs none of these (Pillow only, already a core dependency).
-torch>=2.0
+torch>=2.12.0
 transformers>=4.40
