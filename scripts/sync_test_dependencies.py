@@ -12,6 +12,7 @@ import argparse
 import ast
 import configparser
 import re
+import shlex
 import sys
 import tomllib
 from pathlib import Path
@@ -228,16 +229,23 @@ def _detect_local_project_modules() -> set[str]:
 
 def _pythonpath_has_tests(pythonpath: Any) -> bool:
     if isinstance(pythonpath, str):
-        entries = pythonpath.split()
+        try:
+            entries = shlex.split(pythonpath, posix=False)
+        except ValueError:
+            entries = pythonpath.split()
     elif isinstance(pythonpath, list):
         entries = [str(entry) for entry in pythonpath]
     else:
         entries = []
 
-    return any(
-        entry.strip().strip('"').strip("'").rstrip("/").removeprefix("./") == "tests"
-        for entry in entries
-    )
+    return any(_pythonpath_entry_is_tests_dir(entry) for entry in entries)
+
+
+def _pythonpath_entry_is_tests_dir(entry: str) -> bool:
+    normalized = entry.strip().strip('"').strip("'").replace("\\", "/").rstrip("/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized == "tests" or normalized.endswith("/tests")
 
 
 def _config_root() -> Path:
@@ -265,7 +273,7 @@ def _tests_dir_on_pytest_toml_pythonpath(config_file: Path) -> bool:
 
 
 def _tests_dir_on_pyproject_pythonpath(config_file: Path) -> bool | None:
-    """Return None when pyproject has no usable pytest config and fallback files should be checked."""
+    """Return None when pyproject has no usable pytest table or cannot be read."""
     try:
         with config_file.open("rb") as fh:
             data = tomllib.load(fh)
@@ -279,7 +287,7 @@ def _tests_dir_on_pyproject_pythonpath(config_file: Path) -> bool | None:
         return None
     pytest_config = tool.get("pytest")
     if not isinstance(pytest_config, dict):
-        return False if "pytest" in tool else None
+        return None
     if _pythonpath_has_tests(pytest_config.get("pythonpath", [])):
         return True
     pytest_options = pytest_config.get("ini_options")
@@ -304,7 +312,7 @@ def _tests_dir_on_ini_pythonpath(config_file: Path, section_names: tuple[str, ..
         try:
             pythonpath = config.get(section_name, "pythonpath", raw=True)
         except configparser.Error:
-            return False
+            continue
         if _pythonpath_has_tests(pythonpath):
             return True
 
@@ -323,7 +331,8 @@ def _tests_dir_on_pythonpath() -> bool:
             return _tests_dir_on_ini_pythonpath(resolved_config, section_names)
 
     pyproject = _resolve_config_path(PYPROJECT_FILE)
-    if pyproject.exists():
+    pyproject_exists = pyproject.exists()
+    if pyproject_exists:
         pyproject_result = _tests_dir_on_pyproject_pythonpath(pyproject)
         if pyproject_result is not None:
             return pyproject_result
@@ -332,6 +341,7 @@ def _tests_dir_on_pythonpath() -> bool:
         resolved_config = _resolve_config_path(config_file)
         if resolved_config.exists():
             return _tests_dir_on_ini_pythonpath(resolved_config, section_names)
+
     return False
 
 
