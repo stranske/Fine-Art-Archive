@@ -28,7 +28,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   pytest
-coverage==7.14.0
+coverage==7.14.1
     # via pytest-cov
 fastapi==0.136.3
     # via fine-art-archive (pyproject.toml)
@@ -112,7 +112,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.14
+ruff==0.15.17
     # via fine-art-archive (pyproject.toml)
 scipy==1.17.1
     # via imagehash
