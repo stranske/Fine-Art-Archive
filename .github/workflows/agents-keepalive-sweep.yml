@@ -47,6 +47,10 @@ jobs:
               (context.payload.inputs && context.payload.inputs.dry_run) || 'false',
             ) === 'true';
             const { owner, repo } = context.repo;
+            const dispatchRef = (
+              (context.payload.repository && context.payload.repository.default_branch) ||
+              context.ref.replace(/^refs\/heads\//, '')
+            );
             const prs = await github.paginate(github.rest.pulls.list, {
               owner, repo, state: 'open', per_page: 100,
             });
@@ -65,7 +69,7 @@ jobs:
                   owner,
                   repo,
                   workflow_id: 'agents-81-gate-followups.yml',
-                  ref: context.payload.repository.default_branch,
+                  ref: dispatchRef,
                   inputs: { pr_number: String(pr.number) },
                 });
                 dispatched += 1;
