@@ -146,7 +146,6 @@ Issue: "Add user authentication"
 | `agents:optimize` | Issue | Analyze and suggest improvements |
 | `agents:apply-suggestions` | Issue | Apply optimization suggestions |
 | `agents:auto-pilot` | Issue | Full end-to-end automation |
-| `agents:allow-change` | PR | Permission signal for `agents-guard`; automatically applied to dependency-bot PRs by `maint-auto-label-dep-prs.yml` |
 | `agents:capability-check` | Issue | Check if agent can complete |
 | `agents:decompose` | Issue | Break into smaller issues |
 | `agents:dedup` | Issue | Check for duplicates |
@@ -166,6 +165,7 @@ Issue: "Add user authentication"
 | `agent:needs-attention` | Human intervention required |
 | `agents:auto-pilot-pause` | Auto-pilot paused |
 | `agents:auto-pilot-failed` | Auto-pilot stopped due to errors |
+| `agents:allow-change` | Permission signal for `agents-guard`; bypasses CODEOWNER approval only for automated dependency PRs from Dependabot/Renovate. Auto-applied by `maint-auto-label-dep-prs.yml`; manual application does not bypass guard enforcement. |
 | `needs-human` | Escalated to human |
 | `follow-up` | Created as follow-up to another issue/PR |
 | `duplicate` | Potential duplicate detected |
