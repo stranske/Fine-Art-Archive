@@ -170,7 +170,25 @@ def test_rate_work_all_none_payload(
     assert r.status_code == 400
 
 
-def test_rate_missing_work_404(client: TestClient, isolated_ratings_log) -> None:
+def test_rate_work_unknown_rating(
+    client: TestClient,
+    isolated_ratings_log,
+    stub_work: None,
+) -> None:
+    r = client.post(
+        "/works/test-wid/rate",
+        json={"rating": 99, "surface": "companion-app"},
+    )
+
+    assert r.status_code == 400
+
+
+def test_rate_missing_work_404(
+    client: TestClient,
+    isolated_ratings_log,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(api_store, "get_work", lambda _work_id: None)
     r = client.post(
         "/works/no-such-wid/rate",
         json={"quality": 5, "fit": 4, "surface": "companion-app"},

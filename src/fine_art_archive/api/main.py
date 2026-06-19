@@ -504,8 +504,6 @@ class RatingIn(BaseModel):
     )
     rating: int | None = Field(
         default=None,
-        ge=-2,
-        le=2,
         description="DEPRECATED single-axis -2..+2 (use quality + fit instead)",
     )
     rater: str = Field(default="tim")
