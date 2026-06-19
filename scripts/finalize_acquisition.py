@@ -103,6 +103,8 @@ def run_finalize(work_dir: Path, *, refetch_master_hash: bool = True) -> dict:
             else None
         ),
     }
+    meta["verification"]["source_quality_inputs"] = vreport.to_source_quality_inputs()
+    # TODO: set acquisition_provenance.source on museum-API acquisitions.
 
     # --- Display-quality assessment ---------------------------------------
     qreport = quality_report(
