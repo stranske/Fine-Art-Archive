@@ -1284,7 +1284,6 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts/github-api-with-retry.js
-            .github/scripts/error_classifier.js
             .github/scripts/token_load_balancer.js
           sparse-checkout-cone-mode: false
 
@@ -1355,7 +1354,6 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts/github-api-with-retry.js
-            .github/scripts/error_classifier.js
             .github/scripts/token_load_balancer.js
           sparse-checkout-cone-mode: false
 
@@ -1554,7 +1552,6 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts/github-api-with-retry.js
-            .github/scripts/error_classifier.js
             .github/scripts/token_load_balancer.js
           sparse-checkout-cone-mode: false
       - name: Merge labelled agent PRs (guarded)
