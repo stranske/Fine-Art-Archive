@@ -62,6 +62,21 @@ class VerificationReport:
             ],
         }
 
+    def to_source_quality_inputs(self) -> dict[str, bool | None]:
+        def match_value(name: str) -> bool | None:
+            status = next((c.status for c in self.checks if c.name == name), None)
+            if status == "PASS":
+                return True
+            if status == "FAIL":
+                return False
+            return None
+
+        return {
+            "phash_match": match_value("perceptual_hash"),
+            "aspect_match": match_value("aspect_ratio"),
+            "dim_match": None,
+        }
+
 
 def check_aspect_ratio(
     *,

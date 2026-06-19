@@ -8,6 +8,7 @@ operationally against real masters.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -53,3 +54,39 @@ def test_work_id_slug_fallback(tmp_path: Path) -> None:
     meta = {"work_id": "untitledplaceholder", "files": {"master": {}}}  # no hyphen
     fa.update_files_master_from_bytes(meta, master)
     assert meta["work_id"].endswith("untitled")
+
+
+def test_run_finalize_writes_source_quality_inputs(tmp_path: Path) -> None:
+    _make_jpeg(tmp_path / "master.jpg", w=400, h=300)
+    meta = {
+        "work_id": "0000000-landscape-fixture",
+        "schema_version": "1.0",
+        "artist": {"name": "Fixture Artist"},
+        "title": "Landscape Fixture",
+        "dimensions_original": {"h_cm": 30.0, "w_cm": 40.0},
+        "stable_identifiers": {"wikidata_q": None},
+        "files": {
+            "master": {
+                "filename": "master.jpg",
+                "sha256": "0" * 64,
+                "size_bytes": 0,
+                "ingested_at": "2026-06-19T00:00:00+00:00",
+            }
+        },
+        "history": [
+            {
+                "ts": "2026-06-19T00:00:00+00:00",
+                "actor": "test",
+                "op": "create",
+            }
+        ],
+    }
+    (tmp_path / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+
+    finalized = fa.run_finalize(tmp_path, refetch_master_hash=True)
+
+    inputs = finalized["verification"]["source_quality_inputs"]
+    assert set(inputs) == {"phash_match", "aspect_match", "dim_match"}
+    assert inputs["aspect_match"] is True
+    assert inputs["phash_match"] is None
+    assert inputs["dim_match"] is None
