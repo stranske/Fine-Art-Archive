@@ -14,12 +14,14 @@ everywhere, beats N one-off PRs — and it's why this is a design-system rollout
 ## The 6 patterns
 
 ### P1 — Light, understated theme by default
+
 **Rule:** never ship a default dark theme; default to `theme-air` (Ink & Air). Dark is opt-in only.
 - **web:** load `tokens.css` + `components.css`; root element `class="ds theme-air"` (`theme-paper` for friendlier apps).
 - **Streamlit:** `.streamlit/config.toml` `[theme] base="light"` + the shared `ds_streamlit.inject_theme()` (maps the `theme-air` tokens to Streamlit's theme). *Already prototyped for TMP.*
 - **Fixes:** default-dark on Trend_Model_Project / Portable-Alpha / Manager-Database / Inv-Man-Intake.
 
 ### P2 — Empty state = title + reason + next action
+
 **Rule:** a "no data yet" surface ALWAYS shows a title, a one-line reason, and a **next-action CTA**.
 NEVER a bare prompt sitting above already-rendered content, and NEVER an internal filename/path.
 - **web:** `.ds .empty-state` (`.es-icon/.es-title/.es-desc/.es-cta`).
@@ -28,6 +30,7 @@ NEVER a bare prompt sitting above already-rendered content, and NEVER an interna
   Manager-Database #1214 (empty default date / "Recent Activity"), LMS #351 (root `/` JSON 404).
 
 ### P3 — Errors are human messages + remediation
+
 **Rule:** NEVER surface a raw exception, pydantic/validation dump, internal field name, or stack to a
 user. Translate at the boundary to a plain message + a recovery action.
 - **web:** `.ds .notice--error` (`.ic` + `.body strong` headline + `.body .act` remediation).
@@ -37,6 +40,7 @@ user. Translate at the boundary to a plain message + a recovery action.
   the broad "raw error" class across the fleet.
 
 ### P4 — Dev/diagnostic notices go to logs, not the UI
+
 **Rule:** auth-bypass / trace-sink / observability / "dev mode" notices NEVER render in the main
 content. Use logging, or at most a collapsed "Diagnostics" expander.
 - **web:** n/a in the main flow; use a `<details>`/debug panel.
@@ -44,14 +48,16 @@ content. Use logging, or at most a collapsed "Diagnostics" expander.
 - **Fixes:** Manager-Database #1215 (auth-bypass `st.warning`), Inv-Man-Intake #630 (trace-sink banner).
 
 ### P5 — Feature-availability markers (no silent dead-ends)
+
 **Rule:** a tab/control that isn't applicable in the current mode states so up front (a badge/label),
 rather than opening into a silent empty/disabled surface.
 - **web:** `.ds .badge` on the tab/control (e.g. "multi-period only", "needs setup").
-- **Streamlit:** `ds_streamlit.availability_badge(label)` in the tab title / disabled control caption.
+- **Streamlit:** `ds_streamlit.availability_badge(label)` in the tab title / disabled control caption; use `plain=False` only in trusted HTML containers.
 - **Fixes:** TMP #5629 (4/6 Results tabs empty — fixed by labelling, the canonical example), PA #2026
   (upload-only pages with no sample path → mark/offer the sample).
 
 ### P6 — No raw internal identifiers in user surfaces
+
 **Rule:** decode internal IDs / fixture filenames / record keys into human-readable labels before display.
 - **web/Streamlit:** a display-name mapping; keep the raw id as secondary/`title=` metadata if useful.
 - **Fixes:** Inv-Man-Intake #629 (opaque `item_id`), #630 (raw fixture filename in selector), PA Results (`Outputs.xlsx`).
@@ -75,6 +81,7 @@ rather than opening into a silent empty/disabled surface.
 | Default dark theme (TMP/PA/MD/IMI) | P1 |
 
 ## Streamlit design kit (most of the fleet is Streamlit)
+
 The CSS components above cover the web apps (Pension-Data, trip-planner, LMS). The four Streamlit
 Tier-A apps need a Streamlit-native equivalent — ship a shared `ds_streamlit.py` alongside the CSS:
 - `inject_theme()` — applies the `theme-air` palette (P1); pairs with `.streamlit/config.toml`.
