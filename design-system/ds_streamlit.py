@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Mapping
+from contextlib import contextmanager
+from html import escape
 from typing import Any
 
 logger = logging.getLogger("ds")
@@ -88,9 +90,12 @@ def empty_state(
     clicked. NEVER pass an internal filename/path as `desc`."""
     import streamlit as st
 
+    safe_icon = escape(str(icon))
+    safe_title = escape(str(title))
+    safe_desc = escape(str(desc))
     st.markdown(
-        f"<div class='ds-empty'><div style='font-size:22px;opacity:.6'>{icon}</div>"
-        f"<div class='t'>{title}</div><div class='d'>{desc}</div></div>",
+        f"<div class='ds-empty'><div style='font-size:22px;opacity:.6'>{safe_icon}</div>"
+        f"<div class='t'>{safe_title}</div><div class='d'>{safe_desc}</div></div>",
         unsafe_allow_html=True,
     )
     if cta_label:
@@ -103,16 +108,17 @@ def empty_state(
 
 def notice(kind: str, title: str = "", body: str = "", action: str | None = None) -> None:
     """P3/P4 — the one container for user-facing messages. kind in
-    {error,warn,info,ok}. `action` is optional remediation (markdown)."""
+    {error,warn,info,ok}. `action` is optional literal remediation text."""
     import streamlit as st
 
     color, bg, ic = _NOTICE_STYLE.get(kind, _NOTICE_STYLE["info"])
-    head = f"<strong>{title}</strong><br>" if title else ""
-    act = f"<div style='margin-top:6px'>{action}</div>" if action else ""
+    head = f"<strong>{escape(str(title))}</strong><br>" if title else ""
+    act = f"<div style='margin-top:6px'>{escape(str(action))}</div>" if action else ""
+    safe_body = escape(str(body))
     st.markdown(
         f"<div class='ds-notice' style='background:{bg};border-color:{color}33'>"
         f"<span class='ic' style='color:{color}'>{ic}</span>"
-        f"<div>{head}{body}{act}</div></div>",
+        f"<div>{head}{safe_body}{act}</div></div>",
         unsafe_allow_html=True,
     )
 
@@ -128,18 +134,19 @@ def translate_error(exc: Exception) -> tuple[str, str | None]:
     Falls back to a generic message; the raw text is logged, not shown."""
     logger.warning("ds.translate_error: %s", exc, exc_info=True)
     text = str(exc)
+    text_lower = text.lower()
     # Known field-required cases (extend per app as needed).
-    if "financing_mode" in text:
+    if "financing_mode" in text_lower:
         return (
             "Financing mode isn't set for this run.",
             "Choose a financing mode (e.g. per-path) and run again.",
         )
-    if "exceeds total capital" in text or "capital buffer" in text:
+    if "exceeds total capital" in text_lower or "capital buffer" in text_lower:
         return (
             "The capital allocation isn't feasible.",
             "Reduce the internal allocation or volatility multiple to leave margin headroom.",
         )
-    if "No investable funds" in text or "NO_FUNDS" in text:
+    if "no investable funds" in text_lower or "no_funds" in text_lower:
         return (
             "No funds matched the selection filters.",
             "Try another preset or relax the selection settings.",
@@ -155,16 +162,50 @@ def dev_note(msg: str) -> None:
     logger.info("ds.dev_note: %s", msg)
 
 
-def availability_badge(label: str) -> str:
-    """P5 — markup for a small availability marker (use in a tab title/caption),
-    e.g. tab label f"Export {availability_badge('multi-period only')}"."""
-    return f"<span class='ds-badge'>{label}</span>"
+@contextmanager
+def diagnostics_expander(label: str = "Diagnostics", *, expanded: bool = False):
+    """P4 — explicit opt-in container for diagnostics that must be visible."""
+    import streamlit as st
+
+    with st.expander(label, expanded=expanded):
+        yield
+
+
+def availability_badge(label: str, *, plain: bool = True) -> str:
+    """P5 — availability marker for tabs/captions.
+
+    The default is safe for Streamlit surfaces that render labels as literal
+    text. Use `plain=False` only inside containers rendered as trusted HTML.
+    """
+    text = str(label).strip()
+    if plain:
+        return f" · {text}"
+    return f"<span class='ds-badge'>{escape(text)}</span>"
 
 
 def humanize_id(raw: str, mapping: Mapping[str, str] | None = None) -> str:
     """P6 — decode an internal id to a human label; never show raw keys."""
     if mapping and raw in mapping:
         return mapping[raw]
-    # Best-effort: take a trailing human-ish segment, strip hashes.
-    tail = str(raw).replace("_", " ").split(":")[0].strip()
-    return tail or "item"
+    # Best-effort: prefer the most specific non-opaque namespace segment.
+    segments = str(raw).replace("/", ":").split(":")
+    for segment in reversed(segments):
+        label = _human_label_segment(segment)
+        if label:
+            return label
+    return "item"
+
+
+def _human_label_segment(segment: str) -> str:
+    words = [part for part in segment.replace("-", "_").split("_") if part]
+    meaningful = []
+    for word in words:
+        lowered = word.lower()
+        if lowered.isdigit():
+            continue
+        if len(lowered) >= 8 and all(ch in "0123456789abcdef" for ch in lowered):
+            continue
+        meaningful.append(word)
+    if not meaningful:
+        return ""
+    return " ".join(meaningful).strip()
