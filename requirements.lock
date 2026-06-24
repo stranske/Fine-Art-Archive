@@ -48,7 +48,7 @@ imagehash==4.3.2
     # via fine-art-archive (pyproject.toml)
 iniconfig==2.3.0
     # via pytest
-jsonschema==4.26.0
+jsonschema==4.22.0
     # via fine-art-archive (pyproject.toml)
 jsonschema-specifications==2025.9.1
     # via jsonschema
