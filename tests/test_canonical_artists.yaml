@@ -1,0 +1,78 @@
+artists:
+  # Wikidata-attested artists (have wikidata_qid)
+  - name: Claude Monet
+    wikidata_qid: Q33992
+    aliases:
+      - Claude Oscar Monet
+  - name: Vincent van Gogh
+    wikidata_qid: Q5582
+    aliases:
+      - Vincent Willem van Gogh
+      - Van Gogh
+  - name: Pierre-Auguste Renoir
+    wikidata_qid: Q37799
+    aliases:
+      - Auguste Renoir
+      - P A Renoir
+  - name: Edgar Degas
+    wikidata_qid: Q34906
+    aliases:
+      - Hilaire-Germain-Edgar Degas
+      - Edgar Germain Hilaire Degas
+  - name: Mary Cassatt
+    wikidata_qid: Q234646
+    aliases:
+      - Mary Stevenson Cassatt
+  - name: Rembrandt van Rijn
+    wikidata_qid: Q762
+    aliases:
+      - Rembrandt Harmensz van Rijn
+      - Rembrandt
+  - name: Pieter Bruegel the Elder
+    wikidata_qid: Q43270
+    aliases:
+      - Bruegel
+      - Pieter Brueghel the Elder
+
+  # Non-Wikidata artists (only full string match)
+  - name: James Ensor
+    aliases:
+      - Ensor
+  - name: Camille Pissarro
+    aliases:
+      - Jacob Abraham Camille Pissarro
+  - name: Norman Rockwell
+    aliases:
+      - Rockwell
+  - name: Eugene Boudin
+    aliases:
+      - Boudin
+  - name: Hilaire-Germain-Edgar Degas
+    aliases: []
+
+  # Single-word artists
+  - name: Giotto
+    wikidata_qid: Q37084
+  - name: Caravaggio
+    wikidata_qid: Q45588
+  - name: Raphael
+    wikidata_qid: Q5581
+  - name: Titian
+    wikidata_qid: Q157076
+
+  # Artists with name connectors
+  - name: Jan van Eyck
+    wikidata_qid: Q44735
+    aliases:
+      - van Eyck
+  - name: Albrecht Dürer
+    wikidata_qid: Q5099
+  - name: Hans Holbein the Younger
+    wikidata_qid: Q152014
+    aliases:
+      - Holbein
+  - name: Diego Velázquez
+    wikidata_qid: Q34932
+    aliases:
+      - Velazquez
+      - Diego Rodríguez de Silva y Velázquez
