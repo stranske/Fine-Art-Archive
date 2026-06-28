@@ -153,7 +153,8 @@ def test_fetch_wikidata_sparql_parse_failure(monkeypatch):
 # ---------------------------------------------------------------------------
 # Wikipedia List Fetcher Tests
 # ---------------------------------------------------------------------------
-MOCK_WIKITEXT = """
+MOCK_WIKITEXT = (
+    """
 {| class="wikitable"
 |-
 | [[File:Mona_Lisa.jpg|thumb|100px]]
@@ -169,7 +170,9 @@ MOCK_WIKITEXT = """
 | ''The Baptism of Christ''
 | no date here
 |-
-| ''""" + ("A" * 201) + """''
+| ''"""
+    + ("A" * 201)
+    + """''
 | no date here
 |-
 | [[Lady with an Ermine (painting)|Lady with an Ermine]]
@@ -178,9 +181,14 @@ MOCK_WIKITEXT = """
 |-
 | [[Ginevra de' Benci (Leonardo)|Ginevra de' Benci]]
 |-
-| [[""" + ("B" * 201) + """ (Leonardo)|""" + ("B" * 201) + """]]
+| [["""
+    + ("B" * 201)
+    + """ (Leonardo)|"""
+    + ("B" * 201)
+    + """]]
 |}
 """
+)
 
 
 def test_fetch_wikipedia_list_success(monkeypatch):
@@ -289,7 +297,9 @@ def test_fetch_met(monkeypatch):
         url = req.full_url if hasattr(req, "full_url") else req
 
         if "public/collection/v1/search" in url:
-            return MockResponse(json.dumps({"objectIDs": [101, 102, 103, 104, 105, 106, 107, 108]}).encode("utf-8"))
+            return MockResponse(
+                json.dumps({"objectIDs": [101, 102, 103, 104, 105, 106, 107, 108]}).encode("utf-8")
+            )
 
         if "public/collection/v1/objects/101" in url:
             return MockResponse(
@@ -423,7 +433,9 @@ def test_fetch_met_no_results(monkeypatch):
 # Merger Tests
 # ---------------------------------------------------------------------------
 def test_merge_works():
-    w1 = KnownWork(title="Mona Lisa", year=1503, sources=["wikidata"], source_ids={"wikidata": "Q12418"})
+    w1 = KnownWork(
+        title="Mona Lisa", year=1503, sources=["wikidata"], source_ids={"wikidata": "Q12418"}
+    )
     w2 = KnownWork(
         title="Mona Lisa",
         year=1505,
