@@ -5,7 +5,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -25,6 +27,16 @@ NEGATIVE = SAMPLE / "resources" / "_negative_qkogy_milkmaid.jpg"
 def _require_master():
     if not MASTER.exists():
         pytest.skip("Vermeer sample master.jpg not present")
+
+
+def _write_synthetic_textured_jpeg(path: Path) -> Path:
+    yy, xx = np.mgrid[0:240, 0:320]
+    arr = np.zeros((240, 320, 3), dtype=np.uint8)
+    arr[..., 0] = ((xx * 7 + yy * 3) % 256).astype(np.uint8)
+    arr[..., 1] = ((xx * 2 + yy * 11) % 256).astype(np.uint8)
+    arr[..., 2] = (((xx // 4 % 2) ^ (yy // 4 % 2)) * 180 + 40).astype(np.uint8)
+    Image.fromarray(arr).save(path, quality=91, icc_profile=b"fake-profile")
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +92,55 @@ def test_vermeer_laplacian_indicates_sharpness():
     r = quality_report(MASTER, h_cm=54.3, w_cm=44.0)
     # Vermeer's fine detail should produce non-trivial Laplacian variance.
     assert r.laplacian_variance > 100
+
+
+def test_generated_image_quality_report_extracts_jpeg_metrics(tmp_path):
+    image_path = _write_synthetic_textured_jpeg(tmp_path / "textured.jpg")
+
+    r = quality_report(
+        image_path,
+        h_cm=24.0,
+        w_cm=32.0,
+        devices=["pimoroni_inky_13_3", "meural_landscape"],
+    )
+
+    assert r.long_edge_px == 320
+    assert r.short_edge_px == 240
+    assert r.pixel_area_mp == pytest.approx(0.0768)
+    assert r.px_per_cm_long == pytest.approx(10.0)
+    assert r.bytes_per_megapixel == pytest.approx(image_path.stat().st_size / 0.0768)
+    assert r.icc_profile_present is True
+    assert r.icc_profile_bytes == len(b"fake-profile")
+    if r.jpeg_quality_factor is not None:
+        assert 85 <= r.jpeg_quality_factor <= 95
+    assert r.laplacian_variance > 100
+    assert r.fft_highfreq_ratio > 0.001
+    assert r.fitness == {
+        "pimoroni_inky_13_3": "unfit",
+        "meural_landscape": "unfit",
+    }
+    assert "no embedded ICC profile; treated as sRGB" not in r.notes
+
+
+def test_generated_image_quality_report_flags_low_information_jpeg(tmp_path):
+    image_path = tmp_path / "flat.jpg"
+    Image.new("RGB", (256, 256), (128, 128, 128)).save(image_path, quality=30)
+
+    r = quality_report(image_path, devices=["pimoroni_inky_13_3"])
+
+    assert r.long_edge_px == 256
+    assert r.short_edge_px == 256
+    assert r.px_per_cm_long is None
+    assert r.bytes_per_megapixel < 75_000
+    assert r.icc_profile_present is False
+    assert r.laplacian_variance == 0.0
+    assert r.fft_highfreq_ratio == 0.0
+    assert r.fitness["pimoroni_inky_13_3"] == "unfit"
+    assert "very low FFT high-frequency energy; suspected upscale" in r.notes
+    assert "aggressive JPEG compression (bpp < 75 KB/MP)" in r.notes
+    assert "no embedded ICC profile; treated as sRGB" in r.notes
+    if r.jpeg_quality_factor is not None:
+        assert f"low JPEG Q factor: {r.jpeg_quality_factor}" in r.notes
 
 
 # ---------------------------------------------------------------------------
