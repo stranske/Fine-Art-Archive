@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from fine_art_archive.collect.verify import (  # noqa: E402
@@ -89,6 +91,116 @@ def test_verify_with_higher_layer_flags_returns_skip_placeholders():
 
 
 # -- Layer 2: perceptual hash -----------------------------------------------
+
+
+def _synthetic_work_image(size: tuple[int, int]) -> Image.Image:
+    img = Image.new("RGB", size, "#f7eed6")
+    draw = ImageDraw.Draw(img)
+    w, h = size
+    for x in range(0, w, 12):
+        shade = 80 + (x * 7) % 120
+        draw.line([(x, 0), (w - x // 2, h)], fill=(shade, 90, 120), width=3)
+    draw.rectangle(
+        (w * 0.18, h * 0.22, w * 0.78, h * 0.82),
+        outline="#2b4b5f",
+        width=max(2, w // 50),
+    )
+    draw.ellipse(
+        (w * 0.34, h * 0.28, w * 0.62, h * 0.58),
+        fill="#b85c38",
+        outline="#1d1d1d",
+        width=2,
+    )
+    draw.polygon(
+        [(w * 0.25, h * 0.75), (w * 0.52, h * 0.44), (w * 0.84, h * 0.76)],
+        fill="#5a7455",
+    )
+    return img
+
+
+def _synthetic_mismatch_image(size: tuple[int, int]) -> Image.Image:
+    img = Image.new("RGB", size, "#18212b")
+    draw = ImageDraw.Draw(img)
+    w, h = size
+    for y in range(0, h, 8):
+        color = (220, 220, 40) if y // 8 % 2 == 0 else (40, 140, 210)
+        draw.rectangle((0, y, w, y + 4), fill=color)
+    for x in range(0, w, 16):
+        draw.line((x, 0, w - x, h), fill=(240, 80, 80), width=2)
+    draw.rectangle((w * 0.1, h * 0.1, w * 0.9, h * 0.9), outline=(255, 255, 255), width=4)
+    return img
+
+
+def _save_synthetic_jpeg(path: Path, image: Image.Image) -> Path:
+    image.save(path, quality=92)
+    return path
+
+
+def test_generated_image_perceptual_hash_passes_for_same_work_at_different_sizes(tmp_path):
+    from fine_art_archive.collect.verify import check_perceptual_hash
+
+    reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
+    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_work_image((256, 320)))
+
+    result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+
+    assert result.status == "PASS"
+    assert result.detail["phash_distance"] <= 12
+    assert result.detail["dhash_distance"] <= 12
+    assert result.detail["candidate_size"] == [256, 320]
+    assert result.detail["reference_size"] == [128, 160]
+
+
+def test_generated_image_perceptual_hash_fails_for_different_work_with_same_aspect(tmp_path):
+    from fine_art_archive.collect.verify import check_perceptual_hash
+
+    reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
+    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320)))
+
+    result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+
+    assert result.status == "FAIL"
+    assert result.detail["phash_distance"] > 12
+    assert result.detail["dhash_distance"] > 12
+    assert "both hashes over threshold" in result.message
+
+
+def test_generated_image_verify_layer2_passes_when_aspect_and_hash_match(tmp_path):
+    reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
+    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_work_image((256, 320)))
+
+    report = verify(
+        h_cm=20.0,
+        w_cm=16.0,
+        h_px=320,
+        w_px=256,
+        candidate_path=candidate,
+        reference_path=reference,
+    )
+
+    statuses = {c.name: c.status for c in report.checks}
+    assert report.overall == "PASS"
+    assert statuses["aspect_ratio"] == "PASS"
+    assert statuses["perceptual_hash"] == "PASS"
+
+
+def test_generated_image_verify_layer2_fails_when_hash_mismatches_despite_matching_aspect(tmp_path):
+    reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
+    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320)))
+
+    report = verify(
+        h_cm=20.0,
+        w_cm=16.0,
+        h_px=320,
+        w_px=256,
+        candidate_path=candidate,
+        reference_path=reference,
+    )
+
+    statuses = {c.name: c.status for c in report.checks}
+    assert report.overall == "FAIL"
+    assert statuses["aspect_ratio"] == "PASS"
+    assert statuses["perceptual_hash"] == "FAIL"
 
 
 def test_perceptual_hash_passes_on_real_vermeer_match():
