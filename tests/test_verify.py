@@ -155,7 +155,9 @@ def test_generated_image_perceptual_hash_fails_for_different_work_with_same_aspe
     from fine_art_archive.collect.verify import check_perceptual_hash
 
     reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
-    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320)))
+    candidate = _save_synthetic_jpeg(
+        tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320))
+    )
 
     result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
 
@@ -186,7 +188,9 @@ def test_generated_image_verify_layer2_passes_when_aspect_and_hash_match(tmp_pat
 
 def test_generated_image_verify_layer2_fails_when_hash_mismatches_despite_matching_aspect(tmp_path):
     reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", _synthetic_work_image((128, 160)))
-    candidate = _save_synthetic_jpeg(tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320)))
+    candidate = _save_synthetic_jpeg(
+        tmp_path / "candidate.jpg", _synthetic_mismatch_image((256, 320))
+    )
 
     report = verify(
         h_cm=20.0,
