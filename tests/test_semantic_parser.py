@@ -40,13 +40,16 @@ artists:
 @pytest.fixture
 def reset_corpus():
     """Clear module-level artist corpora before and after each test."""
+    prev_full = semantic._KNOWN_ARTISTS_FULL
+    prev_surnames = semantic._KNOWN_ARTISTS_SURNAMES
+    prev_wikidata = semantic._WIKIDATA_ATTESTED
     semantic._KNOWN_ARTISTS_FULL = set()
     semantic._KNOWN_ARTISTS_SURNAMES = set()
     semantic._WIKIDATA_ATTESTED = set()
     yield
-    semantic._KNOWN_ARTISTS_FULL = set()
-    semantic._KNOWN_ARTISTS_SURNAMES = set()
-    semantic._WIKIDATA_ATTESTED = set()
+    semantic._KNOWN_ARTISTS_FULL = prev_full
+    semantic._KNOWN_ARTISTS_SURNAMES = prev_surnames
+    semantic._WIKIDATA_ATTESTED = prev_wikidata
 
 
 @pytest.fixture
@@ -135,9 +138,7 @@ def test_split_with_separators_short_semicolon_list_keeps_semis(reset_corpus):
 
 
 def test_parse_semantic_title_first(canonical_corpus):
-    result = parse_semantic(
-        "After the Bullfight; Mary Cassatt; 1873; Oil on canvas; 82.5 × 64 cm"
-    )
+    result = parse_semantic("After the Bullfight; Mary Cassatt; 1873; Oil on canvas; 82.5 × 64 cm")
     assert result.title == "After the Bullfight"
     assert result.artist == "Mary Cassatt"
     assert result.year == "1873"
@@ -147,9 +148,7 @@ def test_parse_semantic_title_first(canonical_corpus):
 
 
 def test_parse_semantic_artist_first(canonical_corpus):
-    result = parse_semantic(
-        "Ensor, Masks Confronting Death; 1888; oil on canvas; 72 × 94 cm"
-    )
+    result = parse_semantic("Ensor, Masks Confronting Death; 1888; oil on canvas; 72 × 94 cm")
     assert result.artist == "Ensor"
     assert "Masks Confronting Death" in result.title
     assert result.year == "1888"
@@ -169,9 +168,7 @@ def test_parse_semantic_out_of_order(canonical_corpus):
 
 
 def test_parse_semantic_multi_comma_title_plus_artist(canonical_corpus):
-    result = parse_semantic(
-        "Orchard in Bloom, Louveciennes, Camille Pissarro; 1872; oil on canvas"
-    )
+    result = parse_semantic("Orchard in Bloom, Louveciennes, Camille Pissarro; 1872; oil on canvas")
     assert result.artist == "Camille Pissarro"
     assert "Orchard in Bloom" in result.title
     assert "Louveciennes" in result.title
@@ -180,9 +177,7 @@ def test_parse_semantic_multi_comma_title_plus_artist(canonical_corpus):
 
 
 def test_parse_semantic_numbered_prefix(canonical_corpus):
-    result = parse_semantic(
-        "No. 32 - Seba, from the series Natural History; 1830; engraving"
-    )
+    result = parse_semantic("No. 32 - Seba, from the series Natural History; 1830; engraving")
     assert result.number == "32"
     assert result.year == "1830"
     assert result.medium == "engraving"
@@ -200,9 +195,10 @@ def test_parse_semantic_ambiguous_competing_artists(canonical_corpus):
     result = parse_semantic("Mary Cassatt; Claude Monet; 1880")
     assert result.ambiguous is True
     assert len(result.notes) >= 1
-    assert "competing name candidates" in result.notes[0]
-    assert "Mary Cassatt" in result.notes[0]
-    assert "Claude Monet" in result.notes[0]
+    assert any(
+        "competing name candidates" in note and "Mary Cassatt" in note and "Claude Monet" in note
+        for note in result.notes
+    )
 
 
 # --- canonical_artist_first -------------------------------------------------
@@ -226,10 +222,7 @@ def test_canonical_artist_first_includes_series(reset_corpus):
         series="from the series Zen",
         raw_stem="ignored",
     )
-    assert (
-        canonical_artist_first(parsed)
-        == "Claude Monet; Water Lilies; 1919; from the series Zen"
-    )
+    assert canonical_artist_first(parsed) == "Claude Monet; Water Lilies; 1919; from the series Zen"
 
 
 def test_canonical_artist_first_falls_back_to_raw_stem(reset_corpus):
