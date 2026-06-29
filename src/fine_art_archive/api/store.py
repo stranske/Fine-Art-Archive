@@ -242,9 +242,9 @@ def ratings_summary() -> dict:
     return {
         "n_events": len(events),
         "n_works_rated": len(by_work),
-        "rating_distribution": {str(k): dist[k] for k in sorted(dist)},  # type: ignore[type-var]
-        "quality_distribution": {str(k): quality_dist[k] for k in sorted(quality_dist)},
-        "fit_distribution": {str(k): fit_dist[k] for k in sorted(fit_dist)},
+        "rating_distribution": {str(k): dist[k] for k in sorted(dist, key=str)},
+        "quality_distribution": {str(k): quality_dist[k] for k in sorted(quality_dist, key=str)},
+        "fit_distribution": {str(k): fit_dist[k] for k in sorted(fit_dist, key=str)},
         "by_surface": dict(by_surface),
         "most_rated_works": [
             {
