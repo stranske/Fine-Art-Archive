@@ -19,7 +19,8 @@ from fine_art_archive.collect.verify import (  # noqa: E402
 
 
 def _save(path: Path, image: Image.Image) -> Path:
-    image.save(path, quality=95)
+    path = path.with_suffix(".png")
+    image.save(path, format="PNG")
     return path
 
 
@@ -50,7 +51,7 @@ def _crop_and_reframe(image: Image.Image) -> Image.Image:
 
 
 def _wrong_color_copy(image: Image.Image) -> Image.Image:
-    arr = np.asarray(image.convert("RGB"), dtype=np.uint8).copy()
+    arr = np.asarray(image.convert("RGB"), dtype=np.int16).copy()
     mask = np.any(arr < 235, axis=2)
     arr[mask] = np.stack(
         [
@@ -60,7 +61,7 @@ def _wrong_color_copy(image: Image.Image) -> Image.Image:
         ],
         axis=1,
     )
-    return Image.fromarray(arr, "RGB")
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGB")
 
 
 def _shape_embedding(image: object) -> list[float]:
@@ -75,8 +76,8 @@ def _shape_embedding(image: object) -> list[float]:
 
 
 def test_embedding_leg_passes_cropped_reframed_work_when_phash_fails(tmp_path):
-    reference = _save(tmp_path / "reference.jpg", _reference_work())
-    candidate = _save(tmp_path / "candidate.jpg", _crop_and_reframe(_reference_work()))
+    reference = _save(tmp_path / "reference.png", _reference_work())
+    candidate = _save(tmp_path / "candidate.png", _crop_and_reframe(_reference_work()))
 
     phash = check_perceptual_hash(
         candidate_path=candidate,
@@ -108,8 +109,8 @@ def test_embedding_leg_passes_cropped_reframed_work_when_phash_fails(tmp_path):
 
 
 def test_embedding_leg_fails_different_artwork(tmp_path):
-    reference = _save(tmp_path / "reference.jpg", _reference_work())
-    candidate = _save(tmp_path / "different.jpg", _different_work())
+    reference = _save(tmp_path / "reference.png", _reference_work())
+    candidate = _save(tmp_path / "different.png", _different_work())
 
     result = check_embedding_similarity(
         candidate_path=candidate,
@@ -123,8 +124,8 @@ def test_embedding_leg_fails_different_artwork(tmp_path):
 
 
 def test_color_check_flags_color_wrong_copy_even_when_embedding_matches(tmp_path):
-    reference = _save(tmp_path / "reference.jpg", _reference_work())
-    candidate = _save(tmp_path / "wrong-color.jpg", _wrong_color_copy(_reference_work()))
+    reference = _save(tmp_path / "reference.png", _reference_work())
+    candidate = _save(tmp_path / "wrong-color.png", _wrong_color_copy(_reference_work()))
 
     report = verify(
         h_cm=20.0,
@@ -148,8 +149,8 @@ def test_color_check_flags_color_wrong_copy_even_when_embedding_matches(tmp_path
 
 
 def test_embedding_model_absent_skips_without_crashing(tmp_path, monkeypatch):
-    reference = _save(tmp_path / "reference.jpg", _reference_work())
-    candidate = _save(tmp_path / "candidate.jpg", _reference_work())
+    reference = _save(tmp_path / "reference.png", _reference_work())
+    candidate = _save(tmp_path / "candidate.png", _reference_work())
 
     def missing_backend():
         raise ImportError("open_clip")
@@ -167,5 +168,35 @@ def test_embedding_model_absent_skips_without_crashing(tmp_path, monkeypatch):
     )
 
     statuses = {check.name: check.status for check in report.checks}
+    assert report.overall == "PASS"
+    assert statuses["perceptual_hash"] == "PASS"
+    assert statuses["clip_similarity"] == "SKIP"
+    assert statuses["color_distance"] == "PASS"
+
+
+def test_embedding_skip_keeps_phash_blocking_for_identity_mismatch(tmp_path, monkeypatch):
+    reference = _save(tmp_path / "reference.png", _reference_work())
+    candidate = _save(tmp_path / "candidate.png", _crop_and_reframe(_reference_work()))
+
+    def missing_backend():
+        raise RuntimeError("model download unavailable")
+
+    monkeypatch.setattr("fine_art_archive.collect.verify._load_open_clip_backend", missing_backend)
+
+    report = verify(
+        h_cm=20.0,
+        w_cm=20.0,
+        h_px=180,
+        w_px=180,
+        candidate_path=candidate,
+        reference_path=reference,
+        phash_threshold=2,
+        dhash_threshold=2,
+        enable_clip=True,
+    )
+
+    statuses = {check.name: check.status for check in report.checks}
+    assert report.overall == "FAIL"
+    assert statuses["perceptual_hash"] == "FAIL"
     assert statuses["clip_similarity"] == "SKIP"
     assert statuses["color_distance"] == "PASS"
