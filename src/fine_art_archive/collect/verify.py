@@ -198,6 +198,7 @@ def verify(
     # Layer 2 hook: when a reference image path is supplied, run pHash check.
     candidate_path: Path | None = None,
     reference_path: Path | None = None,
+    aspect_threshold: float = 0.05,
     phash_threshold: int = 12,
     dhash_threshold: int = 12,
     # Layer 3+ hooks (Phase 5c+); not implemented yet.
@@ -211,7 +212,15 @@ def verify(
     are supplied. Higher layers are skip-stubs.
     """
     report = VerificationReport()
-    report.checks.append(check_aspect_ratio(h_cm=h_cm, w_cm=w_cm, h_px=h_px, w_px=w_px))
+    report.checks.append(
+        check_aspect_ratio(
+            h_cm=h_cm,
+            w_cm=w_cm,
+            h_px=h_px,
+            w_px=w_px,
+            threshold=aspect_threshold,
+        )
+    )
 
     if candidate_path is not None and reference_path is not None:
         report.checks.append(
