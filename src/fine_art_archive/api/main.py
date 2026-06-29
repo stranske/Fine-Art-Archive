@@ -634,6 +634,15 @@ def work_ratings(work_id: str) -> dict:
     return {"work_id": work_id, "ratings": store.list_ratings_for(work_id)}
 
 
+@app.api_route("/works/{work_path:path}", methods=["GET", "POST"])
+def reject_invalid_nested_work_path(work_path: str) -> None:
+    try:
+        store.validate_work_id(work_path)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+    raise HTTPException(404, f"no route for work path {work_path}")
+
+
 @app.get("/ratings/recent")
 def recent_ratings(limit: int = Query(20, ge=1, le=200)) -> dict:
     return {"ratings": store.recent_ratings(limit=limit)}
