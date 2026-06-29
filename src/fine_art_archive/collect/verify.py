@@ -289,6 +289,12 @@ def check_embedding_similarity(
                 status="SKIP",
                 message=f"embedding backend unavailable: {exc.name}",
             )
+        except (OSError, RuntimeError) as exc:
+            return CheckResult(
+                name="clip_similarity",
+                status="SKIP",
+                message=f"embedding backend failed to load: {exc}",
+            )
 
     with Image.open(candidate_path) as cand_img, Image.open(reference_path) as ref_img:
         cand_vec = embedding_backend(cand_img.convert("RGB"))
@@ -388,19 +394,37 @@ def verify(
     report = VerificationReport()
     report.checks.append(check_aspect_ratio(h_cm=h_cm, w_cm=w_cm, h_px=h_px, w_px=w_px))
 
+    candidate_image_path: Path | None = None
+    reference_image_path: Path | None = None
     if candidate_path is not None and reference_path is not None:
+        candidate_image_path = Path(candidate_path)
+        reference_image_path = Path(reference_path)
+    have_paths = candidate_image_path is not None and reference_image_path is not None
+    clip_result: CheckResult | None = None
+    if enable_clip and have_paths:
+        assert candidate_image_path is not None and reference_image_path is not None
+        clip_result = check_embedding_similarity(
+            candidate_path=candidate_image_path,
+            reference_path=reference_image_path,
+            threshold=clip_threshold,
+            embedding_backend=embedding_backend,
+        )
+
+    embedding_ran = clip_result is not None and clip_result.status != "SKIP"
+    if have_paths:
+        assert candidate_image_path is not None and reference_image_path is not None
         report.checks.append(
             check_perceptual_hash(
-                candidate_path=Path(candidate_path),
-                reference_path=Path(reference_path),
+                candidate_path=candidate_image_path,
+                reference_path=reference_image_path,
                 phash_threshold=phash_threshold,
                 dhash_threshold=dhash_threshold,
-                blocks_overall=not enable_clip,
+                blocks_overall=not embedding_ran,
             )
         )
 
     if enable_clip:
-        if candidate_path is None or reference_path is None:
+        if not have_paths:
             report.checks.append(
                 CheckResult(
                     name="clip_similarity",
@@ -409,18 +433,16 @@ def verify(
                 )
             )
         else:
-            report.checks.append(
-                check_embedding_similarity(
-                    candidate_path=Path(candidate_path),
-                    reference_path=Path(reference_path),
-                    threshold=clip_threshold,
-                    embedding_backend=embedding_backend,
-                )
+            assert (
+                clip_result is not None
+                and candidate_image_path is not None
+                and reference_image_path is not None
             )
+            report.checks.append(clip_result)
             report.checks.append(
                 check_color_distance(
-                    candidate_path=Path(candidate_path),
-                    reference_path=Path(reference_path),
+                    candidate_path=candidate_image_path,
+                    reference_path=reference_image_path,
                     threshold=color_threshold,
                 )
             )
