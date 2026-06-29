@@ -41,6 +41,8 @@ def write_sidecar(root: Path, work_id: str, payload: dict | None = None) -> Path
         ("get", "/works/%2E%2E", None),
         ("get", "/works/%2E%2E%5Cmeta", None),
         ("get", "/works/vermeer%00little", None),
+        ("get", "/works/%2E%2E/image", None),
+        ("get", "/works/%2E%2E/full", None),
         ("get", "/works/%2E%2E/ratings", None),
         ("post", "/works/%2E%2E/rate", {"quality": 5, "surface": "companion-app"}),
         ("post", "/works/%2E%2E/subject_action", {"action": "freetext_review", "text": "x"}),
