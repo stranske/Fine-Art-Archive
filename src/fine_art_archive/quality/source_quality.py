@@ -222,7 +222,7 @@ def composite_score(
     confidence_floor_weight: float = CONFIDENCE_FLOOR_WEIGHT,
 ) -> float:
     """The weighted formula from source_quality_design.md."""
-    active_weights = weights or COMPOSITE_WEIGHTS
+    active_weights = COMPOSITE_WEIGHTS if weights is None else weights
     base = sum(active_weights[k] * float(stats.get(k, 0.0)) for k in active_weights)
     floor_term = (
         1.0 if n_acquired >= CONFIDENCE_FLOOR_FULL_AT else n_acquired / CONFIDENCE_FLOOR_FULL_AT
