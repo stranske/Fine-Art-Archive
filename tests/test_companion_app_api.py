@@ -100,6 +100,10 @@ def test_ratings_summary_includes_two_axis_and_legacy_ratings(
         "/works/test-wid/rate",
         json={"quality": 9, "fit": 6, "surface": "companion-app"},
     )
+    high_quality = client.post(
+        "/works/test-wid/rate",
+        json={"quality": 10, "fit": 10, "surface": "companion-app"},
+    )
     legacy = client.post(
         "/works/legacy-wid/rate",
         json={"rating": 2, "surface": "companion-app"},
@@ -107,20 +111,23 @@ def test_ratings_summary_includes_two_axis_and_legacy_ratings(
 
     assert first.status_code == 200
     assert second.status_code == 200
+    assert high_quality.status_code == 200
     assert legacy.status_code == 200
 
     r = client.get("/ratings/summary")
     assert r.status_code == 200
     body = r.json()
-    assert body["n_events"] == 3
-    assert body["quality_distribution"] == {"7": 1, "9": 1}
-    assert body["fit_distribution"] == {"4": 1, "6": 1}
+    assert body["n_events"] == 4
+    assert list(body["quality_distribution"]) == ["7", "9", "10"]
+    assert body["quality_distribution"] == {"7": 1, "9": 1, "10": 1}
+    assert list(body["fit_distribution"]) == ["4", "6", "10"]
+    assert body["fit_distribution"] == {"4": 1, "6": 1, "10": 1}
     assert body["rating_distribution"] == {"2": 1}
 
     by_work = {entry["work_id"]: entry for entry in body["most_rated_works"]}
-    assert by_work["test-wid"]["n_ratings"] == 2
-    assert by_work["test-wid"]["last_quality"] == 9
-    assert by_work["test-wid"]["last_fit"] == 6
+    assert by_work["test-wid"]["n_ratings"] == 3
+    assert by_work["test-wid"]["last_quality"] == 10
+    assert by_work["test-wid"]["last_fit"] == 10
     assert by_work["test-wid"]["last_rating"] is None
     assert by_work["legacy-wid"]["last_rating"] == 2
 

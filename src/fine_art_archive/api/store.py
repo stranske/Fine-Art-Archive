@@ -232,6 +232,10 @@ def recent_ratings(*, limit: int = 20) -> list[dict]:
     return sorted(_load_ratings(), key=lambda e: e.get("ts", ""), reverse=True)[:limit]
 
 
+def _numeric_distribution(dist: Counter) -> dict[str, int]:
+    return {str(k): dist[k] for k in sorted(dist)}
+
+
 def ratings_summary() -> dict:
     events = _load_ratings()
     dist = Counter(e.get("rating") for e in events if e.get("rating") is not None)
@@ -242,9 +246,9 @@ def ratings_summary() -> dict:
     return {
         "n_events": len(events),
         "n_works_rated": len(by_work),
-        "rating_distribution": {str(k): dist[k] for k in sorted(dist, key=str)},
-        "quality_distribution": {str(k): quality_dist[k] for k in sorted(quality_dist, key=str)},
-        "fit_distribution": {str(k): fit_dist[k] for k in sorted(fit_dist, key=str)},
+        "rating_distribution": _numeric_distribution(dist),
+        "quality_distribution": _numeric_distribution(quality_dist),
+        "fit_distribution": _numeric_distribution(fit_dist),
         "by_surface": dict(by_surface),
         "most_rated_works": [
             {
