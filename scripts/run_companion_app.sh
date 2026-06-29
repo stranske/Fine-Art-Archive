@@ -5,8 +5,13 @@
 #   ./scripts/run_companion_app.sh   # then browse http://127.0.0.1:8401/
 #
 # Environment:
-#   FAA_APP_HOST   bind host (default 127.0.0.1)
-#   FAA_APP_PORT   bind port (default 8401)
+#   FAA_APP_HOST         bind host (default 127.0.0.1)
+#   FAA_APP_PORT         bind port (default 8401)
+#   FAA_ART_WORKS_ROOT   promoted masters root (default ~/Library/CloudStorage/Dropbox/Pictures/Art/works)
+#   FAA_STAGING_DIR      sidecar root (default ./staging_sidecars)
+#   FAA_MANIFEST_CSV     flat manifest path (default ./manifest.csv)
+#   FAA_RATINGS_LOG      ratings JSONL path (default ./data/ratings_log.jsonl)
+#   FAA_IMAGE_CACHE_DIR  resized image cache (default ./data/image_cache)
 # Extra args are passed through to uvicorn (e.g. --reload).
 set -euo pipefail
 

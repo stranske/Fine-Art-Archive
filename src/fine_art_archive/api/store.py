@@ -11,14 +11,14 @@ import csv
 import json
 from collections import Counter, defaultdict
 from functools import lru_cache
-from pathlib import Path
 
 from fine_art_archive.identity import build_alias_table, resolve_artist
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-STAGING = REPO_ROOT / "staging_sidecars"
-MANIFEST_CSV = REPO_ROOT / "manifest.csv"
-RATINGS_LOG = REPO_ROOT / "data" / "ratings_log.jsonl"
+from .config import REPO_ROOT, env_path
+
+STAGING = env_path("FAA_STAGING_DIR", REPO_ROOT / "staging_sidecars")
+MANIFEST_CSV = env_path("FAA_MANIFEST_CSV", REPO_ROOT / "manifest.csv")
+RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 
 
 # --------------------------------------------------------------------------
