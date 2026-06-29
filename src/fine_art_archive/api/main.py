@@ -16,16 +16,16 @@ from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
 from . import store
+from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
-RATINGS_LOG = REPO_ROOT / "data" / "ratings_log.jsonl"
+RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 VARIANT_UPGRADE_DECISIONS = REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
 VARIANT_UPGRADE_CSV = REPO_ROOT / "variant_upgrade_candidates.csv"
 
 # Canonical archive root where promoted masters live: Art/works/<wid>/master.<ext>
-ART_WORKS_ROOT = Path("/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Art/works")
-IMAGE_CACHE_DIR = REPO_ROOT / "data" / "image_cache"
+ART_WORKS_ROOT = env_path("FAA_ART_WORKS_ROOT", DEFAULT_ART_WORKS_ROOT)
+IMAGE_CACHE_DIR = env_path("FAA_IMAGE_CACHE_DIR", REPO_ROOT / "data" / "image_cache")
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
