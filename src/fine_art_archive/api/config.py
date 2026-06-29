@@ -9,7 +9,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def env_path(name: str, default: Path) -> Path:
-    return Path(os.environ.get(name, default)).expanduser()
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default.expanduser()
+
+    path = Path(raw).expanduser()
+    return path if path.is_absolute() else REPO_ROOT / path
 
 
 DEFAULT_ART_WORKS_ROOT = (
