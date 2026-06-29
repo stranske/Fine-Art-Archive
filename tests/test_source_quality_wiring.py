@@ -86,6 +86,23 @@ def test_source_quality_yaml_drives_candidate_routing(tmp_path: Path) -> None:
     assert second.source == "met"
 
 
+def test_source_quality_routing_normalizes_source_aliases() -> None:
+    aggregates = {
+        "sources": {
+            "cleveland": {"western-painting-19c": {"composite_score": 0.95}},
+            "met": {"western-painting-19c": {"composite_score": 0.20}},
+        }
+    }
+
+    selected, _reason = af.select_source(
+        "western-painting-19c",
+        ["met", "cleveland_museum_of_art"],
+        aggregates,
+    )
+
+    assert selected == "cleveland_museum_of_art"
+
+
 def test_nan_composite_score_cannot_win() -> None:
     aggregates = {
         "sources": {
@@ -105,7 +122,7 @@ def test_infer_work_class_parses_fuzzy_years(year: str) -> None:
 
 def test_verify_threads_aspect_threshold() -> None:
     report = verify(h_cm=10.0, w_cm=10.0, h_px=1000, w_px=1100, aspect_threshold=0.10)
-    check = report.checks[0]
+    check = next(item for item in report.checks if item.name == "aspect_ratio")
     assert check.status == "PASS"
     assert check.detail["threshold"] == 0.10
 
@@ -139,3 +156,25 @@ def test_host_registry_chain_drives_candidate_routing(tmp_path: Path) -> None:
     )
 
     assert result.source == "rijksmuseum"
+
+
+def test_host_registry_qid_without_source_chain_fails_loudly(tmp_path: Path) -> None:
+    work = _make_work(tmp_path / "work")
+    registry = tmp_path / "host_registry.yaml"
+    registry.write_text(
+        yaml.safe_dump(
+            {
+                "hosts": {
+                    "unsupported": {
+                        "wikidata_q": "Q999",
+                        "primary_acquisition": {},
+                        "fallback_chain": [],
+                    }
+                }
+            },
+            sort_keys=False,
+        )
+    )
+
+    with pytest.raises(ValueError, match="no acquisition source chain"):
+        af.run_acquisition_flow("met", [work], host_qid="Q999", host_registry_path=registry)

@@ -45,6 +45,10 @@ def test_composite_confidence_floor_partial():
     assert s10 - s0 == pytest.approx(CONFIDENCE_FLOOR_WEIGHT, abs=1e-9)
 
 
+def test_composite_score_respects_empty_weight_override():
+    assert composite_score(DEFAULT_TIER_PRIORS[1], n_acquired=0, weights={}) == 0.0
+
+
 def test_verify_pass_all_gates_required():
     row = SignalRow(
         source="met",

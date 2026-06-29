@@ -94,7 +94,9 @@ def rank_sources(
     """Return candidate sources sorted by descending source-quality score."""
     ranked: list[tuple[str, float]] = []
     for src in candidate_sources:
-        ranked.append((src, source_quality.score_for(src, work_class, aggregates=aggregates)))
+        ranked.append(
+            (src, source_quality.score_for(_collector_key(src), work_class, aggregates=aggregates))
+        )
     ranked.sort(key=lambda item: (math.isfinite(item[1]), item[1]), reverse=True)
     return ranked
 
@@ -203,6 +205,8 @@ def run_acquisition_flow(
     chosen_source = source
     if candidate_sources is None and host_qid:
         candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)
+        if not candidate_sources:
+            raise ValueError(f"host {host_qid!r} has no acquisition source chain")
     if candidate_sources:
         loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)
         chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)
