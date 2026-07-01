@@ -63,6 +63,14 @@ def _archive_work_dir_checked(work_id: str) -> Path:
         raise _bad_work_id(exc) from exc
 
 
+def _contained_master_filename(work_dir: Path, filename: str) -> Path:
+    work_root = work_dir.resolve(strict=False)
+    candidate = (work_root / filename).resolve(strict=False)
+    if not candidate.is_relative_to(work_root):
+        raise HTTPException(400, "master filename escapes work directory")
+    return candidate
+
+
 # --------------------------------------------------------------------------
 # Browse endpoints (unchanged)
 # --------------------------------------------------------------------------
@@ -328,7 +336,7 @@ def _master_path(work_id: str) -> Path | None:
     if sc:
         fname = (sc.get("files") or {}).get("master", {}).get("filename")
         if fname:
-            p = work_dir / fname
+            p = _contained_master_filename(work_dir, fname)
             if p.is_file():
                 return p
     return None

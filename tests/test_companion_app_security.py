@@ -88,6 +88,28 @@ def test_subject_action_traversal_does_not_write_outside_staging(
     }
 
 
+def test_master_filename_cannot_escape_work_directory(
+    client: TestClient,
+    isolated_archive: Path,
+) -> None:
+    outside_dir = isolated_archive / "works" / "other"
+    outside_dir.mkdir(parents=True)
+    outside_master = outside_dir / "master.jpg"
+    outside_master.write_bytes(b"not really an image")
+    write_sidecar(
+        isolated_archive,
+        "vermeer-little-street",
+        {
+            "work_id": "vermeer-little-street",
+            "files": {"master": {"filename": "../other/master.jpg"}},
+        },
+    )
+
+    response = client.get("/works/vermeer-little-street/full")
+
+    assert response.status_code == 400
+
+
 def test_legitimate_work_id_still_resolves(
     client: TestClient,
     isolated_archive: Path,
