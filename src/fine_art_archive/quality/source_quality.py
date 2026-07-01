@@ -23,6 +23,7 @@ into a SourceQualityAggregate.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -213,13 +214,34 @@ class SourceQualityAggregate:
 # --------------------------------------------------------------------------
 # Scoring
 # --------------------------------------------------------------------------
-def composite_score(stats: dict[str, float], n_acquired: int = 0) -> float:
+def composite_score(
+    stats: dict[str, float],
+    n_acquired: int = 0,
+    *,
+    weights: dict[str, float] | None = None,
+    confidence_floor_weight: float = CONFIDENCE_FLOOR_WEIGHT,
+) -> float:
     """The weighted formula from source_quality_design.md."""
-    base = sum(COMPOSITE_WEIGHTS[k] * float(stats.get(k, 0.0)) for k in COMPOSITE_WEIGHTS)
+    active_weights = COMPOSITE_WEIGHTS if weights is None else weights
+    base = sum(active_weights[k] * float(stats.get(k, 0.0)) for k in active_weights)
     floor_term = (
         1.0 if n_acquired >= CONFIDENCE_FLOOR_FULL_AT else n_acquired / CONFIDENCE_FLOOR_FULL_AT
     )
-    return base + CONFIDENCE_FLOOR_WEIGHT * floor_term
+    return base + confidence_floor_weight * floor_term
+
+
+def _routing_score_from_record(rec: dict, aggregates: dict) -> float:
+    weights = aggregates.get("composite_weights")
+    confidence_floor_weight = aggregates.get("confidence_floor_weight", CONFIDENCE_FLOOR_WEIGHT)
+    blended = rec.get("blended")
+    if isinstance(weights, dict) and isinstance(blended, dict):
+        return composite_score(
+            blended,
+            n_acquired=int(rec.get("n_acquired") or 0),
+            weights={k: float(v) for k, v in weights.items()},
+            confidence_floor_weight=float(confidence_floor_weight),
+        )
+    return float(rec.get("composite_score", 0.0))
 
 
 def score_for(source: str, work_class: str, *, aggregates: dict) -> float:
@@ -228,7 +250,7 @@ def score_for(source: str, work_class: str, *, aggregates: dict) -> float:
     n_acquired=0)."""
     rec = aggregates.get("sources", {}).get(source, {}).get(work_class)
     if rec:
-        return float(rec.get("composite_score", 0.0))
+        return _routing_score_from_record(rec, aggregates)
     # No record: fall back to tier-1 prior with zero confidence floor.
     return composite_score(DEFAULT_TIER_PRIORS[1], n_acquired=0)
 
@@ -243,11 +265,9 @@ def _infer_work_class(meta: dict) -> str:
     cat = (meta.get("category") or "painting").lower()
     year_raw = meta.get("year") or meta.get("year_min") or ""
     year = None
-    for chunk in str(year_raw).replace(":", "-").split("-"):
-        chunk = chunk.strip()
-        if chunk.isdigit():
-            year = int(chunk)
-            break
+    match = re.search(r"\b(\d{3,4})(?:\.0)?\b", str(year_raw))
+    if match:
+        year = int(match.group(1))
     if cat == "photograph":
         return "photograph"
     if cat in {"sculpture"}:
