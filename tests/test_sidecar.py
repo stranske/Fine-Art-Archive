@@ -128,6 +128,54 @@ def test_additional_top_level_property_rejected():
     assert not sidecar.is_valid(meta)
 
 
+def test_category_enum_accepts_site_anchored_media():
+    """The site-anchored media are valid category values."""
+    for cat in ("architecture", "stained_glass", "mosaic", "monument",
+                "architectural_sculpture", "painting", "photograph"):
+        meta = dict(MINIMAL_VALID)
+        meta["category"] = cat
+        assert sidecar.is_valid(meta), cat
+
+
+def test_category_enum_rejects_unknown_value():
+    meta = dict(MINIMAL_VALID)
+    meta["category"] = "stained-glass-typo"
+    assert not sidecar.is_valid(meta)
+
+
+def test_category_null_or_omitted_still_valid():
+    """category is optional; null and absence both validate (backward compat)."""
+    assert sidecar.is_valid(MINIMAL_VALID)  # omitted
+    meta = dict(MINIMAL_VALID)
+    meta["category"] = None
+    assert sidecar.is_valid(meta)
+
+
+def test_site_block_valid():
+    """A site-anchored work: anonymous attribution + populated site block."""
+    meta = dict(MINIMAL_VALID)
+    meta["category"] = "stained_glass"
+    meta["artist"] = {"name": "Anonymous", "relation": "anonymous",
+                      "attribution_anchor": "Q4233718"}
+    meta["site"] = {
+        "name": "Chartres Cathedral",
+        "wikidata_q": "Q188527",
+        "element": "South rose window",
+        "commons_category": "Category:Rose windows of Chartres Cathedral",
+        "coordinates": "48.4475,1.4878",
+        "depicts_q": ["Q188527"],
+    }
+    assert sidecar.is_valid(meta)
+
+
+def test_site_block_rejects_bad_qid_and_extra_keys():
+    meta = dict(MINIMAL_VALID)
+    meta["site"] = {"name": "X", "wikidata_q": "188527"}  # missing Q prefix
+    assert not sidecar.is_valid(meta)
+    meta["site"] = {"name": "X", "unknown_site_key": "y"}  # additionalProperties false
+    assert not sidecar.is_valid(meta)
+
+
 def test_display_hints_open_additionalProperties():  # noqa: N802  -- mirrors JSON Schema keyword
     """display_hints accepts arbitrary per-device keys — that's the point."""
     meta = dict(MINIMAL_VALID)
