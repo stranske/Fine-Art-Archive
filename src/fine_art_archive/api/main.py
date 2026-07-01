@@ -38,6 +38,39 @@ def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
+def _bad_work_id(exc: ValueError) -> HTTPException:
+    return HTTPException(400, str(exc))
+
+
+def _get_work_checked(work_id: str) -> dict | None:
+    try:
+        return store.get_work(work_id)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+
+
+def _sidecar_path_checked(work_id: str) -> Path:
+    try:
+        return store.sidecar_path(work_id)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+
+
+def _archive_work_dir_checked(work_id: str) -> Path:
+    try:
+        return store.contained_work_path(ART_WORKS_ROOT, work_id)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+
+
+def _contained_master_filename(work_dir: Path, filename: str) -> Path:
+    work_root = work_dir.resolve(strict=False)
+    candidate = (work_root / filename).resolve(strict=False)
+    if not candidate.is_relative_to(work_root):
+        raise HTTPException(400, "master filename escapes work directory")
+    return candidate
+
+
 # --------------------------------------------------------------------------
 # Browse endpoints (unchanged)
 # --------------------------------------------------------------------------
@@ -79,7 +112,7 @@ def list_works(
 
 @app.get("/works/{work_id}")
 def get_work(work_id: str) -> dict:
-    w = store.get_work(work_id)
+    w = _get_work_checked(work_id)
     if w is None:
         raise HTTPException(404, f"no sidecar for {work_id}")
     # Attach the latest rating for this work, if any
@@ -187,7 +220,7 @@ class SubjectActionIn(BaseModel):
 def subject_action(work_id: str, body: SubjectActionIn) -> dict:
     if body.action not in {"confirm", "reject", "add", "reset", "freetext_review"}:
         raise HTTPException(400, f"unknown action: {body.action!r}")
-    sc_path = store.STAGING / work_id / "meta.json"
+    sc_path = _sidecar_path_checked(work_id)
     if not sc_path.exists():
         raise HTTPException(404, f"no sidecar for {work_id}")
     sc = json.loads(sc_path.read_text())
@@ -293,17 +326,17 @@ def _master_path(work_id: str) -> Path | None:
     """Find the master file for a work_id. Tries Art/works/<wid>/master.*
     first (canonical post-Phase-3 location), then the sidecar's filename
     field as a fallback."""
-    work_dir = ART_WORKS_ROOT / work_id
+    work_dir = _archive_work_dir_checked(work_id)
     if work_dir.is_dir():
         for f in work_dir.iterdir():
             if f.is_file() and f.name.startswith("master."):
-                return f
+                return _contained_master_filename(work_dir, f.name)
     # Fallback: read filename from sidecar (handles staging-only works)
-    sc = store.get_work(work_id)
+    sc = _get_work_checked(work_id)
     if sc:
         fname = (sc.get("files") or {}).get("master", {}).get("filename")
         if fname:
-            p = work_dir / fname
+            p = _contained_master_filename(work_dir, fname)
             if p.is_file():
                 return p
     return None
@@ -553,7 +586,7 @@ def rate_work(work_id: str, body: RatingIn) -> dict:
         raise HTTPException(400, f"unknown chip ids: {bad_chips}")
 
     # Verify the work exists
-    if store.get_work(work_id) is None:
+    if _get_work_checked(work_id) is None:
         raise HTTPException(404, f"no sidecar for {work_id}")
 
     event = {
@@ -602,7 +635,21 @@ def debug_log(body: DebugIn) -> dict:
 
 @app.get("/works/{work_id}/ratings")
 def work_ratings(work_id: str) -> dict:
+    try:
+        store.validate_work_id(work_id)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
     return {"work_id": work_id, "ratings": store.list_ratings_for(work_id)}
+
+
+@app.api_route("/works/{work_path:path}", methods=["GET", "POST"])
+def reject_invalid_nested_work_path(work_path: str) -> None:
+    work_id = work_path.split("/", 1)[0]
+    try:
+        store.validate_work_id(work_id)
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+    raise HTTPException(404, f"no route for work path {work_path}")
 
 
 @app.get("/ratings/recent")

@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from collections import Counter, defaultdict
 from functools import lru_cache
+from pathlib import Path
 
 from fine_art_archive.identity import build_alias_table, resolve_artist
 
@@ -19,6 +21,32 @@ from .config import REPO_ROOT, env_path
 STAGING = env_path("FAA_STAGING_DIR", REPO_ROOT / "staging_sidecars")
 MANIFEST_CSV = env_path("FAA_MANIFEST_CSV", REPO_ROOT / "manifest.csv")
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
+_WORK_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def validate_work_id(work_id: str) -> str:
+    """Validate a URL-supplied work_id before using it as a path segment."""
+    if not work_id or work_id in {".", ".."}:
+        raise ValueError("invalid work_id")
+    if "/" in work_id or "\\" in work_id or "\x00" in work_id:
+        raise ValueError("invalid work_id")
+    if not _WORK_ID_RE.fullmatch(work_id):
+        raise ValueError("invalid work_id")
+    return work_id
+
+
+def contained_work_path(root: Path, work_id: str, *parts: str) -> Path:
+    """Return root/work_id/parts after proving the result stays under root."""
+    safe_work_id = validate_work_id(work_id)
+    root_path = root.resolve(strict=False)
+    candidate = (root_path / safe_work_id).joinpath(*parts).resolve(strict=False)
+    if not candidate.is_relative_to(root_path):
+        raise ValueError("work_id path escapes archive root")
+    return candidate
+
+
+def sidecar_path(work_id: str) -> Path:
+    return contained_work_path(STAGING, work_id, "meta.json")
 
 
 # --------------------------------------------------------------------------
@@ -116,10 +144,11 @@ def list_works(
 
 
 def get_work(work_id: str) -> dict | None:
-    sidecar_path = STAGING / work_id / "meta.json"
-    if not sidecar_path.exists():
+    """Return a sidecar payload, or raise ValueError for malformed work IDs."""
+    path = sidecar_path(work_id)
+    if not path.exists():
         return None
-    with open(sidecar_path) as f:
+    with open(path) as f:
         return json.load(f)
 
 
