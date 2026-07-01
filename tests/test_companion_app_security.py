@@ -110,6 +110,38 @@ def test_master_filename_cannot_escape_work_directory(
     assert response.status_code == 400
 
 
+def test_symlinked_master_cannot_escape_work_directory(
+    client: TestClient,
+    isolated_archive: Path,
+) -> None:
+    outside_dir = isolated_archive / "works" / "other"
+    outside_dir.mkdir(parents=True)
+    outside_master = outside_dir / "master.jpg"
+    outside_master.write_bytes(b"not really an image")
+
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    (work_dir / "master.jpg").symlink_to(outside_master)
+    write_sidecar(
+        isolated_archive,
+        "vermeer-little-street",
+        {"work_id": "vermeer-little-street"},
+    )
+
+    response = client.get("/works/vermeer-little-street/full")
+
+    assert response.status_code == 400
+
+
+def test_unknown_nested_work_path_returns_404(
+    client: TestClient,
+    isolated_archive: Path,
+) -> None:
+    response = client.get("/works/vermeer-little-street/typo")
+
+    assert response.status_code == 404
+
+
 def test_legitimate_work_id_still_resolves(
     client: TestClient,
     isolated_archive: Path,

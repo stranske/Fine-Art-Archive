@@ -144,6 +144,7 @@ def list_works(
 
 
 def get_work(work_id: str) -> dict | None:
+    """Return a sidecar payload, or raise ValueError for malformed work IDs."""
     path = sidecar_path(work_id)
     if not path.exists():
         return None

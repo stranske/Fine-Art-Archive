@@ -330,7 +330,7 @@ def _master_path(work_id: str) -> Path | None:
     if work_dir.is_dir():
         for f in work_dir.iterdir():
             if f.is_file() and f.name.startswith("master."):
-                return f
+                return _contained_master_filename(work_dir, f.name)
     # Fallback: read filename from sidecar (handles staging-only works)
     sc = _get_work_checked(work_id)
     if sc:
@@ -644,8 +644,9 @@ def work_ratings(work_id: str) -> dict:
 
 @app.api_route("/works/{work_path:path}", methods=["GET", "POST"])
 def reject_invalid_nested_work_path(work_path: str) -> None:
+    work_id = work_path.split("/", 1)[0]
     try:
-        store.validate_work_id(work_path)
+        store.validate_work_id(work_id)
     except ValueError as exc:
         raise _bad_work_id(exc) from exc
     raise HTTPException(404, f"no route for work path {work_path}")
