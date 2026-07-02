@@ -27,7 +27,6 @@ def client() -> TestClient:
 @pytest.fixture
 def isolated_ratings_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     ratings_log = tmp_path / "ratings_log.jsonl"
-    monkeypatch.setattr(api_main, "RATINGS_LOG", ratings_log)
     monkeypatch.setattr(api_store, "RATINGS_LOG", ratings_log)
     api_store.invalidate_ratings_cache()
     yield ratings_log
@@ -222,6 +221,7 @@ def test_rate_work_write_path(
     assert event["work_id"] == "test-wid"
     assert event["selected_reasons"] == ["affect:somber"]
     assert isolated_ratings_log.read_text().strip()
+    assert not hasattr(api_main, "RATINGS_LOG")
 
 
 def test_rate_work_unknown_surface(

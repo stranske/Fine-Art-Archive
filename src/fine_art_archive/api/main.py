@@ -25,7 +25,6 @@ from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
 HTMX_VERSION = "1.9.10"
 HTMX_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "vendor" / "htmx.min.js"
-RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 VARIANT_UPGRADE_DECISIONS = REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
 VARIANT_UPGRADE_CSV = REPO_ROOT / "variant_upgrade_candidates.csv"
 
@@ -681,10 +680,7 @@ def rate_work(work_id: str, body: RatingIn) -> dict:
         "freetext_by_group": body.freetext_by_group or {},
         "notes": body.notes or None,
     }
-    RATINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
-    with open(RATINGS_LOG, "a") as f:
-        f.write(json.dumps(event, ensure_ascii=False) + "\n")
-    store.invalidate_ratings_cache()
+    store.append_rating(event)
     return {"ok": True, "event": event, "total_ratings_for_work": store.count_ratings_for(work_id)}
 
 

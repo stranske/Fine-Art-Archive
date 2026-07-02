@@ -1,8 +1,7 @@
-"""Read-only store backed by staging_sidecars/, manifest.csv, and the
-ratings event log.
+"""Store backed by staging_sidecars/, manifest.csv, and the ratings event log.
 
-This module is the only one in the api/ subpackage that touches the
-filesystem. The rest of the API consumes it.
+This module owns API filesystem access, including manifest/sidecar reads and
+ratings-log appends. The rest of the API consumes it.
 """
 
 from __future__ import annotations
@@ -303,6 +302,14 @@ def invalidate_ratings_cache() -> None:
     _RATINGS_BY_WORK = None
     _RATINGS_SIGNATURE = None
     _RATINGS_CORRUPT_LINES = 0
+
+
+def append_rating(event: dict) -> None:
+    """Append a rating event and invalidate cached rating reads."""
+    RATINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with open(RATINGS_LOG, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+    invalidate_ratings_cache()
 
 
 def ratings_corrupt_line_count() -> int:
