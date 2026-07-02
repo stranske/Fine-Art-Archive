@@ -94,8 +94,13 @@ def load_manifest() -> list[dict]:
         return []
     if _MANIFEST_CACHE is not None and signature == _MANIFEST_SIGNATURE:
         return _MANIFEST_CACHE
-    with open(MANIFEST_CSV) as f:
-        rows = list(csv.DictReader(f))
+    try:
+        with open(MANIFEST_CSV) as f:
+            rows = list(csv.DictReader(f))
+    except FileNotFoundError:
+        _MANIFEST_CACHE = []
+        _MANIFEST_SIGNATURE = None
+        return []
     _MANIFEST_CACHE = rows
     _MANIFEST_SIGNATURE = signature
     return rows
@@ -237,15 +242,21 @@ def _load_ratings() -> list[dict]:
     if _RATINGS_CACHE is not None and signature == _RATINGS_SIGNATURE:
         return _RATINGS_CACHE
     events: list[dict] = []
-    with open(RATINGS_LOG) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                events.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
+    try:
+        with open(RATINGS_LOG) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    events.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    except FileNotFoundError:
+        _RATINGS_CACHE = []
+        _RATINGS_BY_WORK = None
+        _RATINGS_SIGNATURE = None
+        return []
     _RATINGS_CACHE = events
     _RATINGS_BY_WORK = None
     _RATINGS_SIGNATURE = signature
@@ -254,6 +265,7 @@ def _load_ratings() -> list[dict]:
 
 def _ratings_by_work() -> dict[str, list[dict]]:
     global _RATINGS_BY_WORK
+    _load_ratings()
     if _RATINGS_BY_WORK is not None:
         return _RATINGS_BY_WORK
     out: dict[str, list[dict]] = defaultdict(list)
