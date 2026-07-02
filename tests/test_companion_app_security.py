@@ -88,6 +88,43 @@ def test_subject_action_traversal_does_not_write_outside_staging(
     }
 
 
+def test_invalid_subject_action_does_not_append_success_audit(
+    client: TestClient,
+    isolated_archive: Path,
+) -> None:
+    write_sidecar(isolated_archive, "vermeer-little-street", {"work_id": "vermeer-little-street"})
+
+    response = client.post(
+        "/works/vermeer-little-street/subject_action",
+        json={"action": "confirm", "tag": "invalid-tag"},
+    )
+
+    assert response.status_code == 400
+    assert not (isolated_archive / "subject_tag_events.jsonl").exists()
+
+
+def test_subject_action_preserves_sidecar_when_atomic_replace_fails(
+    isolated_archive: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app, raise_server_exceptions=False)
+    original = {"work_id": "vermeer-little-street", "subject": {"content_tags": []}}
+    sidecar = write_sidecar(isolated_archive, "vermeer-little-street", original)
+
+    def fail_replace(_src: Path, _dst: Path) -> None:
+        raise OSError("simulated replace failure")
+
+    monkeypatch.setattr(api_main.os, "replace", fail_replace)
+    response = client.post(
+        "/works/vermeer-little-street/subject_action",
+        json={"action": "add", "tag": "genre:landscape"},
+    )
+
+    assert response.status_code == 500
+    assert json.loads(sidecar.read_text()) == original
+    assert not (isolated_archive / "subject_tag_events.jsonl").exists()
+
+
 def test_master_filename_cannot_escape_work_directory(
     client: TestClient,
     isolated_archive: Path,

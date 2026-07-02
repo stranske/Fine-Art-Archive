@@ -8,6 +8,9 @@ Parquet rollup later can read these straight in.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
+from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -93,10 +96,12 @@ def root() -> FileResponse:
 
 @app.get("/healthz")
 def healthz() -> dict:
+    corrupt_line_count = store.ratings_corrupt_line_count()
     return {
-        "ok": True,
+        "ok": corrupt_line_count == 0,
         "manifest_loaded": len(store.load_manifest()),
         "ratings_count": store.count_ratings(),
+        "ratings_corrupt_line_count": corrupt_line_count,
     }
 
 
@@ -216,16 +221,45 @@ class SubjectActionIn(BaseModel):
     reviewer: str = "tim"
 
 
+@contextmanager
+def _sidecar_file_lock(path: Path):
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a") as lock_file:
+        try:
+            import fcntl
+
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            yield
+        finally:
+            with suppress(NameError, OSError):
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
+def _write_sidecar_atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = json.dumps(payload, indent=2, ensure_ascii=False)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w") as handle:
+            handle.write(encoded)
+        os.replace(tmp_path, path)
+    except Exception:
+        tmp_path.unlink(missing_ok=True)
+        raise
+
+
 @app.post("/works/{work_id}/subject_action")
 def subject_action(work_id: str, body: SubjectActionIn) -> dict:
     if body.action not in {"confirm", "reject", "add", "reset", "freetext_review"}:
         raise HTTPException(400, f"unknown action: {body.action!r}")
+    tag_action = body.action in {"confirm", "reject", "add", "reset"}
+    if tag_action and (not body.tag or ":" not in body.tag):
+        raise HTTPException(400, "tag required (format 'group:id')")
     sc_path = _sidecar_path_checked(work_id)
     if not sc_path.exists():
         raise HTTPException(404, f"no sidecar for {work_id}")
-    sc = json.loads(sc_path.read_text())
-
-    # Audit event (always written)
     event = {
         "ts": _now(),
         "work_id": work_id,
@@ -234,86 +268,81 @@ def subject_action(work_id: str, body: SubjectActionIn) -> dict:
         "text": body.text or None,
         "reviewer": body.reviewer,
     }
+
+    with _sidecar_file_lock(sc_path):
+        sc = json.loads(sc_path.read_text())
+        if body.action == "freetext_review":
+            subj = sc.setdefault("subject", {})
+            notes = subj.setdefault("reviewer_notes", [])
+            notes.append({"ts": _now(), "reviewer": body.reviewer, "text": body.text})
+            _write_sidecar_atomic(sc_path, sc)
+        else:
+            subj = sc.setdefault(
+                "subject",
+                {
+                    "content_tags": [],
+                    "genre": "unknown",
+                    "tag_method_version": "reviewer",
+                    "last_tagged_at": _now(),
+                },
+            )
+            tags = subj.setdefault("content_tags", [])
+            idx = next((i for i, t in enumerate(tags) if t.get("id") == body.tag), None)
+            now_ts = _now()
+            if body.action == "confirm":
+                if idx is None:
+                    tags.append(
+                        {
+                            "id": body.tag,
+                            "state": "confirmed",
+                            "source": "reviewer",
+                            "reviewer": body.reviewer,
+                            "ts": now_ts,
+                        }
+                    )
+                else:
+                    tags[idx]["state"] = "confirmed"
+                    tags[idx]["reviewer"] = body.reviewer
+                    tags[idx]["ts"] = now_ts
+            elif body.action == "reject":
+                if idx is None:
+                    tags.append(
+                        {
+                            "id": body.tag,
+                            "state": "rejected",
+                            "source": "reviewer",
+                            "reviewer": body.reviewer,
+                            "ts": now_ts,
+                        }
+                    )
+                else:
+                    tags[idx]["state"] = "rejected"
+                    tags[idx]["reviewer"] = body.reviewer
+                    tags[idx]["ts"] = now_ts
+            elif body.action == "add":
+                if idx is None:
+                    tags.append(
+                        {
+                            "id": body.tag,
+                            "state": "added",
+                            "source": "reviewer",
+                            "reviewer": body.reviewer,
+                            "ts": now_ts,
+                        }
+                    )
+                else:
+                    tags[idx]["state"] = "added"
+                    tags[idx]["reviewer"] = body.reviewer
+                    tags[idx]["ts"] = now_ts
+            elif body.action == "reset" and idx is not None:
+                tags[idx]["state"] = "proposed"
+                tags[idx].pop("reviewer", None)
+            subj["needs_review"] = any(t.get("state") == "proposed" for t in tags)
+            _write_sidecar_atomic(sc_path, sc)
+
     SUBJECT_TAG_EVENTS.parent.mkdir(parents=True, exist_ok=True)
     with open(SUBJECT_TAG_EVENTS, "a") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
-
-    if body.action == "freetext_review":
-        # Append to subject.reviewer_notes; doesn't mutate tags
-        subj = sc.setdefault("subject", {})
-        notes = subj.setdefault("reviewer_notes", [])
-        notes.append({"ts": _now(), "reviewer": body.reviewer, "text": body.text})
-        sc_path.write_text(json.dumps(sc, indent=2, ensure_ascii=False))
-        return {"ok": True, "event": event}
-
-    # Tag-mutation actions
-    if not body.tag or ":" not in body.tag:
-        raise HTTPException(400, "tag required (format 'group:id')")
-    subj = sc.setdefault(
-        "subject",
-        {
-            "content_tags": [],
-            "genre": "unknown",
-            "tag_method_version": "reviewer",
-            "last_tagged_at": _now(),
-        },
-    )
-    tags = subj.setdefault("content_tags", [])
-    # Find existing entry for this tag id
-    idx = next((i for i, t in enumerate(tags) if t.get("id") == body.tag), None)
-    now_ts = _now()
-    if body.action == "confirm":
-        if idx is None:
-            tags.append(
-                {
-                    "id": body.tag,
-                    "state": "confirmed",
-                    "source": "reviewer",
-                    "reviewer": body.reviewer,
-                    "ts": now_ts,
-                }
-            )
-        else:
-            tags[idx]["state"] = "confirmed"
-            tags[idx]["reviewer"] = body.reviewer
-            tags[idx]["ts"] = now_ts
-    elif body.action == "reject":
-        if idx is None:
-            tags.append(
-                {
-                    "id": body.tag,
-                    "state": "rejected",
-                    "source": "reviewer",
-                    "reviewer": body.reviewer,
-                    "ts": now_ts,
-                }
-            )
-        else:
-            tags[idx]["state"] = "rejected"
-            tags[idx]["reviewer"] = body.reviewer
-            tags[idx]["ts"] = now_ts
-    elif body.action == "add":
-        if idx is None:
-            tags.append(
-                {
-                    "id": body.tag,
-                    "state": "added",
-                    "source": "reviewer",
-                    "reviewer": body.reviewer,
-                    "ts": now_ts,
-                }
-            )
-        else:
-            # Already exists — treat as confirm
-            tags[idx]["state"] = "added"
-            tags[idx]["reviewer"] = body.reviewer
-            tags[idx]["ts"] = now_ts
-    elif body.action == "reset" and idx is not None:
-        tags[idx]["state"] = "proposed"
-        tags[idx].pop("reviewer", None)
-    # Recompute needs_review
-    subj["needs_review"] = any(t.get("state") == "proposed" for t in tags)
-    sc_path.write_text(json.dumps(sc, indent=2, ensure_ascii=False))
     return {"ok": True, "event": event}
 
 

@@ -85,6 +85,7 @@ def test_ratings_summary_empty(client: TestClient) -> None:
     r = client.get("/ratings/summary")
     assert r.status_code == 200
     assert r.json()["n_events"] == 0
+    assert r.json()["corrupt_line_count"] == 0
 
 
 def test_ratings_summary_includes_two_axis_and_legacy_ratings(
@@ -118,6 +119,7 @@ def test_ratings_summary_includes_two_axis_and_legacy_ratings(
     assert r.status_code == 200
     body = r.json()
     assert body["n_events"] == 4
+    assert body["corrupt_line_count"] == 0
     assert list(body["quality_distribution"]) == ["7", "9", "10"]
     assert body["quality_distribution"] == {"7": 1, "9": 1, "10": 1}
     assert list(body["fit_distribution"]) == ["4", "6", "10"]
@@ -130,6 +132,26 @@ def test_ratings_summary_includes_two_axis_and_legacy_ratings(
     assert by_work["test-wid"]["last_fit"] == 10
     assert by_work["test-wid"]["last_rating"] is None
     assert by_work["legacy-wid"]["last_rating"] == 2
+
+
+def test_corrupt_ratings_are_counted_and_surface_in_health(
+    client: TestClient,
+    isolated_ratings_log,
+) -> None:
+    isolated_ratings_log.write_text(
+        '{"work_id": "valid", "quality": 8, "surface": "companion-app"}\n' '{"work_id": "broken",\n'
+    )
+    api_store.invalidate_ratings_cache()
+
+    summary = client.get("/ratings/summary")
+    health = client.get("/healthz")
+
+    assert summary.status_code == 200
+    assert summary.json()["n_events"] == 1
+    assert summary.json()["corrupt_line_count"] == 1
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    assert health.json()["ratings_corrupt_line_count"] == 1
 
 
 def test_work_ratings_shape(client: TestClient) -> None:
