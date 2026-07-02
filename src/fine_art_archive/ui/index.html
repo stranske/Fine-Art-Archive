@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Fine Art Archive — Companion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+  <script src="/ui/vendor/htmx.min.js" defer></script>
   <style>
     :root { --bg: #fafaf7; --ink: #222; --muted: #777; --accent: #5b3a1f;
             --love: #2a7a2a; --like: #6aa86a; --neutral: #aaa;
@@ -1270,6 +1270,13 @@
       };
 
       const wid = data.work_id;
+      const missingSidecar = data._sidecar_status === "missing";
+      const missingSidecarPanel = missingSidecar
+        ? `<div class="rate-panel">
+             <h3>Metadata not staged yet</h3>
+             <p class="sub" style="margin:0">${escText(data._sidecar_message || "Metadata is not staged yet for this work.")}</p>
+           </div>`
+        : "";
       // Queue position display
       const pos = (queueIndex >= 0 && workQueue.length > 0)
           ? `${queueIndex + 1} of ${workQueue.length}` : "—";
@@ -1321,6 +1328,7 @@
                    ? `<span class="pill">${data.artist.relation}</span>` : ""}
              </div>
              <div class="sub">${data.year || ""} ${data.medium ? " · " + data.medium : ""} · ${(data.files?.variants || []).length} variants · <span class="qid">${wid}</span></div>
+             ${missingSidecarPanel}
 
              <div class="rate-panel">
                <h3 style="margin-top:0">Rate this work</h3>

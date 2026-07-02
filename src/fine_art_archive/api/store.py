@@ -175,6 +175,15 @@ def list_works(
     return {"total": len(rows), "offset": offset, "limit": limit, "works": out}
 
 
+def get_manifest_row(work_id: str) -> dict | None:
+    """Return the manifest row for a work_id, or None when it is unknown."""
+    safe_work_id = validate_work_id(work_id)
+    for row in load_manifest():
+        if row.get("work_id") == safe_work_id:
+            return row
+    return None
+
+
 def get_work(work_id: str) -> dict | None:
     """Return a sidecar payload, or raise ValueError for malformed work IDs."""
     path = sidecar_path(work_id)
