@@ -9,10 +9,13 @@ which exercises the data-store layer directly.
 
 from __future__ import annotations
 
+import asyncio
+import json
 import re
 from pathlib import Path
 
 import pytest
+from fastapi.exceptions import RequestValidationError
 from fastapi.testclient import TestClient
 
 from fine_art_archive.api import main as api_main
@@ -230,6 +233,25 @@ def test_rate_work_write_path(
     assert event["selected_reasons"] == ["affect:somber"]
     assert isolated_ratings_log.read_text().strip()
     assert not hasattr(api_main, "RATINGS_LOG")
+    persisted = json.loads(isolated_ratings_log.read_text().strip())
+    assert persisted["quality"] == 8
+    assert persisted["fit"] == 6
+
+
+def test_append_rating_rejects_non_finite_json(
+    isolated_ratings_log,
+) -> None:
+    with pytest.raises(ValueError):
+        api_store.append_rating(
+            {
+                "work_id": "test-wid",
+                "quality": 8,
+                "dwell_seconds": float("nan"),
+                "surface": "companion-app",
+            }
+        )
+
+    assert not isolated_ratings_log.exists()
 
 
 def test_rate_work_unknown_surface(
@@ -243,6 +265,72 @@ def test_rate_work_unknown_surface(
     )
 
     assert r.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"quality": 5, "surface": "companion-app", "dwell_seconds": -1},
+        {"quality": 0, "fit": 5, "surface": "companion-app"},
+        {"quality": 11, "fit": 5, "surface": "companion-app"},
+        {"quality": 5, "fit": 0, "surface": "companion-app"},
+        {"quality": 5, "fit": 11, "surface": "companion-app"},
+        {"quality": "5", "fit": 5, "surface": "companion-app"},
+        {"quality": 5, "fit": "5", "surface": "companion-app"},
+    ],
+)
+def test_rate_work_rejects_invalid_rating_numbers(
+    client: TestClient,
+    isolated_ratings_log,
+    stub_work: None,
+    payload: dict,
+) -> None:
+    r = client.post("/works/test-wid/rate", json=payload)
+
+    assert r.status_code == 422
+    assert not isolated_ratings_log.exists()
+
+
+@pytest.mark.parametrize("non_finite_literal", ["NaN", "Infinity"])
+def test_rate_work_rejects_non_finite_dwell_seconds(
+    client: TestClient,
+    isolated_ratings_log,
+    stub_work: None,
+    non_finite_literal: str,
+) -> None:
+    r = client.post(
+        "/works/test-wid/rate",
+        content=(
+            '{"quality": 5, "surface": "companion-app", ' f'"dwell_seconds": {non_finite_literal}}}'
+        ),
+        headers={"content-type": "application/json"},
+    )
+
+    assert r.status_code == 422
+    assert not isolated_ratings_log.exists()
+
+
+def test_validation_errors_with_validator_context_remain_json_serializable() -> None:
+    response = asyncio.run(
+        api_main.validation_exception_handler(
+            None,
+            RequestValidationError(
+                [
+                    {
+                        "type": "value_error",
+                        "loc": ("body", "rating"),
+                        "msg": "Value error, boom",
+                        "input": 5,
+                        "ctx": {"error": ValueError("boom")},
+                    }
+                ]
+            ),
+        )
+    )
+
+    body = json.loads(response.body)
+    assert response.status_code == 422
+    assert body["detail"][0]["ctx"]["error"] == "boom"
 
 
 def test_rate_work_unknown_chip_id(
