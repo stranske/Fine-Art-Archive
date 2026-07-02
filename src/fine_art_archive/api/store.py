@@ -176,7 +176,10 @@ def list_works(
 
 
 def get_manifest_row(work_id: str) -> dict | None:
-    """Return the manifest row for a work_id, or None when it is unknown."""
+    """Return a manifest row, or None when unknown.
+
+    Raises ValueError for malformed work IDs.
+    """
     safe_work_id = validate_work_id(work_id)
     for row in load_manifest():
         if row.get("work_id") == safe_work_id:

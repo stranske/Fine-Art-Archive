@@ -23,6 +23,7 @@ from . import store
 from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
+HTMX_VERSION = "1.9.10"
 HTMX_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "vendor" / "htmx.min.js"
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 VARIANT_UPGRADE_DECISIONS = REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
@@ -115,7 +116,7 @@ def root() -> FileResponse:
     )
 
 
-@app.get("/ui/vendor/htmx.min.js")
+@app.get(f"/ui/vendor/htmx-{HTMX_VERSION}.min.js")
 def htmx_vendor() -> FileResponse:
     if not HTMX_FILE.exists():
         raise HTTPException(404, "htmx asset not found")

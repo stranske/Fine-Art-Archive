@@ -50,11 +50,11 @@ def test_root_serves_focus_ui(client: TestClient) -> None:
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
     assert "unpkg.com" not in r.text
-    assert 'src="/ui/vendor/htmx.min.js"' in r.text
+    assert 'src="/ui/vendor/htmx-1.9.10.min.js"' in r.text
 
 
 def test_vendored_htmx_is_served(client: TestClient) -> None:
-    r = client.get("/ui/vendor/htmx.min.js")
+    r = client.get("/ui/vendor/htmx-1.9.10.min.js")
     assert r.status_code == 200
     assert "javascript" in r.headers["content-type"]
     assert b"htmx" in r.content[:200]
