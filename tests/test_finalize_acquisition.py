@@ -86,7 +86,8 @@ def test_run_finalize_writes_source_quality_inputs(tmp_path: Path) -> None:
     finalized = fa.run_finalize(tmp_path, refetch_master_hash=True)
 
     inputs = finalized["verification"]["source_quality_inputs"]
-    assert set(inputs) == {"phash_match", "aspect_match", "dim_match"}
+    assert set(inputs) == {"verify_match", "phash_match", "aspect_match", "dim_match"}
+    assert inputs["verify_match"] is True
     assert inputs["aspect_match"] is True
     assert inputs["phash_match"] is None
     assert inputs["dim_match"] is None

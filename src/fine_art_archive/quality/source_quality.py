@@ -84,6 +84,7 @@ class SignalRow:
     phash_match: bool | None = None
     aspect_match: bool | None = None
     dim_match: bool | None = None
+    verify_match: bool | None = None
     attribution_match: bool | None = None
     link_alive: bool | None = None
     metadata_completeness: float | None = None  # 0..1
@@ -92,11 +93,13 @@ class SignalRow:
 
     @property
     def verify_pass(self) -> bool | None:
-        """Aggregate identity-verification gates — pHash + aspect + dim.
+        """Aggregate identity-verification gates.
 
-        Returns True iff every available gate is True; None when no gate
-        is known.
+        Prefer the explicit overall verification result when present. Older
+        sidecars fall back to requiring every available pHash/aspect/dim gate.
         """
+        if self.verify_match is not None:
+            return self.verify_match
         gates = [g for g in (self.phash_match, self.aspect_match, self.dim_match) if g is not None]
         if not gates:
             return None
@@ -321,6 +324,7 @@ def extract_signals(
         source=src,
         work_class=_infer_work_class(meta),
         work_id=meta.get("work_id", ""),
+        verify_match=sq.get("verify_match"),
         phash_match=sq.get("phash_match"),
         aspect_match=sq.get("aspect_match"),
         dim_match=sq.get("dim_match"),
