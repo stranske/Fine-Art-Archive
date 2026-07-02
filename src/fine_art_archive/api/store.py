@@ -305,6 +305,14 @@ def invalidate_ratings_cache() -> None:
     _RATINGS_CORRUPT_LINES = 0
 
 
+def append_rating(event: dict) -> None:
+    """Append a rating event and invalidate cached rating reads."""
+    RATINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with open(RATINGS_LOG, "a") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+    invalidate_ratings_cache()
+
+
 def ratings_corrupt_line_count() -> int:
     _load_ratings()
     return _RATINGS_CORRUPT_LINES
