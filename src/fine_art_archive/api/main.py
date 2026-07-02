@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import tempfile
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
@@ -244,10 +245,18 @@ def _write_sidecar_atomic(path: Path, payload: dict) -> None:
     try:
         with os.fdopen(fd, "w") as handle:
             handle.write(encoded)
+        if path.exists():
+            tmp_path.chmod(stat.S_IMODE(path.stat().st_mode))
         os.replace(tmp_path, path)
     except Exception:
         tmp_path.unlink(missing_ok=True)
         raise
+
+
+def _append_subject_tag_event(event: dict) -> None:
+    SUBJECT_TAG_EVENTS.parent.mkdir(parents=True, exist_ok=True)
+    with open(SUBJECT_TAG_EVENTS, "a") as f:
+        f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 
 @app.post("/works/{work_id}/subject_action")
@@ -270,7 +279,8 @@ def subject_action(work_id: str, body: SubjectActionIn) -> dict:
     }
 
     with _sidecar_file_lock(sc_path):
-        sc = json.loads(sc_path.read_text())
+        original_sc = json.loads(sc_path.read_text())
+        sc = json.loads(json.dumps(original_sc))
         if body.action == "freetext_review":
             subj = sc.setdefault("subject", {})
             notes = subj.setdefault("reviewer_notes", [])
@@ -339,10 +349,12 @@ def subject_action(work_id: str, body: SubjectActionIn) -> dict:
                 tags[idx].pop("reviewer", None)
             subj["needs_review"] = any(t.get("state") == "proposed" for t in tags)
             _write_sidecar_atomic(sc_path, sc)
+        try:
+            _append_subject_tag_event(event)
+        except Exception:
+            _write_sidecar_atomic(sc_path, original_sc)
+            raise
 
-    SUBJECT_TAG_EVENTS.parent.mkdir(parents=True, exist_ok=True)
-    with open(SUBJECT_TAG_EVENTS, "a") as f:
-        f.write(json.dumps(event, ensure_ascii=False) + "\n")
     return {"ok": True, "event": event}
 
 
