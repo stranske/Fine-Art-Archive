@@ -90,7 +90,12 @@ def test_run_acquisition_flow_continues_after_corrupt_meta(
 
     assert len(results) == 2
     assert {result.work_dir.name for result in results} == {"corrupt", "valid"}
-    assert any(str(corrupt / "meta.json") in record.message for record in caplog.records)
+    assert any(
+        "continuing with empty metadata" in record.message
+        and str(corrupt / "meta.json") in record.message
+        and "Expecting property name" in record.message
+        for record in caplog.records
+    )
 
 
 def test_run_acquisition_flow_unknown_source(tmp_path: Path) -> None:

@@ -228,8 +228,12 @@ def run_acquisition_flow(
         if meta_p.exists():
             try:
                 meta = json.loads(meta_p.read_text())
-            except json.JSONDecodeError:
-                LOGGER.warning("Skipping malformed staged metadata: %s", meta_p)
+            except json.JSONDecodeError as exc:
+                LOGGER.warning(
+                    "Ignoring malformed staged metadata for %s; continuing with empty metadata: %s",
+                    meta_p,
+                    exc,
+                )
         dim = meta.get("dimensions_original") or {}
         assessment = assess_master(
             master,
