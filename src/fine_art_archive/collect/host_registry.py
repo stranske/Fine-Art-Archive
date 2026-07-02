@@ -92,21 +92,21 @@ def load_registry(path: Path | str | None = None) -> dict[str, HostEntry]:
     return {hid: _coerce_entry(hid, hd) for hid, hd in hosts.items()}
 
 
-def find_by_wikidata_q(qid: str) -> HostEntry | None:
+def find_by_wikidata_q(qid: str, path: Path | str | None = None) -> HostEntry | None:
     """Find a host by its Wikidata Q-ID (the institution's Q, not the work's)."""
-    for entry in load_registry().values():
+    for entry in load_registry(path).values():
         if entry.wikidata_q == qid:
             return entry
     return None
 
 
-def primary_adapter_for(qid: str) -> str | None:
+def primary_adapter_for(qid: str, path: Path | str | None = None) -> str | None:
     """Return the primary acquisition adapter name for the given institution Q-ID."""
-    entry = find_by_wikidata_q(qid)
+    entry = find_by_wikidata_q(qid, path)
     return entry.primary_adapter if entry else None
 
 
-def fallback_chain_for(qid: str) -> list[str]:
+def fallback_chain_for(qid: str, path: Path | str | None = None) -> list[str]:
     """Return the ordered fallback adapter chain for the given institution Q-ID."""
-    entry = find_by_wikidata_q(qid)
+    entry = find_by_wikidata_q(qid, path)
     return list(entry.fallback_chain) if entry else []

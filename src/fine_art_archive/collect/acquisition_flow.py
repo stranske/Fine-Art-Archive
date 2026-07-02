@@ -17,6 +17,7 @@ testable without network access.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,7 +25,7 @@ from types import ModuleType
 
 from PIL import Image
 
-from fine_art_archive.collect import discovery
+from fine_art_archive.collect import discovery, host_registry
 from fine_art_archive.collect.dedup_cascade import (
     ArchiveEntry,
     DedupVerdict,
@@ -42,6 +43,9 @@ from fine_art_archive.collect.sources import (
 from fine_art_archive.collect.verify import verify
 from fine_art_archive.quality import source_quality
 
+SOURCE_QUALITY_PATH = Path(__file__).resolve().parents[3] / "config" / "source_quality.yaml"
+HOST_REGISTRY_PATH = Path(__file__).resolve().parents[3] / "config" / "host_registry.yaml"
+
 # Source name -> collector module. Each collector exposes acquire_shell_script().
 SOURCE_COLLECTORS: dict[str, ModuleType] = {
     "met": met,
@@ -51,6 +55,42 @@ SOURCE_COLLECTORS: dict[str, ModuleType] = {
     "google_arts_culture": google_arts_culture,
 }
 
+SOURCE_ALIASES = {
+    "cleveland_museum_of_art": "cleveland",
+    "art_institute_chicago": "artic",
+}
+
+
+def _collector_key(source: str) -> str:
+    return SOURCE_ALIASES.get(source, source)
+
+
+def _source_quality_score(source: str, work_class: str, aggregates: dict) -> float:
+    sources = aggregates.get("sources", {})
+    if source in sources:
+        return source_quality.score_for(source, work_class, aggregates=aggregates)
+    collector_key = _collector_key(source)
+    return source_quality.score_for(collector_key, work_class, aggregates=aggregates)
+
+
+def load_source_quality_config(path: Path | None = None) -> dict:
+    """Load source quality routing config, failing loudly when it is absent."""
+    p = path or SOURCE_QUALITY_PATH
+    if not p.exists():
+        raise FileNotFoundError(f"source-quality config not found: {p}")
+    aggregates = source_quality.load_aggregates(p)
+    if not aggregates.get("sources"):
+        raise ValueError(f"source-quality config has no sources: {p}")
+    return aggregates
+
+
+def source_chain_for_host(qid: str, path: Path | None = None) -> list[str]:
+    """Return primary adapter plus configured fallback chain for a host Q-ID."""
+    entry = host_registry.find_by_wikidata_q(qid, path or HOST_REGISTRY_PATH)
+    if entry is None or not entry.primary_adapter:
+        return []
+    return [entry.primary_adapter, *entry.fallback_chain]
+
 
 def rank_sources(
     work_class: str, candidate_sources: list[str], aggregates: dict
@@ -58,8 +98,8 @@ def rank_sources(
     """Return candidate sources sorted by descending source-quality score."""
     ranked: list[tuple[str, float]] = []
     for src in candidate_sources:
-        ranked.append((src, source_quality.score_for(src, work_class, aggregates=aggregates)))
-    ranked.sort(key=lambda item: item[1], reverse=True)
+        ranked.append((src, _source_quality_score(src, work_class, aggregates)))
+    ranked.sort(key=lambda item: (math.isfinite(item[1]), item[1]), reverse=True)
     return ranked
 
 
@@ -82,6 +122,7 @@ def select_source(
 
 def get_collector(source: str) -> ModuleType:
     """Return the collector module for ``source`` or raise ``ValueError``."""
+    source = _collector_key(source)
     try:
         return SOURCE_COLLECTORS[source]
     except KeyError:
@@ -146,8 +187,11 @@ def run_acquisition_flow(
     *,
     max_items: int | None = None,
     candidate_sources: list[str] | None = None,
+    host_qid: str | None = None,
     work_class: str = "western-painting-19c",
     aggregates: dict | None = None,
+    source_quality_path: Path | None = None,
+    host_registry_path: Path | None = None,
     archive: Sequence[ArchiveEntry] | None = None,
     dino_hook=None,
 ) -> list[AcquisitionAssessment]:
@@ -161,10 +205,13 @@ def run_acquisition_flow(
     source name is validated first; directories without a master are skipped.
     """
     chosen_source = source
+    if candidate_sources is None and host_qid:
+        candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)
+        if not candidate_sources:
+            raise ValueError(f"host {host_qid!r} has no acquisition source chain")
     if candidate_sources:
-        chosen_source, _reason = select_source(
-            work_class, candidate_sources, aggregates=aggregates or {}
-        )
+        loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)
+        chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)
 
     get_collector(chosen_source)  # validate the source up front
     selected = work_dirs if max_items is None else work_dirs[:max_items]
@@ -180,7 +227,10 @@ def run_acquisition_flow(
             meta = json.loads(meta_p.read_text())
         dim = meta.get("dimensions_original") or {}
         assessment = assess_master(
-            master, source=chosen_source, h_cm=dim.get("h_cm"), w_cm=dim.get("w_cm")
+            master,
+            source=chosen_source,
+            h_cm=dim.get("h_cm"),
+            w_cm=dim.get("w_cm"),
         )
         if archive is not None:
             assessment.dedup = dedup_check(
