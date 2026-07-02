@@ -228,20 +228,23 @@ def list_artists(*, limit: int = 100) -> list[dict]:
 _RATINGS_CACHE: list[dict] | None = None
 _RATINGS_BY_WORK: dict[str, list[dict]] | None = None
 _RATINGS_SIGNATURE: _FileSignature | None = None
+_RATINGS_CORRUPT_LINES = 0
 
 
 def _load_ratings() -> list[dict]:
     """Load all rating events, reloading when the log file changes."""
-    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE
+    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE, _RATINGS_CORRUPT_LINES
     signature = _file_signature(RATINGS_LOG)
     if signature is None:
         _RATINGS_CACHE = []
         _RATINGS_BY_WORK = None
         _RATINGS_SIGNATURE = None
+        _RATINGS_CORRUPT_LINES = 0
         return []
     if _RATINGS_CACHE is not None and signature == _RATINGS_SIGNATURE:
         return _RATINGS_CACHE
     events: list[dict] = []
+    corrupt_lines = 0
     try:
         with open(RATINGS_LOG) as f:
             for line in f:
@@ -251,15 +254,17 @@ def _load_ratings() -> list[dict]:
                 try:
                     events.append(json.loads(line))
                 except json.JSONDecodeError:
-                    continue
+                    corrupt_lines += 1
     except FileNotFoundError:
         _RATINGS_CACHE = []
         _RATINGS_BY_WORK = None
         _RATINGS_SIGNATURE = None
+        _RATINGS_CORRUPT_LINES = 0
         return []
     _RATINGS_CACHE = events
     _RATINGS_BY_WORK = None
     _RATINGS_SIGNATURE = signature
+    _RATINGS_CORRUPT_LINES = corrupt_lines
     return events
 
 
@@ -281,10 +286,16 @@ def _ratings_by_work() -> dict[str, list[dict]]:
 
 
 def invalidate_ratings_cache() -> None:
-    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE
+    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE, _RATINGS_CORRUPT_LINES
     _RATINGS_CACHE = None
     _RATINGS_BY_WORK = None
     _RATINGS_SIGNATURE = None
+    _RATINGS_CORRUPT_LINES = 0
+
+
+def ratings_corrupt_line_count() -> int:
+    _load_ratings()
+    return _RATINGS_CORRUPT_LINES
 
 
 def latest_rating(work_id: str) -> dict | None:
@@ -321,6 +332,7 @@ def ratings_summary() -> dict:
     by_work = _ratings_by_work()
     return {
         "n_events": len(events),
+        "corrupt_line_count": _RATINGS_CORRUPT_LINES,
         "n_works_rated": len(by_work),
         "rating_distribution": _numeric_distribution(dist),
         "quality_distribution": _numeric_distribution(quality_dist),
