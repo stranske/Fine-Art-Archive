@@ -393,9 +393,10 @@ def verify(
 ) -> VerificationReport:
     """Run all enabled verification layers against an acquired master.
 
-    Layers 1 (aspect ratio) and 2 (perceptual hash vs. reference) are
-    wired. Layer 2 only runs when both `candidate_path` and `reference_path`
-    are supplied. Higher layers are skip-stubs.
+    Layers 1 (aspect ratio) and 2 (perceptual hash vs. reference) are wired.
+    When `enable_clip` is set and image paths are supplied, Layer 3 runs an
+    embedding similarity check plus a Lab color-distance guard. The VLM layer is
+    still a skip-stub.
     """
     report = VerificationReport()
     report.checks.append(check_aspect_ratio(h_cm=h_cm, w_cm=w_cm, h_px=h_px, w_px=w_px))
