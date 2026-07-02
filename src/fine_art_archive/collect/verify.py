@@ -69,11 +69,17 @@ class VerificationReport:
 
     def to_source_quality_inputs(self) -> dict[str, bool | None]:
         def match_value(name: str) -> bool | None:
-            status = next((c.status for c in self.checks if c.name == name), None)
-            if status == "PASS":
+            check = next((c for c in self.checks if c.name == name), None)
+            if check is None:
+                return None
+            if check.status == "PASS":
                 return True
-            if status == "FAIL":
-                return False
+            if check.status == "FAIL":
+                return (
+                    name == "perceptual_hash"
+                    and not check.blocks_overall
+                    and self.overall == "PASS"
+                )
             return None
 
         return {

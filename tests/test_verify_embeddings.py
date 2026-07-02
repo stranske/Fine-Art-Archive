@@ -64,7 +64,7 @@ def _wrong_color_copy(image: Image.Image) -> Image.Image:
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGB")
 
 
-def _shape_embedding(image: object) -> list[float]:
+def _shape_embedding(image: Image.Image) -> list[float]:
     arr = np.asarray(image.convert("RGB").resize((32, 32)), dtype=np.int16)
     background = arr[0, 0]
     mask = (np.abs(arr - background).sum(axis=2) > 35).astype(np.float32)
@@ -106,6 +106,7 @@ def test_embedding_leg_passes_cropped_reframed_work_when_phash_fails(tmp_path):
     assert statuses["perceptual_hash"] == "FAIL"
     assert statuses["clip_similarity"] == "PASS"
     assert statuses["color_distance"] == "PASS"
+    assert report.to_source_quality_inputs()["phash_match"] is True
 
 
 def test_embedding_leg_fails_different_artwork(tmp_path):
@@ -200,3 +201,4 @@ def test_embedding_skip_keeps_phash_blocking_for_identity_mismatch(tmp_path, mon
     assert statuses["perceptual_hash"] == "FAIL"
     assert statuses["clip_similarity"] == "SKIP"
     assert statuses["color_distance"] == "PASS"
+    assert report.to_source_quality_inputs()["phash_match"] is False
