@@ -103,6 +103,34 @@ def test_source_quality_routing_normalizes_source_aliases() -> None:
     assert selected == "cleveland_museum_of_art"
 
 
+def test_source_quality_routing_prefers_configured_host_id_before_alias() -> None:
+    aggregates = {
+        "sources": {
+            "cleveland_museum_of_art": {
+                "western-painting-19c": {
+                    "n_acquired": 10,
+                    "blended": {
+                        "verify_pass_rate": 0.05,
+                        "attribution_agreement": 0.0,
+                        "link_health_30d": 0.0,
+                        "metadata_completeness": 0.0,
+                    },
+                    "composite_score": 0.05,
+                }
+            },
+            "met": {"western-painting-19c": {"composite_score": 0.80}},
+        }
+    }
+
+    selected, _reason = af.select_source(
+        "western-painting-19c",
+        ["met", "cleveland_museum_of_art"],
+        aggregates,
+    )
+
+    assert selected == "met"
+
+
 def test_nan_composite_score_cannot_win() -> None:
     aggregates = {
         "sources": {

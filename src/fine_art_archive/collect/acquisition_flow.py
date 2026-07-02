@@ -65,6 +65,14 @@ def _collector_key(source: str) -> str:
     return SOURCE_ALIASES.get(source, source)
 
 
+def _source_quality_score(source: str, work_class: str, aggregates: dict) -> float:
+    sources = aggregates.get("sources", {})
+    if source in sources:
+        return source_quality.score_for(source, work_class, aggregates=aggregates)
+    collector_key = _collector_key(source)
+    return source_quality.score_for(collector_key, work_class, aggregates=aggregates)
+
+
 def load_source_quality_config(path: Path | None = None) -> dict:
     """Load source quality routing config, failing loudly when it is absent."""
     p = path or SOURCE_QUALITY_PATH
@@ -94,9 +102,7 @@ def rank_sources(
     """Return candidate sources sorted by descending source-quality score."""
     ranked: list[tuple[str, float]] = []
     for src in candidate_sources:
-        ranked.append(
-            (src, source_quality.score_for(_collector_key(src), work_class, aggregates=aggregates))
-        )
+        ranked.append((src, _source_quality_score(src, work_class, aggregates)))
     ranked.sort(key=lambda item: (math.isfinite(item[1]), item[1]), reverse=True)
     return ranked
 
