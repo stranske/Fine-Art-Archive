@@ -23,6 +23,8 @@ from . import store
 from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
+HTMX_VERSION = "1.9.10"
+HTMX_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "vendor" / "htmx.min.js"
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 VARIANT_UPGRADE_DECISIONS = REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
 VARIANT_UPGRADE_CSV = REPO_ROOT / "variant_upgrade_candidates.csv"
@@ -75,6 +77,25 @@ def _contained_master_filename(work_dir: Path, filename: str) -> Path:
     return candidate
 
 
+def _manifest_placeholder_work(work_id: str) -> dict | None:
+    row = store.get_manifest_row(work_id)
+    if row is None:
+        return None
+    return {
+        "work_id": work_id,
+        "title": row.get("title", ""),
+        "artist": {
+            "name": row.get("artist_name", ""),
+            "wikidata_q": row.get("artist_wikidata_q", ""),
+        },
+        "year": row.get("year", ""),
+        "medium": row.get("medium", ""),
+        "files": {"variants": []},
+        "_sidecar_status": "missing",
+        "_sidecar_message": "Metadata is not staged yet for this work.",
+    }
+
+
 # --------------------------------------------------------------------------
 # Browse endpoints (unchanged)
 # --------------------------------------------------------------------------
@@ -92,6 +113,17 @@ def root() -> FileResponse:
             "Pragma": "no-cache",
             "Expires": "0",
         },
+    )
+
+
+@app.get(f"/ui/vendor/htmx-{HTMX_VERSION}.min.js")
+def htmx_vendor() -> FileResponse:
+    if not HTMX_FILE.exists():
+        raise HTTPException(404, "htmx asset not found")
+    return FileResponse(
+        HTMX_FILE,
+        media_type="application/javascript",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
     )
 
 
@@ -120,7 +152,10 @@ def list_works(
 def get_work(work_id: str) -> dict:
     w = _get_work_checked(work_id)
     if w is None:
-        raise HTTPException(404, f"no sidecar for {work_id}")
+        placeholder = _manifest_placeholder_work(work_id)
+        if placeholder is None:
+            raise HTTPException(404, f"no sidecar for {work_id}")
+        w = placeholder
     # Attach the latest rating for this work, if any
     latest = store.latest_rating(work_id)
     if latest is not None:

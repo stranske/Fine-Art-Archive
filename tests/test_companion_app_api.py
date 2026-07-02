@@ -49,6 +49,15 @@ def test_root_serves_focus_ui(client: TestClient) -> None:
     r = client.get("/")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
+    assert "unpkg.com" not in r.text
+    assert 'src="/ui/vendor/htmx-1.9.10.min.js"' in r.text
+
+
+def test_vendored_htmx_is_served(client: TestClient) -> None:
+    r = client.get("/ui/vendor/htmx-1.9.10.min.js")
+    assert r.status_code == 200
+    assert "javascript" in r.headers["content-type"]
+    assert b"htmx" in r.content[:200]
 
 
 def test_works_list_empty_shape(client: TestClient) -> None:
@@ -61,6 +70,32 @@ def test_works_list_empty_shape(client: TestClient) -> None:
 
 def test_missing_work_404(client: TestClient) -> None:
     assert client.get("/works/nonexistent-wid").status_code == 404
+
+
+def test_manifest_work_without_sidecar_returns_handled_placeholder(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest_csv = tmp_path / "manifest.csv"
+    staging = tmp_path / "staging_sidecars"
+    manifest_csv.write_text(
+        "work_id,title,artist_name,artist_wikidata_q,year,medium\n"
+        "manifest-only,Manifest Work,Known Artist,Q123,1888,oil\n"
+    )
+    monkeypatch.setattr(api_store, "MANIFEST_CSV", manifest_csv)
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    api_store.invalidate_manifest_cache()
+
+    response = client.get("/works/manifest-only")
+
+    api_store.invalidate_manifest_cache()
+    assert response.status_code == 200
+    body = response.json()
+    assert body["work_id"] == "manifest-only"
+    assert body["title"] == "Manifest Work"
+    assert body["_sidecar_status"] == "missing"
+    assert "not staged yet" in body["_sidecar_message"]
 
 
 def test_artists_list(client: TestClient) -> None:
