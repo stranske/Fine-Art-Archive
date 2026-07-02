@@ -17,6 +17,7 @@ testable without network access.
 from __future__ import annotations
 
 import json
+import logging
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -45,6 +46,7 @@ from fine_art_archive.quality import source_quality
 
 SOURCE_QUALITY_PATH = Path(__file__).resolve().parents[3] / "config" / "source_quality.yaml"
 HOST_REGISTRY_PATH = Path(__file__).resolve().parents[3] / "config" / "host_registry.yaml"
+LOGGER = logging.getLogger(__name__)
 
 # Source name -> collector module. Each collector exposes acquire_shell_script().
 SOURCE_COLLECTORS: dict[str, ModuleType] = {
@@ -224,7 +226,10 @@ def run_acquisition_flow(
         meta: dict = {}
         meta_p = wd / "meta.json"
         if meta_p.exists():
-            meta = json.loads(meta_p.read_text())
+            try:
+                meta = json.loads(meta_p.read_text())
+            except json.JSONDecodeError:
+                LOGGER.warning("Skipping malformed staged metadata: %s", meta_p)
         dim = meta.get("dimensions_original") or {}
         assessment = assess_master(
             master,
