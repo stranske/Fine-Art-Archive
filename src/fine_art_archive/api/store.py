@@ -22,6 +22,7 @@ STAGING = env_path("FAA_STAGING_DIR", REPO_ROOT / "staging_sidecars")
 MANIFEST_CSV = env_path("FAA_MANIFEST_CSV", REPO_ROOT / "manifest.csv")
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 _WORK_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+_FileSignature = tuple[int, int]
 
 
 def validate_work_id(work_id: str) -> str:
@@ -71,13 +72,44 @@ def _resolve_cached(raw: str) -> tuple[str | None, str | None]:
 # --------------------------------------------------------------------------
 # Manifest + sidecars
 # --------------------------------------------------------------------------
-@lru_cache(maxsize=1)
+_MANIFEST_CACHE: list[dict] | None = None
+_MANIFEST_SIGNATURE: _FileSignature | None = None
+
+
+def _file_signature(path: Path) -> _FileSignature | None:
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        return None
+    return (stat.st_mtime_ns, stat.st_size)
+
+
 def load_manifest() -> list[dict]:
-    """Load the flat manifest CSV. Cached for the process lifetime."""
-    if not MANIFEST_CSV.exists():
+    """Load the flat manifest CSV, reloading when the file changes."""
+    global _MANIFEST_CACHE, _MANIFEST_SIGNATURE
+    signature = _file_signature(MANIFEST_CSV)
+    if signature is None:
+        _MANIFEST_CACHE = []
+        _MANIFEST_SIGNATURE = None
         return []
-    with open(MANIFEST_CSV) as f:
-        return list(csv.DictReader(f))
+    if _MANIFEST_CACHE is not None and signature == _MANIFEST_SIGNATURE:
+        return _MANIFEST_CACHE
+    try:
+        with open(MANIFEST_CSV) as f:
+            rows = list(csv.DictReader(f))
+    except FileNotFoundError:
+        _MANIFEST_CACHE = []
+        _MANIFEST_SIGNATURE = None
+        return []
+    _MANIFEST_CACHE = rows
+    _MANIFEST_SIGNATURE = signature
+    return rows
+
+
+def invalidate_manifest_cache() -> None:
+    global _MANIFEST_CACHE, _MANIFEST_SIGNATURE
+    _MANIFEST_CACHE = None
+    _MANIFEST_SIGNATURE = None
 
 
 def _matches_query(row: dict, ql: str) -> bool:
@@ -195,16 +227,22 @@ def list_artists(*, limit: int = 100) -> list[dict]:
 # --------------------------------------------------------------------------
 _RATINGS_CACHE: list[dict] | None = None
 _RATINGS_BY_WORK: dict[str, list[dict]] | None = None
+_RATINGS_SIGNATURE: _FileSignature | None = None
 
 
 def _load_ratings() -> list[dict]:
-    """Load all rating events. Cached; call invalidate_ratings_cache()
-    after appending."""
-    global _RATINGS_CACHE
-    if _RATINGS_CACHE is not None:
+    """Load all rating events, reloading when the log file changes."""
+    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE
+    signature = _file_signature(RATINGS_LOG)
+    if signature is None:
+        _RATINGS_CACHE = []
+        _RATINGS_BY_WORK = None
+        _RATINGS_SIGNATURE = None
+        return []
+    if _RATINGS_CACHE is not None and signature == _RATINGS_SIGNATURE:
         return _RATINGS_CACHE
     events: list[dict] = []
-    if RATINGS_LOG.exists():
+    try:
         with open(RATINGS_LOG) as f:
             for line in f:
                 line = line.strip()
@@ -214,12 +252,20 @@ def _load_ratings() -> list[dict]:
                     events.append(json.loads(line))
                 except json.JSONDecodeError:
                     continue
+    except FileNotFoundError:
+        _RATINGS_CACHE = []
+        _RATINGS_BY_WORK = None
+        _RATINGS_SIGNATURE = None
+        return []
     _RATINGS_CACHE = events
+    _RATINGS_BY_WORK = None
+    _RATINGS_SIGNATURE = signature
     return events
 
 
 def _ratings_by_work() -> dict[str, list[dict]]:
     global _RATINGS_BY_WORK
+    _load_ratings()
     if _RATINGS_BY_WORK is not None:
         return _RATINGS_BY_WORK
     out: dict[str, list[dict]] = defaultdict(list)
@@ -235,9 +281,10 @@ def _ratings_by_work() -> dict[str, list[dict]]:
 
 
 def invalidate_ratings_cache() -> None:
-    global _RATINGS_CACHE, _RATINGS_BY_WORK
+    global _RATINGS_CACHE, _RATINGS_BY_WORK, _RATINGS_SIGNATURE
     _RATINGS_CACHE = None
     _RATINGS_BY_WORK = None
+    _RATINGS_SIGNATURE = None
 
 
 def latest_rating(work_id: str) -> dict | None:
