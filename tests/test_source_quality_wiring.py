@@ -103,6 +103,22 @@ def test_source_quality_routing_normalizes_source_aliases() -> None:
     assert selected == "cleveland_museum_of_art"
 
 
+def test_acquisition_result_preserves_configured_source_id(tmp_path: Path) -> None:
+    work = _make_work(tmp_path / "work")
+    aggregates = {
+        "sources": {"cleveland_museum_of_art": {"western-painting-19c": {"composite_score": 0.95}}}
+    }
+
+    [result] = af.run_acquisition_flow(
+        "met",
+        [work],
+        candidate_sources=["cleveland_museum_of_art"],
+        aggregates=aggregates,
+    )
+
+    assert result.source == "cleveland_museum_of_art"
+
+
 def test_source_quality_routing_prefers_configured_host_id_before_alias() -> None:
     aggregates = {
         "sources": {

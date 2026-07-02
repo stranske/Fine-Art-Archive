@@ -86,11 +86,7 @@ def load_source_quality_config(path: Path | None = None) -> dict:
 
 def source_chain_for_host(qid: str, path: Path | None = None) -> list[str]:
     """Return primary adapter plus configured fallback chain for a host Q-ID."""
-    entry = None
-    for candidate in host_registry.load_registry(path or HOST_REGISTRY_PATH).values():
-        if candidate.wikidata_q == qid:
-            entry = candidate
-            break
+    entry = host_registry.find_by_wikidata_q(qid, path or HOST_REGISTRY_PATH)
     if entry is None or not entry.primary_adapter:
         return []
     return [entry.primary_adapter, *entry.fallback_chain]
@@ -232,7 +228,7 @@ def run_acquisition_flow(
         dim = meta.get("dimensions_original") or {}
         assessment = assess_master(
             master,
-            source=_collector_key(chosen_source),
+            source=chosen_source,
             h_cm=dim.get("h_cm"),
             w_cm=dim.get("w_cm"),
         )

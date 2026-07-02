@@ -233,13 +233,59 @@ def composite_score(
     return base + confidence_floor_weight * floor_term
 
 
+def _configured_tier_prior(aggregates: dict, tier: int = 1) -> dict[str, float]:
+    configured = aggregates.get("tier_priors")
+    if isinstance(configured, dict):
+        raw = configured.get(tier) or configured.get(str(tier))
+        if isinstance(raw, dict):
+            return {k: float(raw[k]) for k in COMPOSITE_WEIGHTS if k in raw}
+    return DEFAULT_TIER_PRIORS.get(tier, DEFAULT_TIER_PRIORS[1])
+
+
+def _record_blended_stats(rec: dict, aggregates: dict) -> dict[str, float]:
+    empirical = rec.get("empirical")
+    first_seen = rec.get("first_seen")
+    if not isinstance(empirical, dict):
+        blended = rec.get("blended")
+        if isinstance(blended, dict):
+            return {k: float(v) for k, v in blended.items()}
+        return _configured_tier_prior(aggregates, int(rec.get("host_tier") or 1))
+
+    tier = int(rec.get("host_tier") or 1)
+    prior = _configured_tier_prior(aggregates, tier)
+    if not first_seen:
+        return dict(prior)
+
+    try:
+        first = datetime.fromisoformat(str(first_seen).replace("Z", "+00:00"))
+    except ValueError:
+        blended = rec.get("blended")
+        if isinstance(blended, dict):
+            return {k: float(v) for k, v in blended.items()}
+        return dict(prior)
+
+    warmup_days = float(aggregates.get("warmup_days", WARMUP_DAYS) or WARMUP_DAYS)
+    if warmup_days <= 0:
+        t = 1.0
+    else:
+        age_days = (datetime.now(UTC) - first).total_seconds() / 86400.0
+        t = max(0.0, min(1.0, age_days / warmup_days))
+    stats: dict[str, float] = {}
+    for key, prior_value in prior.items():
+        observed = empirical.get(key)
+        stats[key] = (
+            prior_value if observed is None else t * float(observed) + (1 - t) * prior_value
+        )
+    return stats
+
+
 def _routing_score_from_record(rec: dict, aggregates: dict) -> float:
     weights = aggregates.get("composite_weights")
     confidence_floor_weight = aggregates.get("confidence_floor_weight", CONFIDENCE_FLOOR_WEIGHT)
-    blended = rec.get("blended")
-    if isinstance(weights, dict) and isinstance(blended, dict):
+    stats = _record_blended_stats(rec, aggregates)
+    if isinstance(weights, dict):
         return composite_score(
-            blended,
+            stats,
             n_acquired=int(rec.get("n_acquired") or 0),
             weights={k: float(v) for k, v in weights.items()},
             confidence_floor_weight=float(confidence_floor_weight),
@@ -255,7 +301,18 @@ def score_for(source: str, work_class: str, *, aggregates: dict) -> float:
     if rec:
         return _routing_score_from_record(rec, aggregates)
     # No record: fall back to tier-1 prior with zero confidence floor.
-    return composite_score(DEFAULT_TIER_PRIORS[1], n_acquired=0)
+    weights = aggregates.get("composite_weights")
+    active_weights = (
+        {k: float(v) for k, v in weights.items()} if isinstance(weights, dict) else None
+    )
+    return composite_score(
+        _configured_tier_prior(aggregates),
+        n_acquired=0,
+        weights=active_weights,
+        confidence_floor_weight=float(
+            aggregates.get("confidence_floor_weight", CONFIDENCE_FLOOR_WEIGHT)
+        ),
+    )
 
 
 # --------------------------------------------------------------------------

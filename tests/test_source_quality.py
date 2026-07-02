@@ -217,13 +217,14 @@ def test_extract_signals_real_source_with_signals():
         },
     }
     row = extract_signals(meta)
+    assert row is not None
     assert row.source == "met"
     assert row.work_class == "western-painting-19c"
     assert row.verify_pass is True
     assert row.attribution_match is True
 
 
-def test_aggregate_sidecars_separates_real_vs_legacy(tmp_path: Path):
+def test_aggregate_sidecars_separates_real_vs_legacy(tmp_path: Path) -> None:
     staging = tmp_path / "staging_sidecars"
     staging.mkdir()
     # legacy bucket sidecar
@@ -281,3 +282,58 @@ def test_score_for_falls_back_to_prior_when_unknown():
     s = score_for("never-seen-source", "western-painting-19c", aggregates={"sources": {}})
     expected = composite_score(DEFAULT_TIER_PRIORS[1], n_acquired=0)
     assert s == pytest.approx(expected, abs=1e-9)
+
+
+def test_score_for_fallback_uses_configured_weights():
+    aggregates = {
+        "composite_weights": {
+            "verify_pass_rate": 1.0,
+            "attribution_agreement": 0.0,
+            "link_health_30d": 0.0,
+            "metadata_completeness": 0.0,
+        },
+        "confidence_floor_weight": 0.0,
+        "sources": {},
+    }
+
+    assert score_for("unknown", "western-painting-19c", aggregates=aggregates) == pytest.approx(
+        DEFAULT_TIER_PRIORS[1]["verify_pass_rate"]
+    )
+
+
+def test_score_for_recomputes_configured_warmup_from_empirical_record():
+    first_seen = (datetime.now(UTC) - timedelta(days=1)).isoformat(timespec="seconds")
+    aggregates = {
+        "warmup_days": 60,
+        "composite_weights": {
+            "verify_pass_rate": 1.0,
+            "attribution_agreement": 0.0,
+            "link_health_30d": 0.0,
+            "metadata_completeness": 0.0,
+        },
+        "confidence_floor_weight": 0.0,
+        "sources": {
+            "met": {
+                "western-painting-19c": {
+                    "n_acquired": 10,
+                    "first_seen": first_seen,
+                    "host_tier": 1,
+                    "empirical": {
+                        "verify_pass_rate": 0.0,
+                        "attribution_agreement": 0.0,
+                        "link_health_30d": 0.0,
+                        "metadata_completeness": 0.0,
+                    },
+                    "blended": {
+                        "verify_pass_rate": 0.0,
+                        "attribution_agreement": 0.0,
+                        "link_health_30d": 0.0,
+                        "metadata_completeness": 0.0,
+                    },
+                    "composite_score": 0.0,
+                }
+            }
+        },
+    }
+
+    assert score_for("met", "western-painting-19c", aggregates=aggregates) > 0.90
