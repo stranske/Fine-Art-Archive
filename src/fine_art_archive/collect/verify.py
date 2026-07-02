@@ -75,14 +75,11 @@ class VerificationReport:
             if check.status == "PASS":
                 return True
             if check.status == "FAIL":
-                return (
-                    name == "perceptual_hash"
-                    and not check.blocks_overall
-                    and self.overall == "PASS"
-                )
+                return False
             return None
 
         return {
+            "verify_match": {"PASS": True, "FAIL": False}.get(self.overall),
             "phash_match": match_value("perceptual_hash"),
             "aspect_match": match_value("aspect_ratio"),
             "dim_match": None,
@@ -164,27 +161,28 @@ def check_perceptual_hash(
     """
     from PIL import Image
 
-    cand_img = Image.open(candidate_path)
-    ref_img = Image.open(reference_path)
-    try:
-        import imagehash  # imported lazily so the rest of the module loads even
+    with Image.open(candidate_path) as cand_img, Image.open(reference_path) as ref_img:
+        candidate_size = list(cand_img.size)
+        reference_size = list(ref_img.size)
+        try:
+            import imagehash  # imported lazily so the rest of the module loads even
 
-        # if the dep is absent
-        p_dist = imagehash.phash(cand_img) - imagehash.phash(ref_img)
-        d_dist = imagehash.dhash(cand_img) - imagehash.dhash(ref_img)
-        hash_backend = "imagehash"
-    except ImportError:
-        p_dist = _average_hash_distance(cand_img, ref_img)
-        d_dist = _difference_hash_distance(cand_img, ref_img)
-        hash_backend = "fallback"
+            # if the dep is absent
+            p_dist = imagehash.phash(cand_img) - imagehash.phash(ref_img)
+            d_dist = imagehash.dhash(cand_img) - imagehash.dhash(ref_img)
+            hash_backend = "imagehash"
+        except ImportError:
+            p_dist = _average_hash_distance(cand_img, ref_img)
+            d_dist = _difference_hash_distance(cand_img, ref_img)
+            hash_backend = "fallback"
 
     detail = {
         "phash_distance": int(p_dist),
         "phash_threshold": phash_threshold,
         "dhash_distance": int(d_dist),
         "dhash_threshold": dhash_threshold,
-        "candidate_size": list(cand_img.size),
-        "reference_size": list(ref_img.size),
+        "candidate_size": candidate_size,
+        "reference_size": reference_size,
         "hash_backend": hash_backend,
     }
     # PASS if either hash is comfortably under threshold; that handles
@@ -290,10 +288,11 @@ def check_embedding_similarity(
         try:
             embedding_backend = _load_open_clip_backend()
         except ImportError as exc:
+            dependency = exc.name or str(exc) or exc.__class__.__name__
             return CheckResult(
                 name="clip_similarity",
                 status="SKIP",
-                message=f"embedding backend unavailable: {exc.name}",
+                message=f"embedding backend unavailable: {dependency}",
             )
         except (OSError, RuntimeError) as exc:
             return CheckResult(

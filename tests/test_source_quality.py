@@ -68,6 +68,18 @@ def test_verify_pass_all_gates_required():
     assert row.verify_pass is None
 
 
+def test_verify_match_overrides_legacy_gate_rollup():
+    row = SignalRow(
+        source="met",
+        work_class="x",
+        work_id="w",
+        verify_match=True,
+        phash_match=False,
+        aspect_match=True,
+    )
+    assert row.verify_pass is True
+
+
 def test_aggregate_basic_counts():
     agg = SourceQualityAggregate(source="met", work_class="painting", host_tier=1)
     rows = [

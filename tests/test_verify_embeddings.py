@@ -106,7 +106,9 @@ def test_embedding_leg_passes_cropped_reframed_work_when_phash_fails(tmp_path):
     assert statuses["perceptual_hash"] == "FAIL"
     assert statuses["clip_similarity"] == "PASS"
     assert statuses["color_distance"] == "PASS"
-    assert report.to_source_quality_inputs()["phash_match"] is True
+    source_quality = report.to_source_quality_inputs()
+    assert source_quality["verify_match"] is True
+    assert source_quality["phash_match"] is False
 
 
 def test_embedding_leg_fails_different_artwork(tmp_path):
@@ -201,4 +203,6 @@ def test_embedding_skip_keeps_phash_blocking_for_identity_mismatch(tmp_path, mon
     assert statuses["perceptual_hash"] == "FAIL"
     assert statuses["clip_similarity"] == "SKIP"
     assert statuses["color_distance"] == "PASS"
-    assert report.to_source_quality_inputs()["phash_match"] is False
+    source_quality = report.to_source_quality_inputs()
+    assert source_quality["verify_match"] is False
+    assert source_quality["phash_match"] is False
