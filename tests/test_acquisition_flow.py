@@ -8,6 +8,7 @@ passthrough, and the verify+quality assessment over synthetic masters.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -75,6 +76,26 @@ def test_run_acquisition_flow_skips_missing_master(tmp_path: Path) -> None:
     empty.mkdir()
     results = af.run_acquisition_flow("artic", [good, empty])
     assert len(results) == 1  # the master-less dir is skipped
+
+
+def test_run_acquisition_flow_continues_after_corrupt_meta(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    corrupt = _work(tmp_path / "corrupt")
+    valid = _work(tmp_path / "valid")
+    (corrupt / "meta.json").write_text("{not valid json")
+
+    with caplog.at_level(logging.WARNING, logger=af.__name__):
+        results = af.run_acquisition_flow("met", [corrupt, valid])
+
+    assert len(results) == 2
+    assert {result.work_dir.name for result in results} == {"corrupt", "valid"}
+    assert any(
+        "continuing with empty metadata" in record.message
+        and str(corrupt / "meta.json") in record.message
+        and "Expecting property name" in record.message
+        for record in caplog.records
+    )
 
 
 def test_run_acquisition_flow_unknown_source(tmp_path: Path) -> None:
