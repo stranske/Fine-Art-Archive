@@ -26,59 +26,39 @@ import os
 import sys
 import time
 from pathlib import Path
-
-from PIL import Image
-
-Image.MAX_IMAGE_PIXELS = None
+from typing import Any, cast
 
 # Paths derive from this file's location (scripts/ lives at the workspace root),
 # so the tool runs unchanged on the Mac and inside the Cowork sandbox mount.
 WS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WS / "src"))
+
+from fine_art_archive.collect.dedup_cascade import (  # noqa: E402
+    PHASH_BITS,
+    hamming,
+    perceptual_hashes,
+)
+
 ART = WS.parent / "Art" / "works"  # Dropbox/Pictures/Art/works
 STAGE = WS / "staging_acquisitions"
 SIDE = WS / "staging_sidecars"
 CACHE = WS / "archive_phash_cache.json"
-HS = 16  # 16x16 -> 256-bit
+HS = PHASH_BITS  # 16x16 -> 256-bit
 
 
-def _gray(path, target=72):
-    im = Image.open(path)
-    try:
-        im.draft("L", (target, target))  # fast scaled JPEG decode for huge masters
-    except Exception:
-        pass
-    return im.convert("L")
+def _hashes(path: str | Path, hs: int = HS) -> tuple[int, int]:
+    return perceptual_hashes(path, hs=hs)
 
 
-def _hashes(path, hs=HS):
-    im = _gray(path)
-    gd = im.resize((hs + 1, hs), Image.BILINEAR)
-    px = gd.tobytes()
-    w = hs + 1
-    d = 0
-    for r in range(hs):
-        base = r * w
-        for c in range(hs):
-            d = (d << 1) | (1 if px[base + c] < px[base + c + 1] else 0)
-    ga = im.resize((hs, hs), Image.BILINEAR)
-    pa = ga.tobytes()
-    avg = sum(pa) / len(pa)
-    a = 0
-    for p in pa:
-        a = (a << 1) | (1 if p >= avg else 0)
-    return d, a
+ham = hamming
 
 
-def ham(a, b):
-    return bin(a ^ b).count("1")
-
-
-def master_of(d):
+def master_of(d: str | Path) -> str | None:
     g = sorted(glob.glob(str(Path(d) / "master.*"))) or sorted(glob.glob(str(Path(d) / "*.jp*g")))
     return g[0] if g else None
 
 
-def _title(wid):
+def _title(wid: str) -> str:
     for cand in (SIDE / wid / "meta.json", STAGE / wid / "meta.json"):
         if cand.exists():
             try:
@@ -88,23 +68,23 @@ def _title(wid):
     return ""
 
 
-def load_cache():
+def load_cache() -> dict[str, dict[str, Any]]:
     if CACHE.exists():
         try:
-            return json.load(open(CACHE))
+            return cast(dict[str, dict[str, Any]], json.load(open(CACHE)))
         except Exception:
             return {}
     return {}
 
 
-def build(budget=40, workers=16):
+def build(budget: int = 40, workers: int = 16) -> None:
     cache = load_cache()
     dirs = [d for d in sorted(glob.glob(str(ART / "*"))) if os.path.isdir(d)]
     todo = [d for d in dirs if os.path.basename(d) not in cache]
     t0 = time.time()
     done = 0
 
-    def work(d):
+    def work(d: str) -> tuple[str, dict[str, Any]]:
         wid = os.path.basename(d)
         m = master_of(d)
         if not m:
@@ -139,7 +119,7 @@ def build(budget=40, workers=16):
     )
 
 
-def match(wids):
+def match(wids: list[str]) -> None:
     cache = load_cache()
     arch = [
         (k, int(v["dhash"], 16), int(v["ahash"], 16), v.get("title", ""))

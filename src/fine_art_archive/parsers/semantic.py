@@ -23,6 +23,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from fine_art_archive.parsers.year_utils import (
+    CIRCA_TOKEN,
+    DECADE_TOKEN,
+    YEAR_RANGE_TOKEN,
+    YEAR_TOKEN,
+    split_with_separators,
+)
+from fine_art_archive.parsers.year_utils import (
+    looks_like_year as _looks_like_year_fragment,
+)
+
 FieldType = Literal["year", "dimensions", "medium", "name", "title", "series", "number", "unknown"]
 
 
@@ -155,10 +166,10 @@ def matches_known_artist(s: str) -> str | None:
 # --- Patterns for classification --------------------------------------------
 
 # Year patterns: 4-digit year, year range, decade, "c. <year>"
-YEAR_RE = re.compile(r"\b(1[0-9]{3}|2[0-9]{3})\b")
-DECADE_RE = re.compile(r"\b[12][0-9]{3}s\b")
-YEAR_RANGE_RE = re.compile(r"\b\d{4}\s*[-–—]\s*\d{2,4}\b")
-CIRCA_RE = re.compile(r"\bc\.?\s*\d{4}\b", re.I)
+YEAR_RE = YEAR_TOKEN
+DECADE_RE = DECADE_TOKEN
+YEAR_RANGE_RE = YEAR_RANGE_TOKEN
+CIRCA_RE = CIRCA_TOKEN
 
 # Dimensions: cm/in/mm × x dimensions
 # Variant A: "72 × 94 cm"      — unit only on second number
@@ -249,19 +260,7 @@ class ParsedFilename:
 
 
 def looks_like_year(s: str) -> tuple[bool, float, str]:
-    if YEAR_RANGE_RE.search(s):
-        return True, 0.95, "year-range"
-    if DECADE_RE.search(s) and not YEAR_RE.search(s.replace("s", " ", 1)):
-        return True, 0.90, "decade"
-    if CIRCA_RE.search(s):
-        return True, 0.85, "circa-year"
-    if YEAR_RE.search(s):
-        # Could be year, dimension, accession — verify it's not embedded in
-        # something else
-        if len(s) <= 30 and not DIM_SOFT_RE.search(s):
-            return True, 0.80, "single-year"
-        return True, 0.60, "year-token-in-longer-text"
-    return False, 0.0, ""
+    return _looks_like_year_fragment(s, dimension_pattern=DIM_SOFT_RE)
 
 
 def looks_like_dimensions(s: str) -> tuple[bool, float, str]:
@@ -380,19 +379,6 @@ def classify_fragment(s: str) -> FieldClassification:
 
 
 # --- Top-level parser -----------------------------------------------------
-
-
-def split_with_separators(stem: str) -> list[str]:
-    """Split on both ; and , preserving fragment boundaries.
-
-    First tries semicolons; falls back to commas if semicolons yield <3
-    fragments. Strips whitespace, drops empty.
-    """
-    semi = [s.strip() for s in stem.split(";") if s.strip()]
-    if len(semi) >= 3:
-        return semi
-    comma = [s.strip() for s in stem.split(",") if s.strip()]
-    return comma if len(comma) >= 3 else semi or [stem]
 
 
 def _maybe_extract_suffix_artist(

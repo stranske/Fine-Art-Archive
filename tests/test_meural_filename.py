@@ -14,6 +14,9 @@ from fine_art_archive.parsers.meural_filename import (  # noqa: E402
     parse,
     parse_year_range,
 )
+from fine_art_archive.parsers.year_utils import (
+    parse_year_range as shared_parse_year_range,  # noqa: E402
+)
 
 # ---------------------------------------------------------------------------
 # Semicolon-format (62% of the corpus)
@@ -175,6 +178,10 @@ def test_year_range_empty():
 def test_year_range_century_rollover():
     # Hypothetical "1599-02" would mean 1599 to 1602 if we cross a century.
     assert parse_year_range("1599-02") == (1599, 1602)
+
+
+def test_meural_parser_reexports_shared_year_parser():
+    assert parse_year_range is shared_parse_year_range
 
 
 # ---------------------------------------------------------------------------
