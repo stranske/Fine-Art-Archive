@@ -745,7 +745,7 @@ import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade e
 def variant_upgrades() -> dict:
     if not VARIANT_UPGRADE_CSV.exists():
         return {"candidates": [], "decisions": []}
-    with open(VARIANT_UPGRADE_CSV) as _f:
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as _f:
         candidates = list(_csv.DictReader(_f))
     # Attach prior decisions
     decisions: dict[str, dict] = {}
@@ -766,6 +766,24 @@ def variant_upgrades() -> dict:
     return {"candidates": candidates}
 
 
+def _variant_upgrade_fallback_work(existing_wid: str) -> dict | None:
+    if store.get_manifest_row(existing_wid) is not None:
+        return _manifest_placeholder_work(existing_wid)
+    return store.get_work(existing_wid)
+
+
+def _known_variant_upgrade_work_id(existing_wid: str) -> bool:
+    if VARIANT_UPGRADE_CSV.exists():
+        with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as _f:
+            for candidate in _csv.DictReader(_f):
+                if candidate.get("existing_wid") == existing_wid:
+                    return True
+    try:
+        return _variant_upgrade_fallback_work(existing_wid) is not None
+    except ValueError as exc:
+        raise _bad_work_id(exc) from exc
+
+
 class UpgradeDecisionIn(BaseModel):
     decision: str = Field(..., description="accept | reject | defer")
     note: str = Field(default="", max_length=500)
@@ -775,6 +793,8 @@ class UpgradeDecisionIn(BaseModel):
 def variant_upgrade_decision(existing_wid: str, body: UpgradeDecisionIn) -> dict:
     if body.decision not in {"accept", "reject", "defer"}:
         raise HTTPException(400, "decision must be accept/reject/defer")
+    if not _known_variant_upgrade_work_id(existing_wid):
+        raise HTTPException(404, f"unknown variant upgrade work: {existing_wid}")
     event = {
         "existing_wid": existing_wid,
         "decision": body.decision,
