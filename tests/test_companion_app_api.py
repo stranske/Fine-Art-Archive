@@ -137,6 +137,52 @@ def test_corrupt_queue_json_returns_handled_errors_and_health_signal(
     assert health.json()["queues_invalid_count"] == 1
 
 
+def test_invalid_queue_shape_returns_handled_errors_and_health_signal(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queues_dir = tmp_path / "queues"
+    queues_dir.mkdir()
+    (queues_dir / "bad.json").write_text("[]")
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+
+    queue_list = client.get("/queues")
+    queue_detail = client.get("/queues/bad")
+    health = client.get("/healthz")
+
+    assert queue_list.status_code == 422
+    assert queue_detail.status_code == 422
+    assert queue_list.json()["detail"]["error"] == "invalid_queue_shape"
+    assert queue_detail.json()["detail"]["error"] == "invalid_queue_shape"
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    assert health.json()["queues_invalid_count"] == 1
+
+
+def test_unreadable_queue_file_returns_handled_errors_and_health_signal(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queues_dir = tmp_path / "queues"
+    queues_dir.mkdir()
+    (queues_dir / "bad.json").write_bytes(b"\xff")
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+
+    queue_list = client.get("/queues")
+    queue_detail = client.get("/queues/bad")
+    health = client.get("/healthz")
+
+    assert queue_list.status_code == 422
+    assert queue_detail.status_code == 422
+    assert queue_list.json()["detail"]["error"] == "invalid_queue_file"
+    assert queue_detail.json()["detail"]["error"] == "invalid_queue_file"
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    assert health.json()["queues_invalid_count"] == 1
+
+
 def test_rating_taxonomy(client: TestClient) -> None:
     r = client.get("/rating_taxonomy")
     assert r.status_code == 200

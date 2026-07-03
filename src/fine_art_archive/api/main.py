@@ -205,24 +205,36 @@ def list_artists(limit: int = Query(100, ge=1, le=2000)) -> list[dict]:
 QUEUES_DIR = REPO_ROOT / "data" / "queues"
 
 
-def _queue_parse_error(path: Path, exc: json.JSONDecodeError) -> HTTPException:
+def _queue_error(path: Path, message: str, *, error: str = "invalid_queue_json") -> HTTPException:
     return HTTPException(
         422,
         {
-            "error": "invalid_queue_json",
+            "error": error,
             "file": path.name,
-            "message": exc.msg,
-            "line": exc.lineno,
-            "column": exc.colno,
+            "message": message,
         },
     )
 
 
 def _load_queue_file(path: Path) -> dict:
     try:
-        return json.loads(path.read_text())
+        queue = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise _queue_parse_error(path, exc) from exc
+        detail: dict[str, object] = {
+            "error": "invalid_queue_json",
+            "file": path.name,
+            "message": exc.msg,
+            "line": exc.lineno,
+            "column": exc.colno,
+        }
+        raise HTTPException(422, detail) from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise _queue_error(path, str(exc), error="invalid_queue_file") from exc
+    if not isinstance(queue, dict):
+        raise _queue_error(
+            path, "queue file must contain a JSON object", error="invalid_queue_shape"
+        )
+    return queue
 
 
 def _queue_invalid_count() -> int:
@@ -231,8 +243,8 @@ def _queue_invalid_count() -> int:
     invalid = 0
     for path in QUEUES_DIR.glob("*.json"):
         try:
-            json.loads(path.read_text())
-        except json.JSONDecodeError:
+            _load_queue_file(path)
+        except HTTPException:
             invalid += 1
     return invalid
 
