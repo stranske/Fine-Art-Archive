@@ -66,6 +66,17 @@ def test_layer2_phash_near() -> None:
     assert v.is_duplicate and v.layer == "phash" and v.distance == 1
 
 
+def test_layer2_uses_ahash_as_tiebreaker() -> None:
+    cand = Candidate(dhash=0b1010, ahash=0b1111)
+    archive = [
+        ArchiveEntry(wid="worse-ahash", dhash=0b1011, ahash=0b0000),
+        ArchiveEntry(wid="better-ahash", dhash=0b1000, ahash=0b1110),
+    ]
+    v = dedup_check(cand, archive)
+    assert v.is_duplicate and v.matched_wid == "better-ahash"
+    assert v.detail == "dHam 1 <= 13; aHam 1"
+
+
 def test_layer4_metadata_same_artist_needs_review() -> None:
     cand = Candidate(dhash=0, artist_qid="Q762", title="Mona Lisa")
     archive = [ArchiveEntry(wid="w3", dhash=_FAR, artist_qid="Q762", title="Mona Lisa")]
@@ -136,3 +147,37 @@ def test_acquisition_flow_attaches_dedup_verdict(tmp_path: Path) -> None:
     # Without an archive the flow skips the dedup gate.
     [res2] = af.run_acquisition_flow("met", [work])
     assert res2.dedup is None
+
+
+def test_acquisition_flow_attaches_inventory_match(tmp_path: Path) -> None:
+    from fine_art_archive.collect import acquisition_flow as af
+
+    work = tmp_path / "cand-caillebotte"
+    work.mkdir()
+    master = work / "master.jpg"
+    Image.new("RGB", (400, 300)).save(master, "JPEG")
+    (work / "meta.json").write_text(
+        json.dumps(
+            {
+                "artist": {"name": "Gustave Caillebotte", "wikidata_q": "Q123"},
+                "title": "Paris Street; Rainy Day",
+                "dimensions_original": {"h_cm": 212.2, "w_cm": 276.2},
+            }
+        )
+    )
+    inventory = tmp_path / "inventory.csv"
+    inventory.write_text(
+        "\n".join(
+            [
+                "rel_path,size_bytes,title,artist",
+                "Landscape/Paris Street.jpeg,84796647,Paris Street,Gustave Caillebotte",
+            ]
+        )
+    )
+
+    [res] = af.run_acquisition_flow("met", [work], inventory_csv=inventory)
+
+    assert res.inventory_match is not None
+    assert res.inventory_match.has_strong_match
+    assert res.inventory_match.best is not None
+    assert res.inventory_match.best.tier == "exact-artist+near-title"

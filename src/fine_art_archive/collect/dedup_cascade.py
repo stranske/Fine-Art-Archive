@@ -124,16 +124,36 @@ def dedup_check(
 
     # Layer 2 — perceptual hash (near-identical reproduction)
     if candidate.dhash is not None:
-        best: tuple[int, str] | None = None
+        best: tuple[int, int | None, str] | None = None
         for e in archive:
             if e.dhash is None:
                 continue
             d = hamming(candidate.dhash, e.dhash)
-            if best is None or d < best[0]:
-                best = (d, e.wid)
+            a_dist = (
+                hamming(candidate.ahash, e.ahash)
+                if candidate.ahash is not None and e.ahash is not None
+                else None
+            )
+            rank = (d, a_dist if a_dist is not None else PHASH_BITS * PHASH_BITS + 1)
+            if best is None:
+                best = (d, a_dist, e.wid)
+                continue
+            best_rank = (
+                best[0],
+                best[1] if best[1] is not None else PHASH_BITS * PHASH_BITS + 1,
+            )
+            if rank < best_rank:
+                best = (d, a_dist, e.wid)
         if best is not None and best[0] <= phash_threshold:
+            detail = f"dHam {best[0]} <= {phash_threshold}"
+            if best[1] is not None:
+                detail = f"{detail}; aHam {best[1]}"
             return DedupVerdict(
-                "duplicate", "phash", best[1], best[0], f"dHam {best[0]} <= {phash_threshold}"
+                "duplicate",
+                "phash",
+                best[2],
+                best[0],
+                detail,
             )
 
     # Layer 3 — artist Q-ID block (narrow to the same creator)
