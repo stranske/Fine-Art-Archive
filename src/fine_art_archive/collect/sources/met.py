@@ -38,6 +38,8 @@ from __future__ import annotations
 import shlex
 from dataclasses import dataclass
 
+from fine_art_archive.collect.sources._shared import holder_fields, year_fields
+
 API_BASE = "https://collectionapi.metmuseum.org/public/collection/v1"
 
 
@@ -125,17 +127,21 @@ def normalize_metadata(api_json: dict) -> dict:
             if a.get("artistULAN_URL")
             else None
         ),
-        "year": a.get("objectDate"),
-        "year_min": (int(a["objectBeginDate"]) if a.get("objectBeginDate") is not None else None),
-        "year_max": (int(a["objectEndDate"]) if a.get("objectEndDate") is not None else None),
+        **year_fields(
+            year=a.get("objectDate"),
+            year_min=(int(a["objectBeginDate"]) if a.get("objectBeginDate") is not None else None),
+            year_max=(int(a["objectEndDate"]) if a.get("objectEndDate") is not None else None),
+        ),
         "medium": a.get("medium"),
         "dimensions_raw": a.get("dimensions"),
         "rights_status": ("public-domain" if a.get("isPublicDomain") else "rights-reserved"),
         "rights_evidence_url": "https://www.metmuseum.org/about-the-met/policies-and-documents/open-access",
-        "holder_name": "The Metropolitan Museum of Art",
-        "holder_wikidata_q": "Q160236",
-        "holder_ror": "01xtbq813",
-        "holder_url": a.get("objectURL"),
+        **holder_fields(
+            name="The Metropolitan Museum of Art",
+            wikidata_q="Q160236",
+            ror="01xtbq813",
+            url=a.get("objectURL"),
+        ),
         "met_object_id": a.get("objectID"),
         "met_credit_line": a.get("creditLine"),
         "met_department": a.get("department"),
