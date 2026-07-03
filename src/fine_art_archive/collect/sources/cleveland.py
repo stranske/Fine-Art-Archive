@@ -56,7 +56,7 @@ def acquire_shell_script(
     URLs serve full-resolution.
     """
     python_body = f"""
-import json, sys, urllib.parse, urllib.request
+import json, sys, urllib.error, urllib.parse, urllib.request
 ACC = {obj.accession!r}
 TITLE = {title or ""!r}
 ARTIST = {artist or ""!r}

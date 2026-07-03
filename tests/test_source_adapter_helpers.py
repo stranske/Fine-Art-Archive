@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fine_art_archive.collect.sources import artic, cleveland, met, rijksmuseum
+from fine_art_archive.collect.sources._shared import render_image_acquire_shell
 
 
 def test_artic_acquire_shell_keeps_direct_lookup_search_and_iiif_download() -> None:
@@ -24,12 +25,25 @@ def test_cleveland_acquire_shell_keeps_fallback_and_print_image_preference() -> 
     )
 
     assert "ACC = '1942.647'" in script
+    assert "import json, sys, urllib.error, urllib.parse, urllib.request" in script
     assert "fetch_artwork(ACC)" in script
     assert "title+artist search" in script
     assert "openaccess-api.clevelandart.org/api/artworks/?" in script
     assert "(images.get('print') or {}).get('url')" in script
     assert "URL=$(cat /tmp/cle_master_url)" in script
     assert "rm -f /tmp/cle_master_url" in script
+
+
+def test_acquire_shell_quotes_temp_url_path() -> None:
+    script = render_image_acquire_shell(
+        out_path="/tmp/master image.jpg",
+        python_body="print('ready')",
+        temp_url_path="/tmp/source url.txt",
+    )
+
+    assert "URL=$(cat '/tmp/source url.txt')" in script
+    assert "rm -f '/tmp/source url.txt'" in script
+    assert "-o '/tmp/master image.jpg' \"$URL\"" in script
 
 
 def test_holder_and_year_fields_are_preserved_for_museum_normalizers() -> None:

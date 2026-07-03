@@ -19,15 +19,16 @@ def render_image_acquire_shell(
 ) -> str:
     """Render the common Python-resolve -> curl -> verify shell scaffold."""
     out_q = quoted_output_path(out_path)
+    temp_url_q = shlex.quote(temp_url_path)
     return f"""set -e
 mkdir -p "$(dirname {out_q})"
 python3 <<'PYEOF'
 {python_body.rstrip()}
 PYEOF
-URL=$(cat {temp_url_path})
+URL=$(cat {temp_url_q})
 curl -sL -A {shlex.quote(curl_user_agent)} -w 'HTTP %{{http_code}} %{{size_download}} bytes in %{{time_total}}s\\n' \\
      -o {out_q} "$URL"
-rm -f {temp_url_path}
+rm -f {temp_url_q}
 file {out_q}
 shasum -a 256 {out_q}
 """
