@@ -31,6 +31,8 @@ def test_discover_candidates_resolves_and_ranks_without_shell() -> None:
         ("P5253", "nga-7"),
         ("P9173", "artic-9"),
         ("P9092", "cleveland-11"),
+        ("P973", "https://example.org/catalogue"),
+        ("P6611", "smithsonian-1"),
     )
 
     def fake_json(url: str) -> dict[str, Any]:
@@ -87,9 +89,40 @@ def test_discover_candidates_resolves_and_ranks_without_shell() -> None:
         "met",
         "nga",
         "cleveland",
+        "smithsonian",
+        "described_at_url",
     ]
     met = next(candidate for candidate in result["candidates"] if candidate["source"] == "met")
     assert met["size_bytes"] == 999
+    described = next(
+        candidate for candidate in result["candidates"] if candidate["source"] == "described_at_url"
+    )
+    assert described["url"] == "https://example.org/catalogue"
+    smithsonian = next(
+        candidate for candidate in result["candidates"] if candidate["source"] == "smithsonian"
+    )
+    assert smithsonian["evidence"].endswith("; resolver TBD")
+
+
+def test_discover_candidates_records_commons_without_image_url_as_error() -> None:
+    entity = _entity(("P18", "Missing-url.jpg"))
+
+    def fake_json(url: str) -> dict[str, Any]:
+        if "Special:EntityData" in url:
+            return {"entities": {"Q1": entity}}
+        if "commons.wikimedia.org" in url:
+            return {"query": {"pages": {"1": {"imageinfo": [{"width": 100}]}}}}
+        raise AssertionError(f"unexpected URL {url}")
+
+    result = discovery.discover_candidates("Q1", get_json=fake_json)
+
+    assert result["candidates"] == [
+        {
+            "source": "wikimedia_commons",
+            "error": "Commons image URL missing",
+            "evidence": "P18 -> File:Missing-url.jpg",
+        }
+    ]
 
 
 def test_discover_candidates_records_source_errors_without_aborting() -> None:
@@ -126,8 +159,19 @@ def test_write_discovery_output_writes_payload(tmp_path: Path, monkeypatch) -> N
     assert json.loads(out_path.read_text()) == payload
 
 
+def test_write_discovery_output_handles_basename_path(tmp_path: Path, monkeypatch) -> None:
+    payload = {"qid": "Q1", "candidates": [{"source": "nga"}]}
+    monkeypatch.setattr(discovery, "discover_candidates", lambda qid: payload)
+    monkeypatch.chdir(tmp_path)
+
+    assert discovery.write_discovery_output("Q1", "discovery.json") == payload
+    assert json.loads((tmp_path / "discovery.json").read_text()) == payload
+
+
 def test_discovery_shell_script_is_thin_module_wrapper() -> None:
     script = discovery.discovery_shell_script("Q12418", "/tmp/discovery.json")
+    src_root = Path(discovery.__file__).resolve().parents[2]
+    assert f"export PYTHONPATH={src_root}" in script
     assert "python3 -m fine_art_archive.collect.discovery Q12418 /tmp/discovery.json" in script
     assert "urllib.request" not in script
     assert "except Exception" not in script

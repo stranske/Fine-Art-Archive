@@ -28,6 +28,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 USER_AGENT = "Mozilla/5.0 (Fine-Art-Archive)"
@@ -49,6 +50,7 @@ SOURCE_PROPERTIES = [
     ("P347", "joconde", 2, None),  # French national museums; not directly resolvable
     ("P973", "described_at_url", 3, "url"),  # arbitrary
 ]
+HANDLED_DISCOVERY_PROPERTIES = {"P18", "P3634", "P350", "P5253", "P9173", "P9092"}
 
 JsonFetcher = Callable[[str], dict[str, Any]]
 TextFetcher = Callable[[str], str]
@@ -139,12 +141,20 @@ def _resolve_commons(entity: dict[str, Any], get_json: JsonFetcher) -> list[Cand
             data = get_json(api)
             pages = data["query"]["pages"]
             for page in pages.values():
-                imageinfo = (page.get("imageinfo") or [{}])[0]
+                if not isinstance(page, dict):
+                    raise DiscoveryFetchError("Commons page payload is not an object")
+                imageinfo_items = page.get("imageinfo") or []
+                if not imageinfo_items or not isinstance(imageinfo_items[0], dict):
+                    raise DiscoveryFetchError("Commons imageinfo missing")
+                imageinfo = imageinfo_items[0]
+                image_url = imageinfo.get("url")
+                if not image_url:
+                    raise DiscoveryFetchError("Commons image URL missing")
                 candidates.append(
                     {
                         "source": "wikimedia_commons",
                         "tier": 2,
-                        "url": imageinfo.get("url"),
+                        "url": image_url,
                         "width": imageinfo.get("width"),
                         "height": imageinfo.get("height"),
                         "size_bytes": imageinfo.get("size"),
@@ -288,6 +298,27 @@ def _resolve_cleveland(entity: dict[str, Any], get_json: JsonFetcher) -> list[Ca
     return candidates
 
 
+def _resolve_unimplemented_mapped_sources(entity: dict[str, Any]) -> list[Candidate]:
+    candidates: list[Candidate] = []
+    for property_id, source, tier, endpoint in SOURCE_PROPERTIES:
+        if property_id in HANDLED_DISCOVERY_PROPERTIES:
+            continue
+        for value in claim_values(entity, property_id):
+            value_text = str(value)
+            candidates.append(
+                {
+                    "source": source,
+                    "tier": tier,
+                    "url": value_text if endpoint == "url" else None,
+                    "evidence": (
+                        f"Wikidata {property_id} -> {source} {value_text}"
+                        + ("" if endpoint == "url" else "; resolver TBD")
+                    ),
+                }
+            )
+    return candidates
+
+
 def discover_candidates(
     qid: str,
     *,
@@ -309,6 +340,7 @@ def discover_candidates(
     candidates.extend(_resolve_nga(entity))
     candidates.extend(_resolve_artic(entity, get_json))
     candidates.extend(_resolve_cleveland(entity, get_json))
+    candidates.extend(_resolve_unimplemented_mapped_sources(entity))
     candidates.sort(
         key=lambda candidate: (_candidate_score(candidate), -candidate.get("tier", 99)),
         reverse=True,
@@ -319,8 +351,10 @@ def discover_candidates(
 def write_discovery_output(qid: str, out_path: str) -> dict[str, Any]:
     """Write discovery output and return the same payload for callers."""
     payload = discover_candidates(qid)
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with open(out_path, "w") as output:
+    out_dir = os.path.dirname(out_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as output:
         json.dump(payload, output, indent=2)
     return payload
 
@@ -333,8 +367,13 @@ def discovery_shell_script(qid: str, out_path: str) -> str:
     """
     out_q = shlex.quote(out_path)
     qid_q = shlex.quote(qid)
+    src_q = shlex.quote(str(Path(__file__).resolve().parents[2]))
     return f"""set -e
-mkdir -p "$(dirname {out_q})"
+out_dir="$(dirname {out_q})"
+if [ -n "$out_dir" ]; then
+  mkdir -p "$out_dir"
+fi
+export PYTHONPATH={src_q}${{PYTHONPATH:+:$PYTHONPATH}}
 python3 -m fine_art_archive.collect.discovery {qid_q} {out_q}
 """
 

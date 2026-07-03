@@ -27,7 +27,13 @@ from fine_art_archive.known_works.fetchers import (  # noqa: E402
 
 
 def test_fetchers_use_logging_not_print() -> None:
-    source = Path("src/fine_art_archive/known_works/fetchers.py").read_text()
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "fine_art_archive"
+        / "known_works"
+        / "fetchers.py"
+    ).read_text()
     assert "print(" not in source
 
 
