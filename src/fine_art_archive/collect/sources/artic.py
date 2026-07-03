@@ -19,8 +19,13 @@ Rights: CC0 metadata; image rights per object (is_public_domain field).
 
 from __future__ import annotations
 
-import shlex
 from dataclasses import dataclass
+
+from fine_art_archive.collect.sources._shared import (
+    holder_fields,
+    render_image_acquire_shell,
+    year_fields,
+)
 
 API_BASE = "https://api.artic.edu/api/v1/artworks"
 
@@ -51,11 +56,8 @@ def acquire_shell_script(
       3. Verify is_public_domain.
       4. curl /iiif/2/<image_id>/full/max/0/default.jpg to out_path.
     """
-    out_q = shlex.quote(out_path)
     obj_id = obj.object_id
-    return f"""set -e
-mkdir -p "$(dirname {out_q})"
-python3 <<'PYEOF'
+    python_body = f"""
 import json, sys, urllib.parse, urllib.request, urllib.error
 OBJ_ID = {obj_id!r}
 TITLE = {title or ""!r}
@@ -129,14 +131,12 @@ except Exception as e:
     print(f'info.json fetch failed: {{e}}', file=sys.stderr)
 with open('/tmp/artic_master_url', 'w') as f:
     f.write(f'https://www.artic.edu/iiif/2/{{image_id}}/full/max/0/default.jpg')
-PYEOF
-URL=$(cat /tmp/artic_master_url)
-curl -sL -A 'Mozilla/5.0' -w 'HTTP %{{http_code}} %{{size_download}} bytes in %{{time_total}}s\\n' \\
-     -o {out_q} "$URL"
-rm -f /tmp/artic_master_url
-file {out_q}
-shasum -a 256 {out_q}
 """
+    return render_image_acquire_shell(
+        out_path=out_path,
+        python_body=python_body,
+        temp_url_path="/tmp/artic_master_url",
+    )
 
 
 def normalize_metadata(api_json: dict) -> dict:
@@ -150,17 +150,21 @@ def normalize_metadata(api_json: dict) -> dict:
             else (d.get("alt_titles") or [])
         ),
         "artist_name": d.get("artist_display") or d.get("artist_title"),
-        "year": d.get("date_display"),
-        "year_min": d.get("date_start"),
-        "year_max": d.get("date_end"),
+        **year_fields(
+            year=d.get("date_display"),
+            year_min=d.get("date_start"),
+            year_max=d.get("date_end"),
+        ),
         "medium": d.get("medium_display") or d.get("classification_title"),
         "dimensions_raw": d.get("dimensions"),
         "rights_status": ("public-domain" if d.get("is_public_domain") else "rights-reserved"),
         "rights_evidence_url": "https://www.artic.edu/image-licensing",
-        "holder_name": "Art Institute of Chicago",
-        "holder_wikidata_q": "Q239303",
-        "holder_ror": "03kyqs312",
-        "holder_url": f"https://www.artic.edu/artworks/{d.get('id')}",
+        **holder_fields(
+            name="Art Institute of Chicago",
+            wikidata_q="Q239303",
+            ror="03kyqs312",
+            url=f"https://www.artic.edu/artworks/{d.get('id')}",
+        ),
         "artic_object_id": d.get("id"),
         "artic_image_id": d.get("image_id"),
         "artic_credit_line": d.get("credit_line"),

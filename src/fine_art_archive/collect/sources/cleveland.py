@@ -15,8 +15,13 @@ genuinely essay-length for major works; capture into sidecar.description_long.
 
 from __future__ import annotations
 
-import shlex
 from dataclasses import dataclass
+
+from fine_art_archive.collect.sources._shared import (
+    holder_fields,
+    render_image_acquire_shell,
+    year_fields,
+)
 
 API_BASE = "https://openaccess-api.clevelandart.org/api/artworks"
 
@@ -50,10 +55,7 @@ def acquire_shell_script(
     Cleveland doesn't expose IIIF /full/max/ directly, but its direct-image
     URLs serve full-resolution.
     """
-    out_q = shlex.quote(out_path)
-    return f"""set -e
-mkdir -p "$(dirname {out_q})"
-python3 <<'PYEOF'
+    python_body = f"""
 import json, sys, urllib.parse, urllib.request
 ACC = {obj.accession!r}
 TITLE = {title or ""!r}
@@ -126,14 +128,12 @@ with open('/tmp/cle_master_url', 'w') as f:
     f.write(chosen)
 with open('/tmp/cle_accession_resolved', 'w') as f:
     f.write(d.get('accession_number') or '')
-PYEOF
-URL=$(cat /tmp/cle_master_url)
-curl -sL -A 'Mozilla/5.0' -w 'HTTP %{{http_code}} %{{size_download}} bytes in %{{time_total}}s\\n' \\
-     -o {out_q} "$URL"
-rm -f /tmp/cle_master_url
-file {out_q}
-shasum -a 256 {out_q}
 """
+    return render_image_acquire_shell(
+        out_path=out_path,
+        python_body=python_body,
+        temp_url_path="/tmp/cle_master_url",
+    )
 
 
 def normalize_metadata(api_json: dict) -> dict:
@@ -146,9 +146,11 @@ def normalize_metadata(api_json: dict) -> dict:
             [d["title_in_original_language"]] if d.get("title_in_original_language") else []
         ),
         "artist_name": creator.get("description"),
-        "year": d.get("creation_date"),
-        "year_min": d.get("creation_date_earliest"),
-        "year_max": d.get("creation_date_latest"),
+        **year_fields(
+            year=d.get("creation_date"),
+            year_min=d.get("creation_date_earliest"),
+            year_max=d.get("creation_date_latest"),
+        ),
         "medium": d.get("technique") or d.get("type"),
         "dimensions_raw": d.get("measurements"),
         "rights_status": (
@@ -157,10 +159,12 @@ def normalize_metadata(api_json: dict) -> dict:
             else "rights-reserved"
         ),
         "rights_evidence_url": "https://www.clevelandart.org/open-access",
-        "holder_name": "Cleveland Museum of Art",
-        "holder_wikidata_q": "Q657415",
-        "holder_ror": "04em7w569",
-        "holder_url": f"https://www.clevelandart.org/art/{d.get('accession_number')}",
+        **holder_fields(
+            name="Cleveland Museum of Art",
+            wikidata_q="Q657415",
+            ror="04em7w569",
+            url=f"https://www.clevelandart.org/art/{d.get('accession_number')}",
+        ),
         "cleveland_accession": d.get("accession_number"),
         "cleveland_wall_description": d.get("wall_description"),
         "cleveland_tombstone": d.get("tombstone"),

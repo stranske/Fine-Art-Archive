@@ -37,6 +37,8 @@ import re
 import shlex
 from dataclasses import dataclass
 
+from fine_art_archive.collect.sources._shared import year_fields
+
 # Micrio IDs are 5-char alphanumeric (mixed case observed: e.g. VWEov, QkOGy).
 MICRIO_ID_RE = re.compile(r"iiif\.micr\.io/([A-Za-z0-9]{5})")
 OG_IMAGE_RE = re.compile(r'<meta\s+property="og:image"\s+content="([^"]+)"', re.IGNORECASE)
@@ -184,9 +186,7 @@ def normalize_metadata(api_json: dict) -> dict:
     return {
         "title": title,
         "artist": artist,
-        "year": year,
-        "year_min": year_min,
-        "year_max": year_max,
+        **year_fields(year=year, year_min=year_min, year_max=year_max),
         "medium": medium,
         "dimensions_raw": dims_raw,
         "rijksmuseum_object_number": a.get("objectNumber"),
