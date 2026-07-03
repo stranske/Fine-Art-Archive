@@ -21,6 +21,9 @@ from fine_art_archive.parsers.semantic import (  # noqa: E402
     parse_semantic,
     split_with_separators,
 )
+from fine_art_archive.parsers.year_utils import (  # noqa: E402
+    split_with_separators as shared_split_with_separators,
+)
 
 CANONICAL_YAML = """\
 artists:
@@ -73,6 +76,13 @@ def test_classify_fragment_year_range(reset_corpus):
     fc = classify_fragment("1869-71")
     assert fc.type == "year"
     assert fc.confidence >= 0.90
+
+
+def test_classify_fragment_decade(reset_corpus):
+    fc = classify_fragment("1950s")
+    assert fc.type == "year"
+    assert fc.confidence >= 0.90
+    assert fc.evidence == "decade"
 
 
 def test_classify_fragment_dimensions(reset_corpus):
@@ -132,6 +142,10 @@ def test_split_with_separators_comma_fallback(reset_corpus):
 
 def test_split_with_separators_short_semicolon_list_keeps_semis(reset_corpus):
     assert split_with_separators("Title; Artist") == ["Title", "Artist"]
+
+
+def test_semantic_parser_uses_shared_separator_splitter(reset_corpus):
+    assert split_with_separators is shared_split_with_separators
 
 
 # --- parse_semantic ---------------------------------------------------------
