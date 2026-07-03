@@ -206,6 +206,12 @@ QUEUES_DIR = REPO_ROOT / "data" / "queues"
 _queue_invalid_count_cache: tuple[tuple[tuple[str, int, int], ...], int] | None = None
 
 
+def _safe_queue_file_message(exc: OSError | UnicodeDecodeError) -> str:
+    if isinstance(exc, UnicodeDecodeError):
+        return str(exc)
+    return exc.strerror or exc.__class__.__name__
+
+
 def _queue_error_detail(
     path: Path, message: str, *, error: str = "invalid_queue_json"
 ) -> dict[str, object]:
@@ -228,7 +234,7 @@ def _load_queue_file(path: Path) -> dict:
         detail.update({"line": exc.lineno, "column": exc.colno})
         raise HTTPException(422, detail) from exc
     except (OSError, UnicodeDecodeError) as exc:
-        raise _queue_error(path, str(exc), error="invalid_queue_file") from exc
+        raise _queue_error(path, _safe_queue_file_message(exc), error="invalid_queue_file") from exc
     if not isinstance(queue, dict):
         raise _queue_error(
             path, "queue file must contain a JSON object", error="invalid_queue_shape"
@@ -236,30 +242,31 @@ def _load_queue_file(path: Path) -> dict:
     return queue
 
 
-def _queue_files_signature() -> tuple[tuple[str, int, int], ...]:
+def _queue_files_with_signature() -> tuple[list[Path], tuple[tuple[str, int, int], ...]]:
     if not QUEUES_DIR.exists():
-        return ()
+        return [], ()
+    paths = sorted(QUEUES_DIR.glob("*.json"))
     signature: list[tuple[str, int, int]] = []
-    for path in sorted(QUEUES_DIR.glob("*.json")):
+    for path in paths:
         try:
             stat_result = path.stat()
         except OSError:
             signature.append((str(path), -1, -1))
             continue
         signature.append((str(path), stat_result.st_mtime_ns, stat_result.st_size))
-    return tuple(signature)
+    return paths, tuple(signature)
 
 
 def _queue_invalid_count() -> int:
     global _queue_invalid_count_cache
-    signature = _queue_files_signature()
+    paths, signature = _queue_files_with_signature()
     if not signature:
         _queue_invalid_count_cache = (signature, 0)
         return 0
     if _queue_invalid_count_cache is not None and _queue_invalid_count_cache[0] == signature:
         return _queue_invalid_count_cache[1]
     invalid = 0
-    for path in sorted(QUEUES_DIR.glob("*.json")):
+    for path in paths:
         try:
             _load_queue_file(path)
         except HTTPException:

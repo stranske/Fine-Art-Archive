@@ -131,7 +131,8 @@ def test_invalid_queue_returns_partial_list_handled_detail_and_health_signal(
     queues_dir = tmp_path / "queues"
     queues_dir.mkdir()
     (queues_dir / "valid.json").write_text(
-        json.dumps({"name": "Valid", "description": "ok", "work_ids": ["w1"]})
+        json.dumps({"name": "Valid", "description": "ok", "work_ids": ["w1"]}),
+        encoding="utf-8",
     )
     (queues_dir / "bad.json").write_bytes(file_bytes)
     monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
@@ -165,7 +166,8 @@ def test_queue_invalid_count_cache_reloads_when_files_change(
 
     first_health = client.get("/healthz")
     (queues_dir / "bad.json").write_text(
-        json.dumps({"name": "Fixed", "description": "", "work_ids": []})
+        json.dumps({"name": "Fixed", "description": "", "work_ids": []}),
+        encoding="utf-8",
     )
     second_health = client.get("/healthz")
 
