@@ -33,9 +33,11 @@ def validate(meta: dict) -> None:
 
 def is_valid(meta: dict) -> bool:
     """Boolean wrapper around validate()."""
+    import jsonschema
+
     try:
         validate(meta)
-    except Exception:
+    except jsonschema.ValidationError:
         return False
     return True
 

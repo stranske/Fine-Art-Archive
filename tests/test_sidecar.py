@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
+from unittest import mock
+
+import jsonschema
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -85,6 +90,36 @@ def test_full_valid():
 def test_invalid_missing_required_field():
     meta = {k: v for k, v in MINIMAL_VALID.items() if k != "title"}
     assert not sidecar.is_valid(meta)
+
+
+def test_is_valid_raises_when_schema_file_is_missing(monkeypatch, tmp_path):
+    monkeypatch.setattr(sidecar, "SCHEMA_PATH", tmp_path / "missing.schema.json")
+
+    with pytest.raises(sidecar.SchemaNotFound):
+        sidecar.is_valid(MINIMAL_VALID)
+
+
+def test_is_valid_raises_when_jsonschema_is_unavailable():
+    with mock.patch.dict(sys.modules, {"jsonschema": None}), pytest.raises(ModuleNotFoundError):
+        sidecar.is_valid(MINIMAL_VALID)
+
+
+def test_is_valid_raises_for_corrupt_schema_json(monkeypatch, tmp_path):
+    corrupt_schema = tmp_path / "meta.schema.json"
+    corrupt_schema.write_text("{bad\n", encoding="utf-8")
+    monkeypatch.setattr(sidecar, "SCHEMA_PATH", corrupt_schema)
+
+    with pytest.raises(json.JSONDecodeError):
+        sidecar.is_valid(MINIMAL_VALID)
+
+
+def test_is_valid_raises_for_invalid_schema_document(monkeypatch, tmp_path):
+    broken_schema = tmp_path / "meta.schema.json"
+    broken_schema.write_text('{"type": 1}\n', encoding="utf-8")
+    monkeypatch.setattr(sidecar, "SCHEMA_PATH", broken_schema)
+
+    with pytest.raises(jsonschema.SchemaError):
+        sidecar.is_valid(MINIMAL_VALID)
 
 
 def test_invalid_work_id_pattern():
@@ -280,7 +315,5 @@ def test_derive_work_id():
 
 
 def test_derive_work_id_rejects_short_hash():
-    import pytest
-
     with pytest.raises(ValueError):
         sidecar.derive_work_id("abc", "title")
