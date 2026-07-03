@@ -156,11 +156,13 @@ def htmx_vendor() -> FileResponse:
 @app.get("/healthz")
 def healthz() -> dict:
     corrupt_line_count = store.ratings_corrupt_line_count()
+    queues_invalid_count = _queue_invalid_count()
     return {
-        "ok": corrupt_line_count == 0,
+        "ok": corrupt_line_count == 0 and queues_invalid_count == 0,
         "manifest_loaded": len(store.load_manifest()),
         "ratings_count": store.count_ratings(),
         "ratings_corrupt_line_count": corrupt_line_count,
+        "queues_invalid_count": queues_invalid_count,
     }
 
 
@@ -203,23 +205,52 @@ def list_artists(limit: int = Query(100, ge=1, le=2000)) -> list[dict]:
 QUEUES_DIR = REPO_ROOT / "data" / "queues"
 
 
+def _queue_parse_error(path: Path, exc: json.JSONDecodeError) -> HTTPException:
+    return HTTPException(
+        422,
+        {
+            "error": "invalid_queue_json",
+            "file": path.name,
+            "message": exc.msg,
+            "line": exc.lineno,
+            "column": exc.colno,
+        },
+    )
+
+
+def _load_queue_file(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise _queue_parse_error(path, exc) from exc
+
+
+def _queue_invalid_count() -> int:
+    if not QUEUES_DIR.exists():
+        return 0
+    invalid = 0
+    for path in QUEUES_DIR.glob("*.json"):
+        try:
+            json.loads(path.read_text())
+        except json.JSONDecodeError:
+            invalid += 1
+    return invalid
+
+
 @app.get("/queues")
 def list_queues() -> dict:
     """List named queues available for the rating UI."""
     out = []
     if QUEUES_DIR.exists():
         for p in sorted(QUEUES_DIR.glob("*.json")):
-            try:
-                q = json.loads(p.read_text())
-                out.append(
-                    {
-                        "name": q.get("name", p.stem),
-                        "description": q.get("description", ""),
-                        "n_works": len(q.get("work_ids", [])),
-                    }
-                )
-            except json.JSONDecodeError:
-                continue
+            q = _load_queue_file(p)
+            out.append(
+                {
+                    "name": q.get("name", p.stem),
+                    "description": q.get("description", ""),
+                    "n_works": len(q.get("work_ids", [])),
+                }
+            )
     return {"queues": out}
 
 
@@ -233,7 +264,7 @@ def get_queue(name: str) -> dict:
     p = QUEUES_DIR / f"{name}.json"
     if not p.exists():
         raise HTTPException(404, f"no queue named {name!r}")
-    q = json.loads(p.read_text())
+    q = _load_queue_file(p)
     wids_ordered = q.get("work_ids", [])
     # Fetch each work via the store. Preserve queue order.
     works_out = []
