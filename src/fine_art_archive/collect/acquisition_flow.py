@@ -33,7 +33,11 @@ from fine_art_archive.collect.dedup_cascade import (
     build_candidate,
     dedup_check,
 )
-from fine_art_archive.collect.dedupe import DuplicateCheckResult, check_inventory
+from fine_art_archive.collect.dedupe import (
+    DuplicateCheckResult,
+    check_inventory_rows,
+    load_inventory_rows,
+)
 from fine_art_archive.collect.quality import quality_report
 from fine_art_archive.collect.sources import (
     artic,
@@ -155,7 +159,7 @@ class AcquisitionAssessment:
 def _candidate_artist_name(meta: dict) -> str:
     artist = meta.get("artist")
     if isinstance(artist, dict):
-        for key in ("name", "label", "artist", "display_name"):
+        for key in ("name", "label", "display_name"):
             value = artist.get(key)
             if isinstance(value, str) and value.strip():
                 return value.strip()
@@ -233,6 +237,7 @@ def run_acquisition_flow(
 
     get_collector(chosen_source)  # validate the source up front
     selected = work_dirs if max_items is None else work_dirs[:max_items]
+    inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None
     results: list[AcquisitionAssessment] = []
     for raw in selected:
         wd = Path(raw)
@@ -261,11 +266,11 @@ def run_acquisition_flow(
             assessment.dedup = dedup_check(
                 build_candidate(master, meta), archive, dino_hook=dino_hook
             )
-        if inventory_csv is not None:
-            assessment.inventory_match = check_inventory(
+        if inventory_rows is not None:
+            assessment.inventory_match = check_inventory_rows(
                 meta.get("title") or "",
                 _candidate_artist_name(meta),
-                inventory_csv,
+                inventory_rows,
             )
         results.append(assessment)
     return results

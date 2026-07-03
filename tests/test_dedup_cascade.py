@@ -181,3 +181,48 @@ def test_acquisition_flow_attaches_inventory_match(tmp_path: Path) -> None:
     assert res.inventory_match.has_strong_match
     assert res.inventory_match.best is not None
     assert res.inventory_match.best.tier == "exact-artist+near-title"
+
+
+def test_acquisition_flow_loads_inventory_once_per_batch(tmp_path: Path, monkeypatch) -> None:
+    from fine_art_archive.collect import acquisition_flow as af
+
+    work_dirs = []
+    for idx in range(2):
+        work = tmp_path / f"cand-{idx}"
+        work.mkdir()
+        Image.new("RGB", (400, 300)).save(work / "master.jpg", "JPEG")
+        (work / "meta.json").write_text(
+            json.dumps(
+                {
+                    "artist": {"name": "Gustave Caillebotte"},
+                    "title": "Paris Street; Rainy Day",
+                    "dimensions_original": {"h_cm": 212.2, "w_cm": 276.2},
+                }
+            )
+        )
+        work_dirs.append(work)
+
+    inventory = tmp_path / "inventory.csv"
+    inventory.write_text(
+        "\n".join(
+            [
+                "rel_path,size_bytes,title,artist",
+                "Landscape/Paris Street.jpeg,84796647,Paris Street,Gustave Caillebotte",
+            ]
+        )
+    )
+    calls = 0
+    real_loader = af.load_inventory_rows
+
+    def counting_loader(path: Path):
+        nonlocal calls
+        calls += 1
+        return real_loader(path)
+
+    monkeypatch.setattr(af, "load_inventory_rows", counting_loader)
+
+    results = af.run_acquisition_flow("met", work_dirs, inventory_csv=inventory)
+
+    assert calls == 1
+    assert len(results) == 2
+    assert all(res.inventory_match and res.inventory_match.has_strong_match for res in results)

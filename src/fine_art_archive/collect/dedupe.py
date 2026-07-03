@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import re
 import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -129,13 +130,19 @@ def _title_similarity(a: str, b: str) -> float:
 # --- Inventory match ---------------------------------------------------------
 
 
-def check_inventory(
+def load_inventory_rows(inventory_csv: Path) -> list[dict[str, str]]:
+    """Load inventory CSV rows once for batch duplicate checks."""
+    with open(inventory_csv, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def check_inventory_rows(
     candidate_title: str,
     candidate_artist: str,
-    inventory_csv: Path,
+    rows: Sequence[dict[str, str]],
     near_title_threshold: float = 0.60,
 ) -> DuplicateCheckResult:
-    """Search the inventory CSV for entries plausibly matching the candidate.
+    """Search preloaded inventory rows for entries plausibly matching the candidate.
 
     Returns matches sorted by confidence descending. Empty list means
     no plausible duplicate — safe to proceed with acquisition.
@@ -148,67 +155,79 @@ def check_inventory(
     if not norm_title and not norm_artist:
         return out
 
-    with open(inventory_csv) as f:
-        r = csv.DictReader(f)
-        for row in r:
-            inv_title = (row.get("title") or "").strip()
-            inv_artist = (row.get("artist") or "").strip()
-            if not inv_title and not inv_artist:
-                continue
+    for row in rows:
+        inv_title = (row.get("title") or "").strip()
+        inv_artist = (row.get("artist") or "").strip()
+        if not inv_title and not inv_artist:
+            continue
 
-            n_inv_title = _normalize(inv_title)
-            n_inv_artist = _normalize(inv_artist)
-            inv_surname = _surname(inv_artist)
+        n_inv_title = _normalize(inv_title)
+        n_inv_artist = _normalize(inv_artist)
+        inv_surname = _surname(inv_artist)
 
-            tier: MatchTier | None = None
-            confidence = 0.0
-            why = ""
+        tier: MatchTier | None = None
+        confidence = 0.0
+        why = ""
 
-            # Tier 1: both normalize-equal
-            if n_inv_title == norm_title and n_inv_artist == norm_artist:
-                tier = "exact-title-artist"
-                confidence = 0.99
-                why = "exact normalized match on title AND artist"
-            # Tier 2: artist matches (full or surname), title is near-equal
-            elif norm_artist and (
-                n_inv_artist == norm_artist
-                or (candidate_surname and candidate_surname == inv_surname)
-            ):
-                sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
-                if sim >= near_title_threshold:
-                    artist_match_kind = "full" if n_inv_artist == norm_artist else "surname"
-                    tier = "exact-artist+near-title"
-                    confidence = 0.70 + 0.25 * sim  # 0.85–0.95 range
-                    why = f"artist matches ({artist_match_kind}); " f"title similarity {sim:.2f}"
-            # Tier 3: title matches but artist differs (suspicious)
-            if tier is None and norm_title and n_inv_title == norm_title:
-                tier = "exact-title"
-                confidence = 0.70
-                why = "exact title match; artist differs — verify"
-            # Tier 4: surname matches + fuzzy title
-            if tier is None and candidate_surname and candidate_surname == inv_surname:
-                sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
-                if sim >= near_title_threshold:
-                    tier = "surname-only"
-                    confidence = 0.55 + 0.15 * sim  # 0.64–0.70 range
-                    why = f"surname matches; title similarity {sim:.2f}"
+        # Tier 1: both normalize-equal
+        if n_inv_title == norm_title and n_inv_artist == norm_artist:
+            tier = "exact-title-artist"
+            confidence = 0.99
+            why = "exact normalized match on title AND artist"
+        # Tier 2: artist matches (full or surname), title is near-equal
+        elif norm_artist and (
+            n_inv_artist == norm_artist or (candidate_surname and candidate_surname == inv_surname)
+        ):
+            sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
+            if sim >= near_title_threshold:
+                artist_match_kind = "full" if n_inv_artist == norm_artist else "surname"
+                tier = "exact-artist+near-title"
+                confidence = 0.70 + 0.25 * sim  # 0.85–0.95 range
+                why = f"artist matches ({artist_match_kind}); " f"title similarity {sim:.2f}"
+        # Tier 3: title matches but artist differs (suspicious)
+        if tier is None and norm_title and n_inv_title == norm_title:
+            tier = "exact-title"
+            confidence = 0.70
+            why = "exact title match; artist differs — verify"
+        # Tier 4: surname matches + fuzzy title
+        if tier is None and candidate_surname and candidate_surname == inv_surname:
+            sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
+            if sim >= near_title_threshold:
+                tier = "surname-only"
+                confidence = 0.55 + 0.15 * sim  # 0.64–0.70 range
+                why = f"surname matches; title similarity {sim:.2f}"
 
-            if tier:
-                out.matches.append(
-                    DuplicateMatch(
-                        inventory_row=row,
-                        tier=tier,
-                        confidence=confidence,
-                        rel_path=row.get("rel_path", ""),
-                        size_bytes=int(row.get("size_bytes") or 0),
-                        why=why,
-                        inventory_title=inv_title,
-                        inventory_artist=inv_artist,
-                    )
+        if tier:
+            out.matches.append(
+                DuplicateMatch(
+                    inventory_row=row,
+                    tier=tier,
+                    confidence=confidence,
+                    rel_path=row.get("rel_path", ""),
+                    size_bytes=int(row.get("size_bytes") or 0),
+                    why=why,
+                    inventory_title=inv_title,
+                    inventory_artist=inv_artist,
                 )
+            )
 
     out.matches.sort(key=lambda m: -m.confidence)
     return out
+
+
+def check_inventory(
+    candidate_title: str,
+    candidate_artist: str,
+    inventory_csv: Path,
+    near_title_threshold: float = 0.60,
+) -> DuplicateCheckResult:
+    """Search the inventory CSV for entries plausibly matching the candidate."""
+    return check_inventory_rows(
+        candidate_title,
+        candidate_artist,
+        load_inventory_rows(inventory_csv),
+        near_title_threshold=near_title_threshold,
+    )
 
 
 def format_report(result: DuplicateCheckResult, top_n: int = 5) -> str:
