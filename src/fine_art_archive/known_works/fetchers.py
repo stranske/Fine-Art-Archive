@@ -12,13 +12,15 @@ The caller passes them to `merge_works` to dedupe across sources.
 from __future__ import annotations
 
 import json
+import logging
 import re
-import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 
+LOG = logging.getLogger(__name__)
 USER_AGENT = "FineArtArchive/0.3 (tim@stranskemo.com)"
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 MEDIAWIKI_API = "https://en.wikipedia.org/w/api.php"
@@ -91,8 +93,13 @@ def fetch_wikidata_sparql(artist_q: str, *, timeout: int = 60) -> list[KnownWork
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read())
-    except Exception as e:
-        print(f"  [wikidata] FAIL: {type(e).__name__}: {str(e)[:90]}", file=sys.stderr)
+    except (
+        TimeoutError,
+        json.JSONDecodeError,
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+    ) as e:
+        LOG.warning("[wikidata] FAIL: %s: %s", type(e).__name__, str(e)[:90])
         return []
     out: dict[str, KnownWork] = {}
     for r in data.get("results", {}).get("bindings", []):
@@ -113,7 +120,7 @@ def fetch_wikidata_sparql(artist_q: str, *, timeout: int = 60) -> list[KnownWork
                 entry.year = int(m.group(1))
         if "image" in r and entry.image_url is None:
             entry.image_url = r["image"]["value"]
-    print(f"  [wikidata] {len(out)} works", file=sys.stderr)
+    LOG.info("[wikidata] %s works", len(out))
     return list(out.values())
 
 
@@ -136,8 +143,13 @@ def fetch_wikipedia_list(artist_name: str) -> list[KnownWork]:
         )
         try:
             sr = _http_json(search_url)
-        except Exception as e:
-            print(f"  [wikipedia] search FAIL: {e}", file=sys.stderr)
+        except (
+            TimeoutError,
+            json.JSONDecodeError,
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+        ) as e:
+            LOG.warning("[wikipedia] search FAIL: %s", e)
             return []
         for h in sr.get("query", {}).get("search", []) or []:
             t = h.get("title", "")
@@ -147,7 +159,7 @@ def fetch_wikipedia_list(artist_name: str) -> list[KnownWork]:
         if article_title:
             break
     if not article_title:
-        print(f"  [wikipedia] no list-page found for {artist_name!r}", file=sys.stderr)
+        LOG.info("[wikipedia] no list-page found for %r", artist_name)
         return []
     # Fetch wikitext
     parse_url = (
@@ -156,8 +168,13 @@ def fetch_wikipedia_list(artist_name: str) -> list[KnownWork]:
     )
     try:
         pr = _http_json(parse_url)
-    except Exception as e:
-        print(f"  [wikipedia] parse FAIL: {e}", file=sys.stderr)
+    except (
+        TimeoutError,
+        json.JSONDecodeError,
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+    ) as e:
+        LOG.warning("[wikipedia] parse FAIL: %s", e)
         return []
     wikitext = pr.get("parse", {}).get("wikitext", {}).get("*", "")
     if not wikitext:
@@ -205,7 +222,7 @@ def fetch_wikipedia_list(artist_name: str) -> list[KnownWork]:
                     source_ids={"wikipedia": article_title},
                 )
             )
-    print(f"  [wikipedia] {len(works)} works from {article_title!r}", file=sys.stderr)
+    LOG.info("[wikipedia] %s works from %r", len(works), article_title)
     return works
 
 
@@ -217,19 +234,29 @@ def fetch_met(artist_name: str, *, max_objects: int = 100) -> list[KnownWork]:
     url = f"{MET_SEARCH}?artistOrCulture=true&hasImages=true&q=" + urllib.parse.quote(artist_name)
     try:
         sr = _http_json(url)
-    except Exception as e:
-        print(f"  [met] search FAIL: {e}", file=sys.stderr)
+    except (
+        TimeoutError,
+        json.JSONDecodeError,
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+    ) as e:
+        LOG.warning("[met] search FAIL: %s", e)
         return []
     object_ids = sr.get("objectIDs") or []
     if not object_ids:
-        print(f"  [met] no results for {artist_name!r}", file=sys.stderr)
+        LOG.info("[met] no results for %r", artist_name)
         return []
     works: list[KnownWork] = []
     seen_titles: set[str] = set()
     for oid in object_ids[:max_objects]:
         try:
             obj = _http_json(f"{MET_OBJECT}/{oid}", timeout=10)
-        except Exception:
+        except (
+            TimeoutError,
+            json.JSONDecodeError,
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+        ):
             continue
         # Verify the object is genuinely by this artist (not just mentions)
         artist = (obj.get("artistDisplayName") or "").lower()
@@ -262,7 +289,7 @@ def fetch_met(artist_name: str, *, max_objects: int = 100) -> list[KnownWork]:
             )
         )
         time.sleep(0.1)  # polite to Met
-    print(f"  [met] {len(works)} works", file=sys.stderr)
+    LOG.info("[met] %s works", len(works))
     return works
 
 
