@@ -312,12 +312,21 @@ def test_variant_upgrade_decision_rejects_unknown_work_without_append(
     )
     monkeypatch.setattr(api_main, "VARIANT_UPGRADE_CSV", candidates_csv)
     monkeypatch.setattr(api_main, "VARIANT_UPGRADE_DECISIONS", decisions_log)
-    monkeypatch.setattr(api_store, "get_manifest_row", lambda _work_id: None)
-    monkeypatch.setattr(api_store, "get_work", lambda _work_id: None)
+
+    def missing_work(_work_id: str) -> None:
+        api_store.validate_work_id(_work_id)
+        return None
+
+    monkeypatch.setattr(api_store, "get_manifest_row", missing_work)
+    monkeypatch.setattr(api_store, "get_work", missing_work)
 
     missing = client.post(
         "/variant_upgrades/not-a-real-work/decision",
         json={"decision": "reject", "note": "typo"},
+    )
+    malformed = client.post(
+        "/variant_upgrades/not a real work/decision",
+        json={"decision": "reject", "note": "bad path"},
     )
     valid = client.post(
         "/variant_upgrades/known-work/decision",
@@ -325,8 +334,10 @@ def test_variant_upgrade_decision_rejects_unknown_work_without_append(
     )
 
     assert missing.status_code == 404
+    assert malformed.status_code == 400
     assert valid.status_code == 200
     lines = decisions_log.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     assert '"existing_wid": "known-work"' in lines[0]
     assert "not-a-real-work" not in lines[0]
+    assert "not a real work" not in lines[0]
