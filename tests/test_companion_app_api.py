@@ -113,54 +113,47 @@ def test_queues(client: TestClient) -> None:
     assert "queues" in r.json()
 
 
-def test_corrupt_queue_json_returns_handled_errors_and_health_signal(
+@pytest.mark.parametrize(
+    ("file_bytes", "expected_error"),
+    [
+        (b"{bad", "invalid_queue_json"),
+        (b"[]", "invalid_queue_shape"),
+        (b"\xff", "invalid_queue_file"),
+    ],
+)
+def test_invalid_queue_returns_partial_list_handled_detail_and_health_signal(
     client: TestClient,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    file_bytes: bytes,
+    expected_error: str,
 ) -> None:
     queues_dir = tmp_path / "queues"
     queues_dir.mkdir()
-    (queues_dir / "bad.json").write_text("{bad")
+    (queues_dir / "valid.json").write_text(
+        json.dumps({"name": "Valid", "description": "ok", "work_ids": ["w1"]})
+    )
+    (queues_dir / "bad.json").write_bytes(file_bytes)
     monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
 
     queue_list = client.get("/queues")
     queue_detail = client.get("/queues/bad")
     health = client.get("/healthz")
 
-    assert queue_list.status_code == 422
+    assert queue_list.status_code == 200
     assert queue_detail.status_code == 422
-    assert queue_list.json()["detail"]["error"] == "invalid_queue_json"
-    assert queue_detail.json()["detail"]["error"] == "invalid_queue_json"
+    list_body = queue_list.json()
+    assert list_body["queues"] == [{"name": "Valid", "description": "ok", "n_works": 1}]
+    assert list_body["queues_invalid_count"] == 1
+    assert list_body["invalid_queues"][0]["error"] == expected_error
+    assert queue_detail.json()["detail"]["error"] == expected_error
     assert queue_detail.json()["detail"]["file"] == "bad.json"
     assert health.status_code == 200
     assert health.json()["ok"] is False
     assert health.json()["queues_invalid_count"] == 1
 
 
-def test_invalid_queue_shape_returns_handled_errors_and_health_signal(
-    client: TestClient,
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    queues_dir = tmp_path / "queues"
-    queues_dir.mkdir()
-    (queues_dir / "bad.json").write_text("[]")
-    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
-
-    queue_list = client.get("/queues")
-    queue_detail = client.get("/queues/bad")
-    health = client.get("/healthz")
-
-    assert queue_list.status_code == 422
-    assert queue_detail.status_code == 422
-    assert queue_list.json()["detail"]["error"] == "invalid_queue_shape"
-    assert queue_detail.json()["detail"]["error"] == "invalid_queue_shape"
-    assert health.status_code == 200
-    assert health.json()["ok"] is False
-    assert health.json()["queues_invalid_count"] == 1
-
-
-def test_unreadable_queue_file_returns_handled_errors_and_health_signal(
+def test_queue_invalid_count_cache_reloads_when_files_change(
     client: TestClient,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -170,17 +163,18 @@ def test_unreadable_queue_file_returns_handled_errors_and_health_signal(
     (queues_dir / "bad.json").write_bytes(b"\xff")
     monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
 
-    queue_list = client.get("/queues")
-    queue_detail = client.get("/queues/bad")
-    health = client.get("/healthz")
+    first_health = client.get("/healthz")
+    (queues_dir / "bad.json").write_text(
+        json.dumps({"name": "Fixed", "description": "", "work_ids": []})
+    )
+    second_health = client.get("/healthz")
 
-    assert queue_list.status_code == 422
-    assert queue_detail.status_code == 422
-    assert queue_list.json()["detail"]["error"] == "invalid_queue_file"
-    assert queue_detail.json()["detail"]["error"] == "invalid_queue_file"
-    assert health.status_code == 200
-    assert health.json()["ok"] is False
-    assert health.json()["queues_invalid_count"] == 1
+    assert first_health.status_code == 200
+    assert first_health.json()["ok"] is False
+    assert first_health.json()["queues_invalid_count"] == 1
+    assert second_health.status_code == 200
+    assert second_health.json()["ok"] is True
+    assert second_health.json()["queues_invalid_count"] == 0
 
 
 def test_rating_taxonomy(client: TestClient) -> None:

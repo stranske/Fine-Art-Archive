@@ -203,30 +203,29 @@ def list_artists(limit: int = Query(100, ge=1, le=2000)) -> list[dict]:
 #   {"name": str, "description": str, "work_ids": [...]}
 # --------------------------------------------------------------------------
 QUEUES_DIR = REPO_ROOT / "data" / "queues"
+_queue_invalid_count_cache: tuple[tuple[tuple[str, int, int], ...], int] | None = None
+
+
+def _queue_error_detail(
+    path: Path, message: str, *, error: str = "invalid_queue_json"
+) -> dict[str, object]:
+    return {
+        "error": error,
+        "file": path.name,
+        "message": message,
+    }
 
 
 def _queue_error(path: Path, message: str, *, error: str = "invalid_queue_json") -> HTTPException:
-    return HTTPException(
-        422,
-        {
-            "error": error,
-            "file": path.name,
-            "message": message,
-        },
-    )
+    return HTTPException(422, _queue_error_detail(path, message, error=error))
 
 
 def _load_queue_file(path: Path) -> dict:
     try:
         queue = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        detail: dict[str, object] = {
-            "error": "invalid_queue_json",
-            "file": path.name,
-            "message": exc.msg,
-            "line": exc.lineno,
-            "column": exc.colno,
-        }
+        detail = _queue_error_detail(path, exc.msg)
+        detail.update({"line": exc.lineno, "column": exc.colno})
         raise HTTPException(422, detail) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise _queue_error(path, str(exc), error="invalid_queue_file") from exc
@@ -237,15 +236,35 @@ def _load_queue_file(path: Path) -> dict:
     return queue
 
 
-def _queue_invalid_count() -> int:
+def _queue_files_signature() -> tuple[tuple[str, int, int], ...]:
     if not QUEUES_DIR.exists():
+        return ()
+    signature: list[tuple[str, int, int]] = []
+    for path in sorted(QUEUES_DIR.glob("*.json")):
+        try:
+            stat_result = path.stat()
+        except OSError:
+            signature.append((str(path), -1, -1))
+            continue
+        signature.append((str(path), stat_result.st_mtime_ns, stat_result.st_size))
+    return tuple(signature)
+
+
+def _queue_invalid_count() -> int:
+    global _queue_invalid_count_cache
+    signature = _queue_files_signature()
+    if not signature:
+        _queue_invalid_count_cache = (signature, 0)
         return 0
+    if _queue_invalid_count_cache is not None and _queue_invalid_count_cache[0] == signature:
+        return _queue_invalid_count_cache[1]
     invalid = 0
-    for path in QUEUES_DIR.glob("*.json"):
+    for path in sorted(QUEUES_DIR.glob("*.json")):
         try:
             _load_queue_file(path)
         except HTTPException:
             invalid += 1
+    _queue_invalid_count_cache = (signature, invalid)
     return invalid
 
 
@@ -253,9 +272,14 @@ def _queue_invalid_count() -> int:
 def list_queues() -> dict:
     """List named queues available for the rating UI."""
     out = []
+    invalid_queues = []
     if QUEUES_DIR.exists():
         for p in sorted(QUEUES_DIR.glob("*.json")):
-            q = _load_queue_file(p)
+            try:
+                q = _load_queue_file(p)
+            except HTTPException as exc:
+                invalid_queues.append(exc.detail)
+                continue
             out.append(
                 {
                     "name": q.get("name", p.stem),
@@ -263,7 +287,11 @@ def list_queues() -> dict:
                     "n_works": len(q.get("work_ids", [])),
                 }
             )
-    return {"queues": out}
+    return {
+        "queues": out,
+        "queues_invalid_count": len(invalid_queues),
+        "invalid_queues": invalid_queues,
+    }
 
 
 @app.get("/queues/{name}")
