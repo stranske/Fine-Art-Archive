@@ -297,3 +297,36 @@ def test_rate_missing_work_404(
     )
 
     assert r.status_code == 404
+
+
+def test_variant_upgrade_decision_rejects_unknown_work_without_append(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidates_csv = tmp_path / "variant_upgrade_candidates.csv"
+    decisions_log = tmp_path / "variant_upgrade_decisions.jsonl"
+    candidates_csv.write_text(
+        "existing_wid,candidate_wid,score\n" "known-work,candidate-work,0.91\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_main, "VARIANT_UPGRADE_CSV", candidates_csv)
+    monkeypatch.setattr(api_main, "VARIANT_UPGRADE_DECISIONS", decisions_log)
+    monkeypatch.setattr(api_store, "get_manifest_row", lambda _work_id: None)
+    monkeypatch.setattr(api_store, "get_work", lambda _work_id: None)
+
+    missing = client.post(
+        "/variant_upgrades/not-a-real-work/decision",
+        json={"decision": "reject", "note": "typo"},
+    )
+    valid = client.post(
+        "/variant_upgrades/known-work/decision",
+        json={"decision": "accept", "note": "promote"},
+    )
+
+    assert missing.status_code == 404
+    assert valid.status_code == 200
+    lines = decisions_log.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    assert '"existing_wid": "known-work"' in lines[0]
+    assert "not-a-real-work" not in lines[0]

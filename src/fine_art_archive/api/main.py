@@ -766,6 +766,20 @@ def variant_upgrades() -> dict:
     return {"candidates": candidates}
 
 
+def _known_variant_upgrade_work_id(existing_wid: str) -> bool:
+    if VARIANT_UPGRADE_CSV.exists():
+        with open(VARIANT_UPGRADE_CSV) as _f:
+            for candidate in _csv.DictReader(_f):
+                if candidate.get("existing_wid") == existing_wid:
+                    return True
+    try:
+        if store.get_manifest_row(existing_wid) is not None:
+            return True
+        return _get_work_checked(existing_wid) is not None
+    except ValueError:
+        return False
+
+
 class UpgradeDecisionIn(BaseModel):
     decision: str = Field(..., description="accept | reject | defer")
     note: str = Field(default="", max_length=500)
@@ -775,6 +789,8 @@ class UpgradeDecisionIn(BaseModel):
 def variant_upgrade_decision(existing_wid: str, body: UpgradeDecisionIn) -> dict:
     if body.decision not in {"accept", "reject", "defer"}:
         raise HTTPException(400, "decision must be accept/reject/defer")
+    if not _known_variant_upgrade_work_id(existing_wid):
+        raise HTTPException(404, f"unknown variant upgrade work: {existing_wid}")
     event = {
         "existing_wid": existing_wid,
         "decision": body.decision,
