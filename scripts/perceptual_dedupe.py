@@ -14,7 +14,9 @@ Usage:
 
 Cache: archive_phash_cache.json   (wid -> {dhash, ahash, title, size})
 Hamming guide (out of 256):  <=10 = same image; <=20 = same work, different
-processing/crop; higher = unrelated.  Tune after eyeballing real matches.
+processing/crop; higher = unrelated. The review script keeps its <=10 duplicate
+display band intentionally stricter than the D017 cascade's operational
+phash_threshold=13, because this command only ranks candidates for eyeballing.
 """
 
 from __future__ import annotations
@@ -44,6 +46,8 @@ STAGE = WS / "staging_acquisitions"
 SIDE = WS / "staging_sidecars"
 CACHE = WS / "archive_phash_cache.json"
 HS = PHASH_BITS  # 16x16 -> 256-bit
+SCRIPT_DUPLICATE_DHAM = 10
+SCRIPT_NEAR_DHAM = 20
 
 
 def _hashes(path: str | Path, hs: int = HS) -> tuple[int, int]:
@@ -62,7 +66,8 @@ def _title(wid: str) -> str:
     for cand in (SIDE / wid / "meta.json", STAGE / wid / "meta.json"):
         if cand.exists():
             try:
-                return json.load(open(cand)).get("title") or ""
+                with cand.open(encoding="utf-8") as meta_file:
+                    return json.load(meta_file).get("title") or ""
             except Exception:
                 return ""
     return ""
@@ -71,7 +76,8 @@ def _title(wid: str) -> str:
 def load_cache() -> dict[str, dict[str, Any]]:
     if CACHE.exists():
         try:
-            return cast(dict[str, dict[str, Any]], json.load(open(CACHE)))
+            with CACHE.open(encoding="utf-8") as cache_file:
+                return cast(dict[str, dict[str, Any]], json.load(cache_file))
         except Exception:
             return {}
     return {}
@@ -110,7 +116,8 @@ def build(budget: int = 40, workers: int = 16) -> None:
                 for ff in futs:
                     ff.cancel()
                 break
-    json.dump(cache, open(CACHE, "w"))
+    with CACHE.open("w", encoding="utf-8") as cache_file:
+        json.dump(cache, cache_file)
     total = len(dirs)
     good = sum(1 for v in cache.values() if "dhash" in v)
     print(
@@ -138,7 +145,11 @@ def match(wids: list[str]) -> None:
         )
         print(f"\n=== {wid}  ({_title(wid)})")
         for hd, hax, k, t in scored[:5]:
-            tag = "DUP " if hd <= 10 else ("near" if hd <= 20 else "    ")
+            tag = (
+                "DUP "
+                if hd <= SCRIPT_DUPLICATE_DHAM
+                else ("near" if hd <= SCRIPT_NEAR_DHAM else "    ")
+            )
             print(f"   dHam={hd:3} aHam={hax:3} {tag} {k[:44]:44} {t[:34]}")
 
 

@@ -72,6 +72,9 @@ def test_script_uses_cascade_hash_primitives() -> None:
 
     assert pdedupe.ham is dedup_cascade.hamming
     assert pdedupe._hashes.__globals__["perceptual_hashes"] is dedup_cascade.perceptual_hashes
+    cascade_threshold = dedup_cascade.dedup_check.__kwdefaults__["phash_threshold"]
+    assert cascade_threshold > pdedupe.SCRIPT_DUPLICATE_DHAM
+    assert cascade_threshold < pdedupe.SCRIPT_NEAR_DHAM
 
 
 def test_visual_dedupe_imports_without_torch(tmp_path: Path) -> None:

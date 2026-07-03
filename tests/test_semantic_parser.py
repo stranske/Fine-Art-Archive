@@ -78,6 +78,13 @@ def test_classify_fragment_year_range(reset_corpus):
     assert fc.confidence >= 0.90
 
 
+def test_classify_fragment_decade(reset_corpus):
+    fc = classify_fragment("1950s")
+    assert fc.type == "year"
+    assert fc.confidence >= 0.90
+    assert fc.evidence == "decade"
+
+
 def test_classify_fragment_dimensions(reset_corpus):
     fc = classify_fragment("82.5 × 64 cm")
     assert fc.type == "dimensions"

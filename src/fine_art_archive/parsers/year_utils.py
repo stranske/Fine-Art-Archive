@@ -46,7 +46,8 @@ def looks_like_year(
     """Classify whether a fragment contains year-shaped content."""
     if YEAR_RANGE_TOKEN.search(s):
         return True, 0.95, "year-range"
-    if DECADE_TOKEN.search(s) and not YEAR_TOKEN.search(s.replace("s", " ", 1)):
+    dec = DECADE_TOKEN.search(s)
+    if dec and not YEAR_TOKEN.search(s.replace(dec.group(0), "", 1)):
         return True, 0.90, "decade"
     if CIRCA_TOKEN.search(s):
         return True, 0.85, "circa-year"
