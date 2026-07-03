@@ -27,6 +27,7 @@ from __future__ import annotations
 import csv
 import re
 import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -126,94 +127,22 @@ def _title_similarity(a: str, b: str) -> float:
     return jacc
 
 
-# --- Dimensions parsing -------------------------------------------------------
-
-# Pull (h, w) numerics from strings like:
-#   "53.5 x 46.3 cm"           "53.5 × 46.3 cm"
-#   "40.5 cm x 32.5 cm"        "73,5 x 92,3 cm"   (European comma decimal)
-#   "26 x 37.5 in"             "62 x 47 inches"
-#   "oil on canvas, 40.5 cm x 32.5 cm"
-#   "55.5 cm x 47 cm (1)"      "76 × 76 cm"
-# Ignores leading "oil on …,", trailing "(N)" or "each of N panels".
-# Returns (h_cm, w_cm) normalized to centimeters, or None if unparseable.
-_DIM_NUM = r"\d+(?:[.,]\d+)?"
-_DIM_RE = re.compile(
-    rf"({_DIM_NUM})\s*(cm|in|inches|mm)?\s*[×x]\s*({_DIM_NUM})\s*(cm|in|inches|mm)?",
-    re.IGNORECASE,
-)
-
-
-def _parse_dimensions(s: str) -> tuple[float, float] | None:
-    """Return (h_cm, w_cm) sorted ascending, or None.
-
-    Pairs are sorted so a 53.5x46.3 stored as 46.3x53.5 still compares
-    equal. Numbers with European comma-decimal (73,5) are accepted.
-    Inches → cm via ×2.54; mm → cm via ÷10.
-    """
-    if not s:
-        return None
-    m = _DIM_RE.search(s)
-    if not m:
-        return None
-    h_raw, h_unit, w_raw, w_unit = m.groups()
-    try:
-        h = float(h_raw.replace(",", "."))
-        w = float(w_raw.replace(",", "."))
-    except ValueError:
-        return None
-    # Unit precedence: the second unit wins if present (it's the one
-    # that always appears at the end of "N x N cm"); otherwise fall back
-    # to the first unit; otherwise assume cm (the dominant inventory unit).
-    unit = (w_unit or h_unit or "cm").lower()
-    if unit in {"in", "inches"}:
-        h *= 2.54
-        w *= 2.54
-    elif unit == "mm":
-        h /= 10.0
-        w /= 10.0
-    if h <= 0 or w <= 0:
-        return None
-    a, b = sorted((h, w))
-    return (a, b)
-
-
-def _dim_compat(a: str, b: str, *, tolerance: float = 0.05) -> tuple[str, float | None]:
-    """Compare two dimension strings.
-
-    Returns (status, max_relative_difference) where status is:
-      - 'match'     : both parsed; both sides within tolerance (default 5%)
-      - 'mismatch'  : both parsed; at least one side outside tolerance
-      - 'absent'    : at least one side unparseable / missing
-
-    The 5% default absorbs catalog rounding (53.5 vs 53.34) and the
-    occasional cm-vs-inch rounding artifact, but rejects 42×34 vs
-    19×14.1 (a clearly different work).
-    """
-    pa = _parse_dimensions(a)
-    pb = _parse_dimensions(b)
-    if pa is None or pb is None:
-        return ("absent", None)
-    (h1, w1), (h2, w2) = pa, pb
-
-    # Relative difference per side; max wins.
-    def rel(x: float, y: float) -> float:
-        denom = max(x, y)
-        return abs(x - y) / denom if denom else 0.0
-
-    diff = max(rel(h1, h2), rel(w1, w2))
-    return ("match" if diff <= tolerance else "mismatch", diff)
-
-
 # --- Inventory match ---------------------------------------------------------
 
 
-def check_inventory(
+def load_inventory_rows(inventory_csv: Path) -> list[dict[str, str]]:
+    """Load inventory CSV rows once for batch duplicate checks."""
+    with open(inventory_csv, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def check_inventory_rows(
     candidate_title: str,
     candidate_artist: str,
-    inventory_csv: Path,
+    rows: Sequence[dict[str, str]],
     near_title_threshold: float = 0.60,
 ) -> DuplicateCheckResult:
-    """Search the inventory CSV for entries plausibly matching the candidate.
+    """Search preloaded inventory rows for entries plausibly matching the candidate.
 
     Returns matches sorted by confidence descending. Empty list means
     no plausible duplicate — safe to proceed with acquisition.
@@ -226,67 +155,79 @@ def check_inventory(
     if not norm_title and not norm_artist:
         return out
 
-    with open(inventory_csv) as f:
-        r = csv.DictReader(f)
-        for row in r:
-            inv_title = (row.get("title") or "").strip()
-            inv_artist = (row.get("artist") or "").strip()
-            if not inv_title and not inv_artist:
-                continue
+    for row in rows:
+        inv_title = (row.get("title") or "").strip()
+        inv_artist = (row.get("artist") or "").strip()
+        if not inv_title and not inv_artist:
+            continue
 
-            n_inv_title = _normalize(inv_title)
-            n_inv_artist = _normalize(inv_artist)
-            inv_surname = _surname(inv_artist)
+        n_inv_title = _normalize(inv_title)
+        n_inv_artist = _normalize(inv_artist)
+        inv_surname = _surname(inv_artist)
 
-            tier: MatchTier | None = None
-            confidence = 0.0
-            why = ""
+        tier: MatchTier | None = None
+        confidence = 0.0
+        why = ""
 
-            # Tier 1: both normalize-equal
-            if n_inv_title == norm_title and n_inv_artist == norm_artist:
-                tier = "exact-title-artist"
-                confidence = 0.99
-                why = "exact normalized match on title AND artist"
-            # Tier 2: artist matches (full or surname), title is near-equal
-            elif norm_artist and (
-                n_inv_artist == norm_artist
-                or (candidate_surname and candidate_surname == inv_surname)
-            ):
-                sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
-                if sim >= near_title_threshold:
-                    artist_match_kind = "full" if n_inv_artist == norm_artist else "surname"
-                    tier = "exact-artist+near-title"
-                    confidence = 0.70 + 0.25 * sim  # 0.85–0.95 range
-                    why = f"artist matches ({artist_match_kind}); " f"title similarity {sim:.2f}"
-            # Tier 3: title matches but artist differs (suspicious)
-            if tier is None and norm_title and n_inv_title == norm_title:
-                tier = "exact-title"
-                confidence = 0.70
-                why = "exact title match; artist differs — verify"
-            # Tier 4: surname matches + fuzzy title
-            if tier is None and candidate_surname and candidate_surname == inv_surname:
-                sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
-                if sim >= near_title_threshold:
-                    tier = "surname-only"
-                    confidence = 0.55 + 0.15 * sim  # 0.64–0.70 range
-                    why = f"surname matches; title similarity {sim:.2f}"
+        # Tier 1: both normalize-equal
+        if n_inv_title == norm_title and n_inv_artist == norm_artist:
+            tier = "exact-title-artist"
+            confidence = 0.99
+            why = "exact normalized match on title AND artist"
+        # Tier 2: artist matches (full or surname), title is near-equal
+        elif norm_artist and (
+            n_inv_artist == norm_artist or (candidate_surname and candidate_surname == inv_surname)
+        ):
+            sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
+            if sim >= near_title_threshold:
+                artist_match_kind = "full" if n_inv_artist == norm_artist else "surname"
+                tier = "exact-artist+near-title"
+                confidence = 0.70 + 0.25 * sim  # 0.85–0.95 range
+                why = f"artist matches ({artist_match_kind}); " f"title similarity {sim:.2f}"
+        # Tier 3: title matches but artist differs (suspicious)
+        if tier is None and norm_title and n_inv_title == norm_title:
+            tier = "exact-title"
+            confidence = 0.70
+            why = "exact title match; artist differs — verify"
+        # Tier 4: surname matches + fuzzy title
+        if tier is None and candidate_surname and candidate_surname == inv_surname:
+            sim = _title_similarity(candidate_title, inv_title) if norm_title else 0.0
+            if sim >= near_title_threshold:
+                tier = "surname-only"
+                confidence = 0.55 + 0.15 * sim  # 0.64–0.70 range
+                why = f"surname matches; title similarity {sim:.2f}"
 
-            if tier:
-                out.matches.append(
-                    DuplicateMatch(
-                        inventory_row=row,
-                        tier=tier,
-                        confidence=confidence,
-                        rel_path=row.get("rel_path", ""),
-                        size_bytes=int(row.get("size_bytes") or 0),
-                        why=why,
-                        inventory_title=inv_title,
-                        inventory_artist=inv_artist,
-                    )
+        if tier:
+            out.matches.append(
+                DuplicateMatch(
+                    inventory_row=row,
+                    tier=tier,
+                    confidence=confidence,
+                    rel_path=row.get("rel_path", ""),
+                    size_bytes=int(row.get("size_bytes") or 0),
+                    why=why,
+                    inventory_title=inv_title,
+                    inventory_artist=inv_artist,
                 )
+            )
 
     out.matches.sort(key=lambda m: -m.confidence)
     return out
+
+
+def check_inventory(
+    candidate_title: str,
+    candidate_artist: str,
+    inventory_csv: Path,
+    near_title_threshold: float = 0.60,
+) -> DuplicateCheckResult:
+    """Search the inventory CSV for entries plausibly matching the candidate."""
+    return check_inventory_rows(
+        candidate_title,
+        candidate_artist,
+        load_inventory_rows(inventory_csv),
+        near_title_threshold=near_title_threshold,
+    )
 
 
 def format_report(result: DuplicateCheckResult, top_n: int = 5) -> str:

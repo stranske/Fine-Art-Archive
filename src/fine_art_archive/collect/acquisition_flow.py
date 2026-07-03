@@ -33,6 +33,11 @@ from fine_art_archive.collect.dedup_cascade import (
     build_candidate,
     dedup_check,
 )
+from fine_art_archive.collect.dedupe import (
+    DuplicateCheckResult,
+    check_inventory_rows,
+    load_inventory_rows,
+)
 from fine_art_archive.collect.quality import quality_report
 from fine_art_archive.collect.sources import (
     artic,
@@ -148,6 +153,18 @@ class AcquisitionAssessment:
     quality: dict
     fitness: dict
     dedup: DedupVerdict | None = None
+    inventory_match: DuplicateCheckResult | None = None
+
+
+def _candidate_artist_name(meta: dict) -> str:
+    artist = meta.get("artist")
+    if isinstance(artist, dict):
+        for key in ("name", "label", "display_name"):
+            value = artist.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return ""
+    return artist.strip() if isinstance(artist, str) else ""
 
 
 def assess_master(
@@ -195,12 +212,15 @@ def run_acquisition_flow(
     source_quality_path: Path | None = None,
     host_registry_path: Path | None = None,
     archive: Sequence[ArchiveEntry] | None = None,
+    inventory_csv: Path | None = None,
     dino_hook=None,
 ) -> list[AcquisitionAssessment]:
     """Assess a batch of ``source`` acquisitions through verify + quality, and —
     when an ``archive`` index is supplied — gate each through the D017 dedup
     cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2
     ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.
+    When ``inventory_csv`` is supplied, the candidate title/artist are also
+    checked against the inventory name index and attached as ``inventory_match``.
 
     Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an
     optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The
@@ -217,6 +237,7 @@ def run_acquisition_flow(
 
     get_collector(chosen_source)  # validate the source up front
     selected = work_dirs if max_items is None else work_dirs[:max_items]
+    inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None
     results: list[AcquisitionAssessment] = []
     for raw in selected:
         wd = Path(raw)
@@ -244,6 +265,12 @@ def run_acquisition_flow(
         if archive is not None:
             assessment.dedup = dedup_check(
                 build_candidate(master, meta), archive, dino_hook=dino_hook
+            )
+        if inventory_rows is not None:
+            assessment.inventory_match = check_inventory_rows(
+                meta.get("title") or "",
+                _candidate_artist_name(meta),
+                inventory_rows,
             )
         results.append(assessment)
     return results
