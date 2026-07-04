@@ -300,7 +300,7 @@ def measure_observed_gamut_coverage(img: Image.Image, max_dim: int = 512) -> flo
     if np.any(np.std(arr, axis=0) < 1e-9):
         channel_independence = 0.0
     else:
-        corr = np.corrcoef(arr, rowvar=False)
+        corr = np.asarray(np.corrcoef(arr, rowvar=False), dtype=np.float64)
         upper = np.abs(corr[np.triu_indices(3, k=1)])
         channel_independence = float(1.0 - np.mean(upper))
     return float(np.clip(span_volume * channel_independence, 0.0, 1.0))
