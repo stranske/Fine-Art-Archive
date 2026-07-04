@@ -54,6 +54,7 @@ def perceptual_hashes(image_path: Path | str, hs: int = PHASH_BITS) -> tuple[int
     five percent of a 256-bit hash may differ.
     """
     with Image.open(image_path) as im:
+        im.draft("L", (hs + 1, hs))
         return (
             _imagehash_to_int(imagehash.dhash(im, hash_size=hs)),
             _imagehash_to_int(imagehash.average_hash(im, hash_size=hs)),

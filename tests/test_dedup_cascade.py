@@ -56,7 +56,8 @@ def test_library_backed_hashes_flag_near_duplicate_and_distinct(tmp_path: Path) 
     original = _ramp(tmp_path / "original.png")
     near = tmp_path / "near.jpg"
     distinct = _ramp(tmp_path / "distinct.png", reverse=True)
-    Image.open(original).resize((128, 128)).save(near, "JPEG", quality=92)
+    with Image.open(original) as original_image:
+        original_image.resize((128, 128)).save(near, "JPEG", quality=92)
 
     original_dh, original_ah = perceptual_hashes(original)
     near_dh, near_ah = perceptual_hashes(near)
@@ -71,6 +72,7 @@ def test_library_backed_hashes_flag_near_duplicate_and_distinct(tmp_path: Path) 
     assert verdict.is_duplicate
     assert verdict.layer == "phash"
     assert verdict.matched_wid == "near"
+    assert hamming(original_dh, near_dh) <= 13
     assert hamming(original_dh, distinct_dh) > 200
 
 
