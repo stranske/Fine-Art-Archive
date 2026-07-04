@@ -92,9 +92,18 @@ def _ordered_dither(rgb: np.ndarray) -> np.ndarray:
 
 
 def _profile_from_hint(profile_hint: Any) -> Any:
-    if profile_hint in (None, "", "srgb", "sRGB"):
+    if profile_hint is None:
         return ImageCms.createProfile("sRGB")
     if isinstance(profile_hint, (str, Path)):
+        hint_text = str(profile_hint).strip()
+        if not hint_text or hint_text.lower() == "srgb":
+            return ImageCms.createProfile("sRGB")
+        if hint_text.startswith("device:"):
+            device_key = hint_text.removeprefix("device:")
+            raise ValueError(
+                f"missing measured ICC profile for {device_key!r}; "
+                "provide display_hints[device]['icc_profile'] as a path or bytes"
+            )
         return ImageCms.ImageCmsProfile(str(profile_hint))
     if isinstance(profile_hint, bytes):
         return ImageCms.ImageCmsProfile(BytesIO(profile_hint))
@@ -120,9 +129,11 @@ def _icc_gamut_map(src: Image.Image, device_hints: dict[str, Any]) -> Image.Imag
         flags |= ImageCms.Flags.BLACKPOINTCOMPENSATION
 
     try:
+        source_profile = _source_profile(src)
+        source_image = src if src.mode == "RGB" else src.convert("RGB")
         mapped = ImageCms.profileToProfile(
-            src,
-            _source_profile(src),
+            source_image,
+            source_profile,
             _profile_from_hint(device_hints.get("icc_profile")),
             outputMode="RGB",
             renderingIntent=intent,
@@ -131,7 +142,7 @@ def _icc_gamut_map(src: Image.Image, device_hints: dict[str, Any]) -> Image.Imag
         if mapped is None:
             raise ValueError("ICC transform returned no image")
         return mapped
-    except ImageCms.PyCMSError as exc:
+    except (OSError, TypeError, ImageCms.PyCMSError) as exc:
         raise ValueError("failed to apply ICC gamut mapping") from exc
 
 

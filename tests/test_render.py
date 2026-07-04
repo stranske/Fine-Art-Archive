@@ -28,6 +28,7 @@ def test_output_uses_only_palette(tmp_path: Path) -> None:
     out = tmp_path / "rendered.png"
 
     hints = build_display_hints(w_px=96, h_px=64, tags=["geometric"])
+    hints["inkposter_tela_28_5"]["icc_profile"] = "srgb"
     native_size = (80, 48)
     render_for_device(master, hints, "inkposter_tela_28_5", out, native_size=native_size)
 
@@ -46,6 +47,7 @@ def test_render_is_deterministic(tmp_path: Path) -> None:
     out2 = tmp_path / "rendered2.png"
 
     hints = build_display_hints(w_px=96, h_px=64, tags=["geometric"])
+    hints["inkposter_tela_28_5"]["icc_profile"] = "srgb"
     native_size = (80, 48)
 
     render_for_device(master, hints, "inkposter_tela_28_5", out1, native_size=native_size)

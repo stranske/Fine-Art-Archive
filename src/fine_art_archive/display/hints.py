@@ -90,7 +90,7 @@ def build_display_hints(
             "saturation_boost": 1.30,
             "contrast_boost": 1.15,
             "gamut_target": "spectra6",
-            "icc_profile": "srgb",
+            "icc_profile": "device:inkposter_tela_28_5",
             "rendering_intent": "perceptual",
             "black_point_compensation": True,
         },
@@ -99,7 +99,7 @@ def build_display_hints(
             "saturation_boost": 1.40,  # smaller panel, push harder
             "contrast_boost": 1.20,
             "gamut_target": "spectra6",
-            "icc_profile": "srgb",
+            "icc_profile": "device:pimoroni_inky_13_3",
             "rendering_intent": "perceptual",
             "black_point_compensation": True,
         },
