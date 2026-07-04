@@ -309,6 +309,26 @@ def test_verify_applies_exif_orientation_before_aspect_and_hash_checks(tmp_path)
     assert hash_check.detail["reference_size"] == [80, 120]
 
 
+def test_verify_applies_exif_orientation_for_candidate_only_aspect_check(tmp_path):
+    upright = _synthetic_work_image((80, 120))
+    candidate = _save_exif_rotated_jpeg(tmp_path / "candidate.jpg", upright)
+
+    raw_aspect = check_aspect_ratio(h_cm=30.0, w_cm=20.0, h_px=80, w_px=120)
+    report = verify(
+        h_cm=30.0,
+        w_cm=20.0,
+        h_px=80,
+        w_px=120,
+        candidate_path=candidate,
+    )
+
+    statuses = {c.name: c.status for c in report.checks}
+    assert raw_aspect.status == "FAIL"
+    assert report.overall == "PASS"
+    assert statuses["aspect_ratio"] == "PASS"
+    assert "perceptual_hash" not in statuses
+
+
 def test_verify_layer2_catches_milkmaid_under_little_street_metadata():
     """The full motivating bug: Milkmaid bytes filed under Little Street
     metadata. Both layers FAIL — Layer 1 catches aspect, Layer 2 catches

@@ -214,7 +214,7 @@ def _open_exif_transposed_image(path: Path) -> Any:
     from PIL import Image, ImageOps
 
     with Image.open(path) as image:
-        return ImageOps.exif_transpose(image).copy()
+        return ImageOps.exif_transpose(image)
 
 
 def _average_hash_distance(left: Any, right: Any, hash_size: int = 8) -> int:
@@ -406,28 +406,49 @@ def verify(
     embedding similarity check plus a Lab color-distance guard. The VLM layer is
     still a skip-stub.
     """
-    candidate_image_path: Path | None = None
-    reference_image_path: Path | None = None
-    if candidate_path is not None and reference_path is not None:
-        candidate_image_path = Path(candidate_path)
-        reference_image_path = Path(reference_path)
+    candidate_image_path = Path(candidate_path) if candidate_path is not None else None
+    reference_image_path = Path(reference_path) if reference_path is not None else None
 
     aspect_h_px = h_px
     aspect_w_px = w_px
-    if candidate_image_path is not None:
-        with _open_exif_transposed_image(candidate_image_path) as candidate_img:
-            aspect_w_px, aspect_h_px = candidate_img.size
-
-    report = VerificationReport()
-    report.checks.append(
-        check_aspect_ratio(
+    aspect_result: CheckResult
+    should_read_candidate_size = (
+        candidate_image_path is not None
+        and h_cm is not None
+        and w_cm is not None
+        and h_cm > 0
+        and w_cm > 0
+    )
+    if should_read_candidate_size:
+        assert candidate_image_path is not None
+        try:
+            with _open_exif_transposed_image(candidate_image_path) as candidate_img:
+                aspect_w_px, aspect_h_px = candidate_img.size
+            aspect_result = check_aspect_ratio(
+                h_cm=h_cm,
+                w_cm=w_cm,
+                h_px=aspect_h_px,
+                w_px=aspect_w_px,
+                threshold=aspect_threshold,
+            )
+        except OSError as exc:
+            aspect_result = CheckResult(
+                name="aspect_ratio",
+                status="FAIL",
+                message=f"candidate image unavailable for EXIF-aware aspect check: {exc}",
+                detail={"candidate_path": str(candidate_image_path)},
+            )
+    else:
+        aspect_result = check_aspect_ratio(
             h_cm=h_cm,
             w_cm=w_cm,
             h_px=aspect_h_px,
             w_px=aspect_w_px,
             threshold=aspect_threshold,
         )
-    )
+
+    report = VerificationReport()
+    report.checks.append(aspect_result)
 
     have_paths = candidate_image_path is not None and reference_image_path is not None
     clip_result: CheckResult | None = None
