@@ -136,6 +136,14 @@ def _save_synthetic_jpeg(path: Path, image: Image.Image) -> Path:
     return path
 
 
+def _save_exif_rotated_jpeg(path: Path, upright: Image.Image) -> Path:
+    exif = Image.Exif()
+    exif[274] = 6
+    stored_landscape = upright.transpose(Image.Transpose.ROTATE_90)
+    stored_landscape.save(path, quality=92, exif=exif)
+    return path
+
+
 def test_generated_image_perceptual_hash_passes_for_same_work_at_different_sizes(tmp_path):
     from fine_art_archive.collect.verify import check_perceptual_hash
 
@@ -274,6 +282,31 @@ def test_verify_layer2_overall_pass_when_both_layers_pass():
     statuses = {c.name: c.status for c in report.checks}
     assert statuses["aspect_ratio"] == "PASS"
     assert statuses["perceptual_hash"] == "PASS"
+
+
+def test_verify_applies_exif_orientation_before_aspect_and_hash_checks(tmp_path):
+    upright = _synthetic_work_image((80, 120))
+    reference = _save_synthetic_jpeg(tmp_path / "reference.jpg", upright)
+    candidate = _save_exif_rotated_jpeg(tmp_path / "candidate.jpg", upright)
+
+    raw_aspect = check_aspect_ratio(h_cm=30.0, w_cm=20.0, h_px=80, w_px=120)
+    report = verify(
+        h_cm=30.0,
+        w_cm=20.0,
+        h_px=80,
+        w_px=120,
+        candidate_path=candidate,
+        reference_path=reference,
+    )
+
+    statuses = {c.name: c.status for c in report.checks}
+    hash_check = next(c for c in report.checks if c.name == "perceptual_hash")
+    assert raw_aspect.status == "FAIL"
+    assert report.overall == "PASS"
+    assert statuses["aspect_ratio"] == "PASS"
+    assert statuses["perceptual_hash"] == "PASS"
+    assert hash_check.detail["candidate_size"] == [80, 120]
+    assert hash_check.detail["reference_size"] == [80, 120]
 
 
 def test_verify_layer2_catches_milkmaid_under_little_street_metadata():
