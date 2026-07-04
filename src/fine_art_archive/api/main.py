@@ -11,13 +11,14 @@ import json
 import os
 import stat
 import tempfile
+import threading
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from . import store
 from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
@@ -691,6 +692,8 @@ def rate_work(work_id: str, body: RatingIn) -> dict:
 DEBUG_LOG = REPO_ROOT / "automation_logs" / "ui_debug.log"
 DEBUG_LOG_MAX_BYTES = 256 * 1024
 DEBUG_LOG_MAX_EVENT_BYTES = 16 * 1024
+DEBUG_LOG_MAX_REQUEST_BYTES = 24 * 1024
+_debug_log_lock = threading.Lock()
 
 
 class DebugIn(BaseModel):
@@ -698,21 +701,53 @@ class DebugIn(BaseModel):
     info: dict = Field(default_factory=dict)
 
 
+async def _read_capped_debug_log_body(request: Request) -> bytes:
+    chunks: list[bytes] = []
+    total_bytes = 0
+    async for chunk in request.stream():
+        total_bytes += len(chunk)
+        if total_bytes > DEBUG_LOG_MAX_REQUEST_BYTES:
+            raise HTTPException(
+                413,
+                (
+                    "debug log request exceeds size limit "
+                    f"({total_bytes} bytes > {DEBUG_LOG_MAX_REQUEST_BYTES} bytes)"
+                ),
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _parse_debug_log_body(raw_body: bytes) -> DebugIn:
+    try:
+        payload = json.loads(raw_body)
+        if hasattr(DebugIn, "model_validate"):
+            return DebugIn.model_validate(payload)
+        return DebugIn.parse_obj(payload)
+    except (json.JSONDecodeError, TypeError, ValidationError) as exc:
+        raise HTTPException(422, "invalid debug log payload") from exc
+
+
 @app.post("/debug/log")
-def debug_log(body: DebugIn) -> dict:
+async def debug_log(request: Request) -> dict:
+    body = _parse_debug_log_body(await _read_capped_debug_log_body(request))
     DEBUG_LOG.parent.mkdir(parents=True, exist_ok=True)
     event = {"ts": _now(), "where": body.where, **body.info}
     line = json.dumps(event, ensure_ascii=False)
     line_bytes = len((line + "\n").encode("utf-8"))
     if line_bytes > DEBUG_LOG_MAX_EVENT_BYTES:
-        raise HTTPException(413, "debug log event exceeds size limit")
-    if DEBUG_LOG.exists() and DEBUG_LOG.stat().st_size + line_bytes > DEBUG_LOG_MAX_BYTES:
-        rotated = DEBUG_LOG.with_suffix(".log.1")
-        if rotated.exists():
-            rotated.unlink()
-        DEBUG_LOG.replace(rotated)
-    with open(DEBUG_LOG, "a", encoding="utf-8") as f:
-        f.write(line + "\n")
+        raise HTTPException(
+            413,
+            f"debug log event exceeds size limit ({line_bytes} bytes > {DEBUG_LOG_MAX_EVENT_BYTES} bytes)",
+        )
+    with _debug_log_lock:
+        if DEBUG_LOG.exists() and DEBUG_LOG.stat().st_size + line_bytes > DEBUG_LOG_MAX_BYTES:
+            rotated = DEBUG_LOG.with_suffix(".log.1")
+            if rotated.exists():
+                rotated.unlink()
+            DEBUG_LOG.replace(rotated)
+        with open(DEBUG_LOG, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
     return {"ok": True}
 
 

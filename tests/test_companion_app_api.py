@@ -315,6 +315,28 @@ def test_debug_log_rejects_oversized_event_without_append(
     )
 
     assert response.status_code == 413
+    assert "bytes > 64 bytes" in response.json()["detail"]
+    assert debug_log.read_text(encoding="utf-8") == "existing\n"
+
+
+def test_debug_log_rejects_oversized_request_before_parsing(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    debug_log = tmp_path / "ui_debug.log"
+    debug_log.write_text("existing\n", encoding="utf-8")
+    monkeypatch.setattr(api_main, "DEBUG_LOG", debug_log)
+    monkeypatch.setattr(api_main, "DEBUG_LOG_MAX_REQUEST_BYTES", 32)
+
+    response = client.post(
+        "/debug/log",
+        content=b'{"where":"companion","info":{"message":"' + (b"x" * 128) + b'"}}',
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == 413
+    assert "request exceeds size limit" in response.json()["detail"]
     assert debug_log.read_text(encoding="utf-8") == "existing\n"
 
 
