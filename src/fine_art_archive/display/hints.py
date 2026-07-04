@@ -90,12 +90,18 @@ def build_display_hints(
             "saturation_boost": 1.30,
             "contrast_boost": 1.15,
             "gamut_target": "spectra6",
+            "icc_profile": "srgb",
+            "rendering_intent": "perceptual",
+            "black_point_compensation": True,
         },
         "pimoroni_inky_13_3": {
             "dither": dither,
             "saturation_boost": 1.40,  # smaller panel, push harder
             "contrast_boost": 1.20,
             "gamut_target": "spectra6",
+            "icc_profile": "srgb",
+            "rendering_intent": "perceptual",
+            "black_point_compensation": True,
         },
         # Frame TV targets (full sRGB; mat-and-color metadata mirrors the
         # device APIs documented in research_display_landscape_2026-05-16.md)
