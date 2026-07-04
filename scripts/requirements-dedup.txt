@@ -8,6 +8,6 @@
 #     pip install -e . && pip install -r scripts/requirements-dedup.txt
 #     python scripts/visual_dedupe.py smoketest
 #
-# perceptual_dedupe.py needs none of these (Pillow only, already a core dependency).
+# perceptual_dedupe.py needs none of these (Pillow + imagehash are core dependencies).
 torch>=2.12.0
 transformers>=5.10.2

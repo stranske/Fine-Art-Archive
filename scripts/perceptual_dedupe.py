@@ -37,6 +37,7 @@ sys.path.insert(0, str(WS / "src"))
 
 from fine_art_archive.collect.dedup_cascade import (  # noqa: E402
     PHASH_BITS,
+    PHASH_HEX_WIDTH,
     hamming,
     perceptual_hashes,
 )
@@ -98,8 +99,8 @@ def build(budget: int = 40, workers: int = 16) -> None:
         try:
             dh, ah = _hashes(m)
             return wid, {
-                "dhash": format(dh, "064x"),
-                "ahash": format(ah, "064x"),
+                "dhash": format(dh, f"0{PHASH_HEX_WIDTH}x"),
+                "ahash": format(ah, f"0{PHASH_HEX_WIDTH}x"),
                 "title": _title(wid),
                 "size": os.path.getsize(m),
             }

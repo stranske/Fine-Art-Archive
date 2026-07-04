@@ -52,6 +52,28 @@ def test_perceptual_hashes_identity_and_sensitivity(tmp_path: Path) -> None:
     assert hamming(da, dr) > 200
 
 
+def test_library_backed_hashes_flag_near_duplicate_and_distinct(tmp_path: Path) -> None:
+    original = _ramp(tmp_path / "original.png")
+    near = tmp_path / "near.jpg"
+    distinct = _ramp(tmp_path / "distinct.png", reverse=True)
+    Image.open(original).resize((128, 128)).save(near, "JPEG", quality=92)
+
+    original_dh, original_ah = perceptual_hashes(original)
+    near_dh, near_ah = perceptual_hashes(near)
+    distinct_dh, distinct_ah = perceptual_hashes(distinct)
+
+    archive = [
+        ArchiveEntry(wid="near", dhash=near_dh, ahash=near_ah),
+        ArchiveEntry(wid="distinct", dhash=distinct_dh, ahash=distinct_ah),
+    ]
+    verdict = dedup_check(Candidate(dhash=original_dh, ahash=original_ah), archive)
+
+    assert verdict.is_duplicate
+    assert verdict.layer == "phash"
+    assert verdict.matched_wid == "near"
+    assert hamming(original_dh, distinct_dh) > 200
+
+
 def test_layer1_sha256_exact() -> None:
     cand = Candidate(sha256="deadbeef", dhash=_FAR, artist_qid="Q1", title="X")
     archive = [ArchiveEntry(wid="w1", sha256="deadbeef", dhash=0)]

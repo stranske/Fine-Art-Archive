@@ -10,20 +10,21 @@ A new acquisition is checked against the archive *before* promotion
   4. metadata        title similarity within the artist block
   5. DINOv2          vision confirmation on the residual (pluggable hook)
 
-Layers 1-4 are pure-Python (PIL + stdlib) and decide the common cases. Layer 5
-needs torch + the archive embedding cache and is supplied as a hook so it runs
-operationally (scripts/visual_dedupe.py) without being a library/CI dependency.
+Layers 1-4 are dependency-light (Pillow + imagehash) and decide the common
+cases. Layer 5 needs torch + the archive embedding cache and is supplied as a
+hook so it runs operationally (scripts/visual_dedupe.py) without being a
+library/CI dependency.
 """
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import json
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import imagehash
 from PIL import Image
 
 from fine_art_archive.collect.dedupe import _title_similarity
@@ -31,6 +32,7 @@ from fine_art_archive.collect.dedupe import _title_similarity
 Image.MAX_IMAGE_PIXELS = None
 
 PHASH_BITS = 16  # 16x16 grid -> 256-bit dHash / aHash
+PHASH_HEX_WIDTH = (PHASH_BITS * PHASH_BITS) // 4
 
 
 def hamming(a: int, b: int) -> int:
@@ -38,27 +40,24 @@ def hamming(a: int, b: int) -> int:
     return bin(a ^ b).count("1")
 
 
+def _imagehash_to_int(value: imagehash.ImageHash) -> int:
+    """Convert an imagehash value to the archive cache's stable integer form."""
+    return int(str(value), 16)
+
+
 def perceptual_hashes(image_path: Path | str, hs: int = PHASH_BITS) -> tuple[int, int]:
-    """Return (dHash, aHash) as 256-bit ints — resolution/format invariant."""
-    im = Image.open(image_path)
-    with contextlib.suppress(Exception):
-        im.draft("L", (hs * 4, hs * 4))  # fast scaled decode for huge masters
-    im = im.convert("L")  # type: ignore[assignment]
-    gd = im.resize((hs + 1, hs), Image.Resampling.BILINEAR)
-    px = gd.tobytes()
-    width = hs + 1
-    dh = 0
-    for row in range(hs):
-        base = row * width
-        for col in range(hs):
-            dh = (dh << 1) | (1 if px[base + col] < px[base + col + 1] else 0)
-    ga = im.resize((hs, hs), Image.Resampling.BILINEAR)
-    pa = ga.tobytes()
-    avg = sum(pa) / len(pa)
-    ah = 0
-    for p in pa:
-        ah = (ah << 1) | (1 if p >= avg else 0)
-    return dh, ah
+    """Return (dHash, aHash) as ints using maintained imagehash primitives.
+
+    The archive cache persists hashes as 64-character hex strings for the
+    default 16x16 grid. ``imagehash`` uses the same bit count, so existing
+    Hamming thresholds remain comparable: a threshold of 13 still means roughly
+    five percent of a 256-bit hash may differ.
+    """
+    with Image.open(image_path) as im:
+        return (
+            _imagehash_to_int(imagehash.dhash(im, hash_size=hs)),
+            _imagehash_to_int(imagehash.average_hash(im, hash_size=hs)),
+        )
 
 
 def sha256_file(path: Path | str) -> str:
