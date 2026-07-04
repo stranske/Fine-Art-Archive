@@ -159,9 +159,10 @@ def check_perceptual_hash(
     Uses `imagehash` when installed, with a small PIL/numpy fallback so local
     test runs without optional extras still exercise the layer.
     """
-    from PIL import Image
-
-    with Image.open(candidate_path) as cand_img, Image.open(reference_path) as ref_img:
+    with (
+        _open_exif_transposed_image(candidate_path) as cand_img,
+        _open_exif_transposed_image(reference_path) as ref_img,
+    ):
         candidate_size = list(cand_img.size)
         reference_size = list(ref_img.size)
         try:
@@ -207,6 +208,13 @@ def check_perceptual_hash(
         ),
         blocks_overall=blocks_overall,
     )
+
+
+def _open_exif_transposed_image(path: Path) -> Any:
+    from PIL import Image, ImageOps
+
+    with Image.open(path) as image:
+        return ImageOps.exif_transpose(image)
 
 
 def _average_hash_distance(left: Any, right: Any, hash_size: int = 8) -> int:
@@ -282,8 +290,6 @@ def check_embedding_similarity(
     The default backend is OpenCLIP when installed. Tests and offline callers can
     inject a small deterministic backend to avoid network/model downloads.
     """
-    from PIL import Image
-
     if embedding_backend is None:
         try:
             embedding_backend = _load_open_clip_backend()
@@ -301,7 +307,10 @@ def check_embedding_similarity(
                 message=f"embedding backend failed to load: {exc}",
             )
 
-    with Image.open(candidate_path) as cand_img, Image.open(reference_path) as ref_img:
+    with (
+        _open_exif_transposed_image(candidate_path) as cand_img,
+        _open_exif_transposed_image(reference_path) as ref_img,
+    ):
         cand_vec = embedding_backend(cand_img.convert("RGB"))
         ref_vec = embedding_backend(ref_img.convert("RGB"))
 
@@ -340,10 +349,9 @@ def check_color_distance(
 ) -> CheckResult:
     """Compare downscaled Lab color signatures for candidate/reference images."""
     import numpy as np
-    from PIL import Image
 
     def lab_signature(path: Path) -> np.ndarray:
-        with Image.open(path) as img:
+        with _open_exif_transposed_image(path) as img:
             lab = img.convert("RGB").resize((sample_size, sample_size)).convert("LAB")
         arr = np.asarray(lab, dtype=np.float32)
         return arr.reshape(-1, 3).mean(axis=0)
@@ -398,22 +406,50 @@ def verify(
     embedding similarity check plus a Lab color-distance guard. The VLM layer is
     still a skip-stub.
     """
-    report = VerificationReport()
-    report.checks.append(
-        check_aspect_ratio(
+    candidate_image_path = Path(candidate_path) if candidate_path is not None else None
+    reference_image_path = Path(reference_path) if reference_path is not None else None
+
+    aspect_h_px = h_px
+    aspect_w_px = w_px
+    aspect_result: CheckResult
+    should_read_candidate_size = (
+        candidate_image_path is not None
+        and h_cm is not None
+        and w_cm is not None
+        and h_cm > 0
+        and w_cm > 0
+    )
+    if should_read_candidate_size:
+        assert candidate_image_path is not None
+        try:
+            with _open_exif_transposed_image(candidate_image_path) as candidate_img:
+                aspect_w_px, aspect_h_px = candidate_img.size
+            aspect_result = check_aspect_ratio(
+                h_cm=h_cm,
+                w_cm=w_cm,
+                h_px=aspect_h_px,
+                w_px=aspect_w_px,
+                threshold=aspect_threshold,
+            )
+        except OSError as exc:
+            aspect_result = CheckResult(
+                name="aspect_ratio",
+                status="FAIL",
+                message=f"candidate image unavailable for EXIF-aware aspect check: {exc}",
+                detail={"candidate_path": str(candidate_image_path)},
+            )
+    else:
+        aspect_result = check_aspect_ratio(
             h_cm=h_cm,
             w_cm=w_cm,
-            h_px=h_px,
-            w_px=w_px,
+            h_px=aspect_h_px,
+            w_px=aspect_w_px,
             threshold=aspect_threshold,
         )
-    )
 
-    candidate_image_path: Path | None = None
-    reference_image_path: Path | None = None
-    if candidate_path is not None and reference_path is not None:
-        candidate_image_path = Path(candidate_path)
-        reference_image_path = Path(reference_path)
+    report = VerificationReport()
+    report.checks.append(aspect_result)
+
     have_paths = candidate_image_path is not None and reference_image_path is not None
     clip_result: CheckResult | None = None
     if enable_clip and have_paths:
