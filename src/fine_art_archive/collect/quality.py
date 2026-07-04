@@ -13,6 +13,11 @@ the cheap deterministic measurements:
   - jpeg_quality_factor       — via ImageMagick `identify` when available
   - laplacian_variance        — sharpness / focus
   - fft_highfreq_ratio        — upscale detection signal
+  - dpi_gate                  — deterministic per-device resolution gate
+  - no_reference_quality_score — optional BRISQUE/NIQE-style IQA, lazy fallback
+  - ssim_render_fidelity      — full-reference render-vs-master fidelity
+  - color_depth_bits          — source color depth factor
+  - observed_gamut_coverage   — normalized RGB gamut occupancy factor
 
 Plus a composite `quality_report()` that bundles them, and `assess_fitness()`
 that maps the report onto target-device adequacy.
@@ -50,36 +55,43 @@ DEVICE_THRESHOLDS: dict[str, dict] = {
         "min_long_edge_px": 3060,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0015,
+        "min_color_depth_bits": 8,
     },
     "hisense_canvastv": {
         "min_long_edge_px": 3840,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0012,
+        "min_color_depth_bits": 8,
     },
     "samsung_frame": {
         "min_long_edge_px": 3840,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0012,
+        "min_color_depth_bits": 8,
     },
     "pimoroni_inky_13_3": {
         "min_long_edge_px": 1600,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
+        "min_color_depth_bits": 8,
     },
     "meural_landscape": {
         "min_long_edge_px": 1920,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
+        "min_color_depth_bits": 8,
     },
     "meural_portrait": {
         "min_long_edge_px": 1920,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
+        "min_color_depth_bits": 8,
     },
     "archival_a2_print": {
         "min_long_edge_px": 7016,  # 300 DPI at A2
         "min_jpeg_q": 85,
         "min_fft_highfreq_ratio": 0.0020,
+        "min_color_depth_bits": 8,
     },
 }
 
@@ -101,6 +113,12 @@ class QualityReport:
     jpeg_quality_factor: int | None = None
     laplacian_variance: float = 0.0
     fft_highfreq_ratio: float = 0.0
+    dpi_gate: dict[str, str] = field(default_factory=dict)
+    no_reference_quality_score: float | None = None
+    no_reference_quality_method: str | None = None
+    ssim_render_fidelity: float | None = None
+    color_depth_bits: int = 0
+    observed_gamut_coverage: float = 0.0
     fitness: dict[str, str] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
 
@@ -204,6 +222,97 @@ def measure_fft_highfreq_ratio(img: Image.Image, max_dim: int = 1024) -> float:
     return float(high / total) if total > 0 else 0.0
 
 
+def assess_dpi_gate(report: QualityReport, devices: list[str] | None = None) -> dict[str, str]:
+    """Return deterministic pass/fail DPI adequacy by device."""
+    if devices is None:
+        devices = list(DEVICE_THRESHOLDS.keys())
+    gate = {}
+    for dev in devices:
+        thr = DEVICE_THRESHOLDS.get(dev)
+        if not thr:
+            continue
+        gate[dev] = "pass" if report.long_edge_px >= thr["min_long_edge_px"] else "fail"
+    return gate
+
+
+def measure_no_reference_quality(img: Image.Image) -> tuple[float | None, str | None]:
+    """Return an optional no-reference IQA score.
+
+    BRISQUE/NIQE implementations are intentionally optional because they add
+    heavy dependencies. When they are absent, return a finite in-repo fallback
+    based on the existing sharpness and high-frequency signals so the quality
+    report still exposes a stable no-reference factor.
+    """
+    try:
+        import piq  # type: ignore[import-not-found]
+        import torch  # type: ignore[import-not-found]
+
+        arr = np.asarray(img.convert("RGB").resize((256, 256)), dtype=np.float32) / 255.0
+        tensor = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
+        score = float(piq.brisque(tensor, data_range=1.0).item())
+        if np.isfinite(score):
+            return score, "brisque"
+    except Exception:
+        pass
+
+    lap = measure_laplacian_variance(img)
+    fft = measure_fft_highfreq_ratio(img)
+    # Higher is better, roughly 0..100 for typical local images.
+    score = min(100.0, (np.log1p(lap) * 8.0) + (fft * 2500.0))
+    return float(score), "sharpness_fft_fallback"
+
+
+def measure_color_depth_bits(img: Image.Image) -> int:
+    """Estimate bits per color channel for the source image."""
+    if img.mode in {"1"}:
+        return 1
+    if img.mode in {"L", "P"}:
+        return 8
+    if img.mode in {"I;16", "I;16B", "I;16L"}:
+        return 16
+    return 8
+
+
+def measure_observed_gamut_coverage(img: Image.Image, max_dim: int = 512) -> float:
+    """Estimate normalized RGB gamut occupancy from robust channel spans."""
+    rgb = img.convert("RGB")
+    if max(rgb.size) > max_dim:
+        ratio = max_dim / max(rgb.size)
+        rgb = rgb.resize((int(rgb.size[0] * ratio), int(rgb.size[1] * ratio)), Image.Resampling.BOX)
+    arr = np.asarray(rgb, dtype=np.float32).reshape(-1, 3)
+    low = np.percentile(arr, 1, axis=0)
+    high = np.percentile(arr, 99, axis=0)
+    spans = np.maximum(high - low, 0.0) / 255.0
+    return float(np.clip(np.prod(spans), 0.0, 1.0))
+
+
+def measure_ssim(master: Image.Image, rendered: Image.Image, max_dim: int = 512) -> float:
+    """Compute a small grayscale SSIM score without requiring scikit-image."""
+    left = master.convert("L")
+    right = rendered.convert("L")
+    if left.size != right.size:
+        right = right.resize(left.size, Image.Resampling.LANCZOS)
+    if max(left.size) > max_dim:
+        ratio = max_dim / max(left.size)
+        new_size = (int(left.size[0] * ratio), int(left.size[1] * ratio))
+        left = left.resize(new_size, Image.Resampling.LANCZOS)
+        right = right.resize(new_size, Image.Resampling.LANCZOS)
+
+    x = np.asarray(left, dtype=np.float64)
+    y = np.asarray(right, dtype=np.float64)
+    c1 = (0.01 * 255) ** 2
+    c2 = (0.03 * 255) ** 2
+    mux = x.mean()
+    muy = y.mean()
+    sigx = ((x - mux) ** 2).mean()
+    sigy = ((y - muy) ** 2).mean()
+    sigxy = ((x - mux) * (y - muy)).mean()
+    score = ((2 * mux * muy + c1) * (2 * sigxy + c2)) / (
+        (mux**2 + muy**2 + c1) * (sigx + sigy + c2)
+    )
+    return float(np.clip(score, -1.0, 1.0))
+
+
 # ---------------------------------------------------------------------------
 # Composite report + fitness
 # ---------------------------------------------------------------------------
@@ -234,6 +343,8 @@ def assess_fitness(report: QualityReport, devices: list[str] | None = None) -> d
                 f"fft_highfreq_ratio {report.fft_highfreq_ratio:.3f} "
                 f"< {thr['min_fft_highfreq_ratio']}"
             )
+        if report.color_depth_bits and report.color_depth_bits < thr["min_color_depth_bits"]:
+            warns.append(f"color depth {report.color_depth_bits} < {thr['min_color_depth_bits']}")
         if fails:
             fitness[dev] = "unfit"
         elif warns:
@@ -248,6 +359,7 @@ def quality_report(
     *,
     h_cm: float | None = None,
     w_cm: float | None = None,
+    rendered_path: Path | None = None,
     devices: list[str] | None = None,
 ) -> QualityReport:
     """Compute the full cheap-deterministic quality report for an image."""
@@ -265,6 +377,15 @@ def quality_report(
     rpt.jpeg_quality_factor = measure_jpeg_quality(path)
     rpt.laplacian_variance = measure_laplacian_variance(img)
     rpt.fft_highfreq_ratio = measure_fft_highfreq_ratio(img)
+    rpt.dpi_gate = assess_dpi_gate(rpt, devices=devices)
+    rpt.no_reference_quality_score, rpt.no_reference_quality_method = measure_no_reference_quality(
+        img
+    )
+    rpt.color_depth_bits = measure_color_depth_bits(img)
+    rpt.observed_gamut_coverage = measure_observed_gamut_coverage(img)
+    if rendered_path is not None:
+        with Image.open(rendered_path) as rendered:
+            rpt.ssim_render_fidelity = measure_ssim(img, rendered)
     rpt.fitness = assess_fitness(rpt, devices=devices)
 
     # Informational notes (advisory; don't gate fitness alone)
@@ -276,5 +397,7 @@ def quality_report(
         rpt.notes.append("no embedded ICC profile; treated as sRGB")
     if rpt.jpeg_quality_factor is not None and rpt.jpeg_quality_factor < 75:
         rpt.notes.append(f"low JPEG Q factor: {rpt.jpeg_quality_factor}")
+    if rpt.observed_gamut_coverage < 0.01:
+        rpt.notes.append("very narrow observed RGB gamut")
 
     return rpt
