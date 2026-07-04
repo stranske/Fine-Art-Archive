@@ -299,6 +299,49 @@ def test_rate_missing_work_404(
     assert r.status_code == 404
 
 
+def test_debug_log_rejects_oversized_event_without_append(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    debug_log = tmp_path / "ui_debug.log"
+    debug_log.write_text("existing\n", encoding="utf-8")
+    monkeypatch.setattr(api_main, "DEBUG_LOG", debug_log)
+    monkeypatch.setattr(api_main, "DEBUG_LOG_MAX_EVENT_BYTES", 64)
+
+    response = client.post(
+        "/debug/log",
+        json={"where": "companion", "info": {"message": "x" * 200}},
+    )
+
+    assert response.status_code == 413
+    assert debug_log.read_text(encoding="utf-8") == "existing\n"
+
+
+def test_debug_log_rotates_before_log_grows_unbounded(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    debug_log = tmp_path / "ui_debug.log"
+    debug_log.write_text("old line\n", encoding="utf-8")
+    monkeypatch.setattr(api_main, "DEBUG_LOG", debug_log)
+    monkeypatch.setattr(api_main, "DEBUG_LOG_MAX_BYTES", debug_log.stat().st_size + 20)
+    monkeypatch.setattr(api_main, "DEBUG_LOG_MAX_EVENT_BYTES", 1024)
+
+    response = client.post(
+        "/debug/log",
+        json={"where": "companion", "info": {"message": "new line"}},
+    )
+
+    rotated = debug_log.with_suffix(".log.1")
+    assert response.status_code == 200
+    assert rotated.read_text(encoding="utf-8") == "old line\n"
+    current = debug_log.read_text(encoding="utf-8")
+    assert '"where": "companion"' in current
+    assert '"message": "new line"' in current
+
+
 def test_variant_upgrade_decision_rejects_unknown_work_without_append(
     client: TestClient,
     tmp_path: Path,

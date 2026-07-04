@@ -689,6 +689,8 @@ def rate_work(work_id: str, body: RatingIn) -> dict:
 # without needing a working browser-side debugger. Append-only, gitignored.
 # --------------------------------------------------------------------------
 DEBUG_LOG = REPO_ROOT / "automation_logs" / "ui_debug.log"
+DEBUG_LOG_MAX_BYTES = 256 * 1024
+DEBUG_LOG_MAX_EVENT_BYTES = 16 * 1024
 
 
 class DebugIn(BaseModel):
@@ -699,8 +701,17 @@ class DebugIn(BaseModel):
 @app.post("/debug/log")
 def debug_log(body: DebugIn) -> dict:
     DEBUG_LOG.parent.mkdir(parents=True, exist_ok=True)
-    line = json.dumps({"ts": _now(), "where": body.where, **body.info}, ensure_ascii=False)
-    with open(DEBUG_LOG, "a") as f:
+    event = {"ts": _now(), "where": body.where, **body.info}
+    line = json.dumps(event, ensure_ascii=False)
+    line_bytes = len((line + "\n").encode("utf-8"))
+    if line_bytes > DEBUG_LOG_MAX_EVENT_BYTES:
+        raise HTTPException(413, "debug log event exceeds size limit")
+    if DEBUG_LOG.exists() and DEBUG_LOG.stat().st_size + line_bytes > DEBUG_LOG_MAX_BYTES:
+        rotated = DEBUG_LOG.with_suffix(".log.1")
+        if rotated.exists():
+            rotated.unlink()
+        DEBUG_LOG.replace(rotated)
+    with open(DEBUG_LOG, "a", encoding="utf-8") as f:
         f.write(line + "\n")
     return {"ok": True}
 
