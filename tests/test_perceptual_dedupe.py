@@ -2,9 +2,9 @@
 
 The DINOv2 vision stage (scripts/visual_dedupe.py) needs torch + real archive
 masters and is validated operationally via its `smoketest` subcommand in the
-.faa-venv — not here. These tests cover the pure, dependency-light perceptual
-hashing in scripts/perceptual_dedupe.py (PIL + stdlib only) so it stays correct
-under the Gate.
+.faa-venv — not here. These tests cover the dependency-light perceptual hashing
+in scripts/perceptual_dedupe.py (Pillow + imagehash) so it stays correct under
+the Gate.
 """
 
 from __future__ import annotations
