@@ -15,6 +15,7 @@ from fine_art_archive.collect.quality import (  # noqa: E402
     DEVICE_THRESHOLDS,
     QualityReport,
     assess_fitness,
+    measure_observed_gamut_coverage,
     measure_ssim,
     quality_report,
 )
@@ -122,7 +123,7 @@ def test_generated_image_quality_report_extracts_jpeg_metrics(tmp_path):
     }
     assert r.no_reference_quality_score is not None
     assert np.isfinite(r.no_reference_quality_score)
-    assert r.no_reference_quality_method in {"brisque", "sharpness_fft_fallback"}
+    assert r.no_reference_quality_method in {"brisque_normalized", "sharpness_fft_fallback"}
     assert r.color_depth_bits == 8
     assert 0.0 <= r.observed_gamut_coverage <= 1.0
     assert r.fitness == {
@@ -199,14 +200,18 @@ def test_fitness_unfit_for_low_resolution():
 def test_dpi_gate_passes_adequate_and_fails_under_resolution(tmp_path):
     small = tmp_path / "small.jpg"
     large = tmp_path / "large.jpg"
+    panorama = tmp_path / "panorama.jpg"
     Image.new("RGB", (800, 600), "white").save(small, quality=90)
     Image.new("RGB", (1700, 1200), "white").save(large, quality=90)
+    Image.new("RGB", (2000, 600), "white").save(panorama, quality=90)
 
     small_report = quality_report(small, devices=["pimoroni_inky_13_3"])
     large_report = quality_report(large, devices=["pimoroni_inky_13_3"])
+    panorama_report = quality_report(panorama, devices=["pimoroni_inky_13_3"])
 
     assert small_report.dpi_gate["pimoroni_inky_13_3"] == "fail"
     assert large_report.dpi_gate["pimoroni_inky_13_3"] == "pass"
+    assert panorama_report.dpi_gate["pimoroni_inky_13_3"] == "fail"
 
 
 def test_ssim_render_fidelity_identical_and_degraded(tmp_path):
@@ -228,7 +233,8 @@ def test_ssim_render_fidelity_identical_and_degraded(tmp_path):
     assert identical.ssim_render_fidelity == pytest.approx(1.0)
     assert degraded_report.ssim_render_fidelity is not None
     assert degraded_report.ssim_render_fidelity < 0.5
-    assert measure_ssim(Image.open(base), Image.open(same)) == pytest.approx(1.0)
+    with Image.open(base) as base_img, Image.open(same) as same_img:
+        assert measure_ssim(base_img, same_img) == pytest.approx(1.0)
 
 
 def test_quality_report_populates_color_depth_and_gamut(tmp_path):
@@ -240,6 +246,23 @@ def test_quality_report_populates_color_depth_and_gamut(tmp_path):
     assert r.observed_gamut_coverage > 0.05
     assert r.no_reference_quality_score is not None
     assert np.isfinite(r.no_reference_quality_score)
+
+
+def test_observed_gamut_penalizes_grayscale_correlation(tmp_path):
+    color_path = tmp_path / "color.png"
+    gray_path = tmp_path / "gray.png"
+    yy, xx = np.mgrid[0:128, 0:128]
+    color = np.zeros((128, 128, 3), dtype=np.uint8)
+    color[..., 0] = ((xx * 2) % 256).astype(np.uint8)
+    color[..., 1] = ((yy * 2) % 256).astype(np.uint8)
+    color[..., 2] = (((xx + yy) * 3) % 256).astype(np.uint8)
+    gray = np.repeat(((xx * 2) % 256).astype(np.uint8)[..., None], 3, axis=2)
+    Image.fromarray(color).save(color_path)
+    Image.fromarray(gray).save(gray_path)
+
+    with Image.open(color_path) as color_img, Image.open(gray_path) as gray_img:
+        assert measure_observed_gamut_coverage(color_img) > 0.05
+        assert measure_observed_gamut_coverage(gray_img) < 0.01
 
 
 def test_fitness_unfit_for_suspected_upscale():
@@ -280,5 +303,6 @@ def test_device_thresholds_present():
         assert dev in DEVICE_THRESHOLDS
         thr = DEVICE_THRESHOLDS[dev]
         assert "min_long_edge_px" in thr
+        assert "min_short_edge_px" in thr
         assert "min_jpeg_q" in thr
         assert "min_fft_highfreq_ratio" in thr

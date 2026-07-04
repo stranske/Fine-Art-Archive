@@ -53,42 +53,49 @@ from PIL import Image
 DEVICE_THRESHOLDS: dict[str, dict] = {
     "inkposter_tela_28_5": {
         "min_long_edge_px": 3060,
+        "min_short_edge_px": 2160,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0015,
         "min_color_depth_bits": 8,
     },
     "hisense_canvastv": {
         "min_long_edge_px": 3840,
+        "min_short_edge_px": 2160,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0012,
         "min_color_depth_bits": 8,
     },
     "samsung_frame": {
         "min_long_edge_px": 3840,
+        "min_short_edge_px": 2160,
         "min_jpeg_q": 75,
         "min_fft_highfreq_ratio": 0.0012,
         "min_color_depth_bits": 8,
     },
     "pimoroni_inky_13_3": {
         "min_long_edge_px": 1600,
+        "min_short_edge_px": 1200,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
         "min_color_depth_bits": 8,
     },
     "meural_landscape": {
         "min_long_edge_px": 1920,
+        "min_short_edge_px": 1080,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
         "min_color_depth_bits": 8,
     },
     "meural_portrait": {
         "min_long_edge_px": 1920,
+        "min_short_edge_px": 1080,
         "min_jpeg_q": 70,
         "min_fft_highfreq_ratio": 0.0010,
         "min_color_depth_bits": 8,
     },
     "archival_a2_print": {
         "min_long_edge_px": 7016,  # 300 DPI at A2
+        "min_short_edge_px": 4960,
         "min_jpeg_q": 85,
         "min_fft_highfreq_ratio": 0.0020,
         "min_color_depth_bits": 8,
@@ -231,7 +238,9 @@ def assess_dpi_gate(report: QualityReport, devices: list[str] | None = None) -> 
         thr = DEVICE_THRESHOLDS.get(dev)
         if not thr:
             continue
-        gate[dev] = "pass" if report.long_edge_px >= thr["min_long_edge_px"] else "fail"
+        long_ok = report.long_edge_px >= thr["min_long_edge_px"]
+        short_ok = report.short_edge_px >= thr.get("min_short_edge_px", 0)
+        gate[dev] = "pass" if long_ok and short_ok else "fail"
     return gate
 
 
@@ -249,10 +258,12 @@ def measure_no_reference_quality(img: Image.Image) -> tuple[float | None, str | 
 
         arr = np.asarray(img.convert("RGB").resize((256, 256)), dtype=np.float32) / 255.0
         tensor = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
-        score = float(piq.brisque(tensor, data_range=1.0).item())
-        if np.isfinite(score):
-            return score, "brisque"
-    except Exception:
+        brisque_score = float(piq.brisque(tensor, data_range=1.0).item())
+        if np.isfinite(brisque_score):
+            # BRISQUE is lower-is-better. Report a stable higher-is-better
+            # quality score so callers can compare methods consistently.
+            return float(np.clip(100.0 - brisque_score, 0.0, 100.0)), "brisque_normalized"
+    except ImportError:
         pass
 
     lap = measure_laplacian_variance(img)
@@ -283,7 +294,16 @@ def measure_observed_gamut_coverage(img: Image.Image, max_dim: int = 512) -> flo
     low = np.percentile(arr, 1, axis=0)
     high = np.percentile(arr, 99, axis=0)
     spans = np.maximum(high - low, 0.0) / 255.0
-    return float(np.clip(np.prod(spans), 0.0, 1.0))
+    span_volume = float(np.prod(spans))
+    if span_volume < 1e-12:
+        return 0.0
+    if np.any(np.std(arr, axis=0) < 1e-9):
+        channel_independence = 0.0
+    else:
+        corr = np.corrcoef(arr, rowvar=False)
+        upper = np.abs(corr[np.triu_indices(3, k=1)])
+        channel_independence = float(1.0 - np.mean(upper))
+    return float(np.clip(span_volume * channel_independence, 0.0, 1.0))
 
 
 def measure_ssim(master: Image.Image, rendered: Image.Image, max_dim: int = 512) -> float:
@@ -333,6 +353,9 @@ def assess_fitness(report: QualityReport, devices: list[str] | None = None) -> d
             fails.append(f"long edge {report.long_edge_px} < {thr['min_long_edge_px']}")
         elif report.long_edge_px < thr["min_long_edge_px"] * 1.1:
             warns.append("long edge near minimum")
+        min_short_edge = thr.get("min_short_edge_px")
+        if min_short_edge and report.short_edge_px < min_short_edge:
+            fails.append(f"short edge {report.short_edge_px} < {min_short_edge}")
         if (
             report.jpeg_quality_factor is not None
             and report.jpeg_quality_factor < thr["min_jpeg_q"]
@@ -364,28 +387,29 @@ def quality_report(
 ) -> QualityReport:
     """Compute the full cheap-deterministic quality report for an image."""
     path = Path(image_path)
-    img = Image.open(path)
     rpt = QualityReport()
-    rpt.long_edge_px, rpt.short_edge_px, rpt.px_per_cm_long = measure_resolution(
-        img, h_cm=h_cm, w_cm=w_cm
-    )
-    rpt.pixel_area_mp = (img.size[0] * img.size[1]) / 1e6
-    rpt.bytes_per_megapixel = measure_bytes_per_megapixel(
-        path.stat().st_size, img.size[0], img.size[1]
-    )
-    rpt.icc_profile_present, rpt.icc_profile_bytes = measure_icc(img)
-    rpt.jpeg_quality_factor = measure_jpeg_quality(path)
-    rpt.laplacian_variance = measure_laplacian_variance(img)
-    rpt.fft_highfreq_ratio = measure_fft_highfreq_ratio(img)
-    rpt.dpi_gate = assess_dpi_gate(rpt, devices=devices)
-    rpt.no_reference_quality_score, rpt.no_reference_quality_method = measure_no_reference_quality(
-        img
-    )
-    rpt.color_depth_bits = measure_color_depth_bits(img)
-    rpt.observed_gamut_coverage = measure_observed_gamut_coverage(img)
-    if rendered_path is not None:
-        with Image.open(rendered_path) as rendered:
-            rpt.ssim_render_fidelity = measure_ssim(img, rendered)
+    with Image.open(path) as img:
+        rpt.long_edge_px, rpt.short_edge_px, rpt.px_per_cm_long = measure_resolution(
+            img, h_cm=h_cm, w_cm=w_cm
+        )
+        rpt.pixel_area_mp = (img.size[0] * img.size[1]) / 1e6
+        rpt.bytes_per_megapixel = measure_bytes_per_megapixel(
+            path.stat().st_size, img.size[0], img.size[1]
+        )
+        rpt.icc_profile_present, rpt.icc_profile_bytes = measure_icc(img)
+        rpt.jpeg_quality_factor = measure_jpeg_quality(path)
+        rpt.laplacian_variance = measure_laplacian_variance(img)
+        rpt.fft_highfreq_ratio = measure_fft_highfreq_ratio(img)
+        rpt.dpi_gate = assess_dpi_gate(rpt, devices=devices)
+        (
+            rpt.no_reference_quality_score,
+            rpt.no_reference_quality_method,
+        ) = measure_no_reference_quality(img)
+        rpt.color_depth_bits = measure_color_depth_bits(img)
+        rpt.observed_gamut_coverage = measure_observed_gamut_coverage(img)
+        if rendered_path is not None:
+            with Image.open(rendered_path) as rendered:
+                rpt.ssim_render_fidelity = measure_ssim(img, rendered)
     rpt.fitness = assess_fitness(rpt, devices=devices)
 
     # Informational notes (advisory; don't gate fitness alone)
