@@ -1367,7 +1367,7 @@
                ${last ? `<div class="sub last-rated-sub" style="margin-top:8px">Last rated ${last.ts} · ${lastQ != null || lastF != null ? `Q${lastQ ?? "—"}·F${lastF ?? "—"}` : (lastR != null ? "(legacy) " + ratingLabel(lastR) : "")}${last.selected_reasons?.length ? " · " + last.selected_reasons.join(", ") : ""}${last.notes ? ` · "${last.notes.replace(/"/g,'&quot;').slice(0,80)}"` : ""}</div>` : ""}
              </div>
 
-             <details class="rate-section" id="rs-history">
+             <details class="rate-section" id="rs-history" open>
                <summary class="rate-section-summary">Rating history</summary>
                <div id="rating-history" class="sub">…</div>
              </details>

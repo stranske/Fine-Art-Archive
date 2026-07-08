@@ -197,6 +197,13 @@ def test_work_ratings_shape(client: TestClient) -> None:
     assert body["ratings"] == []
 
 
+def test_rating_history_detail_section_is_visible_by_default(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    assert '<details class="rate-section" id="rs-history" open>' in r.text
+    assert '<div id="rating-history" class="sub">' in r.text
+
+
 def test_rate_work_write_path(
     client: TestClient,
     isolated_ratings_log,
