@@ -9,6 +9,7 @@ which exercises the data-store layer directly.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -195,6 +196,13 @@ def test_work_ratings_shape(client: TestClient) -> None:
     body = r.json()
     assert body["work_id"] == "any-wid"
     assert body["ratings"] == []
+
+
+def test_rating_history_detail_section_is_visible_by_default(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    assert re.search(r'<details\b(?=[^>]*\bid="rs-history")(?=[^>]*\bopen\b)[^>]*>', r.text)
+    assert re.search(r'<div\b(?=[^>]*\bid="rating-history")(?=[^>]*\bclass="sub")[^>]*>', r.text)
 
 
 def test_rate_work_write_path(
