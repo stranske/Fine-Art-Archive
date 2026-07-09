@@ -30,7 +30,28 @@
         "string",
         "null"
       ],
-      "description": "Top-level work category written by the acquisition pipeline (e.g. 'painting', 'photography', 'print', 'drawing', 'sculpture')."
+      "enum": [
+        "painting",
+        "drawing",
+        "print",
+        "sculpture",
+        "photograph",
+        "illuminated_manuscript",
+        "fresco",
+        "mural",
+        "tapestry",
+        "altarpiece",
+        "icon",
+        "architecture",
+        "stained_glass",
+        "mosaic",
+        "monument",
+        "architectural_sculpture",
+        "other",
+        null
+      ],
+      "default": null,
+      "description": "Top-level work category written by the acquisition pipeline. The SITE-ANCHORED class is a DERIVED predicate (not stored): category in {architecture, stained_glass, mosaic, monument, architectural_sculpture} marks an in-situ, place-bound object whose identity anchors on the `site` block rather than `artist`. See site_anchored_category_design.md."
     },
     "subject": {
       "type": [
@@ -292,6 +313,71 @@
             "null"
           ],
           "format": "uri"
+        }
+      }
+    },
+    "site": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Place anchor for site-anchored / in-situ works (architecture, stained glass, mosaics, monuments) whose identity is the PLACE + element, not a creator. For these, `artist.relation` is typically 'anonymous' and verification gates on the Commons reference SET in `commons_category` (DINOv2 cosine), not a single P18 pHash. See site_anchored_category_design.md.",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Human-readable site name, e.g. 'Chartres Cathedral'."
+        },
+        "wikidata_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID of the site/building (e.g. Q188527 for Chartres Cathedral)."
+        },
+        "element": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The specific element within the site, e.g. 'South rose window'. The work_id is keyed on (site, element) so multiple captures collapse into one work."
+        },
+        "element_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID of the element, when separately catalogued."
+        },
+        "commons_category": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Wikimedia Commons category used as the verify reference SET, e.g. 'Category:Rose windows of Chartres Cathedral'."
+        },
+        "coordinates": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "P625 coordinates as 'lat,lon'."
+        },
+        "depicts_q": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "pattern": "^Q[0-9]+$"
+          },
+          "description": "Wikidata 'depicts' (P180) Q-IDs."
         }
       }
     },
