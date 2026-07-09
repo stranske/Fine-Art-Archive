@@ -306,9 +306,10 @@ def invalidate_ratings_cache() -> None:
 
 def append_rating(event: dict) -> None:
     """Append a rating event and invalidate cached rating reads."""
+    payload = json.dumps(event, ensure_ascii=False, allow_nan=False)
     RATINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(RATINGS_LOG, "a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+        handle.write(payload + "\n")
     invalidate_ratings_cache()
 
 

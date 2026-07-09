@@ -8,6 +8,7 @@ Parquet rollup later can read these straight in.
 from __future__ import annotations
 
 import json
+import math
 import os
 import stat
 import tempfile
@@ -15,9 +16,12 @@ import threading
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, ValidationError
 
 from . import store
@@ -38,6 +42,28 @@ app = FastAPI(
     description="Browse + rate the canonical Fine Art Archive.",
     version="0.2.0",
 )
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, BaseException):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    _request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"detail": jsonable_encoder(_json_safe(exc.errors()))},
+    )
 
 
 def _now() -> str:
@@ -603,12 +629,14 @@ class RatingIn(BaseModel):
         default=None,
         ge=1,
         le=10,
+        strict=True,
         description="1-N (N from active scheme), 'how good this is as art'",
     )
     fit: int | None = Field(
         default=None,
         ge=1,
         le=10,
+        strict=True,
         description="1-N (N from active scheme), 'want to see this in rotation'",
     )
     rating: int | None = Field(
@@ -628,6 +656,8 @@ class RatingIn(BaseModel):
     )
     dwell_seconds: float | None = Field(
         default=None,
+        ge=0,
+        allow_inf_nan=False,
         description="Seconds on the work before rating (signal, not ground truth)",
     )
     notes: str = Field(
