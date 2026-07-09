@@ -11,7 +11,10 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from fine_art_archive import sidecar  # noqa: E402
-from fine_art_archive.collect.verify import verify_place_object  # noqa: E402
+from fine_art_archive.collect.verify import (  # noqa: E402
+    check_place_object_similarity,
+    verify_place_object,
+)
 
 
 def _minimal_meta() -> dict[str, Any]:
@@ -189,3 +192,38 @@ def test_place_object_verify_fails_without_commons_anchor(tmp_path):
     assert report.overall == "FAIL"
     assert report.checks[0].name == "site_identity"
     assert report.checks[0].status == "FAIL"
+
+
+def test_place_object_verify_fails_when_embedding_backend_unavailable(tmp_path, monkeypatch):
+    meta = _minimal_meta()
+    reference = _save(tmp_path / "commons-reference.png", _rose_window())
+    candidate = _save(tmp_path / "candidate.png", _alternate_view(_rose_window()))
+
+    def fail_backend_load():
+        raise RuntimeError("offline model cache")
+
+    monkeypatch.setattr(
+        "fine_art_archive.collect.verify._load_open_clip_backend", fail_backend_load
+    )
+
+    report = verify_place_object(meta=meta, candidate_path=candidate, reference_paths=[reference])
+
+    assert report.overall == "FAIL"
+    assert report.checks[-1].name == "site_embedding_similarity"
+    assert report.checks[-1].status == "FAIL"
+    assert "offline model cache" in report.checks[-1].message
+
+
+def test_place_object_similarity_fails_on_unreadable_candidate(tmp_path):
+    reference = _save(tmp_path / "commons-reference.png", _rose_window())
+    candidate = tmp_path / "candidate.png"
+    candidate.write_text("not an image", encoding="utf-8")
+
+    result = check_place_object_similarity(
+        candidate_path=candidate,
+        reference_paths=[reference],
+        embedding_backend=_shape_embedding,
+    )
+
+    assert result.status == "FAIL"
+    assert "failed to load candidate image" in result.message
