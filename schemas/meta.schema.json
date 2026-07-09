@@ -381,6 +381,54 @@
         }
       }
     },
+    "depicts": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Structured depicted subject identity, separate from the capture/site anchor. Use for place-bound works where the capture is an alternate view of the same place object.",
+      "properties": {
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wikidata_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$"
+        },
+        "hierarchy": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "wikidata_q": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^Q[0-9]+$"
+              }
+            }
+          }
+        }
+      }
+    },
     "rights": {
       "type": [
         "object",
@@ -533,6 +581,7 @@
                   "portrait-crop",
                   "landscape-crop",
                   "eink-render",
+                  "place-capture",
                   "thumbnail",
                   "duplicate-copy",
                   "unknown"

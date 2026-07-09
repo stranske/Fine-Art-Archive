@@ -24,6 +24,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
 
+from fine_art_archive import sidecar
+
 VerifyStatus = Literal["PASS", "FAIL", "SKIP", "UNVERIFIED"]
 
 
@@ -338,6 +340,161 @@ def check_embedding_similarity(
         detail=detail,
         message=f"embedding cosine {similarity:.3f} below {threshold}",
     )
+
+
+def check_site_identity(meta: dict) -> CheckResult:
+    """Hard gate for place-bound works before image-set verification."""
+    site = meta.get("site") or {}
+    if not sidecar.is_site_anchored(meta):
+        return CheckResult(
+            name="site_identity",
+            status="FAIL",
+            detail={"category": meta.get("category")},
+            message="category is not site-anchored",
+        )
+    if not (site.get("wikidata_q") or site.get("element_q")):
+        return CheckResult(
+            name="site_identity",
+            status="FAIL",
+            message="site.wikidata_q or site.element_q is required",
+        )
+    commons_category = site.get("commons_category")
+    if not commons_category:
+        return CheckResult(
+            name="site_identity",
+            status="FAIL",
+            message="site.commons_category is required for place-object verification",
+        )
+    return CheckResult(
+        name="site_identity",
+        status="PASS",
+        detail={
+            "site_q": site.get("wikidata_q"),
+            "element_q": site.get("element_q"),
+            "commons_category": commons_category,
+        },
+        message="site identity has Wikidata/Commons anchors",
+    )
+
+
+def check_place_object_similarity(
+    *,
+    candidate_path: Path,
+    reference_paths: Sequence[Path],
+    threshold: float = 0.55,
+    embedding_backend: EmbeddingBackend | None = None,
+) -> CheckResult:
+    """Compare a place-object capture against a Commons category reference set."""
+    if not reference_paths:
+        return CheckResult(
+            name="site_embedding_similarity",
+            status="FAIL",
+            detail={"threshold": threshold, "reference_count": 0},
+            message="no Commons category reference images supplied",
+        )
+    if embedding_backend is None:
+        try:
+            embedding_backend = _load_open_clip_backend()
+        except ImportError as exc:
+            dependency = exc.name or str(exc) or exc.__class__.__name__
+            return CheckResult(
+                name="site_embedding_similarity",
+                status="FAIL",
+                detail={"threshold": threshold, "reference_count": len(reference_paths)},
+                message=f"embedding backend unavailable: {dependency}",
+            )
+        except Exception as exc:
+            return CheckResult(
+                name="site_embedding_similarity",
+                status="FAIL",
+                detail={"threshold": threshold, "reference_count": len(reference_paths)},
+                message=f"embedding backend failed to load: {exc}",
+            )
+
+    try:
+        with _open_exif_transposed_image(candidate_path) as candidate_img:
+            candidate_vec = embedding_backend(candidate_img.convert("RGB"))
+    except OSError as exc:
+        return CheckResult(
+            name="site_embedding_similarity",
+            status="FAIL",
+            detail={"threshold": threshold, "candidate": str(candidate_path)},
+            message=f"failed to load candidate image: {exc}",
+        )
+
+    scores: list[dict[str, float | str]] = []
+    best_score = -1.0
+    best_path = ""
+    for reference_path in reference_paths:
+        try:
+            with _open_exif_transposed_image(reference_path) as reference_img:
+                reference_vec = embedding_backend(reference_img.convert("RGB"))
+        except OSError as exc:
+            return CheckResult(
+                name="site_embedding_similarity",
+                status="FAIL",
+                detail={"threshold": threshold, "reference": str(reference_path)},
+                message=f"failed to load reference image: {exc}",
+            )
+        try:
+            score = _cosine_similarity(candidate_vec, reference_vec)
+        except ValueError as exc:
+            return CheckResult(
+                name="site_embedding_similarity",
+                status="FAIL",
+                detail={"threshold": threshold, "reference": str(reference_path)},
+                message=str(exc),
+            )
+        rounded = round(score, 4)
+        scores.append({"reference": str(reference_path), "cosine_similarity": rounded})
+        if score > best_score:
+            best_score = score
+            best_path = str(reference_path)
+
+    detail = {
+        "threshold": threshold,
+        "reference_count": len(reference_paths),
+        "best_reference": best_path,
+        "best_cosine_similarity": round(best_score, 4),
+        "scores": scores,
+    }
+    if best_score >= threshold:
+        return CheckResult(
+            name="site_embedding_similarity",
+            status="PASS",
+            detail=detail,
+            message=f"best Commons-category cosine {best_score:.3f}",
+        )
+    return CheckResult(
+        name="site_embedding_similarity",
+        status="FAIL",
+        detail=detail,
+        message=f"best Commons-category cosine {best_score:.3f} below {threshold}",
+    )
+
+
+def verify_place_object(
+    *,
+    meta: dict,
+    candidate_path: Path,
+    reference_paths: Sequence[Path],
+    threshold: float = 0.55,
+    embedding_backend: EmbeddingBackend | None = None,
+) -> VerificationReport:
+    """Verify a site-anchored object against its Commons category image set."""
+    report = VerificationReport()
+    identity_result = check_site_identity(meta)
+    report.checks.append(identity_result)
+    if identity_result.status == "PASS":
+        report.checks.append(
+            check_place_object_similarity(
+                candidate_path=candidate_path,
+                reference_paths=reference_paths,
+                threshold=threshold,
+                embedding_backend=embedding_backend,
+            )
+        )
+    return report
 
 
 def check_color_distance(
