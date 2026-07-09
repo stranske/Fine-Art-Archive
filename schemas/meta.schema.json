@@ -444,6 +444,24 @@
             "null"
           ]
         },
+        "ulan": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aat": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tgn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "museum_accession": {
           "type": [
             "string",

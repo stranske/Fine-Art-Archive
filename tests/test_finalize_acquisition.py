@@ -83,7 +83,7 @@ def test_run_finalize_writes_source_quality_inputs(tmp_path: Path) -> None:
     }
     (tmp_path / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
 
-    finalized = fa.run_finalize(tmp_path, refetch_master_hash=True)
+    finalized = fa.run_finalize(tmp_path, refetch_master_hash=True, enrich_getty=False)
 
     inputs = finalized["verification"]["source_quality_inputs"]
     assert set(inputs) == {"verify_match", "phash_match", "aspect_match", "dim_match"}
@@ -91,3 +91,44 @@ def test_run_finalize_writes_source_quality_inputs(tmp_path: Path) -> None:
     assert inputs["aspect_match"] is True
     assert inputs["phash_match"] is None
     assert inputs["dim_match"] is None
+
+
+def test_run_finalize_can_apply_getty_enrichment(tmp_path: Path, monkeypatch) -> None:
+    _make_jpeg(tmp_path / "master.jpg", w=400, h=300)
+    meta = {
+        "work_id": "0000000-landscape-fixture",
+        "schema_version": "1.0",
+        "artist": {"name": "Fixture Artist"},
+        "title": "Landscape Fixture",
+        "dimensions_original": {"h_cm": 30.0, "w_cm": 40.0},
+        "stable_identifiers": {"wikidata_q": None},
+        "files": {
+            "master": {
+                "filename": "master.jpg",
+                "sha256": "0" * 64,
+                "size_bytes": 0,
+                "ingested_at": "2026-06-19T00:00:00+00:00",
+            }
+        },
+        "history": [
+            {
+                "ts": "2026-06-19T00:00:00+00:00",
+                "actor": "test",
+                "op": "create",
+            }
+        ],
+    }
+    (tmp_path / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+
+    def fake_enrich(meta: dict, *, timeout: int) -> dict:
+        enriched = json.loads(json.dumps(meta))
+        enriched.setdefault("stable_identifiers", {})["ulan"] = "http://vocab.getty.edu/ulan/1"
+        return enriched
+
+    monkeypatch.setattr(fa, "enrich_sidecar_getty", fake_enrich)
+
+    finalized = fa.run_finalize(tmp_path, refetch_master_hash=True, enrich_getty=True)
+
+    assert finalized["stable_identifiers"]["ulan"] == "http://vocab.getty.edu/ulan/1"
+    written = json.loads((tmp_path / "meta.json").read_text(encoding="utf-8"))
+    assert written["stable_identifiers"]["ulan"] == "http://vocab.getty.edu/ulan/1"
