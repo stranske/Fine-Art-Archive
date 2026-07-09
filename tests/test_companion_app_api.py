@@ -113,6 +113,72 @@ def test_queues(client: TestClient) -> None:
     assert "queues" in r.json()
 
 
+@pytest.mark.parametrize(
+    ("file_bytes", "expected_error"),
+    [
+        (b"{bad", "invalid_queue_json"),
+        (b"[]", "invalid_queue_shape"),
+        (b"\xff", "invalid_queue_file"),
+    ],
+)
+def test_invalid_queue_returns_partial_list_handled_detail_and_health_signal(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    file_bytes: bytes,
+    expected_error: str,
+) -> None:
+    queues_dir = tmp_path / "queues"
+    queues_dir.mkdir()
+    (queues_dir / "valid.json").write_text(
+        json.dumps({"name": "Valid", "description": "ok", "work_ids": ["w1"]}),
+        encoding="utf-8",
+    )
+    (queues_dir / "bad.json").write_bytes(file_bytes)
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+
+    queue_list = client.get("/queues")
+    queue_detail = client.get("/queues/bad")
+    health = client.get("/healthz")
+
+    assert queue_list.status_code == 200
+    assert queue_detail.status_code == 422
+    list_body = queue_list.json()
+    assert list_body["queues"] == [{"name": "Valid", "description": "ok", "n_works": 1}]
+    assert list_body["queues_invalid_count"] == 1
+    assert list_body["invalid_queues"][0]["error"] == expected_error
+    assert queue_detail.json()["detail"]["error"] == expected_error
+    assert queue_detail.json()["detail"]["file"] == "bad.json"
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    assert health.json()["queues_invalid_count"] == 1
+
+
+def test_queue_invalid_count_cache_reloads_when_files_change(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queues_dir = tmp_path / "queues"
+    queues_dir.mkdir()
+    (queues_dir / "bad.json").write_bytes(b"\xff")
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+
+    first_health = client.get("/healthz")
+    (queues_dir / "bad.json").write_text(
+        json.dumps({"name": "Fixed", "description": "", "work_ids": []}),
+        encoding="utf-8",
+    )
+    second_health = client.get("/healthz")
+
+    assert first_health.status_code == 200
+    assert first_health.json()["ok"] is False
+    assert first_health.json()["queues_invalid_count"] == 1
+    assert second_health.status_code == 200
+    assert second_health.json()["ok"] is True
+    assert second_health.json()["queues_invalid_count"] == 0
+
+
 def test_rating_taxonomy(client: TestClient) -> None:
     r = client.get("/rating_taxonomy")
     assert r.status_code == 200
