@@ -15,7 +15,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=None, help="Directory for manifest.json")
     parser.add_argument(
         "--base-url",
-        default=None,
+        required=True,
         help="Absolute IIIF manifest URL to use as the manifest id",
     )
     args = parser.parse_args()

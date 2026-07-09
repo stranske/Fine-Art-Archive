@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
+
+import pytest
 
 from fine_art_archive.iiif import emit_manifest, to_manifest
 
@@ -45,14 +48,19 @@ def _sidecar() -> dict[str, Any]:
 
 
 def test_manifest_has_iiif_presentation_v3_shape_and_canvas() -> None:
-    manifest = to_manifest(_sidecar())
+    manifest = to_manifest(
+        _sidecar(),
+        base_url="https://archive.example/iiif/4f3a2b8-after-the-bullfight-cassatt",
+    )
 
     assert manifest["@context"] == "http://iiif.io/api/presentation/3/context.json"
+    assert urlparse(manifest["id"]).scheme == "https"
     assert manifest["type"] == "Manifest"
     assert manifest["label"] == {"en": ["After the Bullfight"]}
     assert manifest["rights"] == "https://creativecommons.org/publicdomain/mark/1.0/"
 
     canvas = manifest["items"][0]
+    assert urlparse(canvas["id"]).scheme == "https"
     assert canvas["type"] == "Canvas"
     assert canvas["width"] == 640
     assert canvas["height"] == 825
@@ -69,7 +77,10 @@ def test_manifest_has_iiif_presentation_v3_shape_and_canvas() -> None:
 
 
 def test_manifest_metadata_carries_core_sidecar_fields() -> None:
-    manifest = to_manifest(_sidecar())
+    manifest = to_manifest(
+        _sidecar(),
+        base_url="https://archive.example/iiif/4f3a2b8-after-the-bullfight-cassatt",
+    )
 
     metadata = {item["label"]["en"][0]: item["value"]["en"][0] for item in manifest["metadata"]}
     assert metadata == {
@@ -79,6 +90,22 @@ def test_manifest_metadata_carries_core_sidecar_fields() -> None:
         "Holder": "Art Institute of Chicago",
         "Work ID": "4f3a2b8-after-the-bullfight-cassatt",
     }
+
+
+def test_manifest_rejects_missing_or_non_http_base_url() -> None:
+    with pytest.raises(ValueError, match="base_url is required"):
+        to_manifest(_sidecar())
+
+    with pytest.raises(ValueError, match="absolute HTTP"):
+        to_manifest(_sidecar(), base_url="urn:fine-art-archive:iiif:work")
+
+
+def test_manifest_rejects_non_positive_dimensions() -> None:
+    sidecar = _sidecar()
+    sidecar["files"]["master"]["dimensions_px"] = [640, 0]
+
+    with pytest.raises(ValueError, match="dimensions_px"):
+        to_manifest(sidecar, base_url="https://archive.example/iiif/work")
 
 
 def test_emit_manifest_writes_manifest_json(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from fine_art_archive import sidecar
 
@@ -56,11 +57,12 @@ def _master_dimensions(master: dict[str, Any]) -> tuple[int, int] | None:
         isinstance(dimensions, list)
         and len(dimensions) == 2
         and all(isinstance(value, int) for value in dimensions)
+        and all(value > 0 for value in dimensions)
     ):
         return dimensions[0], dimensions[1]
     width = master.get("width") or master.get("width_px")
     height = master.get("height") or master.get("height_px")
-    if isinstance(width, int) and isinstance(height, int):
+    if isinstance(width, int) and isinstance(height, int) and width > 0 and height > 0:
         return width, height
     return None
 
@@ -86,6 +88,16 @@ def _image_id(manifest_id: str, meta: dict[str, Any], master: dict[str, Any]) ->
     return f"{manifest_id}/files/{filename}"
 
 
+def _manifest_id(base_url: str | None) -> str:
+    if not base_url:
+        raise ValueError("base_url is required for IIIF Presentation 3.0 HTTP(S) ids")
+    manifest_id = base_url.rstrip("/")
+    parsed = urlparse(manifest_id)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("base_url must be an absolute HTTP(S) URL")
+    return manifest_id
+
+
 def to_manifest(meta: dict[str, Any], *, base_url: str | None = None) -> dict[str, Any]:
     """Build a minimal IIIF Presentation 3.0 manifest for one work sidecar."""
     work_id = _clean(meta.get("work_id")) or "unknown"
@@ -98,9 +110,7 @@ def to_manifest(meta: dict[str, Any], *, base_url: str | None = None) -> dict[st
         raise ValueError("files.master.dimensions_px must provide [width, height]")
     width, height = dimensions
 
-    manifest_id = (base_url.rstrip("/") if base_url else f"urn:fine-art-archive:iiif:{work_id}") + (
-        "" if base_url else ""
-    )
+    manifest_id = _manifest_id(base_url)
     canvas_id = f"{manifest_id}/canvas/master"
     annotation_page_id = f"{canvas_id}/page"
     annotation_id = f"{annotation_page_id}/annotation"
