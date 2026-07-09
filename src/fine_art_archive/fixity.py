@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import stat
+import tempfile
 from collections.abc import Iterable
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fine_art_archive import sidecar
 
@@ -48,10 +52,11 @@ class BagVerificationResult:
     checked: int
     mismatches: tuple[str, ...] = ()
     missing: tuple[str, ...] = ()
+    unexpected: tuple[str, ...] = ()
 
     @property
     def valid(self) -> bool:
-        return not self.mismatches and not self.missing
+        return not self.mismatches and not self.missing and not self.unexpected
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -60,6 +65,7 @@ class BagVerificationResult:
             "valid": self.valid,
             "mismatches": list(self.mismatches),
             "missing": list(self.missing),
+            "unexpected": list(self.unexpected),
         }
 
 
@@ -109,7 +115,12 @@ def _append_fixity_event(
     *,
     actor: str,
 ) -> dict[str, Any]:
-    verification = meta.setdefault("verification", {})
+    verification = (
+        cast(dict[str, Any], meta["verification"])
+        if isinstance(meta.get("verification"), dict)
+        else {}
+    )
+    meta["verification"] = verification
     events = verification.setdefault("fixity_events", [])
     events.append(event)
     sidecar.merge_history(
@@ -124,6 +135,46 @@ def _append_fixity_event(
     return meta
 
 
+@contextmanager
+def _sidecar_file_lock(path: Path):
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a") as lock_file:
+        try:
+            import fcntl
+
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            yield
+        finally:
+            with suppress(NameError, OSError):
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
+def _write_sidecar_atomic(path: Path, meta: dict[str, Any]) -> None:
+    sidecar.validate(meta)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(meta, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+        if path.exists():
+            tmp_path.chmod(stat.S_IMODE(path.stat().st_mode))
+        os.replace(tmp_path, path)
+    except Exception:
+        tmp_path.unlink(missing_ok=True)
+        raise
+
+
+def _ensure_master_block(meta: dict[str, Any]) -> dict[str, Any]:
+    files = cast(dict[str, Any], meta["files"]) if isinstance(meta.get("files"), dict) else {}
+    master = cast(dict[str, Any], files["master"]) if isinstance(files.get("master"), dict) else {}
+    meta["files"] = files
+    files["master"] = master
+    return master
+
+
 def verify_fixity(
     meta_path: Path | str,
     *,
@@ -134,29 +185,32 @@ def verify_fixity(
 ) -> FixityResult:
     """Re-hash a sidecar's master file and report whether it matches metadata."""
     meta_file = Path(meta_path)
-    meta = sidecar.load(meta_file)
-    resolved_master = (
-        Path(master_path) if master_path is not None else master_path_for_sidecar(meta_file, meta)
-    )
-    actual = sha256_file(resolved_master)
-    expected = ((meta.get("files") or {}).get("master") or {}).get("sha256")
-    result = FixityResult(
-        meta_path=meta_file,
-        master_path=resolved_master,
-        expected_sha256=expected,
-        actual_sha256=actual,
-    )
-
-    if record:
-        event = _fixity_event(
-            result,
-            verified_at=verified_at or utc_now(),
-            status="verified" if result.matched else "mismatch",
+    with _sidecar_file_lock(meta_file):
+        meta = sidecar.load(meta_file)
+        resolved_master = (
+            Path(master_path)
+            if master_path is not None
+            else master_path_for_sidecar(meta_file, meta)
         )
-        _append_fixity_event(meta, event, actor=actor)
-        sidecar.write(meta_file, meta, validate_first=False)
+        actual = sha256_file(resolved_master)
+        expected = ((meta.get("files") or {}).get("master") or {}).get("sha256")
+        result = FixityResult(
+            meta_path=meta_file,
+            master_path=resolved_master,
+            expected_sha256=expected,
+            actual_sha256=actual,
+        )
 
-    return result
+        if record:
+            event = _fixity_event(
+                result,
+                verified_at=verified_at or utc_now(),
+                status="verified" if result.matched else "mismatch",
+            )
+            _append_fixity_event(meta, event, actor=actor)
+            _write_sidecar_atomic(meta_file, meta)
+
+        return result
 
 
 def record_fixity(
@@ -168,24 +222,27 @@ def record_fixity(
 ) -> FixityResult:
     """Record the current master SHA-256 in the sidecar verification history."""
     meta_file = Path(meta_path)
-    meta = sidecar.load(meta_file)
-    resolved_master = (
-        Path(master_path) if master_path is not None else master_path_for_sidecar(meta_file, meta)
-    )
-    actual = sha256_file(resolved_master)
-    master = meta.setdefault("files", {}).setdefault("master", {})
-    expected = master.get("sha256")
-    master["sha256"] = actual
-    result = FixityResult(
-        meta_path=meta_file,
-        master_path=resolved_master,
-        expected_sha256=expected,
-        actual_sha256=actual,
-    )
-    event = _fixity_event(result, verified_at=verified_at or utc_now(), status="recorded")
-    _append_fixity_event(meta, event, actor=actor)
-    sidecar.write(meta_file, meta, validate_first=False)
-    return result
+    with _sidecar_file_lock(meta_file):
+        meta = sidecar.load(meta_file)
+        resolved_master = (
+            Path(master_path)
+            if master_path is not None
+            else master_path_for_sidecar(meta_file, meta)
+        )
+        actual = sha256_file(resolved_master)
+        master = _ensure_master_block(meta)
+        expected = master.get("sha256")
+        master["sha256"] = actual
+        result = FixityResult(
+            meta_path=meta_file,
+            master_path=resolved_master,
+            expected_sha256=expected,
+            actual_sha256=actual,
+        )
+        event = _fixity_event(result, verified_at=verified_at or utc_now(), status="recorded")
+        _append_fixity_event(meta, event, actor=actor)
+        _write_sidecar_atomic(meta_file, meta)
+        return result
 
 
 def _iter_files(root: Path) -> Iterable[Path]:
@@ -205,13 +262,37 @@ def _copy_payload(source_dirs: Iterable[Path], data_dir: Path) -> None:
         shutil.copytree(source, destination)
 
 
+def _payload_oxum(data_root: Path) -> tuple[int, int]:
+    files = list(_iter_files(data_root))
+    return sum(path.stat().st_size for path in files), len(files)
+
+
+def _safe_manifest_path(bag_root: Path, rel_path: str) -> Path | None:
+    payload_file = bag_root / rel_path
+    try:
+        payload_file.resolve().relative_to(bag_root.resolve())
+    except ValueError:
+        return None
+    return payload_file
+
+
+def _read_manifest_entries(manifest: Path) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        expected, rel_path = line.split(maxsplit=1)
+        entries.append((expected, rel_path.strip()))
+    return entries
+
+
 def create_bag(
     source_dirs: Iterable[Path | str],
     bag_dir: Path | str,
     *,
     payload_name: str = "works",
 ) -> Path:
-    """Create a minimal BagIt package and return the bag directory."""
+    """Create a dependency-free BagIt 0.97 package and return the bag directory."""
     bag_root = Path(bag_dir)
     if bag_root.exists() and any(bag_root.iterdir()):
         raise FileExistsError(f"bag directory must be empty: {bag_root}")
@@ -219,17 +300,20 @@ def create_bag(
     data_root = bag_root / "data" / payload_name
     _copy_payload((Path(source) for source in source_dirs), data_root)
 
+    data_dir = bag_root / "data"
     manifest_lines = []
-    for payload_file in _iter_files(bag_root / "data"):
+    for payload_file in _iter_files(data_dir):
         rel = payload_file.relative_to(bag_root).as_posix()
         manifest_lines.append(f"{sha256_file(payload_file)}  {rel}")
+    oxum_bytes, oxum_files = _payload_oxum(data_dir)
 
     (bag_root / "bagit.txt").write_text(
         f"BagIt-Version: {BAGIT_VERSION}\nTag-File-Character-Encoding: UTF-8\n",
         encoding="utf-8",
     )
     (bag_root / "bag-info.txt").write_text(
-        f"Bagging-Date: {datetime.now(UTC).date().isoformat()}\nPayload-Oxum: 0.0\n",
+        f"Bagging-Date: {datetime.now(UTC).date().isoformat()}\n"
+        f"Payload-Oxum: {oxum_bytes}.{oxum_files}\n",
         encoding="utf-8",
     )
     (bag_root / "manifest-sha256.txt").write_text(
@@ -248,13 +332,15 @@ def verify_bag(bag_dir: Path | str) -> BagVerificationResult:
 
     mismatches: list[str] = []
     missing: list[str] = []
+    unexpected: list[str] = []
     checked = 0
-    for line in manifest.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
+    manifest_entries = _read_manifest_entries(manifest)
+    manifest_paths = {rel_path for _, rel_path in manifest_entries}
+    for expected, rel_path in manifest_entries:
+        payload_file = _safe_manifest_path(bag_root, rel_path)
+        if payload_file is None:
+            mismatches.append(rel_path)
             continue
-        expected, rel_path = line.split(maxsplit=1)
-        rel_path = rel_path.strip()
-        payload_file = bag_root / rel_path
         if not payload_file.exists():
             missing.append(rel_path)
             continue
@@ -262,11 +348,19 @@ def verify_bag(bag_dir: Path | str) -> BagVerificationResult:
         if sha256_file(payload_file) != expected:
             mismatches.append(rel_path)
 
+    data_root = bag_root / "data"
+    if data_root.exists():
+        for payload_file in _iter_files(data_root):
+            rel_path = payload_file.relative_to(bag_root).as_posix()
+            if rel_path not in manifest_paths:
+                unexpected.append(rel_path)
+
     return BagVerificationResult(
         bag_dir=bag_root,
         checked=checked,
         mismatches=tuple(mismatches),
         missing=tuple(missing),
+        unexpected=tuple(unexpected),
     )
 
 
