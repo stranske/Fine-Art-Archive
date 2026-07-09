@@ -86,7 +86,9 @@ def _resolve_first_content_tag(subject: Any, *, timeout: int) -> str | None:
         return None
     for tag in tags:
         if isinstance(tag, str):
-            name = tag
+            name = _clean_string(tag)
+            if name is None:
+                continue
         elif isinstance(tag, dict):
             tag_name = _clean_string(tag.get("label") or tag.get("name"))
             qid = _clean_qid(tag.get("wikidata_q"))

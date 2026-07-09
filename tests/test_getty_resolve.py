@@ -120,6 +120,30 @@ def test_subject_and_site_reconcile_to_aat_and_tgn(monkeypatch):
     assert enriched["stable_identifiers"]["tgn"] == "http://vocab.getty.edu/tgn/7008038"
 
 
+def test_plain_string_content_tags_are_cleaned_before_reconcile(monkeypatch):
+    seen_urls: list[str] = []
+
+    def fake_urlopen(request, timeout):  # noqa: ANN001
+        url = request.full_url
+        seen_urls.append(url)
+        if "Special:EntityData/Q173223.json" in url:
+            return _Response({"entities": {"Q173223": {"claims": {}}}})
+        if "query%22%3A+%22Mary+Cassatt%22" in url:
+            return _Response({"q0": {"result": [{"id": "http://vocab.getty.edu/ulan/500030502"}]}})
+        if "query%22%3A+%22print%22" in url:
+            return _Response({"q0": {"result": [{"id": "http://vocab.getty.edu/aat/300041273"}]}})
+        raise AssertionError(url)
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    meta = _minimal_meta()
+    meta["subject"] = {"content_tags": ["   ", "  print  "]}
+
+    enriched = enrich_sidecar_getty(meta)
+
+    assert enriched["stable_identifiers"]["aat"] == "http://vocab.getty.edu/aat/300041273"
+    assert not any("%22+++%22" in url for url in seen_urls)
+
+
 def test_schema_allows_getty_stable_identifier_fields():
     schema_path = Path(__file__).resolve().parents[1] / "schemas" / "meta.schema.json"
     schema = json.loads(schema_path.read_text(encoding="utf-8"))

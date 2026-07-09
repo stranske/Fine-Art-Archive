@@ -29,6 +29,7 @@ import hashlib
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -39,9 +40,10 @@ from PIL import Image  # noqa: E402
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.collect.quality import quality_report  # noqa: E402
 from fine_art_archive.collect.verify import verify  # noqa: E402
+from fine_art_archive.identity import enrich_sidecar_getty  # noqa: E402
 
 
-def update_files_master_from_bytes(meta: dict, master_path: Path) -> None:
+def update_files_master_from_bytes(meta: dict[str, Any], master_path: Path) -> None:
     """Recompute and persist SHA-256, size, pixel dims, color profile."""
     sha = hashlib.sha256(master_path.read_bytes()).hexdigest()
     size = master_path.stat().st_size
@@ -59,7 +61,13 @@ def update_files_master_from_bytes(meta: dict, master_path: Path) -> None:
     meta["work_id"] = sidecar.derive_work_id(sha, slug)
 
 
-def run_finalize(work_dir: Path, *, refetch_master_hash: bool = True) -> dict:
+def run_finalize(
+    work_dir: Path,
+    *,
+    refetch_master_hash: bool = True,
+    enrich_getty: bool = True,
+    getty_timeout: int = 15,
+) -> dict[str, Any]:
     """Run verify + quality + fitness against the master in `work_dir`.
 
     Returns the updated meta dict. Writes meta.json on the caller's side.
@@ -116,6 +124,9 @@ def run_finalize(work_dir: Path, *, refetch_master_hash: bool = True) -> dict:
     meta["fitness"] = qd.pop("fitness")
     meta["quality"] = {**qd, "assessed_at": ts, "assessor_version": "1.0"}
 
+    if enrich_getty:
+        meta = enrich_sidecar_getty(meta, timeout=getty_timeout)
+
     # --- History event ----------------------------------------------------
     fit_summary = ", ".join(f"{k}:{v}" for k, v in meta["fitness"].items() if v != "unfit")
     history_event = {
@@ -137,14 +148,19 @@ def run_finalize(work_dir: Path, *, refetch_master_hash: bool = True) -> dict:
     return meta
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("work_dir", type=Path, help="Path to samples/<work_id>/")
+    ap.add_argument(
+        "--skip-getty",
+        action="store_true",
+        help="Skip best-effort Getty vocabulary enrichment before sidecar write.",
+    )
     args = ap.parse_args(argv)
 
-    meta = run_finalize(args.work_dir)
+    meta = run_finalize(args.work_dir, enrich_getty=not args.skip_getty)
 
     # Summary print-out
     print(f"✓ {meta['work_id']}")
