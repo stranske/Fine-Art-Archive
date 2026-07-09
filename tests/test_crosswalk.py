@@ -65,6 +65,16 @@ def test_dublin_core_projection_populates_core_terms() -> None:
     }
 
 
+def test_rights_projection_uses_evidence_url_when_status_missing() -> None:
+    meta = _sidecar()
+    meta["rights"] = {"evidence_url": "https://example.test/source"}
+
+    assert to_dublin_core(meta)["rights"] == "https://example.test/source"
+    assert to_linked_art(meta)["subject_to"] == [
+        {"type": "Right", "_label": "https://example.test/source"}
+    ]
+
+
 def test_linked_art_projection_has_valid_context_type_and_identifiers() -> None:
     linked = to_linked_art(_sidecar())
 

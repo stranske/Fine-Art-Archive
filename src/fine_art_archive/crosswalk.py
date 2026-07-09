@@ -33,7 +33,7 @@ def _artist_name(meta: dict[str, Any]) -> str:
 
 def _rights_label(meta: dict[str, Any]) -> str | None:
     rights = meta.get("rights") or {}
-    return _clean(rights.get("status")) or _clean(rights.get("evidence"))
+    return _clean(rights.get("status")) or _clean(rights.get("evidence_url"))
 
 
 def _identifier_values(meta: dict[str, Any]) -> list[str]:
@@ -165,6 +165,12 @@ def emit_crosswalks(meta_path: Path | str, out_dir: Path | str | None = None) ->
 
     dc_path = output_dir / "dc.json"
     linked_art_path = output_dir / "linkedart.json"
-    dc_path.write_text(json.dumps(to_dublin_core(meta), indent=2, ensure_ascii=False) + "\n")
-    linked_art_path.write_text(json.dumps(to_linked_art(meta), indent=2, ensure_ascii=False) + "\n")
+    dc_path.write_text(
+        json.dumps(to_dublin_core(meta), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    linked_art_path.write_text(
+        json.dumps(to_linked_art(meta), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
     return dc_path, linked_art_path
