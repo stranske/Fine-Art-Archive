@@ -9,6 +9,15 @@ from pathlib import Path
 # even when jsonschema isn't installed. Validation requires it.
 
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "meta.schema.json"
+SITE_ANCHORED_CATEGORIES = frozenset(
+    {
+        "architecture",
+        "stained_glass",
+        "mosaic",
+        "monument",
+        "architectural_sculpture",
+    }
+)
 
 
 class SchemaNotFound(RuntimeError):  # noqa: N818  -- stable public name for importers
@@ -40,6 +49,11 @@ def is_valid(meta: dict) -> bool:
     except jsonschema.ValidationError:
         return False
     return True
+
+
+def is_site_anchored(meta: dict) -> bool:
+    """Return the derived site-anchored predicate for a sidecar dict."""
+    return meta.get("category") in SITE_ANCHORED_CATEGORIES
 
 
 def load(path: Path | str) -> dict:
