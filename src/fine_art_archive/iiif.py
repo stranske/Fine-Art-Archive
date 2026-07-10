@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
-from urllib.parse import urlparse
+from typing import Any, TypeGuard
+from urllib.parse import quote, urlparse
 
 from fine_art_archive import sidecar
 
@@ -32,42 +33,47 @@ def _metadata_item(label: str, value: str | None) -> dict[str, dict[str, list[st
     }
 
 
-def _rights_uri(meta: dict[str, Any]) -> str | None:
-    rights = meta.get("rights") or {}
+def _mapping(value: Any, field: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field} must be an object")
+    return value
+
+
+def _rights_uri(meta: Mapping[str, Any]) -> str | None:
+    rights = meta.get("rights")
+    if rights is None:
+        return None
+    rights = _mapping(rights, "rights")
     status = _clean(rights.get("status"))
-    evidence_url = _clean(rights.get("evidence_url"))
     if status in {"public-domain", "public_domain", "pd"}:
         return "https://creativecommons.org/publicdomain/mark/1.0/"
-    if evidence_url and evidence_url.startswith(("http://", "https://")):
-        return evidence_url
     return None
 
 
-def _master_file(meta: dict[str, Any]) -> dict[str, Any]:
-    files = meta.get("files") or {}
-    master = files.get("master") or {}
-    if not isinstance(master, dict):
-        return {}
+def _master_file(meta: Mapping[str, Any]) -> Mapping[str, Any]:
+    files = _mapping(meta.get("files"), "files")
+    master = _mapping(files.get("master"), "files.master")
     return master
 
 
-def _master_dimensions(master: dict[str, Any]) -> tuple[int, int] | None:
+def _positive_int(value: Any) -> TypeGuard[int]:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _master_dimensions(master: Mapping[str, Any]) -> tuple[int, int] | None:
     dimensions = master.get("dimensions_px")
-    if (
-        isinstance(dimensions, list)
-        and len(dimensions) == 2
-        and all(isinstance(value, int) for value in dimensions)
-        and all(value > 0 for value in dimensions)
-    ):
-        return dimensions[0], dimensions[1]
+    if isinstance(dimensions, list) and len(dimensions) == 2:
+        width, height = dimensions
+        if _positive_int(width) and _positive_int(height):
+            return width, height
     width = master.get("width") or master.get("width_px")
     height = master.get("height") or master.get("height_px")
-    if isinstance(width, int) and isinstance(height, int) and width > 0 and height > 0:
+    if _positive_int(width) and _positive_int(height):
         return width, height
     return None
 
 
-def _master_format(master: dict[str, Any]) -> str:
+def _master_format(master: Mapping[str, Any]) -> str:
     filename = str(master.get("filename") or "").lower()
     if filename.endswith((".jpg", ".jpeg")):
         return "image/jpeg"
@@ -80,12 +86,9 @@ def _master_format(master: dict[str, Any]) -> str:
     return "application/octet-stream"
 
 
-def _image_id(manifest_id: str, meta: dict[str, Any], master: dict[str, Any]) -> str:
-    source_url = _clean(master.get("url")) or _clean(master.get("source_url"))
-    if source_url:
-        return source_url
+def _image_id(manifest_id: str, master: Mapping[str, Any]) -> str:
     filename = _clean(master.get("filename")) or "master"
-    return f"{manifest_id}/files/{filename}"
+    return f"{manifest_id}/files/{quote(filename, safe='')}"
 
 
 def _manifest_id(base_url: str | None) -> str:
@@ -95,16 +98,20 @@ def _manifest_id(base_url: str | None) -> str:
     parsed = urlparse(manifest_id)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("base_url must be an absolute HTTP(S) URL")
+    if parsed.query or parsed.fragment:
+        raise ValueError("base_url must not contain a query string or fragment")
     return manifest_id
 
 
 def to_manifest(meta: dict[str, Any], *, base_url: str | None = None) -> dict[str, Any]:
     """Build a minimal IIIF Presentation 3.0 manifest for one work sidecar."""
-    work_id = _clean(meta.get("work_id")) or "unknown"
-    title = _clean(meta.get("title")) or "Untitled"
-    artist = meta.get("artist") or {}
-    holder = meta.get("holder") or {}
-    master = _master_file(meta)
+    source = _mapping(meta, "meta")
+    work_id = _clean(source.get("work_id")) or "unknown"
+    title = _clean(source.get("title")) or "Untitled"
+    artist = _mapping(source.get("artist"), "artist")
+    holder_value = source.get("holder")
+    holder = _mapping(holder_value, "holder") if holder_value is not None else {}
+    master = _master_file(source)
     dimensions = _master_dimensions(master)
     if dimensions is None:
         raise ValueError("files.master.dimensions_px must provide [width, height]")
@@ -114,7 +121,7 @@ def to_manifest(meta: dict[str, Any], *, base_url: str | None = None) -> dict[st
     canvas_id = f"{manifest_id}/canvas/master"
     annotation_page_id = f"{canvas_id}/page"
     annotation_id = f"{annotation_page_id}/annotation"
-    image_id = _image_id(manifest_id, meta, master)
+    image_id = _image_id(manifest_id, master)
 
     metadata = [
         item
@@ -165,7 +172,7 @@ def to_manifest(meta: dict[str, Any], *, base_url: str | None = None) -> dict[st
             }
         ],
     }
-    rights = _rights_uri(meta)
+    rights = _rights_uri(source)
     if rights:
         manifest["rights"] = rights
     return manifest
