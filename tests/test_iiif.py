@@ -5,9 +5,94 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+import jsonschema
 import pytest
+from iiif_prezi3 import Manifest
 
 from fine_art_archive.iiif import emit_manifest, to_manifest
+
+IIIF_PRESENTATION_3_SHAPE = {
+    "type": "object",
+    "required": ["@context", "id", "type", "label", "items"],
+    "properties": {
+        "@context": {"const": "http://iiif.io/api/presentation/3/context.json"},
+        "id": {"type": "string", "format": "uri"},
+        "type": {"const": "Manifest"},
+        "label": {"type": "object"},
+        "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["id", "type", "width", "height", "items"],
+                "properties": {
+                    "id": {"type": "string", "format": "uri"},
+                    "type": {"const": "Canvas"},
+                    "width": {"type": "integer", "minimum": 1},
+                    "height": {"type": "integer", "minimum": 1},
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["id", "type", "items"],
+                            "properties": {
+                                "id": {"type": "string", "format": "uri"},
+                                "type": {"const": "AnnotationPage"},
+                                "items": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "object",
+                                        "required": [
+                                            "id",
+                                            "type",
+                                            "motivation",
+                                            "target",
+                                            "body",
+                                        ],
+                                        "properties": {
+                                            "id": {"type": "string", "format": "uri"},
+                                            "type": {"const": "Annotation"},
+                                            "motivation": {"const": "painting"},
+                                            "target": {"type": "string", "format": "uri"},
+                                            "body": {
+                                                "type": "object",
+                                                "required": [
+                                                    "id",
+                                                    "type",
+                                                    "format",
+                                                    "width",
+                                                    "height",
+                                                ],
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uri",
+                                                    },
+                                                    "type": {"const": "Image"},
+                                                    "format": {"type": "string"},
+                                                    "width": {
+                                                        "type": "integer",
+                                                        "minimum": 1,
+                                                    },
+                                                    "height": {
+                                                        "type": "integer",
+                                                        "minimum": 1,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+}
 
 
 def _sidecar() -> dict[str, Any]:
@@ -74,6 +159,31 @@ def test_manifest_has_iiif_presentation_v3_shape_and_canvas() -> None:
         "width": 640,
         "height": 825,
     }
+    jsonschema.validate(
+        instance=manifest,
+        schema=IIIF_PRESENTATION_3_SHAPE,
+        format_checker=jsonschema.FormatChecker(),
+    )
+    parsed = Manifest.model_validate(manifest)
+    round_tripped = Manifest.model_validate_json(
+        parsed.model_dump_json(by_alias=True, exclude_none=True)
+    )
+    assert str(round_tripped.id) == manifest["id"]
+    assert round_tripped.type == "Manifest"
+    assert len(round_tripped.items) == 1
+
+
+def test_manifest_shape_validation_is_load_bearing() -> None:
+    manifest = to_manifest(_sidecar(), base_url="https://archive.example/iiif/work")
+    del manifest["items"][0]["type"]
+
+    with pytest.raises(jsonschema.ValidationError, match="'type' is a required property"):
+        jsonschema.validate(instance=manifest, schema=IIIF_PRESENTATION_3_SHAPE)
+
+    malformed_items = to_manifest(_sidecar(), base_url="https://archive.example/iiif/work")
+    malformed_items["items"][0]["items"] = "not-an-annotation-page"
+    with pytest.raises(jsonschema.ValidationError, match="is not of type 'array'"):
+        jsonschema.validate(instance=malformed_items, schema=IIIF_PRESENTATION_3_SHAPE)
 
 
 def test_manifest_metadata_carries_core_sidecar_fields() -> None:
@@ -99,6 +209,9 @@ def test_manifest_rejects_missing_or_non_http_base_url() -> None:
     with pytest.raises(ValueError, match="absolute HTTP"):
         to_manifest(_sidecar(), base_url="urn:fine-art-archive:iiif:work")
 
+    with pytest.raises(ValueError, match="query string or fragment"):
+        to_manifest(_sidecar(), base_url="https://archive.example/iiif/work?draft=1")
+
 
 def test_manifest_rejects_non_positive_dimensions() -> None:
     sidecar = _sidecar()
@@ -106,6 +219,36 @@ def test_manifest_rejects_non_positive_dimensions() -> None:
 
     with pytest.raises(ValueError, match="dimensions_px"):
         to_manifest(sidecar, base_url="https://archive.example/iiif/work")
+
+
+def test_manifest_rejects_boolean_dimensions_and_malformed_objects() -> None:
+    sidecar = _sidecar()
+    sidecar["files"]["master"]["dimensions_px"] = [True, 825]
+    with pytest.raises(ValueError, match="dimensions_px"):
+        to_manifest(sidecar, base_url="https://archive.example/iiif/work")
+
+    malformed_files = _sidecar()
+    malformed_files["files"] = []
+    with pytest.raises(ValueError, match="files must be an object"):
+        to_manifest(malformed_files, base_url="https://archive.example/iiif/work")
+
+    malformed_rights = _sidecar()
+    malformed_rights["rights"] = []
+    with pytest.raises(ValueError, match="rights must be an object"):
+        to_manifest(malformed_rights, base_url="https://archive.example/iiif/work")
+
+
+def test_manifest_omits_evidence_url_and_escapes_filename() -> None:
+    sidecar = _sidecar()
+    sidecar["rights"] = {"status": "rights-reserved", "evidence_url": "https://example.test/work"}
+    sidecar["files"]["master"]["filename"] = "master #1.jpg"
+
+    manifest = to_manifest(sidecar, base_url="https://archive.example/iiif/work")
+
+    assert "rights" not in manifest
+    assert manifest["items"][0]["items"][0]["items"][0]["body"]["id"].endswith(
+        "/files/master%20%231.jpg"
+    )
 
 
 def test_emit_manifest_writes_manifest_json(tmp_path: Path) -> None:
@@ -121,3 +264,18 @@ def test_emit_manifest_writes_manifest_json(tmp_path: Path) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["id"] == "https://archive.example/iiif/4f3a2b8-after-the-bullfight-cassatt"
     assert manifest["items"][0]["id"].endswith("/canvas/master")
+
+
+def test_emit_manifest_writes_to_explicit_output_dir(tmp_path: Path) -> None:
+    meta_path = tmp_path / "meta.json"
+    meta_path.write_text(json.dumps(_sidecar()), encoding="utf-8")
+    out_dir = tmp_path / "out"
+
+    manifest_path = emit_manifest(
+        meta_path,
+        out_dir,
+        base_url="https://archive.example/iiif/4f3a2b8-after-the-bullfight-cassatt",
+    )
+
+    assert manifest_path == out_dir / "manifest.json"
+    assert manifest_path.exists()

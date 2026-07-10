@@ -20,6 +20,9 @@ certifi==2026.5.20
     # via
     #   httpcore
     #   httpx
+    #   requests
+charset-normalizer==3.4.9
+    # via requests
 click==8.3.1
     # via
     #   black
@@ -44,6 +47,9 @@ idna==3.17
     # via
     #   anyio
     #   httpx
+    #   requests
+iiif-prezi3==3.1.1
+    # via fine-art-archive (pyproject.toml)
 imagehash==4.3.2
     # via fine-art-archive (pyproject.toml)
 iniconfig==2.3.0
@@ -74,9 +80,10 @@ pathspec==1.0.4
     # via
     #   black
     #   mypy
-pillow==12.2.0
+pillow==12.0.0
     # via
     #   fine-art-archive (pyproject.toml)
+    #   iiif-prezi3
     #   imagehash
 platformdirs==4.9.2
     # via black
@@ -88,6 +95,7 @@ pydantic==2.13.4
     # via
     #   fine-art-archive (pyproject.toml)
     #   fastapi
+    #   iiif-prezi3
 pydantic-core==2.46.4
     # via pydantic
 pygments==2.19.2
@@ -108,6 +116,8 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
+requests==2.34.2
+    # via iiif-prezi3
 rpds-py==2026.5.1
     # via
     #   jsonschema
@@ -132,5 +142,7 @@ typing-inspection==0.4.2
     # via
     #   fastapi
     #   pydantic
+urllib3==2.7.0
+    # via requests
 uvicorn==0.48.0
     # via fine-art-archive (pyproject.toml)
