@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 import jsonschema
 import pytest
+from iiif_prezi3 import Manifest
 
 from fine_art_archive.iiif import emit_manifest, to_manifest
 
@@ -105,6 +106,13 @@ def test_manifest_has_iiif_presentation_v3_shape_and_canvas() -> None:
         schema=IIIF_PRESENTATION_3_SHAPE,
         format_checker=jsonschema.FormatChecker(),
     )
+    parsed = Manifest.model_validate(manifest)
+    round_tripped = Manifest.model_validate_json(
+        parsed.model_dump_json(by_alias=True, exclude_none=True)
+    )
+    assert str(round_tripped.id) == manifest["id"]
+    assert round_tripped.type == "Manifest"
+    assert len(round_tripped.items) == 1
 
 
 def test_manifest_shape_validation_is_load_bearing() -> None:
