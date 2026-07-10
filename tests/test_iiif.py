@@ -30,6 +30,64 @@ IIIF_PRESENTATION_3_SHAPE = {
                     "type": {"const": "Canvas"},
                     "width": {"type": "integer", "minimum": 1},
                     "height": {"type": "integer", "minimum": 1},
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["id", "type", "items"],
+                            "properties": {
+                                "id": {"type": "string", "format": "uri"},
+                                "type": {"const": "AnnotationPage"},
+                                "items": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "object",
+                                        "required": [
+                                            "id",
+                                            "type",
+                                            "motivation",
+                                            "target",
+                                            "body",
+                                        ],
+                                        "properties": {
+                                            "id": {"type": "string", "format": "uri"},
+                                            "type": {"const": "Annotation"},
+                                            "motivation": {"const": "painting"},
+                                            "target": {"type": "string", "format": "uri"},
+                                            "body": {
+                                                "type": "object",
+                                                "required": [
+                                                    "id",
+                                                    "type",
+                                                    "format",
+                                                    "width",
+                                                    "height",
+                                                ],
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uri",
+                                                    },
+                                                    "type": {"const": "Image"},
+                                                    "format": {"type": "string"},
+                                                    "width": {
+                                                        "type": "integer",
+                                                        "minimum": 1,
+                                                    },
+                                                    "height": {
+                                                        "type": "integer",
+                                                        "minimum": 1,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -121,6 +179,11 @@ def test_manifest_shape_validation_is_load_bearing() -> None:
 
     with pytest.raises(jsonschema.ValidationError, match="'type' is a required property"):
         jsonschema.validate(instance=manifest, schema=IIIF_PRESENTATION_3_SHAPE)
+
+    malformed_items = to_manifest(_sidecar(), base_url="https://archive.example/iiif/work")
+    malformed_items["items"][0]["items"] = "not-an-annotation-page"
+    with pytest.raises(jsonschema.ValidationError, match="is not of type 'array'"):
+        jsonschema.validate(instance=malformed_items, schema=IIIF_PRESENTATION_3_SHAPE)
 
 
 def test_manifest_metadata_carries_core_sidecar_fields() -> None:
