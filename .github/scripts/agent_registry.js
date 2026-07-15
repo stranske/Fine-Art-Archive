@@ -147,8 +147,8 @@ function normalizeRegistryOptions(options = {}) {
 
 function loadAgentRegistry(options = {}) {
   const { registryPath } = normalizeRegistryOptions(options);
-  const path = registryPath || '.github/agents/registry.yml';
-  const raw = fs.readFileSync(path, 'utf8');
+  const registryFilePath = registryPath || '.github/agents/registry.yml';
+  const raw = fs.readFileSync(registryFilePath, 'utf8');
   const registry = parseRegistryYaml(raw);
   if (!registry || typeof registry !== 'object') {
     throw new Error('Agent registry did not parse into an object');
@@ -159,7 +159,7 @@ function loadAgentRegistry(options = {}) {
   if (!registry.default_agent || typeof registry.default_agent !== 'string') {
     throw new Error('Agent registry missing required "default_agent" string');
   }
-  validateAgentRegistry(registry, { registryPath: path });
+  validateAgentRegistry(registry, { registryPath: registryFilePath });
   return registry;
 }
 
@@ -262,6 +262,12 @@ function resolveExecutionProfile(profileId, options = {}) {
     );
   }
   validateExecutionProfile(id, profile, registry);
+  if (String(profile.lifecycle || '').trim() !== 'active') {
+    throw new Error(
+      `Execution profile ${id} has lifecycle ${profile.lifecycle || '(empty)'}; ` +
+        'ordinary agent execution accepts active profiles only',
+    );
+  }
   return {
     id,
     ...profile,
