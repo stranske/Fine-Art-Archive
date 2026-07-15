@@ -286,7 +286,9 @@ def configured_model_for_provider(
                     slot_profile,
                     slot_provider,
                 )
-                return ""
+                # A malformed slot must not mask a later valid slot or the
+                # provider-level reviewed selection/fallback.
+                continue
             if explicit_model and explicit_model != model:
                 logger.warning(
                     "Ignoring slot model pin %s/%s; reviewed %s selection is %s",
@@ -377,7 +379,11 @@ def load_slot_config(*, github_default_model: str = "") -> list[SlotDefinition]:
             continue
         name = str(entry.get("name") or f"slot{idx}").strip() or f"slot{idx}"
         slots.append(SlotDefinition(name=name, provider=provider, model=model))
-    return slots if slot_entries else fallback_slots
+    # A syntactically valid config can still yield no usable entries (for
+    # example, every profile was retired or every model was blocked).  That is
+    # equivalent to no usable slot configuration; retain the reviewed defaults
+    # instead of silently disabling every provider.
+    return slots or fallback_slots
 
 
 def apply_slot_env_overrides(
