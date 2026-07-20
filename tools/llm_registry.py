@@ -133,7 +133,6 @@ def load_model_registry() -> list[ModelRegistryEntry]:
                 model=model,
                 blocked=bool(raw_entry.get("blocked", False)),
                 lifecycle=str(raw_entry.get("lifecycle", "unknown")).strip().lower(),
-                quality={},
             )
         )
     return entries
@@ -357,18 +356,25 @@ def load_slot_config(*, github_default_model: str = "") -> list[SlotDefinition]:
         ):
             model = explicit_model
         elif provider and explicit_model and explicit_model != model:
-            logger.warning(
-                "Skipping unresolved slot model pin %s/%s; reviewed %s selection is %s",
+            # A caller-supplied slot file is an allowlist and must fail closed.
+            # The repository's bundled legacy file is advisory: ignore a stale
+            # pin and retain the reviewed registry selection for that provider.
+            if os.environ.get(ENV_SLOT_CONFIG):
+                logger.warning(
+                    "Skipping unresolved slot model pin %s/%s; reviewed %s selection is %s",
+                    provider,
+                    explicit_model,
+                    profile,
+                    model or "unavailable",
+                )
+                continue
+            logger.debug(
+                "Ignoring advisory bundled slot model pin %s/%s; reviewed %s selection before fallback is %s",
                 provider,
                 explicit_model,
                 profile,
                 model or "unavailable",
             )
-            # A caller-supplied slot file is an allowlist and must fail closed.
-            # The repository's bundled legacy file is advisory: ignore a stale
-            # pin and retain the reviewed registry selection for that provider.
-            if os.environ.get(ENV_SLOT_CONFIG):
-                continue
         if provider and configured_profile and not model:
             logger.warning(
                 "Skipping slot with unresolved reviewed profile: %s/%s",
@@ -428,7 +434,12 @@ def resolve_slots(
     # Preserve an explicit runtime override as an emergency bootstrap when the
     # registry file is unavailable. Empty models are never invoked directly;
     # langchain_client skips them when the override cannot serve that provider.
-    if not slots and not os.environ.get(ENV_SLOT_CONFIG) and os.environ.get(env_model_name):
+    if (
+        not slots
+        and not os.environ.get(ENV_SLOT_CONFIG)
+        and not _slot_path().exists()
+        and os.environ.get(env_model_name)
+    ):
         slots = [
             SlotDefinition(name=f"slot{index}", provider=provider, model="")
             for index, provider in enumerate(
