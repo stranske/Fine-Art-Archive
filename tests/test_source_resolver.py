@@ -121,6 +121,174 @@ def test_tier_a_wins_before_tier_b_when_both_have_values() -> None:
     assert wikidata.calls == []
 
 
+def test_new_registry_host_uses_declarative_api_before_wikidata() -> None:
+    museum_client = FakeJsonClient(
+        [
+            {
+                "record": {
+                    "objectType": "Oil painting",
+                    "productionDates": [{"date": {"text": "1888"}}],
+                    "materialsAndTechniques": "oil on canvas",
+                }
+            }
+        ]
+    )
+    museum = MuseumProvider(client=museum_client)  # type: ignore[arg-type]
+    wikidata = StaticProvider("wikidata", value="1889")
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["holder"] = {
+        "name": "V&A",
+        "wikidata_q": None,
+        "ror": None,
+        "url": "https://www.vam.ac.uk/",
+        "accession": "O1288719",
+    }
+    resolver = SourceResolver(
+        museum=museum,
+        wikidata=wikidata,
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "year")
+
+    assert resolution.status == "available"
+    assert resolution.value == "1888"
+    assert resolution.source_id == "museum:victoria_and_albert"
+    assert resolution.tier == Tier.MUSEUM
+    assert resolution.source_ref == "https://api.vam.ac.uk/v2/museumobject/O1288719"
+    assert museum_client.calls == [("https://api.vam.ac.uk/v2/museumobject/O1288719", None)]
+    assert wikidata.calls == []
+
+
+def test_declarative_iiif_pattern_is_tier_a(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    entry = host_registry.HostEntry(
+        host_id="iiif_museum",
+        name="IIIF Museum",
+        wikidata_q="Q999001",
+        ror=None,
+        homepage="https://museum.example/",
+        rights_default="mixed",
+        primary_adapter=None,
+        accession_property="P217",
+        iiif_pattern="https://iiif.example/manifests/{accession}.json",
+    )
+    monkeypatch.setattr(
+        host_registry,
+        "find_by_holder",
+        lambda **kwargs: entry if kwargs.get("wikidata_q") == entry.wikidata_q else None,
+    )
+    museum_client = FakeJsonClient(
+        [
+            {
+                "@context": "http://iiif.io/api/presentation/3/context.json",
+                "id": "https://iiif.example/manifests/42.json",
+                "type": "Manifest",
+                "metadata": [
+                    {
+                        "label": {"en": ["Dimensions"]},
+                        "value": {"en": ["82.5 × 64 cm"]},
+                    }
+                ],
+            }
+        ]
+    )
+    museum = MuseumProvider(client=museum_client)  # type: ignore[arg-type]
+    wikidata = StaticProvider("wikidata", value={"h_cm": 1.0, "w_cm": 1.0})
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["holder"] = {
+        "name": entry.name,
+        "wikidata_q": entry.wikidata_q,
+        "accession": "42",
+    }
+    resolver = SourceResolver(
+        museum=museum,
+        wikidata=wikidata,
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "dimensions_original")
+
+    assert resolution.status == "available"
+    assert resolution.value == {
+        "h_cm": 82.5,
+        "w_cm": 64.0,
+        "raw": "82.5 × 64 cm",
+    }
+    assert resolution.source_id == "museum:iiif_museum"
+    assert resolution.tier == Tier.MUSEUM
+    assert wikidata.calls == []
+
+
+def test_registry_accession_property_discovers_declarative_iiif_identifier() -> None:
+    museum_client = FakeJsonClient(
+        [
+            {
+                "entities": {
+                    "Q106854726": {
+                        "claims": {
+                            "P10121": [_claim("231347")],
+                        }
+                    }
+                }
+            },
+            {
+                "@context": "http://iiif.io/api/presentation/3/context.json",
+                "id": "https://iiif.harvardartmuseums.org/manifests/object/231347",
+                "type": "Manifest",
+                "metadata": [
+                    {
+                        "label": {"en": ["Date"]},
+                        "value": {"en": ["about 1500"]},
+                    }
+                ],
+            },
+        ]
+    )
+    museum = MuseumProvider(client=museum_client)  # type: ignore[arg-type]
+    generic_wikidata = StaticProvider("wikidata", value="1499")
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["holder"] = {
+        "name": "Harvard Art Museums",
+        "wikidata_q": "Q3783572",
+        "accession": None,
+    }
+    meta["stable_identifiers"] = {"wikidata_q": "Q106854726"}
+    resolver = SourceResolver(
+        museum=museum,
+        wikidata=generic_wikidata,
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "year")
+
+    assert resolution.status == "available"
+    assert resolution.value == "1500"
+    assert resolution.source_id == "museum:harvard_art_museums"
+    assert resolution.tier == Tier.MUSEUM
+    assert museum_client.calls == [
+        (
+            WikidataProvider.API_URL,
+            {
+                "action": "wbgetentities",
+                "format": "json",
+                "ids": "Q106854726",
+                "languages": "en",
+                "props": "claims",
+            },
+        ),
+        ("https://iiif.harvardartmuseums.org/manifests/object/231347", None),
+    ]
+    assert generic_wikidata.calls == []
+
+
 def test_available_value_is_never_overwritten_or_requeried() -> None:
     meta = deepcopy(MINIMAL_SIDECAR)
     meta["year"] = "1872"
@@ -307,8 +475,8 @@ def test_artist_resolves_from_museum_record_and_getty_ulan(
     )
     monkeypatch.setattr(
         host_registry,
-        "find_by_wikidata_q",
-        lambda qid: entry if qid == "Q160236" else None,
+        "find_by_holder",
+        lambda **kwargs: entry if kwargs.get("wikidata_q") == "Q160236" else None,
     )
     museum_client = FakeJsonClient(
         [
