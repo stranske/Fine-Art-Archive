@@ -165,8 +165,15 @@ def test_additional_top_level_property_rejected():
 
 def test_category_enum_accepts_site_anchored_media():
     """The site-anchored media are valid category values."""
-    for cat in ("architecture", "stained_glass", "mosaic", "monument",
-                "architectural_sculpture", "painting", "photograph"):
+    for cat in (
+        "architecture",
+        "stained_glass",
+        "mosaic",
+        "monument",
+        "architectural_sculpture",
+        "painting",
+        "photograph",
+    ):
         meta = dict(MINIMAL_VALID)
         meta["category"] = cat
         assert sidecar.is_valid(meta), cat
@@ -190,8 +197,11 @@ def test_site_block_valid():
     """A site-anchored work: anonymous attribution + populated site block."""
     meta = dict(MINIMAL_VALID)
     meta["category"] = "stained_glass"
-    meta["artist"] = {"name": "Anonymous", "relation": "anonymous",
-                      "attribution_anchor": "Q4233718"}
+    meta["artist"] = {
+        "name": "Anonymous",
+        "relation": "anonymous",
+        "attribution_anchor": "Q4233718",
+    }
     meta["site"] = {
         "name": "Chartres Cathedral",
         "wikidata_q": "Q188527",

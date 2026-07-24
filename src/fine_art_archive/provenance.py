@@ -5,9 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-STATUSES = frozenset(
-    {"not_researched", "available", "not_available", "unverified", "conflicting"}
-)
+STATUSES = frozenset({"not_researched", "available", "not_available", "unverified", "conflicting"})
 FILENAME_BACKFILLED_FIELDS = ("medium", "category", "dimensions_original")
 
 
