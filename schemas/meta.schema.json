@@ -550,6 +550,54 @@
         }
       }
     },
+    "field_provenance": {
+      "type": "object",
+      "description": "Per-field research ledger. Values remain in their existing fields; this records whether and how each field was checked.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_researched",
+              "available",
+              "not_available",
+              "unverified",
+              "conflicting"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
     "files": {
       "type": "object",
       "required": [
