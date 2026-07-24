@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Complete holder metadata for a bounded set of eligible sidecars."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from copy import deepcopy
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from fine_art_archive import provenance, sidecar  # noqa: E402
+from fine_art_archive.enrichment.holder import (  # noqa: E402
+    HolderClient,
+    WikidataClient,
+    complete_holder,
+)
+
+DEFAULT_LIMIT = 100
+
+
+@dataclass(frozen=True)
+class CompletionStats:
+    attempted: int
+    updated: int
+    mirrored: int
+
+
+def complete_sidecars(
+    staging_dir: Path,
+    *,
+    art_works_root: Path | None = None,
+    operations_log: Path | None = None,
+    limit: int = DEFAULT_LIMIT,
+    client: HolderClient | None = None,
+) -> CompletionStats:
+    """Complete at most ``limit`` eligible sidecars and return run counts."""
+    if limit < 1:
+        raise ValueError("limit must be at least 1")
+
+    active_client = client if client is not None else WikidataClient()
+    attempted = updated_count = mirrored_count = 0
+    for path in _sidecar_paths(staging_dir):
+        meta = sidecar.load(path)
+        if not _eligible(meta):
+            continue
+        attempted += 1
+        before = deepcopy(meta)
+        completed = complete_holder(meta, client=active_client)
+        if completed != before:
+            sidecar.validate(completed)
+            sidecar.write(path, completed)
+            mirror_paths = _write_existing_mirrors(completed, art_works_root, exclude=path)
+            updated_count += 1
+            mirrored_count += len(mirror_paths)
+            if operations_log is not None:
+                _append_operation(operations_log, completed, path, mirror_paths)
+        if attempted >= limit:
+            break
+    return CompletionStats(attempted, updated_count, mirrored_count)
+
+
+def _sidecar_paths(staging_dir: Path) -> list[Path]:
+    paths = set(staging_dir.rglob("meta.json"))
+    paths.update(staging_dir.glob("*.json"))
+    return sorted(path for path in paths if path.is_file())
+
+
+def _eligible(meta: dict[str, Any]) -> bool:
+    return provenance.needs_research(meta, "holder")
+
+
+def _write_existing_mirrors(
+    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
+) -> list[Path]:
+    if art_works_root is None:
+        return []
+    work_id = str(meta["work_id"])
+    candidates = {
+        art_works_root / "works" / work_id / "meta.json",
+        art_works_root / work_id / "meta.json",
+    }
+    written: list[Path] = []
+    for candidate in sorted(candidates):
+        if candidate.is_file() and candidate.resolve() != exclude.resolve():
+            sidecar.write(candidate, meta)
+            written.append(candidate)
+    return written
+
+
+def _append_operation(
+    log_path: Path,
+    meta: dict[str, Any],
+    staging_path: Path,
+    mirror_paths: list[Path],
+) -> None:
+    holder_provenance = provenance.get(meta, "holder")
+    if holder_provenance is None:
+        raise ValueError("holder completion did not record provenance")
+    entry = {
+        "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "actor": "complete_holders",
+        "op": "holder_completion",
+        "work_id": meta["work_id"],
+        "status": holder_provenance["status"],
+        "staging_path": str(staging_path),
+        "mirror_paths": [str(path) for path in mirror_paths],
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _env_path(name: str) -> Path | None:
+    raw = os.environ.get(name)
+    return Path(raw).expanduser() if raw else None
+
+
+def _default_limit() -> int:
+    raw = os.environ.get("FAA_HOLDER_LIMIT")
+    return int(raw) if raw else DEFAULT_LIMIT
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=_default_limit(),
+        help=f"Maximum eligible sidecars to attempt (default: {DEFAULT_LIMIT}).",
+    )
+    args = parser.parse_args(argv)
+
+    staging_dir = _env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars"
+    stats = complete_sidecars(
+        staging_dir,
+        art_works_root=_env_path("FAA_ART_WORKS_ROOT"),
+        operations_log=_env_path("FAA_OPERATIONS_LOG"),
+        limit=args.limit,
+    )
+    print(
+        f"holder completion: attempted={stats.attempted} "
+        f"updated={stats.updated} mirrored={stats.mirrored}"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
