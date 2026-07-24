@@ -1,0 +1,459 @@
+"""Focused, network-free tests for issue #321 metadata completion."""
+
+from __future__ import annotations
+
+import json
+import urllib.error
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
+
+import pytest
+from scripts.complete_metadata import complete_sidecars
+
+from fine_art_archive import provenance, sidecar
+from fine_art_archive.collect import host_registry
+from fine_art_archive.enrichment.source_resolver import (
+    ArtistQidResolver,
+    Candidate,
+    IiifProvider,
+    JsonClient,
+    MuseumProvider,
+    ProviderResult,
+    Resolution,
+    SourceResolver,
+    Tier,
+    WikidataProvider,
+    apply_resolution,
+    parse_dimensions,
+)
+
+MINIMAL_SIDECAR: dict[str, Any] = {
+    "work_id": "4f3a2b8-after-the-bullfight-cassatt",
+    "schema_version": "1.0",
+    "artist": {"name": "Mary Cassatt"},
+    "title": "After the Bullfight",
+    "files": {
+        "master": {
+            "filename": "master.jpeg",
+            "sha256": "4f3a2b8" + ("0" * 57),
+            "size_bytes": 12378451,
+            "ingested_at": "2026-05-16T21:30:00Z",
+        }
+    },
+    "history": [{"ts": "2026-05-16T21:30:00Z", "actor": "codex", "op": "ingested"}],
+}
+
+
+class StaticProvider:
+    def __init__(
+        self,
+        source_id: str,
+        *,
+        value: Any = None,
+        checked: bool = True,
+        tier: Tier = Tier.GENERAL,
+    ) -> None:
+        self.source_id = source_id
+        self.value = value
+        self.checked = checked
+        self.tier = tier
+        self.calls: list[str] = []
+
+    def resolve(self, meta: dict[str, Any], field: str) -> ProviderResult:
+        assert meta["work_id"] == MINIMAL_SIDECAR["work_id"]
+        self.calls.append(field)
+        candidate = (
+            Candidate(
+                self.value,
+                self.source_id,
+                f"https://example.test/{self.source_id}",
+                self.tier,
+            )
+            if self.value is not None
+            else None
+        )
+        return ProviderResult(self.checked, self.source_id, candidate)
+
+
+def _resolver(
+    *,
+    museum: StaticProvider | None = None,
+    wikidata: StaticProvider | None = None,
+    iiif: StaticProvider | None = None,
+    europeana: StaticProvider | None = None,
+    commons: StaticProvider | None = None,
+) -> SourceResolver:
+    return SourceResolver(
+        museum=museum or StaticProvider("museum", checked=False),
+        wikidata=wikidata or StaticProvider("wikidata", checked=False),
+        iiif=iiif or StaticProvider("iiif", checked=False),
+        europeana=europeana or StaticProvider("europeana", checked=False),
+        commons=commons or StaticProvider("commons", checked=False),
+    )
+
+
+def _claim(value: Any) -> dict[str, Any]:
+    return {"mainsnak": {"datavalue": {"value": value}}}
+
+
+class FakeJsonClient:
+    def __init__(self, responses: list[dict[str, Any]], *, timeout: float = 15) -> None:
+        self.responses = responses
+        self.timeout = timeout
+        self.calls: list[tuple[str, dict[str, str] | None]] = []
+
+    def get(self, url: str, *, params: dict[str, str] | None = None) -> dict[str, Any] | None:
+        self.calls.append((url, params))
+        return self.responses.pop(0)
+
+
+def test_tier_a_wins_before_tier_b_when_both_have_values() -> None:
+    museum = StaticProvider("met", value="1873", tier=Tier.MUSEUM)
+    wikidata = StaticProvider("wikidata", value="1874")
+    resolver = _resolver(museum=museum, wikidata=wikidata)
+
+    resolution = resolver.research(deepcopy(MINIMAL_SIDECAR), "year")
+
+    assert resolution.status == "available"
+    assert resolution.as_tuple() == ("1873", "met", "https://example.test/met")
+    assert museum.calls == ["year"]
+    assert wikidata.calls == []
+
+
+def test_available_value_is_never_overwritten_or_requeried() -> None:
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["year"] = "1872"
+    provenance.set(
+        meta,
+        "year",
+        "available",
+        "catalogue",
+        checked_at="2026-07-24T00:00:00Z",
+    )
+    museum = StaticProvider("met", value="1873", tier=Tier.MUSEUM)
+
+    resolution = _resolver(museum=museum).research(meta, "year")
+
+    assert resolution.value == "1872"
+    assert resolution.status == "available"
+    assert resolution.source_id == "catalogue"
+    assert museum.calls == []
+
+
+def test_all_failed_or_inapplicable_sources_leave_field_researchable() -> None:
+    resolution = _resolver().research(deepcopy(MINIMAL_SIDECAR), "medium")
+
+    assert resolution.status == "not_researched"
+    assert resolution.value is None
+    assert resolution.source_id is None
+
+
+def test_wikidata_claim_is_available_with_source_identity() -> None:
+    client = FakeJsonClient(
+        [
+            {
+                "entities": {
+                    "Q98549878": {
+                        "claims": {
+                            "P571": [
+                                _claim(
+                                    {
+                                        "time": "+1873-00-00T00:00:00Z",
+                                        "precision": 9,
+                                    }
+                                )
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    )
+    wikidata = WikidataProvider(client=client)  # type: ignore[arg-type]
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["stable_identifiers"] = {"wikidata_q": "Q98549878"}
+    resolver = SourceResolver(
+        museum=StaticProvider("museum", checked=False),
+        wikidata=wikidata,
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "year")
+
+    assert resolution.status == "available"
+    assert resolution.value == "1873"
+    assert resolution.source_id == "wikidata"
+    assert resolution.source_ref == "https://www.wikidata.org/wiki/Q98549878"
+
+
+def test_iiif_only_value_is_available_and_dimensions_are_parsed() -> None:
+    client = FakeJsonClient(
+        [
+            {
+                "@context": "http://iiif.io/api/presentation/3/context.json",
+                "id": "https://iiif.example/manifest",
+                "type": "Manifest",
+                "metadata": [
+                    {
+                        "label": {"en": ["Dimensions"]},
+                        "value": {"en": ["82.5 × 64 cm"]},
+                    }
+                ],
+            }
+        ]
+    )
+    iiif = IiifProvider(client=client)  # type: ignore[arg-type]
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["stable_identifiers"] = {
+        "iiif_manifest_url": "https://iiif.example/manifest",
+    }
+    resolver = SourceResolver(
+        museum=StaticProvider("museum", checked=False),
+        wikidata=StaticProvider("wikidata", checked=False),
+        iiif=iiif,
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "dimensions_original")
+
+    assert resolution.status == "available"
+    assert resolution.source_id == "iiif"
+    assert resolution.source_ref == "https://iiif.example/manifest"
+    assert resolution.value == {
+        "h_cm": 82.5,
+        "w_cm": 64.0,
+        "raw": "82.5 × 64 cm",
+    }
+
+
+def test_absent_from_all_successfully_checked_sources_is_not_available() -> None:
+    resolver = _resolver(
+        museum=StaticProvider("met"),
+        wikidata=StaticProvider("wikidata"),
+        iiif=StaticProvider("iiif"),
+    )
+
+    resolution = resolver.research(deepcopy(MINIMAL_SIDECAR), "medium")
+
+    assert resolution.status == "not_available"
+    assert resolution.value is None
+    assert resolution.source_id == "source_resolver"
+    assert resolution.note is not None
+    assert "met, wikidata, iiif" in resolution.note
+
+
+def test_source_disagreement_replaces_guess_and_records_loser() -> None:
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["year"] = "1872"
+    provenance.set(
+        meta,
+        "year",
+        "unverified",
+        "filename_parse",
+        checked_at="2026-07-24T00:00:00Z",
+    )
+    resolver = _resolver(
+        museum=StaticProvider("met", value="1873", tier=Tier.MUSEUM),
+    )
+
+    resolution = resolver.research(meta, "year")
+    changed = apply_resolution(
+        meta,
+        "year",
+        resolution,
+        checked_at="2026-07-24T01:00:00Z",
+    )
+
+    assert changed
+    assert meta["year"] == "1873"
+    assert meta["field_provenance"]["year"] == {
+        "status": "conflicting",
+        "source": "met",
+        "source_ref": "https://example.test/met",
+        "checked_at": "2026-07-24T01:00:00Z",
+        "note": 'Higher-tier source replaced lower-tier existing value "1872".',
+    }
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("Height: 10 in; Width: 5 in", {"h_cm": 25.4, "w_cm": 12.7}),
+        ("820 × 640 mm", {"h_cm": 82.0, "w_cm": 64.0}),
+    ],
+)
+def test_dimension_parser_converts_to_centimetres(raw: str, expected: dict[str, float]) -> None:
+    parsed = parse_dimensions(raw)
+
+    assert parsed is not None
+    assert {key: parsed[key] for key in ("h_cm", "w_cm")} == expected
+
+
+def test_artist_resolves_from_museum_record_and_getty_ulan(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    entry = host_registry.HostEntry(
+        host_id="met",
+        name="The Metropolitan Museum of Art",
+        wikidata_q="Q160236",
+        ror="01xtbq813",
+        homepage="https://www.metmuseum.org/",
+        rights_default="public-domain",
+        primary_adapter="met",
+    )
+    monkeypatch.setattr(
+        host_registry,
+        "find_by_wikidata_q",
+        lambda qid: entry if qid == "Q160236" else None,
+    )
+    museum_client = FakeJsonClient(
+        [
+            {
+                "objectID": 42,
+                "title": "Test Work",
+                "artistDisplayName": "Aurelia Test",
+                "artistULAN_URL": "http://vocab.getty.edu/ulan/500123456",
+                "objectURL": "https://www.metmuseum.org/art/collection/search/42",
+            }
+        ]
+    )
+    wikidata_client = FakeJsonClient(
+        [
+            {"search": [{"id": "Q1234", "label": "Aurelia Test"}]},
+            {
+                "entities": {
+                    "Q1234": {
+                        "claims": {
+                            "P31": [_claim({"id": "Q5"})],
+                            "P245": [_claim("500123456")],
+                        },
+                        "labels": {"en": {"value": "Aurelia Test"}},
+                        "aliases": {"en": [{"value": "A. Test"}]},
+                    }
+                }
+            },
+        ]
+    )
+    wikidata = WikidataProvider(client=wikidata_client)  # type: ignore[arg-type]
+    identity = ArtistQidResolver(wikidata=wikidata)
+    museum = MuseumProvider(
+        client=museum_client,  # type: ignore[arg-type]
+        artist_resolver=identity,
+    )
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["artist"] = {"name": "Unknown museum transcription"}
+    meta["holder"] = {
+        "name": entry.name,
+        "wikidata_q": entry.wikidata_q,
+        "ror": entry.ror,
+        "url": entry.homepage,
+        "accession": "42",
+    }
+    resolver = SourceResolver(
+        museum=museum,
+        wikidata=StaticProvider("wikidata", checked=False),
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    )
+
+    resolution = resolver.research(meta, "artist_qid")
+
+    assert resolution.status == "available"
+    assert resolution.value == "Q1234"
+    assert resolution.source_id == "met"
+    assert resolution.note == "Wikidata P245 match via Getty ULAN 500123456"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        urllib.error.URLError("offline"),
+        TimeoutError("timeout"),
+        OSError("socket failed"),
+    ],
+)
+def test_json_transport_is_timeout_bounded_and_skips_network_failures(
+    monkeypatch: pytest.MonkeyPatch, error: OSError
+) -> None:
+    seen_timeouts: list[float] = []
+
+    def fail(request: object, *, timeout: float) -> None:
+        assert request is not None
+        seen_timeouts.append(timeout)
+        raise error
+
+    monkeypatch.setattr("urllib.request.urlopen", fail)
+
+    assert JsonClient(timeout=7.5).get("https://example.test/data.json") is None
+    assert seen_timeouts == [7.5]
+
+
+def test_completion_writes_staging_existing_work_mirror_and_log_idempotently(
+    tmp_path: Path,
+) -> None:
+    work_id = str(MINIMAL_SIDECAR["work_id"])
+    meta = deepcopy(MINIMAL_SIDECAR)
+    provenance.set(
+        meta,
+        "year",
+        "not_researched",
+        checked_at="2026-07-24T00:00:00Z",
+    )
+    for field in ("medium", "category", "dimensions_original", "artist_qid"):
+        provenance.set(
+            meta,
+            field,
+            "not_available",
+            "fixture",
+            checked_at="2026-07-24T00:00:00Z",
+        )
+    staging_path = tmp_path / "staging" / work_id / "meta.json"
+    mirror_path = tmp_path / "art" / "works" / work_id / "meta.json"
+    log_path = tmp_path / "operations.log"
+    sidecar.write(staging_path, meta)
+    sidecar.write(mirror_path, meta)
+
+    class YearResolver:
+        def research(self, meta: dict[str, Any], field: str) -> Resolution:
+            assert field == "year"
+            return Resolution(
+                "1873",
+                "wikidata",
+                "https://www.wikidata.org/wiki/Q1",
+                "available",
+                Tier.GENERAL,
+            )
+
+    first = complete_sidecars(
+        staging_path.parents[1],
+        art_works_root=tmp_path / "art",
+        operations_log=log_path,
+        resolver=YearResolver(),  # type: ignore[arg-type]
+        limit=1,
+    )
+
+    assert first.updated_works == 1
+    assert first.updated_fields == 1
+    assert first.mirrored == 1
+    assert sidecar.load_validated(staging_path) == sidecar.load_validated(mirror_path)
+    assert sidecar.load(staging_path)["year"] == "1873"
+    log_lines = log_path.read_text(encoding="utf-8").splitlines()
+    assert len(log_lines) == 1
+    assert json.loads(log_lines[0])["fields"]["year"]["source"] == "wikidata"
+
+    second = complete_sidecars(
+        staging_path.parents[1],
+        art_works_root=tmp_path / "art",
+        operations_log=log_path,
+        resolver=YearResolver(),  # type: ignore[arg-type]
+        limit=1,
+    )
+
+    assert second.attempted_works == 0
+    assert second.updated_works == 0
+    assert log_path.read_text(encoding="utf-8").splitlines() == log_lines
