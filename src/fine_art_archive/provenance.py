@@ -22,7 +22,7 @@ def set(
     sidecar: dict[str, Any],
     field: str,
     status: str,
-    source: str | None,
+    source: str | None = None,
     source_ref: str | None = None,
     checked_at: str | None = None,
     note: str | None = None,
@@ -47,9 +47,13 @@ def set(
 
 
 def needs_research(sidecar: dict[str, Any], field: str) -> bool:
-    """Return whether ``field`` lacks research or has only unverified evidence."""
+    """Return whether ``field`` lacks research or has unresolved/unverified evidence."""
     entry = get(sidecar, field)
-    return entry is None or entry.get("status") in {"not_researched", "unverified"}
+    return entry is None or entry.get("status") in {
+        "not_researched",
+        "unverified",
+        "conflicting",
+    }
 
 
 def mark_filename_backfilled_fields(sidecar: dict[str, Any]) -> list[str]:

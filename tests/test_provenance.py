@@ -72,9 +72,15 @@ def test_get_set_and_needs_research_round_trip():
     provenance.set(meta, "category", "unverified", "filename_backfill")
     provenance.set(meta, "dimensions_original", "not_researched", "migration")
     provenance.set(meta, "title", "not_available", "museum_catalog")
+    provenance.set(meta, "artist", "conflicting", "museum_catalog")
     assert provenance.needs_research(meta, "category")
     assert provenance.needs_research(meta, "dimensions_original")
+    assert provenance.needs_research(meta, "artist")
     assert not provenance.needs_research(meta, "title")
+
+    omitted_source = provenance.set(meta, "notes", "not_researched")
+    assert omitted_source["source"] is None
+    assert provenance.needs_research(meta, "notes")
 
 
 def test_set_rejects_unknown_status_and_stamps_timestamp():
@@ -85,6 +91,7 @@ def test_set_rejects_unknown_status_and_stamps_timestamp():
 
     entry = provenance.set(meta, "medium", "conflicting", "museum_catalog")
     assert entry["checked_at"].endswith("Z")
+    assert provenance.needs_research(meta, "medium")
 
 
 def test_filename_backfill_migration_marks_present_fields_without_overwriting():
@@ -96,6 +103,8 @@ def test_filename_backfill_migration_marks_present_fields_without_overwriting():
             "dimensions_original": {"h_cm": 82.5, "w_cm": 64.0},
         }
     )
+    original_medium = meta["medium"]
+    original_category = meta["category"]
     original_dimensions = deepcopy(meta["dimensions_original"])
     provenance.set(meta, "medium", "available", "museum_catalog")
 
@@ -105,4 +114,6 @@ def test_filename_backfill_migration_marks_present_fields_without_overwriting():
     assert provenance.get(meta, "medium")["status"] == "available"
     assert provenance.get(meta, "category")["status"] == "unverified"
     assert provenance.get(meta, "dimensions_original")["status"] == "unverified"
+    assert meta["medium"] == original_medium
+    assert meta["category"] == original_category
     assert meta["dimensions_original"] == original_dimensions
