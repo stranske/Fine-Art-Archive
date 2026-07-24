@@ -8,6 +8,7 @@ for this enrichment routing detail.
 
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import socket
@@ -21,7 +22,13 @@ from fine_art_archive import provenance
 from fine_art_archive.collect import host_registry
 
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
-NETWORK_ERRORS = (urllib.error.URLError, TimeoutError, socket.timeout, OSError)
+NETWORK_ERRORS = (
+    urllib.error.URLError,
+    http.client.HTTPException,
+    TimeoutError,
+    socket.timeout,
+    OSError,
+)
 QID_RE = re.compile(r"^Q[1-9][0-9]*$")
 ROR_RE = re.compile(r"^0[a-z0-9]{6}[0-9]{2}$", re.IGNORECASE)
 

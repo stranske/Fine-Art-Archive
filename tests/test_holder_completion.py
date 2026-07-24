@@ -199,3 +199,15 @@ def test_cli_worker_validates_writes_mirrors_and_logs(tmp_path: Path) -> None:
     log_entries = operations_log.read_text(encoding="utf-8").splitlines()
     assert len(log_entries) == 1
     assert json.loads(log_entries[0])["work_id"] == work_id
+
+    rerun = complete_sidecars(
+        staging_meta.parents[1],
+        art_works_root=tmp_path / "art",
+        operations_log=operations_log,
+        limit=1,
+        client=FakeClient(_lookup()),
+    )
+    assert rerun.attempted == 0
+    assert rerun.updated == 0
+    assert rerun.mirrored == 0
+    assert operations_log.read_text(encoding="utf-8").splitlines() == log_entries

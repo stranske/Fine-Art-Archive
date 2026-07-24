@@ -75,10 +75,7 @@ def _sidecar_paths(staging_dir: Path) -> list[Path]:
 
 
 def _eligible(meta: dict[str, Any]) -> bool:
-    entry = provenance.get(meta, "holder")
-    if entry is None:
-        return True
-    return entry.get("status") in {"not_researched", "unverified"}
+    return provenance.needs_research(meta, "holder")
 
 
 def _write_existing_mirrors(
