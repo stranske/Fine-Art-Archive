@@ -17,7 +17,7 @@ import socket
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from enum import IntEnum
@@ -185,21 +185,23 @@ class MuseumProvider:
     ) -> None:
         self.client = client or JsonClient()
         self.artist_resolver = artist_resolver or ArtistQidResolver(timeout=self.client.timeout)
+        self._accession_cache: dict[tuple[str, str], str | None] = {}
 
     def resolve(self, sidecar: dict[str, Any], field: str) -> ProviderResult:
         entry = _holder_registry_entry(sidecar)
-        if entry is None or not entry.primary_adapter:
+        if entry is None:
             return ProviderResult(False, "museum")
-        accession = _museum_accession(sidecar)
+        source_id = entry.primary_adapter or f"museum:{entry.host_id}"
+        accession = self._configured_accession(sidecar, entry) or _museum_accession(sidecar)
         if accession is None:
-            return ProviderResult(False, entry.primary_adapter)
+            return ProviderResult(False, source_id)
         route = _museum_route(entry, accession)
         if route is None:
-            return ProviderResult(False, entry.primary_adapter)
+            return ProviderResult(False, source_id)
         api_url, source_ref, normalizer = route
         payload = self.client.get(api_url)
         if payload is None:
-            return ProviderResult(False, entry.primary_adapter)
+            return ProviderResult(False, source_id)
         try:
             normalized_value = normalizer(payload)
         except (KeyError, TypeError, ValueError):
@@ -209,13 +211,43 @@ class MuseumProvider:
             field,
             payload,
             normalized,
-            source_id=entry.primary_adapter,
+            source_id=source_id,
             source_ref=source_ref,
             tier=Tier.MUSEUM,
             artist_resolver=self.artist_resolver,
             sidecar=sidecar,
         )
-        return ProviderResult(True, entry.primary_adapter, candidate)
+        return ProviderResult(True, source_id, candidate)
+
+    def _configured_accession(
+        self, sidecar: Mapping[str, Any], entry: host_registry.HostEntry
+    ) -> str | None:
+        """Read a host-specific Wikidata identifier when the registry declares one."""
+        property_id = entry.accession_property
+        work_qid = _work_qid(sidecar)
+        if property_id is None or property_id == "P217" or work_qid is None:
+            return None
+        cache_key = (work_qid, property_id)
+        if cache_key in self._accession_cache:
+            return self._accession_cache[cache_key]
+        payload = self.client.get(
+            WikidataProvider.API_URL,
+            params={
+                "action": "wbgetentities",
+                "format": "json",
+                "ids": work_qid,
+                "languages": "en",
+                "props": "claims",
+            },
+        )
+        accession = None
+        if payload is not None:
+            entities = payload.get("entities")
+            entity = entities.get(work_qid) if isinstance(entities, Mapping) else None
+            if isinstance(entity, Mapping):
+                accession = _first_text(*_claim_values(entity, property_id))
+        self._accession_cache[cache_key] = accession
+        return accession
 
 
 class WikidataProvider:
@@ -821,55 +853,154 @@ def _year_from_metadata(raw: Mapping[str, Any], normalized: Mapping[str, Any]) -
     return match.group(1) if match else value
 
 
-def _museum_route(entry: host_registry.HostEntry, accession: str) -> tuple[str, str, Any] | None:
-    """Load a configured collector without embedding museum URL rules here."""
+MetadataNormalizer = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+def _museum_route(
+    entry: host_registry.HostEntry, accession: str
+) -> tuple[str, str, MetadataNormalizer] | None:
+    """Resolve an adapter, declarative JSON API, or IIIF manifest route."""
     adapter = entry.primary_adapter
-    if adapter is None or not re.fullmatch(r"[a-z][a-z0-9_]*", adapter):
-        return None
-    try:
-        module = importlib.import_module(f"fine_art_archive.collect.sources.{adapter}")
-    except ImportError:
-        return None
-    normalizer = getattr(module, "normalize_metadata", None)
-    if not callable(normalizer):
-        return None
-
-    # Existing adapters expose a one-argument stable-handle dataclass with
-    # metadata_api_url/web_url properties. Discover that contract rather than
-    # teaching this institution-agnostic resolver one URL path per museum.
-    for candidate_type in vars(module).values():
-        if not isinstance(candidate_type, type) or candidate_type.__module__ != module.__name__:
-            continue
+    if adapter is not None and re.fullmatch(r"[a-z][a-z0-9_]*", adapter):
         try:
-            handle = candidate_type(accession)
-        except (TypeError, ValueError):
-            continue
-        api_url = _absolute_http_url(getattr(handle, "metadata_api_url", None))
-        if api_url is None:
-            continue
-        source_ref = (
-            _absolute_http_url(getattr(handle, "web_url", None)) or entry.homepage or api_url
-        )
-        return api_url, source_ref, normalizer
+            module = importlib.import_module(f"fine_art_archive.collect.sources.{adapter}")
+        except ImportError:
+            module = None
+        normalizer = getattr(module, "normalize_metadata", None)
+        if module is not None and callable(normalizer):
+            # Existing adapters expose a one-argument stable-handle dataclass
+            # with metadata_api_url/web_url properties.
+            for candidate_type in vars(module).values():
+                if (
+                    not isinstance(candidate_type, type)
+                    or candidate_type.__module__ != module.__name__
+                ):
+                    continue
+                try:
+                    handle = candidate_type(accession)
+                except (TypeError, ValueError):
+                    continue
+                api_url = _absolute_http_url(getattr(handle, "metadata_api_url", None))
+                if api_url is None:
+                    continue
+                source_ref = (
+                    _absolute_http_url(getattr(handle, "web_url", None))
+                    or entry.homepage
+                    or api_url
+                )
+                return api_url, source_ref, normalizer
 
-    lookup_pattern = entry.accession_lookup_url
-    if lookup_pattern is None:
-        return None
+    if entry.api_base is not None:
+        api_url = _declarative_url(entry.api_base, accession)
+        if api_url is not None:
+            return (
+                api_url,
+                api_url,
+                lambda payload: _declarative_metadata(payload, entry.field_map),
+            )
+
+    if entry.iiif_pattern is not None:
+        manifest_url = _declarative_url(entry.iiif_pattern, accession, append=False)
+        if manifest_url is not None:
+            return manifest_url, manifest_url, _iiif_metadata
+    return None
+
+
+def _declarative_url(pattern: str, accession: str, *, append: bool = True) -> str | None:
+    encoded_accession = urllib.parse.quote(accession, safe="")
     try:
-        api_url = _absolute_http_url(lookup_pattern.format(accession=accession))
+        if "{accession}" in pattern:
+            candidate = pattern.format(accession=encoded_accession)
+        elif append:
+            candidate = f"{pattern.rstrip('/')}/{encoded_accession}"
+        else:
+            return None
     except (KeyError, ValueError):
         return None
-    if api_url is None:
-        return None
-    return api_url, entry.homepage or api_url, normalizer
+    return _absolute_http_url(candidate)
+
+
+def _declarative_metadata(
+    payload: Mapping[str, Any], field_map: Mapping[str, Sequence[str]]
+) -> dict[str, Any]:
+    """Project common museum JSON shapes without institution-specific code."""
+    aliases: dict[str, tuple[str, ...]] = {
+        "year": (
+            "date_display",
+            "objectDate",
+            "creation_date",
+            "productionDates",
+            "_primaryDate",
+            "dated",
+            "date",
+            "year",
+        ),
+        "medium": (
+            "materialsAndTechniques",
+            "medium_display",
+            "medium",
+            "materials",
+            "technique",
+            "techniques",
+        ),
+        "category": (
+            "classification_title",
+            "classification",
+            "objectType",
+            "objectName",
+            "type",
+        ),
+        "dimensions_raw": (
+            "dimensions_display",
+            "dimensions",
+            "measurements",
+            "physicalDescription",
+        ),
+        "artist_name": (
+            "artistDisplayName",
+            "artist_display",
+            "_primaryMaker",
+            "principalOrFirstMaker",
+            "creator",
+            "creators",
+            "maker",
+        ),
+    }
+    normalized: dict[str, Any] = {}
+    for field_name, defaults in aliases.items():
+        configured = field_map.get(field_name)
+        value = _declarative_text(payload, configured or defaults)
+        if value is not None:
+            normalized[field_name] = value
+    return normalized
+
+
+def _declarative_text(payload: Mapping[str, Any], aliases: Sequence[str]) -> str | None:
+    values = _walk_values(payload)
+    for alias in aliases:
+        folded_alias = fold_name(alias)
+        for key, value in values:
+            folded_key = fold_name(key)
+            if (
+                folded_key == folded_alias
+                or folded_key.endswith(f" {folded_alias}")
+                or f" {folded_alias} " in f" {folded_key} "
+            ):
+                text = _clean_text(value)
+                if text is not None:
+                    return text
+    return None
 
 
 def _holder_registry_entry(sidecar: Mapping[str, Any]) -> host_registry.HostEntry | None:
     holder = sidecar.get("holder")
     qid = _clean_qid(holder.get("wikidata_q")) if isinstance(holder, Mapping) else None
+    name = _clean_text(holder.get("name")) if isinstance(holder, Mapping) else None
+    ror = _clean_text(holder.get("ror")) if isinstance(holder, Mapping) else None
     try:
-        if qid is not None:
-            return host_registry.find_by_wikidata_q(qid)
+        direct = host_registry.find_by_holder(name=name, wikidata_q=qid, ror=ror)
+        if direct is not None:
+            return direct
         entry = provenance.get(dict(sidecar), "holder")
         note = entry.get("note") if entry is not None else None
         if isinstance(note, str):

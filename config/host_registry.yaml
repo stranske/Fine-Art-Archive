@@ -6,7 +6,7 @@
 # host's behavior changes; the next acquisition reflects the update.
 
 schema_version: "1.0"
-last_updated: "2026-05-17"
+last_updated: "2026-07-24"
 
 hosts:
 
@@ -27,11 +27,12 @@ hosts:
         og:image meta tag from the object's HTML page. /full/max/0/default.jpg
         delivers the full resolution single-request.
     discovery:
-      accession_property: P350
+      api_base: null   # adapter resolves the current object-metadata route
+      accession_property: P217
       accession_lookup_url: "https://www.rijksmuseum.nl/en/collection/{accession}"
       iiif_pattern: "https://iiif.micr.io/{micrio_id}/full/max/0/default.jpg"
       quirks:
-        - "P350 in Wikidata sometimes stores internal numeric DB ID instead of canonical alphanumeric accession (e.g., '52501' instead of 'SK-A-2860'); fall back to search by Q-ID title if direct lookup 404s."
+        - "P217 inventory numbers vary in form; fall back to search by Q-ID title if direct lookup fails."
         - "Multiple Micrio IDs per page (main work + 'more by this artist' carousel). Use og:image, not the first grep match."
     fallback_chain:
       - wikimedia_commons
@@ -45,6 +46,9 @@ hosts:
 
   met:
     name: The Metropolitan Museum of Art
+    aliases:
+      - Metropolitan Museum of Art
+      - The Met
     wikidata_q: Q160236
     ror: 01xtbq813
     homepage: https://www.metmuseum.org/
@@ -57,6 +61,7 @@ hosts:
         2000-4000 px on the long edge, 1-10 MP total. For large canvases
         this yields low px/cm; quality assessment correctly flags.
     discovery:
+      api_base: "https://collectionapi.metmuseum.org/public/collection/v1/objects/{accession}"
       accession_property: P3634   # Met object ID (numeric)
       accession_lookup_url: "https://collectionapi.metmuseum.org/public/collection/v1/objects/{accession}"
       iiif_pattern: null   # Met has no public IIIF for most works
@@ -76,6 +81,8 @@ hosts:
 
   national_gallery_london:
     name: The National Gallery, London
+    aliases:
+      - National Gallery
     wikidata_q: Q180788
     ror: 03dn21404
     homepage: https://www.nationalgallery.org.uk/
@@ -94,6 +101,7 @@ hosts:
         high-res (~30-50 MP for many works). When GAC doesn't have a specific
         work, Wikimedia Commons is the fallback.
     discovery:
+      api_base: null
       accession_property: null   # NGL accession numbers (NG1207 etc.) don't resolve via public API
       accession_lookup_url: null
       iiif_pattern: null
@@ -127,7 +135,8 @@ hosts:
         direct high-res JPEGs (no IIIF) at nga.gov/api/.../iiif/... — verify
         the current URL pattern when building the adapter.
     discovery:
-      accession_property: P4625   # NGA object ID
+      api_base: null   # bulk CSV is authoritative, but is not a per-object JSON API
+      accession_property: P4683   # National Gallery of Art artwork ID
       accession_lookup_url: "https://www.nga.gov/artworks/{accession}"
       iiif_pattern: null
       quirks:
@@ -154,7 +163,8 @@ hosts:
         major US museum (CC-BY licensed); the descriptions feed
         description_long in the sidecar directly.
     discovery:
-      accession_property: P9173
+      api_base: "https://api.artic.edu/api/v1/artworks/{accession}"
+      accession_property: P4610   # ARTIC artwork ID
       accession_lookup_url: "https://api.artic.edu/api/v1/artworks/{accession}"
       iiif_pattern: "https://www.artic.edu/iiif/2/{image_id}/full/max/0/default.jpg"
       quirks:
@@ -180,19 +190,401 @@ hosts:
         images.print.url (largest variant; ~7 MP typical), fall back to
         images.web.url (~2 MP).
     discovery:
-      accession_property: P9092
+      api_base: "https://openaccess-api.clevelandart.org/api/artworks/{accession}"
+      accession_property: P11110   # Cleveland Museum of Art ID
       accession_lookup_url: "https://openaccess-api.clevelandart.org/api/artworks/{accession}"
       iiif_pattern: "https://openaccess-cdn.clevelandart.org/{accession}/{accession}_print.jpg"
       quirks:
-        - "P9092 in Wikidata is unreliable: sometimes stores an internal numeric ID (e.g. '58478'), sometimes the canonical accession number ('1965.233'). The API only accepts the canonical accession_number form. Fallback: search the Cleveland API by title + artist when the direct lookup 404s."
+        - "Prefer the museum-specific P11110 value over generic P217; the API requires the canonical accession-number form (for example, 1965.233)."
     fallback_chain:
       - wikimedia_commons
     known_issues:
       - date: "2026-05-17"
-        description: "Wikidata Q56879420 (Church 'Twilight in the Wilderness') has P9092='58478' but Cleveland's API requires '1965.233'."
-        workaround: "When P9092 lookup 404s, fall back to Cleveland API search by title + artist before failing."
+        description: "Generic inventory imports may carry internal numeric IDs that the object endpoint does not accept."
+        workaround: "Use P11110 first, then fall back to Cleveland API search by title and artist."
     last_verified: "2026-05-17"
     verification_test_work_q: Q56879420  # Church Twilight in the Wilderness
+    source_tier: 1
+
+  # ----------------------------------------------------------------------
+  # Additional high-frequency archive holders
+  #
+  # Seeded from the 2026-07-24 holder-completion output in the canonical
+  # archive. The leading counts were NGA 240, National Gallery 195, AIC 143,
+  # Van Gogh Museum 117, Met 115, Rijksmuseum 59, Getty 48, Mauritshuis 41,
+  # Prado 35, National Gallery Prague/LACMA/Alte Nationalgalerie 32 each,
+  # Städel 27, Musée d'Orsay 24, Tate 22, and Kunsthistorisches Museum 20.
+  #
+  # A null api_base is intentional: it records holder identity without
+  # pretending that a bulk dump, staff-only endpoint, or API-keyed search is
+  # a safe accession-addressable route. Such entries still improve holder
+  # matching and can gain a declarative route later without Python changes.
+  # ----------------------------------------------------------------------
+
+  harvard_art_museums:
+    name: Harvard Art Museums
+    aliases:
+      - Fogg Museum
+      - Busch-Reisinger Museum
+      - Arthur M. Sackler Museum
+    wikidata_q: Q3783572
+    ror: null
+    homepage: https://harvardartmuseums.org/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "The keyed JSON API is optional; Wikidata's museum object ID resolves directly to a public IIIF manifest."
+    discovery:
+      api_base: null
+      accession_property: P10121
+      accession_lookup_url: "https://harvardartmuseums.org/collections/object/{accession}"
+      iiif_pattern: "https://iiif.harvardartmuseums.org/manifests/object/{accession}"
+      quirks:
+        - "The JSON collection API requires credentials; the IIIF Presentation manifest does not."
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  j_paul_getty_museum:
+    name: J. Paul Getty Museum
+    aliases:
+      - Getty Museum
+      - The J. Paul Getty Museum
+    wikidata_q: Q731126
+    ror: null
+    homepage: https://www.getty.edu/art/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Getty's current Linked Art identifiers do not map safely to the legacy numeric IIIF path."
+    discovery:
+      api_base: null
+      accession_property: P2582
+      accession_lookup_url: "https://www.getty.edu/art/collection/object/{accession}"
+      iiif_pattern: null
+      quirks:
+        - "Discover current IIIF/Linked Art URLs from the object record; do not combine P2582 with the legacy numeric IIIF path."
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  smithsonian_institution:
+    name: Smithsonian Institution
+    aliases:
+      - Smithsonian
+      - SI
+    wikidata_q: Q131626
+    ror: null
+    homepage: https://www.si.edu/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Open Access JSON and IIIF are available, but accession lookup is API-keyed and spans SI units."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: "https://www.si.edu/object/{accession}"
+      iiif_pattern: null
+      quirks:
+        - "Use the Smithsonian Open Access API only when an API key and unit-qualified identifier are available."
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  walters_art_museum:
+    name: Walters Art Museum
+    aliases:
+      - The Walters Art Museum
+    wikidata_q: Q210081
+    ror: null
+    homepage: https://thewalters.org/
+    rights_default: public-domain
+    primary_acquisition:
+      adapter: null
+      notes: "The former v1 REST API is retired; keep the host mapped but do not call the retired endpoint."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: "https://art.thewalters.org/detail/{accession}"
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  victoria_and_albert:
+    name: Victoria and Albert Museum
+    aliases:
+      - V&A
+      - Victoria & Albert Museum
+    wikidata_q: Q213322
+    ror: null
+    homepage: https://www.vam.ac.uk/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Collections API v2 exposes object JSON and IIIF-backed images."
+    discovery:
+      api_base: "https://api.vam.ac.uk/v2/museumobject/{accession}"
+      accession_property: P3929
+      accession_lookup_url: "https://collections.vam.ac.uk/item/{accession}"
+      iiif_pattern: null
+      field_map:
+        year:
+          - productionDates
+          - _primaryDate
+        medium:
+          - materialsAndTechniques
+          - materials
+          - techniques
+        category:
+          - objectType
+        artist_name:
+          - artistMakerPerson
+          - _primaryMaker
+    fallback_chain:
+      - wikimedia_commons
+    last_verified: "2026-07-24"
+    source_tier: 1
+
+  cooper_hewitt:
+    name: Cooper Hewitt, Smithsonian Design Museum
+    aliases:
+      - Cooper Hewitt
+      - Cooper-Hewitt National Design Museum
+    wikidata_q: Q1129820
+    ror: null
+    homepage: https://www.cooperhewitt.org/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "The legacy Cooper Hewitt API is not treated as a current accession-addressable route."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: "https://collection.cooperhewitt.org/objects/{accession}"
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  museum_of_modern_art:
+    name: Museum of Modern Art
+    aliases:
+      - MoMA
+      - The Museum of Modern Art
+    wikidata_q: Q188740
+    ror: null
+    homepage: https://www.moma.org/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "The live REST API is staff/partner-only; public metadata is a bulk dataset."
+    discovery:
+      api_base: null
+      accession_property: P2014
+      accession_lookup_url: "https://www.moma.org/collection/works/{accession}"
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  tate:
+    name: Tate
+    aliases:
+      - Tate Britain
+      - Tate Modern
+    wikidata_q: Q430682
+    ror: null
+    homepage: https://www.tate.org.uk/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Public collection metadata is distributed as bulk JSON/CSV rather than a stable live API."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: "https://www.tate.org.uk/art/artworks/{accession}"
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  van_gogh_museum:
+    name: Van Gogh Museum
+    wikidata_q: Q224124
+    ror: null
+    homepage: https://www.vangoghmuseum.nl/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "No verified accession-addressable JSON or IIIF Presentation route is configured."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+      - europeana
+    source_tier: 1
+
+  mauritshuis:
+    name: Mauritshuis
+    wikidata_q: Q221092
+    ror: null
+    homepage: https://www.mauritshuis.nl/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Micrio image identifiers are not derivable from accession numbers."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+      - europeana
+    source_tier: 1
+
+  museo_del_prado:
+    name: Museo del Prado
+    aliases:
+      - Prado Museum
+    wikidata_q: Q160112
+    ror: null
+    homepage: https://www.museodelprado.es/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "No verified public accession-addressable JSON endpoint is configured."
+    discovery:
+      api_base: null
+      accession_property: P8905
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+      - europeana
+    source_tier: 1
+
+  national_gallery_prague:
+    name: National Gallery Prague
+    wikidata_q: Q1419555
+    ror: null
+    homepage: https://www.ngprague.cz/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Use standards-based fallbacks until a stable object API is verified."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - europeana
+      - wikimedia_commons
+    source_tier: 1
+
+  lacma:
+    name: Los Angeles County Museum of Art
+    aliases:
+      - LACMA
+    wikidata_q: Q1641836
+    ror: null
+    homepage: https://www.lacma.org/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "No current public accession-addressable API is configured."
+    discovery:
+      api_base: null
+      accession_property: P4611
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - wikimedia_commons
+    source_tier: 1
+
+  alte_nationalgalerie:
+    name: Alte Nationalgalerie
+    wikidata_q: Q162111
+    ror: null
+    homepage: https://www.smb.museum/museen-einrichtungen/alte-nationalgalerie/home/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Use standards-based fallbacks until an accession route is verified."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - europeana
+      - wikimedia_commons
+    source_tier: 1
+
+  staedel_museum:
+    name: Städel Museum
+    aliases:
+      - Stadel Museum
+    wikidata_q: Q163804
+    ror: null
+    homepage: https://www.staedelmuseum.de/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Use standards-based fallbacks until an accession route is verified."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - europeana
+      - wikimedia_commons
+    source_tier: 1
+
+  musee_d_orsay:
+    name: Musée d'Orsay
+    aliases:
+      - Musee d'Orsay
+    wikidata_q: Q23402
+    ror: null
+    homepage: https://www.musee-orsay.fr/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Use standards-based fallbacks until an accession route is verified."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - europeana
+      - wikimedia_commons
+    source_tier: 1
+
+  kunsthistorisches_museum:
+    name: Kunsthistorisches Museum
+    wikidata_q: Q95569
+    ror: null
+    homepage: https://www.khm.at/
+    rights_default: mixed
+    primary_acquisition:
+      adapter: null
+      notes: "Use standards-based fallbacks until an accession route is verified."
+    discovery:
+      api_base: null
+      accession_property: P217
+      accession_lookup_url: null
+      iiif_pattern: null
+    fallback_chain:
+      - europeana
+      - wikimedia_commons
     source_tier: 1
 
   # ----------------------------------------------------------------------
