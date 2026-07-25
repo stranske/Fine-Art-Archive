@@ -14,6 +14,7 @@ import json
 import os
 import re
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -36,6 +37,26 @@ NETWORK_ERRORS = (
     socket.timeout,
     OSError,
 )
+
+_THROTTLE_SECONDS = 0.2
+_MAX_RETRIES = 4
+_last_request_monotonic = 0.0
+
+
+def _throttle() -> None:
+    """Space out remote requests so shared APIs (Wikidata) don't rate-limit us."""
+    global _last_request_monotonic
+    wait = _THROTTLE_SECONDS - (time.monotonic() - _last_request_monotonic)
+    if wait > 0:
+        time.sleep(wait)
+    _last_request_monotonic = time.monotonic()
+
+
+def _retry_delay(exc: urllib.error.HTTPError, attempt: int) -> float:
+    retry_after = exc.headers.get("Retry-After") if exc.headers else None
+    if retry_after and retry_after.strip().isdigit():
+        return min(float(retry_after), 30.0)
+    return min(2.0**attempt, 30.0)
 QID_RE = re.compile(r"^Q[1-9][0-9]*$")
 QID_IN_TEXT_RE = re.compile(r"(?:wikidata\.org/(?:wiki/)?|^)(Q[1-9][0-9]*)\b")
 ULAN_RE = re.compile(r"(?:ulan/)?([0-9]{3,})/?$")
@@ -111,17 +132,25 @@ class JsonClient:
             url,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "Fine-Art-Archive/0.1",
+                "User-Agent": "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)",
             },
         )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                payload = json.loads(response.read())
-        except NETWORK_ERRORS:
-            return None
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return None
-        return payload if isinstance(payload, dict) else None
+        for attempt in range(_MAX_RETRIES):
+            _throttle()
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    payload = json.loads(response.read())
+                return payload if isinstance(payload, dict) else None
+            except urllib.error.HTTPError as exc:
+                if exc.code in (429, 503) and attempt < _MAX_RETRIES - 1:
+                    time.sleep(_retry_delay(exc, attempt))
+                    continue
+                return None
+            except NETWORK_ERRORS:
+                return None
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return None
+        return None
 
 
 class ArtistQidResolver:

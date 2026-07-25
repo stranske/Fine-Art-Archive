@@ -12,6 +12,7 @@ import http.client
 import json
 import re
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -31,6 +32,29 @@ NETWORK_ERRORS = (
 )
 QID_RE = re.compile(r"^Q[1-9][0-9]*$")
 ROR_RE = re.compile(r"^0[a-z0-9]{6}[0-9]{2}$", re.IGNORECASE)
+
+# Wikidata asks for a descriptive User-Agent and rate-limits anonymous bursts.
+USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
+_THROTTLE_SECONDS = 0.2
+_MAX_RETRIES = 4
+_last_request_monotonic = 0.0
+
+
+def _throttle() -> None:
+    """Space out Wikidata requests so a bulk pass does not get rate-limited."""
+    global _last_request_monotonic
+    wait = _THROTTLE_SECONDS - (time.monotonic() - _last_request_monotonic)
+    if wait > 0:
+        time.sleep(wait)
+    _last_request_monotonic = time.monotonic()
+
+
+def _retry_delay(exc: urllib.error.HTTPError, attempt: int) -> float:
+    """Backoff for a retryable response: honour Retry-After, else exponential."""
+    retry_after = exc.headers.get("Retry-After") if exc.headers else None
+    if retry_after and retry_after.strip().isdigit():
+        return min(float(retry_after), 30.0)
+    return min(2.0**attempt, 30.0)
 
 
 @dataclass(frozen=True)
@@ -66,30 +90,38 @@ class WikidataClient:
         self, title: str, artist: str, *, creator_qid: str | None = None
     ) -> str | None:
         """Best-effort work lookup, verifying P170 when a creator QID is known."""
-        query = " ".join(part for part in (title.strip(), artist.strip()) if part)
-        if not query:
-            return None
-
-        payload = self._request_json(
-            {
-                "action": "wbsearchentities",
-                "format": "json",
-                "language": "en",
-                "limit": "10",
-                "search": query,
-                "type": "item",
-            }
-        )
-        qids = _search_qids(payload)
-        if not qids:
+        title = title.strip()
+        artist = artist.strip()
+        # Search title-only first (broadest recall) then the combined phrase, so
+        # a work indexed only under its title is still found and then verified by
+        # creator. Dedupe queries and preserve candidate order.
+        queries = [q for q in (title, f"{title} {artist}".strip()) if q]
+        seen: dict[str, str] = {}
+        candidate_qids: list[str] = []
+        for query in dict.fromkeys(queries):
+            payload = self._request_json(
+                {
+                    "action": "wbsearchentities",
+                    "format": "json",
+                    "language": "en",
+                    "limit": "10",
+                    "search": query,
+                    "type": "item",
+                }
+            )
+            for qid in _search_qids(payload):
+                if qid not in seen:
+                    seen[qid] = query
+                    candidate_qids.append(qid)
+        if not candidate_qids:
             return None
         if creator_qid is None:
-            return qids[0]
+            return candidate_qids[0]
 
-        entities = self._get_entities(qids, props="claims")
+        entities = self._get_entities(candidate_qids, props="claims")
         if entities is None:
             return None
-        for qid in qids:
+        for qid in candidate_qids:
             entity = entities.get(qid)
             if isinstance(entity, dict) and creator_qid in _qid_claims(entity, "P170"):
                 return qid
@@ -148,15 +180,26 @@ class WikidataClient:
 
     def _request_json(self, params: dict[str, str]) -> dict[str, Any] | None:
         url = f"{WIKIDATA_API}?{urllib.parse.urlencode(params)}"
-        request = urllib.request.Request(url, headers={"User-Agent": "Fine-Art-Archive/0.1"})
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                payload = json.loads(response.read())
-        except NETWORK_ERRORS:
-            return None
-        except json.JSONDecodeError:
-            return None
-        return payload if isinstance(payload, dict) else None
+        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        for attempt in range(_MAX_RETRIES):
+            _throttle()
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    payload = json.loads(response.read())
+                return payload if isinstance(payload, dict) else None
+            except urllib.error.HTTPError as exc:
+                # Retry transient rate-limit / unavailable responses with backoff;
+                # anything else is a hard failure that the caller skips.
+                if exc.code in (429, 503) and attempt < _MAX_RETRIES - 1:
+                    time.sleep(_retry_delay(exc, attempt))
+                    continue
+                return None
+            except NETWORK_ERRORS:
+                # No retry: preserves timeout-bounded semantics for the caller.
+                return None
+            except json.JSONDecodeError:
+                return None
+        return None
 
 
 def complete_holder(
