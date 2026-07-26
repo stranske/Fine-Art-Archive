@@ -213,6 +213,40 @@ def test_cli_worker_validates_writes_mirrors_and_logs(tmp_path: Path) -> None:
     assert operations_log.read_text(encoding="utf-8").splitlines() == log_entries
 
 
+def test_invalid_sidecar_is_skipped_not_fatal(tmp_path: Path) -> None:
+    staging_dir = tmp_path / "staging"
+    operations_log = tmp_path / "operations.log"
+    valid_paths: list[Path] = []
+    for directory in ("01-valid", "03-valid"):
+        path = staging_dir / directory / "meta.json"
+        sidecar.write(path, deepcopy(MINIMAL_SIDECAR))
+        valid_paths.append(path)
+    invalid = deepcopy(MINIMAL_SIDECAR)
+    invalid["rights"] = {"status": "CC0"}
+    invalid_path = staging_dir / "02-invalid" / "meta.json"
+    invalid_path.parent.mkdir(parents=True)
+    invalid_path.write_text(json.dumps(invalid), encoding="utf-8")
+
+    stats = complete_sidecars(
+        staging_dir,
+        operations_log=operations_log,
+        limit=2,
+        client=FakeClient(_lookup()),
+    )
+
+    assert stats.attempted == 2
+    assert stats.updated == 2
+    assert stats.skipped_invalid == 1
+    assert all(sidecar.load(path)["holder"] is not None for path in valid_paths)
+    entries = [json.loads(line) for line in operations_log.read_text(encoding="utf-8").splitlines()]
+    skipped = [entry for entry in entries if entry["op"] == "invalid_sidecar_skipped"]
+    assert len(skipped) == 1
+    assert skipped[0]["actor"] == "complete_holders"
+    assert skipped[0]["work_id"] == str(MINIMAL_SIDECAR["work_id"])
+    assert skipped[0]["staging_path"] == str(invalid_path)
+    assert "'CC0' is not one of" in skipped[0]["validation_error"]
+
+
 def _entity(*, creator: str | None = None, instance_of: str | None = None) -> dict[str, Any]:
     claims: dict[str, Any] = {}
     for prop, qid in (("P170", creator), ("P31", instance_of)):

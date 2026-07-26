@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import jsonschema
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -37,6 +39,7 @@ class CompletionStats:
     updated_works: int
     updated_fields: int
     mirrored: int
+    skipped_invalid: int = 0
 
 
 def complete_sidecars(
@@ -52,32 +55,41 @@ def complete_sidecars(
         raise ValueError("limit must be at least 1")
 
     active_resolver = resolver or SourceResolver()
-    attempted_works = attempted_fields = updated_works = updated_fields = mirrored = 0
+    attempted_works = attempted_fields = updated_works = updated_fields = mirrored = (
+        skipped_invalid
+    ) = 0
     for path in _sidecar_paths(staging_dir):
-        meta = sidecar.load(path)
-        fields = _eligible_fields(meta)
-        if not fields:
-            continue
-        attempted_works += 1
-        before = deepcopy(meta)
-        outcomes: dict[str, Resolution] = {}
-        for field in fields:
-            attempted_fields += 1
-            resolution = active_resolver.research(meta, field)
-            if apply_resolution(meta, field, resolution):
-                updated_fields += 1
-                outcomes[field] = resolution
-
-        if meta != before:
+        work_id = path.parent.name
+        try:
+            meta = sidecar.load(path)
+            work_id = str(meta.get("work_id", work_id))
             sidecar.validate(meta)
-            sidecar.write(path, meta)
-            mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
-            updated_works += 1
-            mirrored += len(mirror_paths)
-            if operations_log is not None:
-                _append_operation(operations_log, meta, path, mirror_paths, outcomes)
-        if attempted_works >= limit:
-            break
+            fields = _eligible_fields(meta)
+            if not fields:
+                continue
+            attempted_works += 1
+            before = deepcopy(meta)
+            outcomes: dict[str, Resolution] = {}
+            for field in fields:
+                attempted_fields += 1
+                resolution = active_resolver.research(meta, field)
+                if apply_resolution(meta, field, resolution):
+                    updated_fields += 1
+                    outcomes[field] = resolution
+
+            if meta != before:
+                sidecar.validate(meta)
+                sidecar.write(path, meta)
+                mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
+                updated_works += 1
+                mirrored += len(mirror_paths)
+                if operations_log is not None:
+                    _append_operation(operations_log, meta, path, mirror_paths, outcomes)
+            if attempted_works >= limit:
+                break
+        except jsonschema.ValidationError as error:
+            skipped_invalid += 1
+            _record_invalid_sidecar(operations_log, path, work_id, error)
 
     return CompletionStats(
         attempted_works,
@@ -85,6 +97,7 @@ def complete_sidecars(
         updated_works,
         updated_fields,
         mirrored,
+        skipped_invalid,
     )
 
 
@@ -152,6 +165,26 @@ def _append_operation(
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _record_invalid_sidecar(
+    log_path: Path | None, path: Path, work_id: str, error: jsonschema.ValidationError
+) -> None:
+    message = f"skipping invalid sidecar work_id={work_id}: {error.message}"
+    print(message, file=sys.stderr)
+    if log_path is None:
+        return
+    entry = {
+        "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "actor": "complete_metadata",
+        "op": "invalid_sidecar_skipped",
+        "work_id": work_id,
+        "staging_path": str(path),
+        "validation_error": error.message,
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def _env_path(name: str) -> Path | None:
     raw = os.environ.get(name)
     return Path(raw).expanduser() if raw else None
@@ -199,7 +232,8 @@ def main(argv: list[str] | None = None) -> int:
         f"attempted_fields={stats.attempted_fields} "
         f"updated_works={stats.updated_works} "
         f"updated_fields={stats.updated_fields} "
-        f"mirrored={stats.mirrored}"
+        f"mirrored={stats.mirrored} "
+        f"skipped_invalid={stats.skipped_invalid}"
     )
     return 0
 

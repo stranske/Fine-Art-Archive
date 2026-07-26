@@ -625,3 +625,54 @@ def test_completion_writes_staging_existing_work_mirror_and_log_idempotently(
     assert second.attempted_works == 0
     assert second.updated_works == 0
     assert log_path.read_text(encoding="utf-8").splitlines() == log_lines
+
+
+def test_invalid_sidecar_is_skipped_not_fatal(tmp_path: Path) -> None:
+    staging_dir = tmp_path / "staging"
+    log_path = tmp_path / "operations.log"
+
+    def write_valid(directory: str) -> Path:
+        meta = deepcopy(MINIMAL_SIDECAR)
+        provenance.set(meta, "year", "not_researched", checked_at="2026-07-24T00:00:00Z")
+        for field in ("medium", "category", "dimensions_original", "artist_qid"):
+            provenance.set(
+                meta, field, "not_available", "fixture", checked_at="2026-07-24T00:00:00Z"
+            )
+        path = staging_dir / directory / "meta.json"
+        sidecar.write(path, meta)
+        return path
+
+    first = write_valid("01-valid")
+    invalid = deepcopy(MINIMAL_SIDECAR)
+    invalid["rights"] = {"status": "CC0"}
+    invalid_path = staging_dir / "02-invalid" / "meta.json"
+    invalid_path.parent.mkdir(parents=True)
+    invalid_path.write_text(json.dumps(invalid), encoding="utf-8")
+    last = write_valid("03-valid")
+
+    class YearResolver:
+        def research(self, meta: dict[str, Any], field: str) -> Resolution:
+            assert field == "year"
+            return Resolution(
+                "1873", "wikidata", "https://www.wikidata.org/wiki/Q1", "available", Tier.GENERAL
+            )
+
+    stats = complete_sidecars(
+        staging_dir,
+        operations_log=log_path,
+        resolver=YearResolver(),  # type: ignore[arg-type]
+        limit=2,
+    )
+
+    assert stats.attempted_works == 2
+    assert stats.updated_works == 2
+    assert stats.skipped_invalid == 1
+    assert sidecar.load(first)["year"] == "1873"
+    assert sidecar.load(last)["year"] == "1873"
+    entries = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    skipped = [entry for entry in entries if entry["op"] == "invalid_sidecar_skipped"]
+    assert len(skipped) == 1
+    assert skipped[0]["actor"] == "complete_metadata"
+    assert skipped[0]["work_id"] == str(MINIMAL_SIDECAR["work_id"])
+    assert skipped[0]["staging_path"] == str(invalid_path)
+    assert "'CC0' is not one of" in skipped[0]["validation_error"]
