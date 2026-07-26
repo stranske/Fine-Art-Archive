@@ -3,6 +3,36 @@
 from __future__ import annotations
 
 import shlex
+from collections.abc import Mapping
+
+
+def normalize_rights_status(value: object, *, fallback: str = "rights-reserved") -> str:
+    """Map common source-rights values onto the sidecar status enum.
+
+    Collection APIs use several spellings for the same public-domain
+    dedication. Keeping this conversion at the adapter boundary prevents a raw
+    provider value such as ``CC0`` from reaching the strict sidecar schema.
+    """
+    if isinstance(value, Mapping):
+        value = value.get("status") or value.get("license") or value.get("name")
+    if not isinstance(value, str):
+        return fallback
+
+    normalized = " ".join(value.casefold().replace("_", "-").split())
+    if normalized in {
+        "public-domain",
+        "public domain",
+        "pd",
+        "cc0",
+        "cc0 1.0",
+        "cc0-1.0",
+        "creativecommons zero",
+        "creative commons zero",
+    }:
+        return "public-domain"
+    if normalized.startswith(("cc-by", "cc by", "creative commons attribution")):
+        return "rights-reserved"
+    return fallback
 
 
 def quoted_output_path(out_path: str) -> str:

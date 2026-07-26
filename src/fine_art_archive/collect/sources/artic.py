@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from fine_art_archive.collect.sources._shared import (
     holder_fields,
+    normalize_rights_status,
     render_image_acquire_shell,
     year_fields,
 )
@@ -142,6 +143,7 @@ with open('/tmp/artic_master_url', 'w') as f:
 def normalize_metadata(api_json: dict) -> dict:
     """Project the ARTIC API response into our sidecar shape."""
     d = api_json.get("data", api_json)
+    default_rights = "public-domain" if d.get("is_public_domain") else "rights-reserved"
     return {
         "title": d.get("title"),
         "title_alternate": (
@@ -157,7 +159,10 @@ def normalize_metadata(api_json: dict) -> dict:
         ),
         "medium": d.get("medium_display") or d.get("classification_title"),
         "dimensions_raw": d.get("dimensions"),
-        "rights_status": ("public-domain" if d.get("is_public_domain") else "rights-reserved"),
+        "rights_status": normalize_rights_status(
+            d.get("rights") or d.get("rights_status") or d.get("copyright"),
+            fallback=default_rights,
+        ),
         "rights_evidence_url": "https://www.artic.edu/image-licensing",
         **holder_fields(
             name="Art Institute of Chicago",

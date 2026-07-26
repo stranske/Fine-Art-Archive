@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from fine_art_archive import sidecar
 from fine_art_archive.collect.sources import artic, cleveland, met, rijksmuseum
 from fine_art_archive.collect.sources._shared import render_image_acquire_shell
 
@@ -105,3 +106,35 @@ def test_holder_and_year_fields_are_preserved_for_museum_normalizers() -> None:
     assert met_meta["year_max"] == 1884
     assert rijks_meta["year"] == "c. 1658"
     assert rijks_meta["year_min"] == 1657
+
+
+def test_cc0_maps_to_public_domain_and_validates_sidecar() -> None:
+    normalized = artic.normalize_metadata(
+        {
+            "data": {
+                "id": 11723,
+                "title": "The Child's Bath",
+                "rights": "CC0 1.0",
+                "is_public_domain": False,
+            }
+        }
+    )
+    meta = {
+        "work_id": "4f3a2b8-the-childs-bath",
+        "schema_version": "1.0",
+        "artist": {"name": "Mary Cassatt"},
+        "title": normalized["title"],
+        "files": {
+            "master": {
+                "filename": "master.jpeg",
+                "sha256": "4f3a2b8" + ("0" * 57),
+                "size_bytes": 123,
+                "ingested_at": "2026-07-26T00:00:00Z",
+            }
+        },
+        "history": [{"ts": "2026-07-26T00:00:00Z", "actor": "test", "op": "ingested"}],
+        "rights": {"status": normalized["rights_status"]},
+    }
+
+    assert normalized["rights_status"] == "public-domain"
+    assert sidecar.is_valid(meta)
