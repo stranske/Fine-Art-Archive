@@ -61,7 +61,7 @@ def _note_original(note: str) -> Any:
     idx = note.find(_NOTE_MARKER)
     if idx < 0:
         return None
-    text = note[idx + len(_NOTE_MARKER):].strip()
+    text = note[idx + len(_NOTE_MARKER) :].strip()
     if text.startswith('"'):
         end = 1
         while end < len(text):
@@ -112,8 +112,11 @@ def _write_existing_mirrors(
 
 
 def _append_operation(
-    log_path: Path, meta: dict[str, Any], staging_path: Path,
-    mirror_paths: list[Path], outcomes: dict[str, str],
+    log_path: Path,
+    meta: dict[str, Any],
+    staging_path: Path,
+    mirror_paths: list[Path],
+    outcomes: dict[str, str],
 ) -> None:
     entry = {
         "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -147,14 +150,20 @@ def resolve_field(meta: dict[str, Any], field: str) -> tuple[str, list[str]]:
         if kind == "agree" and canonical:
             meta["medium"] = canonical
             provenance.set(
-                meta, "medium", "available", "reconciled",
+                meta,
+                "medium",
+                "available",
+                "reconciled",
                 note="Conflict resolved: curated and source agree; canonical medium form.",
             )
             return "reconciled", review
         # unparsed or genuine material conflict -> keep curated museum value
         meta["medium"] = original
         provenance.set(
-            meta, "medium", "unverified", "curated",
+            meta,
+            "medium",
+            "unverified",
+            "curated",
             note=f"Conflict resolved: kept curated museum value; source alternative was {current!r}.",
         )
         if kind == "conflict":
@@ -165,15 +174,21 @@ def resolve_field(meta: dict[str, Any], field: str) -> tuple[str, list[str]]:
     # museum catalogue authoritative for physical-object facts
     meta[field] = original
     provenance.set(
-        meta, field, "unverified", "curated",
+        meta,
+        field,
+        "unverified",
+        "curated",
         note=f"Conflict resolved: kept curated museum value; source alternative was {current!r}.",
     )
     return "curated", review
 
 
 def resolve_sidecars(
-    staging_dir: Path, *, art_works_root: Path | None = None,
-    operations_log: Path | None = None, limit: int = DEFAULT_LIMIT,
+    staging_dir: Path,
+    *,
+    art_works_root: Path | None = None,
+    operations_log: Path | None = None,
+    limit: int = DEFAULT_LIMIT,
 ) -> tuple[ResolutionStats, list[str]]:
     if limit < 1:
         raise ValueError("limit must be at least 1")
@@ -182,8 +197,11 @@ def resolve_sidecars(
     for path in _sidecar_paths(staging_dir):
         meta = sidecar.load(path)
         fp = meta.get("field_provenance") or {}
-        conflicting = [f for f in ("medium", *CURATED_FIELDS)
-                       if (fp.get(f) or {}).get("status") == "conflicting"]
+        conflicting = [
+            f
+            for f in ("medium", *CURATED_FIELDS)
+            if (fp.get(f) or {}).get("status") == "conflicting"
+        ]
         if not conflicting:
             continue
         attempted += 1
@@ -220,17 +238,23 @@ def _env_path(name: str) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
-    parser.add_argument("--staging-dir", type=Path,
-                        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars")
+    parser.add_argument(
+        "--staging-dir",
+        type=Path,
+        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+    )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
-    parser.add_argument("--show-conflicts", action="store_true",
-                        help="Print the material-conflict review list.")
+    parser.add_argument(
+        "--show-conflicts", action="store_true", help="Print the material-conflict review list."
+    )
     args = parser.parse_args(argv)
 
     stats, review = resolve_sidecars(
-        args.staging_dir, art_works_root=args.art_works_root,
-        operations_log=args.operations_log, limit=args.limit,
+        args.staging_dir,
+        art_works_root=args.art_works_root,
+        operations_log=args.operations_log,
+        limit=args.limit,
     )
     print(
         "conflict resolution: "

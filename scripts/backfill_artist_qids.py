@@ -58,11 +58,16 @@ def _artist_name(meta: dict[str, Any]) -> str:
     return str(artist.get("name") or "").strip() if isinstance(artist, dict) else ""
 
 
-def _write_existing_mirrors(meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path) -> list[Path]:
+def _write_existing_mirrors(
+    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
+) -> list[Path]:
     if art_works_root is None:
         return []
     work_id = str(meta["work_id"])
-    candidates = {art_works_root / "works" / work_id / "meta.json", art_works_root / work_id / "meta.json"}
+    candidates = {
+        art_works_root / "works" / work_id / "meta.json",
+        art_works_root / work_id / "meta.json",
+    }
     written: list[Path] = []
     for candidate in sorted(candidates):
         if candidate.is_file() and candidate.resolve() != exclude.resolve():
@@ -71,8 +76,14 @@ def _write_existing_mirrors(meta: dict[str, Any], art_works_root: Path | None, *
     return written
 
 
-def _append_operation(log_path: Path, meta: dict[str, Any], qid: str, method: str,
-                      staging_path: Path, mirror_paths: list[Path]) -> None:
+def _append_operation(
+    log_path: Path,
+    meta: dict[str, Any],
+    qid: str,
+    method: str,
+    staging_path: Path,
+    mirror_paths: list[Path],
+) -> None:
     entry = {
         "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "actor": "backfill_artist_qids",
@@ -88,9 +99,14 @@ def _append_operation(log_path: Path, meta: dict[str, Any], qid: str, method: st
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def backfill(staging_dir: Path, *, client: Any, art_works_root: Path | None = None,
-             operations_log: Path | None = None, limit: int = DEFAULT_LIMIT,
-             ) -> tuple[BackfillStats, Counter[str]]:
+def backfill(
+    staging_dir: Path,
+    *,
+    client: Any,
+    art_works_root: Path | None = None,
+    operations_log: Path | None = None,
+    limit: int = DEFAULT_LIMIT,
+) -> tuple[BackfillStats, Counter[str]]:
     if limit < 1:
         raise ValueError("limit must be at least 1")
     attempted = resolved = updated = mirrored = 0
@@ -109,7 +125,10 @@ def backfill(staging_dir: Path, *, client: Any, art_works_root: Path | None = No
             continue
         meta.setdefault("artist", {})["wikidata_q"] = qid
         provenance.set(
-            meta, "artist_qid", "available", "wikidata",
+            meta,
+            "artist_qid",
+            "available",
+            "wikidata",
             source_ref=f"https://www.wikidata.org/wiki/{qid}",
             note=f"Resolved from artist name {name!r} ({method}).",
         )
@@ -134,16 +153,21 @@ def _env_path(name: str) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
-    parser.add_argument("--staging-dir", type=Path,
-                        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars")
+    parser.add_argument(
+        "--staging-dir",
+        type=Path,
+        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+    )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
     parser.add_argument("--timeout", type=float, default=15.0)
     args = parser.parse_args(argv)
 
     stats, reasons = backfill(
-        args.staging_dir, client=JsonClient(timeout=args.timeout),
-        art_works_root=args.art_works_root, operations_log=args.operations_log,
+        args.staging_dir,
+        client=JsonClient(timeout=args.timeout),
+        art_works_root=args.art_works_root,
+        operations_log=args.operations_log,
         limit=args.limit,
     )
     print(

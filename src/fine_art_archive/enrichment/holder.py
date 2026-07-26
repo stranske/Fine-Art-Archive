@@ -39,23 +39,23 @@ ROR_RE = re.compile(r"^0[a-z0-9]{6}[0-9]{2}$", re.IGNORECASE)
 # exhaustive; a candidate with a P170 creator is also accepted as an artwork.
 _ARTWORK_P31 = frozenset(
     {
-        "Q3305213",    # painting
-        "Q838948",     # work of art
-        "Q93184",      # drawing
-        "Q11060274",   # print
-        "Q18761202",   # watercolor painting
-        "Q56676432",   # panel painting
-        "Q15709879",   # triptych
-        "Q3374376",    # diptych
-        "Q22669139",   # fresco
-        "Q860861",     # sculpture
-        "Q179700",     # statue
-        "Q133067",     # tapestry
-        "Q1278452",    # engraving
-        "Q11835431",   # etching
-        "Q4502142",    # visual artwork
+        "Q3305213",  # painting
+        "Q838948",  # work of art
+        "Q93184",  # drawing
+        "Q11060274",  # print
+        "Q18761202",  # watercolor painting
+        "Q56676432",  # panel painting
+        "Q15709879",  # triptych
+        "Q3374376",  # diptych
+        "Q22669139",  # fresco
+        "Q860861",  # sculpture
+        "Q179700",  # statue
+        "Q133067",  # tapestry
+        "Q1278452",  # engraving
+        "Q11835431",  # etching
+        "Q4502142",  # visual artwork
         "Q106857709",  # oil painting
-        "Q2247624",    # painting series
+        "Q2247624",  # painting series
     }
 )
 

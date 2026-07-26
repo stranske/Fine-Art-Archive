@@ -57,6 +57,8 @@ def _retry_delay(exc: urllib.error.HTTPError, attempt: int) -> float:
     if retry_after and retry_after.strip().isdigit():
         return min(float(retry_after), 30.0)
     return min(2.0**attempt, 30.0)
+
+
 QID_RE = re.compile(r"^Q[1-9][0-9]*$")
 QID_IN_TEXT_RE = re.compile(r"(?:wikidata\.org/(?:wiki/)?|^)(Q[1-9][0-9]*)\b")
 ULAN_RE = re.compile(r"(?:ulan/)?([0-9]{3,})/?$")
