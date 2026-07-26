@@ -211,3 +211,57 @@ def test_cli_worker_validates_writes_mirrors_and_logs(tmp_path: Path) -> None:
     assert rerun.updated == 0
     assert rerun.mirrored == 0
     assert operations_log.read_text(encoding="utf-8").splitlines() == log_entries
+
+
+def _entity(*, creator: str | None = None, instance_of: str | None = None) -> dict[str, Any]:
+    claims: dict[str, Any] = {}
+    for prop, qid in (("P170", creator), ("P31", instance_of)):
+        if qid is not None:
+            claims[prop] = [{"mainsnak": {"datavalue": {"value": {"id": qid}}}}]
+    return {"claims": claims}
+
+
+class _GateClient(WikidataClient):
+    """WikidataClient with canned search + entity payloads for gate tests."""
+
+    def __init__(self, search_qids: list[str], entities: dict[str, dict[str, Any]]) -> None:
+        super().__init__()
+        self._search = {"search": [{"id": qid} for qid in search_qids]}
+        self._entities = entities
+
+    def _request_json(self, params: dict[str, str]) -> dict[str, Any] | None:  # type: ignore[override]
+        return self._search
+
+    def _get_entities(  # type: ignore[override]
+        self, qids: list[str], *, props: str
+    ) -> dict[str, dict[str, Any]] | None:
+        return {qid: self._entities[qid] for qid in qids if qid in self._entities}
+
+
+def test_find_work_qid_rejects_non_artwork_top_hit() -> None:
+    # "Rouen Cathedral" ranks the cathedral *building* (no creator, not an
+    # artwork) above the painting; the gate must skip it and pick the artwork.
+    client = _GateClient(
+        ["Q476516", "Q1050"],
+        {
+            "Q476516": _entity(instance_of="Q2977"),  # cathedral (building)
+            "Q1050": _entity(creator="Q296", instance_of="Q3305213"),  # painting
+        },
+    )
+    assert client.find_work_qid("Rouen Cathedral", "Claude Monet") == "Q1050"
+
+
+def test_find_work_qid_returns_none_when_only_non_artwork_matches() -> None:
+    client = _GateClient(["Q19675"], {"Q19675": _entity(instance_of="Q33506")})  # museum
+    assert client.find_work_qid("The Louvre", "") is None
+
+
+def test_find_work_qid_honours_known_creator_over_search_rank() -> None:
+    client = _GateClient(
+        ["Q1001", "Q1002"],
+        {
+            "Q1001": _entity(creator="Q999", instance_of="Q3305213"),  # wrong creator
+            "Q1002": _entity(creator="Q296", instance_of="Q3305213"),  # right creator
+        },
+    )
+    assert client.find_work_qid("Water Lilies", "Claude Monet", creator_qid="Q296") == "Q1002"
