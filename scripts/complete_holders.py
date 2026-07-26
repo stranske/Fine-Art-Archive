@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import jsonschema
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -32,6 +34,7 @@ class CompletionStats:
     attempted: int
     updated: int
     mirrored: int
+    skipped_invalid: int = 0
 
 
 def complete_sidecars(
@@ -47,25 +50,32 @@ def complete_sidecars(
         raise ValueError("limit must be at least 1")
 
     active_client = client if client is not None else WikidataClient()
-    attempted = updated_count = mirrored_count = 0
+    attempted = updated_count = mirrored_count = skipped_invalid = 0
     for path in _sidecar_paths(staging_dir):
-        meta = sidecar.load(path)
-        if not _eligible(meta):
-            continue
-        attempted += 1
-        before = deepcopy(meta)
-        completed = complete_holder(meta, client=active_client)
-        if completed != before:
-            sidecar.validate(completed)
-            sidecar.write(path, completed)
-            mirror_paths = _write_existing_mirrors(completed, art_works_root, exclude=path)
-            updated_count += 1
-            mirrored_count += len(mirror_paths)
-            if operations_log is not None:
-                _append_operation(operations_log, completed, path, mirror_paths)
-        if attempted >= limit:
-            break
-    return CompletionStats(attempted, updated_count, mirrored_count)
+        work_id = path.parent.name
+        try:
+            meta = sidecar.load(path)
+            work_id = str(meta.get("work_id", work_id))
+            sidecar.validate(meta)
+            if not _eligible(meta):
+                continue
+            attempted += 1
+            before = deepcopy(meta)
+            completed = complete_holder(meta, client=active_client)
+            if completed != before:
+                sidecar.validate(completed)
+                sidecar.write(path, completed)
+                mirror_paths = _write_existing_mirrors(completed, art_works_root, exclude=path)
+                updated_count += 1
+                mirrored_count += len(mirror_paths)
+                if operations_log is not None:
+                    _append_operation(operations_log, completed, path, mirror_paths)
+            if attempted >= limit:
+                break
+        except jsonschema.ValidationError as error:
+            skipped_invalid += 1
+            _record_invalid_sidecar(operations_log, path, work_id, error)
+    return CompletionStats(attempted, updated_count, mirrored_count, skipped_invalid)
 
 
 def _sidecar_paths(staging_dir: Path) -> list[Path]:
@@ -119,6 +129,26 @@ def _append_operation(
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _record_invalid_sidecar(
+    log_path: Path | None, path: Path, work_id: str, error: jsonschema.ValidationError
+) -> None:
+    message = f"skipping invalid sidecar work_id={work_id}: {error.message}"
+    print(message, file=sys.stderr)
+    if log_path is None:
+        return
+    entry = {
+        "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "actor": "complete_holders",
+        "op": "invalid_sidecar_skipped",
+        "work_id": work_id,
+        "staging_path": str(path),
+        "validation_error": error.message,
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def _env_path(name: str) -> Path | None:
     raw = os.environ.get(name)
     return Path(raw).expanduser() if raw else None
@@ -148,7 +178,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(
         f"holder completion: attempted={stats.attempted} "
-        f"updated={stats.updated} mirrored={stats.mirrored}"
+        f"updated={stats.updated} mirrored={stats.mirrored} "
+        f"skipped_invalid={stats.skipped_invalid}"
     )
     return 0
 
