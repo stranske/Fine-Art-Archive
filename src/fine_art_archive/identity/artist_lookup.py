@@ -27,28 +27,38 @@ ALIAS_CONFIDENCE = 0.9
 # Wikidata P106 occupations that qualify a person as a visual artist.
 ART_OCCUPATIONS = frozenset(
     {
-        "Q1028181",   # painter
-        "Q483501",    # artist
-        "Q3391743",   # visual artist
-        "Q1281618",   # sculptor
+        "Q1028181",  # painter
+        "Q483501",  # artist
+        "Q3391743",  # visual artist
+        "Q1281618",  # sculptor
         "Q11569986",  # printmaker
-        "Q329439",    # draughtsperson
-        "Q644687",    # illustrator
-        "Q33231",     # photographer
-        "Q1925963",   # graphic artist
+        "Q329439",  # draughtsperson
+        "Q644687",  # illustrator
+        "Q33231",  # photographer
+        "Q1925963",  # graphic artist
         "Q15296811",  # watercolorist
         "Q10862983",  # etcher
         "Q16947657",  # lithographer
-        "Q1114448",   # cartoonist
+        "Q1114448",  # cartoonist
         "Q18216771",  # woodcut artist
-        "Q7541856",   # engraver
-        "Q42973",     # architect
+        "Q7541856",  # engraver
+        "Q42973",  # architect
     }
 )
 
 _ATTRIBUTION = (
-    "attribut", "circle of", "after ", "follower", "workshop", "manner of",
-    "studio of", "school of", "style of", "imitator", "unknown", "anonymous",
+    "attribut",
+    "circle of",
+    "after ",
+    "follower",
+    "workshop",
+    "manner of",
+    "studio of",
+    "school of",
+    "style of",
+    "imitator",
+    "unknown",
+    "anonymous",
     "unidentified",
 )
 
@@ -112,8 +122,12 @@ def resolve_artist_qid(raw_name: str, *, client: JsonGetter) -> tuple[str | None
     search = client.get(
         WIKIDATA_API,
         params={
-            "action": "wbsearchentities", "format": "json", "language": "en",
-            "limit": "10", "search": name, "type": "item",
+            "action": "wbsearchentities",
+            "format": "json",
+            "language": "en",
+            "limit": "10",
+            "search": name,
+            "type": "item",
         },
     )
     hits = (search or {}).get("search")
@@ -126,8 +140,11 @@ def resolve_artist_qid(raw_name: str, *, client: JsonGetter) -> tuple[str | None
     entities_payload = client.get(
         WIKIDATA_API,
         params={
-            "action": "wbgetentities", "ids": "|".join(qids),
-            "props": "claims|labels|aliases", "languages": "en", "format": "json",
+            "action": "wbgetentities",
+            "ids": "|".join(qids),
+            "props": "claims|labels|aliases",
+            "languages": "en",
+            "format": "json",
         },
     )
     entities = (entities_payload or {}).get("entities") or {}

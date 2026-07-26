@@ -36,7 +36,11 @@ class FakeClient:
         self._entities = {"entities": entities}
 
     def get(self, url: str, *, params: dict[str, str] | None = None) -> dict[str, Any] | None:
-        return self._search if params and params.get("action") == "wbsearchentities" else self._entities
+        return (
+            self._search
+            if params and params.get("action") == "wbsearchentities"
+            else self._entities
+        )
 
 
 def _person(name: str, *, occupations: list[str]) -> dict[str, Any]:
@@ -54,13 +58,18 @@ def _person(name: str, *, occupations: list[str]) -> dict[str, Any]:
 def test_clean_name_variants() -> None:
     assert artist_lookup.clean_name("Titian (Tiziano Vecellio)") == "Titian"
     assert artist_lookup.clean_name("Kandinsky, Vassily") == "Vassily Kandinsky"
-    assert artist_lookup.clean_name("Jan Brueghel the Elder & Hans Rottenhammer") == "Jan Brueghel the Elder"
+    assert (
+        artist_lookup.clean_name("Jan Brueghel the Elder & Hans Rottenhammer")
+        == "Jan Brueghel the Elder"
+    )
 
 
 # --- resolution + occupation gate -----------------------------------------
 def test_resolves_artist_with_occupation() -> None:
     # obscure name (not in the offline alias table) -> exercises the search path
-    client = FakeClient(["Q16012501"], {"Q16012501": _person("Edna Reindel", occupations=["Q1028181"])})
+    client = FakeClient(
+        ["Q16012501"], {"Q16012501": _person("Edna Reindel", occupations=["Q1028181"])}
+    )
     qid, method = artist_lookup.resolve_artist_qid("Edna Reindel", client=client)
     assert qid == "Q16012501"
     assert "wikidata artist match" in method
