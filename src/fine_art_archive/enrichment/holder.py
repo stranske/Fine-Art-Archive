@@ -33,6 +33,32 @@ NETWORK_ERRORS = (
 QID_RE = re.compile(r"^Q[1-9][0-9]*$")
 ROR_RE = re.compile(r"^0[a-z0-9]{6}[0-9]{2}$", re.IGNORECASE)
 
+# Wikidata P31 (instance-of) classes that mark a candidate as a work of art
+# rather than a building/place/museum. Used to gate bare title matches so a
+# search for "Rouen Cathedral" cannot return the cathedral building. Not
+# exhaustive; a candidate with a P170 creator is also accepted as an artwork.
+_ARTWORK_P31 = frozenset(
+    {
+        "Q3305213",    # painting
+        "Q838948",     # work of art
+        "Q93184",      # drawing
+        "Q11060274",   # print
+        "Q18761202",   # watercolor painting
+        "Q56676432",   # panel painting
+        "Q15709879",   # triptych
+        "Q3374376",    # diptych
+        "Q22669139",   # fresco
+        "Q860861",     # sculpture
+        "Q179700",     # statue
+        "Q133067",     # tapestry
+        "Q1278452",    # engraving
+        "Q11835431",   # etching
+        "Q4502142",    # visual artwork
+        "Q106857709",  # oil painting
+        "Q2247624",    # painting series
+    }
+)
+
 # Wikidata asks for a descriptive User-Agent and rate-limits anonymous bursts.
 USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
 _THROTTLE_SECONDS = 0.2
@@ -115,15 +141,28 @@ class WikidataClient:
                     candidate_qids.append(qid)
         if not candidate_qids:
             return None
-        if creator_qid is None:
-            return candidate_qids[0]
 
+        # Gate every candidate: accept only an entity that is actually the
+        # artwork. Without this a bare title search returns e.g. the cathedral
+        # *building* for "Rouen Cathedral" or the *museum* for "The Louvre",
+        # whose year/holder/medium then poison the sidecar.
         entities = self._get_entities(candidate_qids, props="claims")
         if entities is None:
             return None
         for qid in candidate_qids:
             entity = entities.get(qid)
-            if isinstance(entity, dict) and creator_qid in _qid_claims(entity, "P170"):
+            if not isinstance(entity, dict):
+                continue
+            creators = _qid_claims(entity, "P170")
+            if creator_qid is not None:
+                # Known creator: require it to match this candidate.
+                if creator_qid in creators:
+                    return qid
+                continue
+            # Creator unknown: accept only a plausible artwork — one with a
+            # creator (P170) or an artwork instance-of (P31). Rejects buildings,
+            # museums, places and other non-artwork top hits.
+            if creators or (set(_qid_claims(entity, "P31")) & _ARTWORK_P31):
                 return qid
         return None
 
