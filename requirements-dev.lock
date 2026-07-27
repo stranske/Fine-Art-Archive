@@ -118,7 +118,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.22
+ruff==0.16.0
     # via fine-art-archive (pyproject.toml)
 scipy==1.17.1
     # via imagehash
