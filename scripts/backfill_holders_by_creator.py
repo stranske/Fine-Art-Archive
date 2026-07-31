@@ -34,6 +34,7 @@ from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment import holder as holdermod  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.holder_by_creator import (  # noqa: E402
+    IMMOVABLE_CATEGORIES,
     HolderMatch,
     resolve_holder,
     year_of,
@@ -120,23 +121,23 @@ def _write_existing_mirrors(meta: dict[str, Any], art_works_root: Path | None, *
 
 def _apply_match(meta: dict[str, Any], match: HolderMatch) -> None:
     work = match.work
-    assert work.collection_qid is not None  # guaranteed by match_work's guard
-    entry = holdermod._registry_entry(work.collection_qid)
+    entry = holdermod._registry_entry(match.holder_qid)
     meta["holder"] = {
-        "name": work.collection_label or (entry.name if entry else None),
-        "wikidata_q": work.collection_qid,
-        "ror": work.ror or (entry.ror if entry else None),
-        "url": work.url or (entry.homepage if entry else None),
+        "name": match.holder_label or (entry.name if entry else None),
+        "wikidata_q": match.holder_qid,
+        "ror": match.holder_ror or (entry.ror if entry else None),
+        "url": match.holder_url or (entry.homepage if entry else None),
         "accession": work.accession,
     }
     stable = meta.setdefault("stable_identifiers", {})
     stable["wikidata_q"] = work.work_qid
     if work.accession:
         stable["museum_accession"] = work.accession
+    kind = "location (P276)" if match.kind == "location" else "collection (P195)"
     provenance.set(
         meta, "holder", "available", "wikidata",
         source_ref=f"https://www.wikidata.org/wiki/{work.work_qid}",
-        note=f"Holder via SPARQL creator-work match ({match.score:.2f}); "
+        note=f"Holder via SPARQL creator-work match ({match.score:.2f}), {kind}; "
              f"work {work.work_qid} matched by creator+title.",
     )
 
@@ -149,7 +150,8 @@ def _append_operation(log_path: Path, meta: dict[str, Any], match: HolderMatch,
         "op": "holder_by_creator_backfill",
         "work_id": meta["work_id"],
         "matched_work_qid": match.work.work_qid,
-        "collection_qid": match.work.collection_qid,
+        "holder_qid": match.holder_qid,
+        "holder_kind": match.kind,
         "score": round(match.score, 3),
         "staging_path": str(staging_path),
         "mirror_paths": [str(path) for path in mirror_paths],
@@ -174,8 +176,10 @@ def backfill(staging_dir: Path, *, client: Any, art_works_root: Path | None = No
         if not creator:
             continue
         attempted += 1
+        allow_location = str(meta.get("category") or "") in IMMOVABLE_CATEGORIES
         match, reason = resolve_holder(
-            str(meta.get("title") or ""), year_of(meta.get("year")), creator, client=client
+            str(meta.get("title") or ""), year_of(meta.get("year")), creator,
+            client=client, allow_location=allow_location,
         )
         if match is None:
             reasons[reason] += 1

@@ -30,7 +30,8 @@ BASE: dict[str, Any] = {
 
 
 def _binding(w: str, label: str, coll: str | None = None, coll_label: str | None = None,
-             inception: str | None = None) -> dict[str, Any]:
+             inception: str | None = None, loc: str | None = None,
+             loc_label: str | None = None) -> dict[str, Any]:
     row: dict[str, Any] = {
         "w": {"value": f"http://www.wikidata.org/entity/{w}"},
         "wLabel": {"value": label},
@@ -40,6 +41,9 @@ def _binding(w: str, label: str, coll: str | None = None, coll_label: str | None
         row["collLabel"] = {"value": coll_label or coll}
     if inception:
         row["inception"] = {"value": inception}
+    if loc:
+        row["loc"] = {"value": f"http://www.wikidata.org/entity/{loc}"}
+        row["locLabel"] = {"value": loc_label or loc}
     return row
 
 
@@ -61,7 +65,58 @@ def test_matches_and_returns_collection() -> None:
     assert reason == "match"
     assert match is not None
     assert match.work.work_qid == "Q1"
-    assert match.work.collection_qid == "Q123"
+    assert match.holder_qid == "Q123"
+    assert match.kind == "collection"
+
+
+def test_immovable_uses_location_when_no_collection() -> None:
+    # a fresco has no P195 collection but a P276 location (the church)
+    client = FakeSparql([_binding("Q1", "The Last Judgment", loc="Q47476", loc_label="Sistine Chapel")])
+    # default (movable): no collection -> rejected
+    assert hbc.resolve_holder("The Last Judgment", None, "Q5592", client=client)[1] == "no-collection"
+    # immovable: location becomes the holder
+    match, reason = hbc.resolve_holder(
+        "The Last Judgment", None, "Q5592", client=client, allow_location=True
+    )
+    assert reason == "match"
+    assert match is not None
+    assert match.holder_qid == "Q47476"
+    assert match.holder_label == "Sistine Chapel"
+    assert match.kind == "location"
+
+
+def test_location_from_title_when_work_titles_do_not_match() -> None:
+    # fresco scan-naming: per-work titles don't match, but the location name is
+    # in the title and the creator's works share that P276 location.
+    client = FakeSparql([
+        _binding("Q1", "No. 20 Flight into Egypt", loc="Q47476", loc_label="Scrovegni Chapel"),
+        _binding("Q2", "No. 17 Nativity", loc="Q47476", loc_label="Scrovegni Chapel"),
+    ])
+    match, reason = hbc.resolve_holder(
+        "Capella dei Scrovegni - 20. Flight", None, "Q7814", client=client, allow_location=True
+    )
+    assert reason == "match"
+    assert match is not None
+    assert match.holder_qid == "Q47476"
+    assert match.kind == "location"
+
+
+def test_location_from_title_ambiguous_two_sites() -> None:
+    client = FakeSparql([
+        _binding("Q1", "Fresco A", loc="Q1", loc_label="Assisi Basilica"),
+        _binding("Q2", "Fresco B", loc="Q2", loc_label="Scrovegni Chapel"),
+    ])
+    # title mentions neither distinctively -> no location-in-title
+    match, reason = hbc.resolve_holder("Untitled fresco", None, "Q7814", client=client, allow_location=True)
+    assert match is None
+
+
+def test_collection_preferred_over_location() -> None:
+    client = FakeSparql([_binding("Q1", "The Starry Night", "Q123", "MoMA", loc="Q999")])
+    match, _ = hbc.resolve_holder("The Starry Night", None, "Q296", client=client, allow_location=True)
+    assert match is not None
+    assert match.holder_qid == "Q123"
+    assert match.kind == "collection"
 
 
 def test_ambiguous_same_title_is_rejected() -> None:
