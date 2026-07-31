@@ -82,6 +82,17 @@ def test_medium_technique_word_boundary_and_junk() -> None:
     assert ci.infer_from_medium_technique("limestone") is None
 
 
+def test_medium_technique_second_wave() -> None:
+    # fresco typo + plural that \b-anchored "fresco" would miss
+    assert ci.infer_from_medium_technique("fresc")[0] == "fresco"
+    assert ci.infer_from_medium_technique("frescoes, Scrovegni Chapel")[0] == "fresco"
+    # bare "Print" and photogravure -> print
+    assert ci.infer_from_medium_technique("Print")[0] == "print"
+    assert ci.infer_from_medium_technique("Photogravure")[0] == "print"
+    # photographic transparency -> photograph
+    assert ci.infer_from_medium_technique("Time Life color transparency")[0] == "photograph"
+
+
 # --- medium material (tier 3) ----------------------------------------------
 def test_medium_material_paint_and_draw() -> None:
     assert ci.infer_from_medium_material("oil paint, canvas")[0] == "painting"
@@ -90,6 +101,18 @@ def test_medium_material_paint_and_draw() -> None:
     assert ci.infer_from_medium_material("sancai earthenware")[0] == "other"
     assert ci.infer_from_medium_material("gold and silver leaf") is None
     assert ci.infer_from_medium_material(None) is None
+
+
+def test_medium_material_colorant_and_ceramic_and_typo() -> None:
+    # East-Asian "<colorant> on <support>" -> painting (scrolls, thangkas)
+    assert ci.infer_from_medium_material("Color on silk")[0] == "painting"
+    assert ci.infer_from_medium_material("Pigment and gold on cotton")[0] == "painting"
+    assert ci.infer_from_medium_material("Egg temper on cardboard")[0] == "painting"
+    assert ci.infer_from_medium_material("fired clay")[0] == "other"
+    assert ci.infer_from_medium_material("ceramic; found in Tlahuac")[0] == "other"
+    # medium_vocab still wins: watercolour/ink stay drawing, not colorant-painting
+    assert ci.infer_from_medium_material("watercolour on paper")[0] == "drawing"
+    assert ci.infer_from_medium_material("ink and colour on paper")[0] == "drawing"
 
 
 # --- title (tier 4) --------------------------------------------------------
