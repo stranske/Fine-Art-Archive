@@ -115,10 +115,13 @@ _TECHNIQUE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("stained_glass", ("stained glass", "stained-glass")),
     ("mosaic", ("mosaic", "mosaics")),
     ("tapestry", ("tapestry", "tapestries")),
-    ("fresco", ("fresco", "affresco")),
+    # "fresc"/"frescoes" cover a common typo and the plural that \b-anchored
+    # "fresco" would miss.
+    ("fresco", ("fresco", "frescoes", "frescos", "fresc", "affresco")),
     (
         "print",
         (
+            "print",
             "engraving",
             "etching",
             "woodcut",
@@ -131,7 +134,14 @@ _TECHNIQUE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "aquatint",
             "screenprint",
             "serigraph",
+            "photogravure",
         ),
+    ),
+    # Photographic processes. "transparency"/"gelatin silver" are the forms that
+    # actually appear; a bare medium of "photograph" is included for completeness.
+    (
+        "photograph",
+        ("photograph", "photographs", "transparency", "gelatin silver", "daguerreotype"),
     ),
     (
         "sculpture",
@@ -147,7 +157,15 @@ _PAINT_MEDIUMS = frozenset({"oil", "tempera", "acrylic", "encaustic", "distemper
 _DRAW_MEDIUMS = frozenset(
     {"watercolour", "gouache", "ink", "chalk", "charcoal", "pastel", "pencil", "graphite", "crayon"}
 )
-_CERAMIC_KEYWORDS = ("earthenware", "stoneware", "porcelain", "faience", "majolica")
+_CERAMIC_KEYWORDS = (
+    "earthenware",
+    "stoneware",
+    "porcelain",
+    "faience",
+    "majolica",
+    "ceramic",
+    "fired clay",
+)
 
 
 def _word_in(keyword: str, text: str) -> bool:
@@ -166,8 +184,15 @@ def infer_from_medium_technique(medium: object) -> tuple[str, str] | None:
     return None
 
 
+# East-Asian catalogue convention: "<colorant> on <textile/paper>" (e.g.
+# "Color on silk", "Pigment and gold on cotton" for scrolls and thangkas). Only
+# consulted after medium_vocab, so ink -> drawing and watercolour -> drawing
+# still win; a lone colorant-on-support is a painting.
+_COLORANT_ON = re.compile(r"\b(?:colou?r|pigment)\b.*\bon\b")
+
+
 def infer_from_medium_material(medium: object) -> tuple[str, str] | None:
-    """Tier 3: paint-vs-draw (via medium_vocab), or ceramics -> other."""
+    """Tier 3: paint-vs-draw (via medium_vocab), then colorant-on-support / ceramics."""
     if not isinstance(medium, str) or not medium.strip():
         return None
     low = medium.lower()
@@ -180,6 +205,10 @@ def infer_from_medium_material(medium: object) -> tuple[str, str] | None:
         draw = mediums & _DRAW_MEDIUMS
         if draw:
             return "drawing", f"Drawing medium {sorted(draw)} -> drawing."
+    if "egg temper" in low:  # typo of "egg tempera" that medium_vocab misses
+        return "painting", "Egg tempera (typo) -> painting."
+    if _COLORANT_ON.search(low):
+        return "painting", "Colorant on textile/paper -> painting."
     for keyword in _CERAMIC_KEYWORDS:
         if _word_in(keyword, low):
             return "other", f"Ceramic medium {keyword!r} -> other (no ceramic enum)."
