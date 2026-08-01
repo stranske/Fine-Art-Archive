@@ -26,20 +26,28 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 # --- commerce screening ----------------------------------------------------
-# Domains whose purpose is selling products alongside (or instead of) information.
+# Domains whose purpose is selling reproductions/products alongside (or instead
+# of) information. These are never cited.
 COMMERCE_DOMAINS = frozenset({
     "fineartamerica.com", "art.com", "allposters.com", "poster.com",
     "redbubble.com", "etsy.com", "amazon.", "ebay.", "zazzle.com",
-    "saatchiart.com", "artsy.net", "artnet.com", "invaluable.com",
-    "christies.com", "sothebys.com", "bonhams.com", "phillips.com",
+    "saatchiart.com", "artfinder.com",
     "shutterstock.com", "gettyimages.", "alamy.com", "istockphoto.com",
-    "1stdibs.com", "artfinder.com", "society6.com", "canvasprints",
+    "1stdibs.com", "society6.com", "canvasprints",
     "printful.com", "displate.com", "wall-art", "posterlounge.",
+})
+# Auction houses & art-market databases are a deliberate EXCEPTION: they fund
+# top-tier scholarship (provenance, attribution, condition) and their pages are
+# TRANSIENT (lots come down after sale), so they are high-value and worth
+# capturing aggressively -- never commerce-blocked, but flagged transient.
+TRANSIENT_HIGH_VALUE_DOMAINS = frozenset({
+    "christies.com", "sothebys.com", "bonhams.com", "phillips.com",
+    "dorotheum.com", "invaluable.com", "artnet.com", "mutualart.com",
 })
 _COMMERCE_SIGNALS = re.compile(
     r"add to (cart|basket|bag)|buy (this |a )?(print|poster|canvas)|shopping cart|"
     r"checkout|framed print|canvas print|\bshop now\b|add to wishlist|"
-    r"price[:\s]*[$£€]|starting at [$£€]|our price",
+    r"our price|shop this",
     re.IGNORECASE,
 )
 
@@ -49,8 +57,16 @@ def domain_of(url: str) -> str:
     return (m.group(1).lower() if m else "").removeprefix("www.")
 
 
+def is_transient_source(url: str) -> bool:
+    """Auction/market source: high-value scholarship, but the page won't persist."""
+    dom = domain_of(url)
+    return any(a in dom for a in TRANSIENT_HIGH_VALUE_DOMAINS)
+
+
 def is_commercial(url: str, text: str | None = None) -> bool:
     dom = domain_of(url)
+    if is_transient_source(url):
+        return False  # auction/market scholarship is allowed (and snapshotted)
     if any(bad in dom for bad in COMMERCE_DOMAINS):
         return True
     return bool(text and len(_COMMERCE_SIGNALS.findall(text)) >= 2)
@@ -59,9 +75,11 @@ def is_commercial(url: str, text: str | None = None) -> bool:
 # --- authority ranking -----------------------------------------------------
 _AUTHORITY = {
     "holder_object_page": 5.0,
+    "scholarly": 4.5,
+    "market_scholarship": 4.0,  # auction lot essays: provenance/attribution, transient
     "encyclopedia_work": 4.0,
     "encyclopedia_artist": 3.5,
-    "scholarly": 4.0,
+    "independent_expert": 3.5,
     "reference": 3.0,
 }
 
