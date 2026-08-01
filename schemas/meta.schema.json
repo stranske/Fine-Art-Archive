@@ -147,7 +147,7 @@
             "null"
           ],
           "pattern": "^Q[0-9]+$",
-          "description": "Wikidata Q-ID that classifies the attribution kind itself. Q4233718 (anonymous), Q23807 (workshop), Q3343150 (school of art), etc. Used when relation != 'self' to make the entry machine-queryable beyond the relation enum."
+          "description": "Wikidata Q-ID classifying the attribution kind, used chiefly for the anonymous case: Q4233718 (anonymous). For the person relations (workshop/circle/after/follower/attributed) the 'relation' enum plus the reference-artist 'wikidata_q' already carry the kind, so this is usually null there. No stable Q-ID cleanly denotes 'workshop' or 'school of art' -- do not guess one (the earlier examples Q23807/Q3343150 were wrong: Q23807 is now 'Bank of China Building')."
         },
         "canonical": {
           "type": [
