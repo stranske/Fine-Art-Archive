@@ -598,6 +598,141 @@
         }
       }
     },
+    "dossier": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Viewer-facing enriched context: a plain-language summary, attributed key facts, and ranked durable source references (link + Wayback + local snapshot).",
+      "properties": {
+        "viewer_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key_facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "publisher": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "license": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "redistributable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "live_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri"
+              },
+              "wayback_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri"
+              },
+              "retrieved_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "content_hash": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "authority_score": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "commerce_flag": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "excerpt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "local_snapshot_path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "generated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "files": {
       "type": "object",
       "required": [
