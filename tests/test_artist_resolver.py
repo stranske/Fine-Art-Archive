@@ -1,8 +1,14 @@
 """Regression coverage for curated artist identity resolution."""
 
+import os
+
+import pytest
+
 from fine_art_archive.identity.artist_resolver import (
     CURATED_ALIASES,
+    audit_curated_aliases_against_wikidata,
     build_alias_table,
+    curated_alias_identity_mismatches,
     resolve_artist,
 )
 
@@ -51,3 +57,42 @@ def test_corrected_curated_aliases_resolve_exactly() -> None:
         assert resolved.q == qid
         assert resolved.method == "alias-exact"
         assert resolved.confidence == 0.99
+
+
+def test_curated_alias_identity_audit_accepts_english_label_or_alias() -> None:
+    entities = {
+        "Q43270": {"labels": {"en": {"value": "Pieter Bruegel I"}}},
+        "Q255828": {
+            "labels": {"en": {"value": "Pieter Brueghel II"}},
+            "aliases": {"en": [{"value": "Pieter Brueghel the Younger"}]},
+        },
+    }
+
+    mismatches = curated_alias_identity_mismatches(entities)
+
+    assert "Q43270" not in "\n".join(mismatches)
+    assert "Q255828" not in "\n".join(mismatches)
+    assert (
+        "Q209050: expected 'Jan Brueghel the Elder', but Wikidata returned no entity" in mismatches
+    )
+
+
+def test_curated_alias_identity_audit_reports_name_mismatch() -> None:
+    entities = {
+        "Q43270": {"labels": {"en": {"value": "Not Pieter Bruegel"}}},
+    }
+
+    mismatches = curated_alias_identity_mismatches(entities)
+
+    assert (
+        "Q43270: expected 'Pieter Bruegel the Elder'; Wikidata reports 'Not Pieter Bruegel'"
+        in mismatches
+    )
+
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_WIKIDATA_AUDIT") != "1",
+    reason="Set RUN_WIKIDATA_AUDIT=1 to run the live Wikidata identity audit.",
+)
+def test_live_curated_aliases_match_wikidata() -> None:
+    assert audit_curated_aliases_against_wikidata() == []
