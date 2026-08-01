@@ -48,8 +48,14 @@ USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive
 class SparqlClient:
     """Throttled, retrying Wikidata Query Service transport."""
 
-    def __init__(self, *, endpoint: str = SPARQL_ENDPOINT, timeout: float = 45.0,
-                 throttle: float = 0.3, max_retries: int = 4) -> None:
+    def __init__(
+        self,
+        *,
+        endpoint: str = SPARQL_ENDPOINT,
+        timeout: float = 45.0,
+        throttle: float = 0.3,
+        max_retries: int = 4,
+    ) -> None:
         self.endpoint = endpoint
         self.timeout = timeout
         self.throttle = throttle
@@ -106,11 +112,16 @@ def _has_holder(meta: dict[str, Any]) -> bool:
     return meta.get("holder") not in (None, "", {}, [])
 
 
-def _write_existing_mirrors(meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path) -> list[Path]:
+def _write_existing_mirrors(
+    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
+) -> list[Path]:
     if art_works_root is None:
         return []
     work_id = str(meta["work_id"])
-    candidates = {art_works_root / "works" / work_id / "meta.json", art_works_root / work_id / "meta.json"}
+    candidates = {
+        art_works_root / "works" / work_id / "meta.json",
+        art_works_root / work_id / "meta.json",
+    }
     written: list[Path] = []
     for candidate in sorted(candidates):
         if candidate.is_file() and candidate.resolve() != exclude.resolve():
@@ -135,15 +146,23 @@ def _apply_match(meta: dict[str, Any], match: HolderMatch) -> None:
         stable["museum_accession"] = work.accession
     kind = "location (P276)" if match.kind == "location" else "collection (P195)"
     provenance.set(
-        meta, "holder", "available", "wikidata",
+        meta,
+        "holder",
+        "available",
+        "wikidata",
         source_ref=f"https://www.wikidata.org/wiki/{work.work_qid}",
         note=f"Holder via SPARQL creator-work match ({match.score:.2f}), {kind}; "
-             f"work {work.work_qid} matched by creator+title.",
+        f"work {work.work_qid} matched by creator+title.",
     )
 
 
-def _append_operation(log_path: Path, meta: dict[str, Any], match: HolderMatch,
-                      staging_path: Path, mirror_paths: list[Path]) -> None:
+def _append_operation(
+    log_path: Path,
+    meta: dict[str, Any],
+    match: HolderMatch,
+    staging_path: Path,
+    mirror_paths: list[Path],
+) -> None:
     entry = {
         "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "actor": "backfill_holders_by_creator",
@@ -161,9 +180,14 @@ def _append_operation(log_path: Path, meta: dict[str, Any], match: HolderMatch,
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def backfill(staging_dir: Path, *, client: Any, art_works_root: Path | None = None,
-             operations_log: Path | None = None, limit: int = DEFAULT_LIMIT,
-             ) -> tuple[HolderBackfillStats, Counter[str]]:
+def backfill(
+    staging_dir: Path,
+    *,
+    client: Any,
+    art_works_root: Path | None = None,
+    operations_log: Path | None = None,
+    limit: int = DEFAULT_LIMIT,
+) -> tuple[HolderBackfillStats, Counter[str]]:
     if limit < 1:
         raise ValueError("limit must be at least 1")
     attempted = resolved = updated = mirrored = 0
@@ -178,8 +202,11 @@ def backfill(staging_dir: Path, *, client: Any, art_works_root: Path | None = No
         attempted += 1
         allow_location = str(meta.get("category") or "") in IMMOVABLE_CATEGORIES
         match, reason = resolve_holder(
-            str(meta.get("title") or ""), year_of(meta.get("year")), creator,
-            client=client, allow_location=allow_location,
+            str(meta.get("title") or ""),
+            year_of(meta.get("year")),
+            creator,
+            client=client,
+            allow_location=allow_location,
         )
         if match is None:
             reasons[reason] += 1
@@ -206,15 +233,21 @@ def _env_path(name: str) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
-    parser.add_argument("--staging-dir", type=Path,
-                        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars")
+    parser.add_argument(
+        "--staging-dir",
+        type=Path,
+        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+    )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
     args = parser.parse_args(argv)
 
     stats, reasons = backfill(
-        args.staging_dir, client=SparqlClient(),
-        art_works_root=args.art_works_root, operations_log=args.operations_log, limit=args.limit,
+        args.staging_dir,
+        client=SparqlClient(),
+        art_works_root=args.art_works_root,
+        operations_log=args.operations_log,
+        limit=args.limit,
     )
     print(
         "holder-by-creator backfill: "

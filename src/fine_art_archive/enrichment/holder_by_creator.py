@@ -229,9 +229,12 @@ def location_from_title(title: str, works: list[CreatorWork]) -> tuple[HolderMat
     if len(matched) != 1:
         return None, "ambiguous" if matched else "no-location-in-title"
     w = matched[0]
-    return HolderMatch(
-        w, 0.95, w.location_qid or "", w.location_label, None, w.location_url, "location"
-    ), "match"
+    return (
+        HolderMatch(
+            w, 0.95, w.location_qid or "", w.location_label, None, w.location_url, "location"
+        ),
+        "match",
+    )
 
 
 def _derive_holder(work: CreatorWork, *, allow_location: bool) -> HolderMatch | None:
@@ -261,15 +264,18 @@ def match_work(
     holder = _derive_holder(best, allow_location=allow_location)
     if holder is None:
         return None, "no-collection"
-    return HolderMatch(
-        best,
-        best_score,
-        holder.holder_qid,
-        holder.holder_label,
-        holder.holder_ror,
-        holder.holder_url,
-        holder.kind,
-    ), "match"
+    return (
+        HolderMatch(
+            best,
+            best_score,
+            holder.holder_qid,
+            holder.holder_label,
+            holder.holder_ror,
+            holder.holder_url,
+            holder.kind,
+        ),
+        "match",
+    )
 
 
 def _score_for(text: str) -> str:
