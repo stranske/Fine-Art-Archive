@@ -343,6 +343,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if outcomes:
         print("outcomes:", dict(outcomes.most_common()))
+    for m in stats.matches:
+        print(f"  {m['method']:14} {m['qid']:10} {m['work_id']}")
     return 0
 
 
