@@ -1060,7 +1060,7 @@
       const img = document.querySelector("#image-pane img");
       if (!img || !currentWorkId) return;
       const wid = encodeURIComponent(currentWorkId);
-      img.src = fullResOn ? `/works/${wid}/full` : `/works/${wid}/image?max=1600`;
+      img.src = fullResOn ? `/works/${wid}/image?max=8192` : `/works/${wid}/image?max=1600`;
     }
 
     // ----- chip toggle -----
@@ -1309,14 +1309,15 @@
          <div class="detail-split">
            <div>
              <div class="image-pane" id="image-pane">
-               <img src="${fullResOn ? `/works/${encodeURIComponent(wid)}/full` : `/works/${encodeURIComponent(wid)}/image?max=1600`}"
+               <img src="${fullResOn ? `/works/${encodeURIComponent(wid)}/image?max=8192` : `/works/${encodeURIComponent(wid)}/image?max=1600`}"
                     alt="${(data.title || "").replace(/"/g,"&quot;")}"
                     onerror="this.outerHTML='<div class=&quot;placeholder&quot;>No image available for this work (${wid})</div>'">
              </div>
              <div class="image-meta">
                <span>${(data.files?.master?.dimensions_px || []).join(" × ") || ""}</span>
                <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>
-               <a href="/works/${encodeURIComponent(wid)}/full" target="_blank" rel="noopener">Open full-res ↗</a>
+               <a href="/works/${encodeURIComponent(wid)}/image?max=8192" target="_blank" rel="noopener">View high-res ↗</a>
+               <a href="/works/${encodeURIComponent(wid)}/full">Download original ⭳</a>
              </div>
            </div>
 
