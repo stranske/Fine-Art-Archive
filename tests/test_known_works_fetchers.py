@@ -18,12 +18,72 @@ from fine_art_archive.known_works.fetchers import (  # noqa: E402
     KnownWork,
     _http_text,
     _norm_title,
+    display_score,
     fetch_met,
     fetch_wikidata_sparql,
     fetch_wikipedia_list,
     merge_works,
+    rank_by_display_worthiness,
     works_to_dicts,
 )
+
+
+def _kw(title: str, **kw) -> KnownWork:
+    return KnownWork(title=title, **kw)
+
+
+def test_display_score_rewards_demand_image_collection() -> None:
+    famous = _kw(
+        "The Starry Night",
+        sitelinks=30,
+        image_url="http://x",
+        holder="MoMA",
+        sources=["wikidata", "met"],
+    )
+    obscure = _kw("Untitled", sitelinks=0)
+    assert display_score(famous) > 0.9
+    assert display_score(obscure) == 0.0
+    assert display_score(famous) > display_score(obscure)
+
+
+def test_sitelinks_are_volume_neutral_across_artists() -> None:
+    # a prolific-but-mediocre artist's individual work has ~0 demand signal even
+    # with an image; a masterpiece with many sitelinks outranks it regardless of
+    # how many works its creator made.
+    prolific_minor = _kw("Landscape no. 412", sitelinks=0, image_url="http://x")
+    masterpiece = _kw("Guernica", sitelinks=40, image_url="http://y", holder="Reina Sofia")
+    assert display_score(masterpiece) > display_score(prolific_minor)
+
+
+def test_studies_and_sketches_are_demoted() -> None:
+    finished = _kw("The Night Watch", sitelinks=20, image_url="http://x", holder="Rijksmuseum")
+    study = _kw(
+        "Study for The Night Watch", sitelinks=20, image_url="http://x", holder="Rijksmuseum"
+    )
+    assert display_score(study) < display_score(finished)
+    assert display_score(study) == round(display_score(finished) * 0.4, 3)
+
+
+def test_rank_by_display_worthiness_orders_desc() -> None:
+    works = [
+        _kw("Obscure", sitelinks=0),
+        _kw("Famous", sitelinks=50, image_url="http://x", holder="Louvre", sources=["a", "b"]),
+        _kw("Study of Hands", sitelinks=50, image_url="http://x"),
+    ]
+    ranked = [w.title for w in rank_by_display_worthiness(works)]
+    assert ranked[0] == "Famous"
+    assert ranked[-1] == "Obscure"
+
+
+def test_wd_query_uses_valid_label_service_and_sitelinks() -> None:
+    # bd:Language "en" is malformed and 400s live (WDQS returns [] silently); the
+    # label service must use bd:serviceParam. Guards that regression + sitelinks.
+    from fine_art_archive.known_works.fetchers import _wd_sparql_query
+
+    q = _wd_sparql_query("Q5582")
+    assert 'bd:serviceParam wikibase:language "en"' in q
+    assert "bd:Language" not in q
+    assert "wikibase:sitelinks ?sitelinks" in q
 
 
 def test_fetchers_use_logging_not_print() -> None:
@@ -522,6 +582,8 @@ def test_works_to_dicts():
         "year": 1503,
         "image_url": "http://...",
         "holder": "Louvre",
+        "sitelinks": 0,
         "sources": ["wikidata"],
         "source_ids": {"wikidata": "Q12418"},
+        "display_score": 0.4,  # image (0.25) + collection (0.15); no sitelinks/corroboration
     }
