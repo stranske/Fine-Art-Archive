@@ -11,6 +11,7 @@ The caller passes them to `merge_works` to dedupe across sources.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import re
@@ -35,6 +36,7 @@ class KnownWork:
     year: int | None = None
     image_url: str | None = None
     holder: str | None = None
+    sitelinks: int = 0  # Wikipedia-language count: a volume-neutral "demand" proxy
     sources: list[str] = field(default_factory=list)
     source_ids: dict[str, str] = field(default_factory=dict)
 
@@ -66,14 +68,15 @@ def _norm_title(s: str) -> str:
 # --------------------------------------------------------------------------
 def _wd_sparql_query(artist_q: str) -> str:
     return f"""
-SELECT DISTINCT ?work ?workLabel ?inception ?image WHERE {{
+SELECT DISTINCT ?work ?workLabel ?inception ?image ?sitelinks WHERE {{
   ?work wdt:P170 wd:{artist_q} .
   VALUES ?cls {{ wd:Q3305213 wd:Q4502142 wd:Q11086742 wd:Q15727816
                   wd:Q15711026 wd:Q11060274 wd:Q18761202 wd:Q860861 }}
   ?work wdt:P31 ?cls .
   OPTIONAL {{ ?work wdt:P571 ?inception . }}
   OPTIONAL {{ ?work wdt:P18 ?image . }}
-  SERVICE wikibase:label {{ bd:Language "en". }}
+  OPTIONAL {{ ?work wikibase:sitelinks ?sitelinks . }}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
 }}
 LIMIT 500
 """
@@ -120,6 +123,9 @@ def fetch_wikidata_sparql(artist_q: str, *, timeout: int = 60) -> list[KnownWork
                 entry.year = int(m.group(1))
         if "image" in r and entry.image_url is None:
             entry.image_url = r["image"]["value"]
+        if "sitelinks" in r:
+            with contextlib.suppress(ValueError, TypeError):
+                entry.sitelinks = max(entry.sitelinks, int(r["sitelinks"]["value"]))
     LOG.info("[wikidata] %s works", len(out))
     return list(out.values())
 
@@ -324,10 +330,58 @@ def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
                     existing.image_url = w.image_url
                 if not existing.holder and w.holder:
                     existing.holder = w.holder
+                existing.sitelinks = max(existing.sitelinks, w.sitelinks)
             else:
                 merged[key] = w
     return sorted(merged.values(), key=lambda w: (w.year or 9999, w.title or ""))
 
 
+# --------------------------------------------------------------------------
+# Display-worthiness: prioritise works people typically want to *display*
+# --------------------------------------------------------------------------
+# Scored PER WORK, never per artist, so there is no volume bias: a great
+# prolific artist's masterpieces score high and a mediocre prolific artist's
+# works score low, automatically, with no artist-level cap. Signals are
+# objective Wikidata/source facts, not quality judgements:
+#   * sitelinks  -- Wikipedia-language count; the strongest "people care about
+#                   this specific work" proxy, and volume-neutral across artists.
+#   * has image  -- you can actually hang it (P18 / Met primaryImage).
+#   * in a public collection (a holder) -- institutional selection.
+#   * multi-source corroboration -- curated notability (Met, "List of paintings").
+# A study/sketch/fragment title is demoted: even by a master, a preparatory
+# drawing is not what people hang. Weights are transparent and easily retuned.
+_STUDY_RE = re.compile(
+    r"\b(stud(?:y|ies)|sketch|drawing|fragment|preparatory|cartoon|recto|verso)\b",
+    re.IGNORECASE,
+)
+_SITELINK_SATURATION = 30.0  # sitelinks at/above this count as maximally in-demand
+# (30 ~ a work with a Wikipedia article in most major languages); below it the
+# demand signal scales linearly, so the very top of a famous oeuvre still sorts.
+_DISPLAY_WEIGHTS = {"sitelinks": 0.45, "image": 0.25, "collection": 0.15, "corroboration": 0.15}
+_STUDY_DEMOTION = 0.4
+
+
+def display_score(work: KnownWork) -> float:
+    """Return a 0..1 display-worthiness score for one work (see module notes)."""
+    demand = min(work.sitelinks / _SITELINK_SATURATION, 1.0)
+    image = 1.0 if work.image_url else 0.0
+    collection = 1.0 if work.holder else 0.0
+    corroboration = min(max(len(work.sources) - 1, 0) / 2.0, 1.0)
+    score = (
+        _DISPLAY_WEIGHTS["sitelinks"] * demand
+        + _DISPLAY_WEIGHTS["image"] * image
+        + _DISPLAY_WEIGHTS["collection"] * collection
+        + _DISPLAY_WEIGHTS["corroboration"] * corroboration
+    )
+    if _STUDY_RE.search(work.title or ""):
+        score *= _STUDY_DEMOTION
+    return round(score, 3)
+
+
+def rank_by_display_worthiness(works: list[KnownWork]) -> list[KnownWork]:
+    """Return works ordered most display-worthy first (stable on ties by title)."""
+    return sorted(works, key=lambda w: (-display_score(w), w.title or ""))
+
+
 def works_to_dicts(works: list[KnownWork]) -> list[dict]:
-    return [asdict(w) for w in works]
+    return [{**asdict(w), "display_score": display_score(w)} for w in works]
