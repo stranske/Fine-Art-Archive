@@ -49,8 +49,16 @@ class FakeClient:
 # --- commerce + authority --------------------------------------------------
 def test_is_commercial_by_domain() -> None:
     assert d.is_commercial("https://fineartamerica.com/x")
-    assert d.is_commercial("https://www.christies.com/lot/1")
+    assert d.is_commercial("https://redbubble.com/shop/x")
     assert not d.is_commercial("https://www.artic.edu/artworks/1")
+
+
+def test_auction_houses_are_not_commercial() -> None:
+    # auction/market scholarship is a deliberate exception: high-value, transient
+    assert not d.is_commercial("https://www.christies.com/lot/1", "Estimate $2m. Add to cart.")
+    assert not d.is_commercial("https://www.sothebys.com/en/buy/auction/lot")
+    assert d.is_transient_source("https://www.christies.com/lot/1")
+    assert not d.is_transient_source("https://en.wikipedia.org/wiki/x")
 
 
 def test_is_commercial_by_signals() -> None:
