@@ -30,6 +30,60 @@ def test_gather_needs_a_source() -> None:
     assert cli.gather(None, None) == []
 
 
+def test_missing_only_drops_held_works(monkeypatch, tmp_path, capsys) -> None:
+    import json
+
+    # archive already holds one work by QID and one by title
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "meta.json").write_text(
+        json.dumps({"stable_identifiers": {"wikidata_q": "Q100"}, "title": "Held By Qid"}),
+        encoding="utf-8",
+    )
+    (tmp_path / "b").mkdir()
+    (tmp_path / "b" / "meta.json").write_text(
+        json.dumps({"title": "Held By Title"}), encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_wikidata_sparql",
+        lambda q: [
+            _kw("Held By Qid", source_ids={"wikidata": "Q100"}, sitelinks=5),
+            _kw("Held By Title", sitelinks=5),
+            _kw("Not Held", sitelinks=5, image_url="http://x"),
+        ],
+    )
+    monkeypatch.setattr(cli, "fetch_wikipedia_list", lambda n: [])
+    monkeypatch.setattr(cli, "fetch_met", lambda n: [])
+
+    rc = cli.main(["--artist-qid", "Q1", "--missing-only", "--staging-dir", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "Not Held" in out
+    assert "Held By Qid" not in out
+    assert "Held By Title" not in out
+
+
+def test_is_held_matches_qid_and_title() -> None:
+    held_qids, held_titles = {"Q100"}, {cli._norm_title("Held By Title")}
+    assert cli.is_held(_kw("x", source_ids={"wikidata": "Q100"}), held_qids, held_titles)
+    assert cli.is_held(_kw("Held By Title!"), held_qids, held_titles)
+    assert not cli.is_held(_kw("Brand New", source_ids={"wikidata": "Q999"}), held_qids, held_titles)
+
+
+def test_load_held_reads_qids_and_titles(tmp_path) -> None:
+    import json
+
+    (tmp_path / "w").mkdir()
+    (tmp_path / "w" / "meta.json").write_text(
+        json.dumps({"stable_identifiers": {"wikidata_q": "Q7"}, "title": "The Night Watch"}),
+        encoding="utf-8",
+    )
+    qids, titles = cli.load_held(tmp_path)
+    assert qids == {"Q7"}
+    assert cli._norm_title("The Night Watch") in titles
+
+
 def test_main_ranks_and_respects_top(monkeypatch, capsys) -> None:
     monkeypatch.setattr(
         cli,
