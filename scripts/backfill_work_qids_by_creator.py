@@ -129,8 +129,14 @@ def _work_qid(meta: dict[str, Any]) -> str | None:
     return None
 
 
-def _eligible(meta: dict[str, Any]) -> bool:
-    return meta.get("category") in _UNCATEGORIZED and _work_qid(meta) is None
+def _eligible(meta: dict[str, Any], *, include_categorized: bool = False) -> bool:
+    if _work_qid(meta) is not None:
+        return False
+    # By default only the uncategorized floor (a work QID unlocks its P31
+    # category). With --include-categorized, also resolve the work QID for
+    # already-categorized works so downstream holder / IIIF resolution can use
+    # it -- e.g. the works whose artist was just un-swapped from a person QID.
+    return include_categorized or meta.get("category") in _UNCATEGORIZED
 
 
 def _apply_match(meta: dict[str, Any], match: WorkQidMatch) -> None:
@@ -196,6 +202,7 @@ def backfill(
     operations_log: Path | None = None,
     limit: int = DEFAULT_LIMIT,
     apply: bool = False,
+    include_categorized: bool = False,
 ) -> tuple[WorkQidBackfillStats, Counter[str]]:
     if limit < 1:
         raise ValueError("limit must be at least 1")
@@ -203,7 +210,7 @@ def backfill(
     reasons: Counter[str] = Counter()
     for path in _sidecar_paths(staging_dir):
         meta = sidecar.load(path)
-        if not _eligible(meta):
+        if not _eligible(meta, include_categorized=include_categorized):
             continue
         creator = _creator_qid(meta)
         if not creator:
@@ -263,6 +270,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
     parser.add_argument("--show-matches", action="store_true", help="print each proposed match")
+    parser.add_argument(
+        "--include-categorized",
+        action="store_true",
+        help="also resolve the work QID for already-categorized works (for holder/IIIF)",
+    )
     args = parser.parse_args(argv)
 
     stats, reasons = backfill(
@@ -272,6 +284,7 @@ def main(argv: list[str] | None = None) -> int:
         operations_log=args.operations_log,
         limit=args.limit,
         apply=args.apply,
+        include_categorized=args.include_categorized,
     )
     mode = "apply" if args.apply else "dry-run"
     print(

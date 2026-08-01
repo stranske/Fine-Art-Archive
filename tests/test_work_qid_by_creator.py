@@ -259,6 +259,38 @@ def test_skips_categorized_and_already_qided(tmp_path: Path) -> None:
     assert stats.attempted == 0 and stats.resolved == 0
 
 
+def test_include_categorized_resolves_categorized_qidless_works(tmp_path: Path) -> None:
+    # a categorized work with a creator but no work QID: skipped by default,
+    # resolved with include_categorized (so holder/IIIF can use the work QID).
+    cat = _uncat_sidecar("2222222-categorized", "The Starry Night")
+    cat["category"] = "painting"
+    _write(tmp_path, cat)
+    client = FakeSparql([_binding("Q1", "The Starry Night", inception="1889")])
+
+    default_stats, _ = backfill(tmp_path, client=client, apply=False)
+    assert default_stats.attempted == 0  # skipped by default
+
+    inc_stats, _ = backfill(tmp_path, client=client, apply=True, include_categorized=True)
+    assert inc_stats.attempted == 1 and inc_stats.resolved == 1
+    assert (
+        json.loads((tmp_path / "2222222-categorized" / "meta.json").read_text())[
+            "stable_identifiers"
+        ]["wikidata_q"]
+        == "Q1"
+    )
+
+
+def test_include_categorized_still_skips_already_qided(tmp_path: Path) -> None:
+    qided = _uncat_sidecar("3333330-already-qided", "The Starry Night")
+    qided["category"] = "painting"
+    qided["stable_identifiers"] = {"wikidata_q": "Q99"}
+    _write(tmp_path, qided)
+    client = FakeSparql([_binding("Q1", "The Starry Night", inception="1889")])
+
+    stats, _ = backfill(tmp_path, client=client, apply=True, include_categorized=True)
+    assert stats.attempted == 0  # a work that already has a QID is never re-touched
+
+
 def test_no_creator_qid_is_reported_not_guessed(tmp_path: Path) -> None:
     _write(tmp_path, _uncat_sidecar("4444444-no-artist", "The Starry Night", artist_qid=None))
     client = FakeSparql([_binding("Q1", "The Starry Night", inception="1889")])
