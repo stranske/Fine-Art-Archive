@@ -50,7 +50,7 @@ CURATED_ALIASES: list[dict] = [
         ],
     },
     {
-        "q": "Q380732",
+        "q": "Q255828",
         "display_name": "Pieter Brueghel the Younger",
         "lifespan": "1564–1638",
         "family_key": "bruegel-younger",
@@ -63,7 +63,7 @@ CURATED_ALIASES: list[dict] = [
         ],
     },
     {
-        "q": "Q150611",
+        "q": "Q209050",
         "display_name": "Jan Brueghel the Elder",
         "lifespan": "1568–1625",
         "family_key": "brueghel-jan-elder",
@@ -77,7 +77,7 @@ CURATED_ALIASES: list[dict] = [
         ],
     },
     {
-        "q": "Q462281",
+        "q": "Q285933",
         "display_name": "Jan Brueghel the Younger",
         "lifespan": "1601–1678",
         "family_key": "brueghel-jan-younger",
@@ -93,7 +93,7 @@ CURATED_ALIASES: list[dict] = [
         "aliases": ["Claude Monet", "Monet"],
     },
     {
-        "q": "Q352",
+        "q": "Q39931",
         "display_name": "Pierre-Auguste Renoir",
         "lifespan": "1841–1919",
         "family_key": "renoir-pierre-auguste",
