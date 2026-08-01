@@ -18,7 +18,7 @@ import json
 import os
 import sys
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -32,6 +32,7 @@ from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
 from fine_art_archive.identity.artist_lookup import resolve_artist_qid  # noqa: E402
 
 DEFAULT_LIMIT = 100_000
+_UNCATEGORIZED = (None, "", "(uncategorized)")
 
 
 @dataclass
@@ -40,6 +41,7 @@ class BackfillStats:
     resolved: int
     updated_works: int
     mirrored: int
+    matches: list[dict[str, Any]] = field(default_factory=list)  # proposals (for --dry-run)
 
 
 def _sidecar_paths(staging_dir: Path) -> list[Path]:
@@ -51,6 +53,19 @@ def _sidecar_paths(staging_dir: Path) -> list[Path]:
 def _existing_qid(meta: dict[str, Any]) -> str | None:
     artist = meta.get("artist")
     return artist.get("wikidata_q") if isinstance(artist, dict) else None
+
+
+def _work_qid(meta: dict[str, Any]) -> str | None:
+    stable = meta.get("stable_identifiers")
+    if isinstance(stable, dict):
+        qid = stable.get("wikidata_q")
+        return qid if isinstance(qid, str) and qid else None
+    return None
+
+
+def _in_uncategorized_scope(meta: dict[str, Any]) -> bool:
+    """The categorization-unblocking cluster: uncategorized + no work QID."""
+    return meta.get("category") in _UNCATEGORIZED and _work_qid(meta) is None
 
 
 def _artist_name(meta: dict[str, Any]) -> str:
@@ -106,43 +121,54 @@ def backfill(
     art_works_root: Path | None = None,
     operations_log: Path | None = None,
     limit: int = DEFAULT_LIMIT,
+    dry_run: bool = False,
+    only_uncategorized: bool = False,
 ) -> tuple[BackfillStats, Counter[str]]:
     if limit < 1:
         raise ValueError("limit must be at least 1")
-    attempted = resolved = updated = mirrored = 0
+    stats = BackfillStats(attempted=0, resolved=0, updated_works=0, mirrored=0)
     reasons: Counter[str] = Counter()
     for path in _sidecar_paths(staging_dir):
         meta = sidecar.load(path)
         if _existing_qid(meta):
             continue
+        if only_uncategorized and not _in_uncategorized_scope(meta):
+            continue
         name = _artist_name(meta)
         if not name:
             continue
-        attempted += 1
+        stats.attempted += 1
         qid, method = resolve_artist_qid(name, client=client)
         if qid is None:
             reasons[method or "unresolved"] += 1
+            if stats.attempted >= limit:
+                break
             continue
-        meta.setdefault("artist", {})["wikidata_q"] = qid
-        provenance.set(
-            meta,
-            "artist_qid",
-            "available",
-            "wikidata",
-            source_ref=f"https://www.wikidata.org/wiki/{qid}",
-            note=f"Resolved from artist name {name!r} ({method}).",
+        reasons["resolved"] += 1
+        stats.matches.append(
+            {"work_id": meta["work_id"], "name": name, "qid": qid, "method": method}
         )
-        sidecar.validate(meta)
-        sidecar.write(path, meta)
-        mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
-        resolved += 1
-        updated += 1
-        mirrored += len(mirror_paths)
-        if operations_log is not None:
-            _append_operation(operations_log, meta, qid, method or "", path, mirror_paths)
-        if attempted >= limit:
+        if not dry_run:
+            meta.setdefault("artist", {})["wikidata_q"] = qid
+            provenance.set(
+                meta,
+                "artist_qid",
+                "available",
+                "wikidata",
+                source_ref=f"https://www.wikidata.org/wiki/{qid}",
+                note=f"Resolved from artist name {name!r} ({method}).",
+            )
+            sidecar.validate(meta)
+            sidecar.write(path, meta)
+            mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
+            stats.resolved += 1
+            stats.updated_works += 1
+            stats.mirrored += len(mirror_paths)
+            if operations_log is not None:
+                _append_operation(operations_log, meta, qid, method or "", path, mirror_paths)
+        if stats.attempted >= limit:
             break
-    return BackfillStats(attempted, resolved, updated, mirrored), reasons
+    return stats, reasons
 
 
 def _env_path(name: str) -> Path | None:
@@ -161,6 +187,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
     parser.add_argument("--timeout", type=float, default=15.0)
+    parser.add_argument(
+        "--dry-run", action="store_true", help="report proposed QIDs without writing"
+    )
+    parser.add_argument(
+        "--only-uncategorized",
+        action="store_true",
+        help="restrict to uncategorized works still lacking a work QID",
+    )
     args = parser.parse_args(argv)
 
     stats, reasons = backfill(
@@ -169,14 +203,22 @@ def main(argv: list[str] | None = None) -> int:
         art_works_root=args.art_works_root,
         operations_log=args.operations_log,
         limit=args.limit,
+        dry_run=args.dry_run,
+        only_uncategorized=args.only_uncategorized,
     )
+    mode = "dry-run" if args.dry_run else "apply"
     print(
-        "artist_qid backfill: "
-        f"attempted={stats.attempted} resolved={stats.resolved} "
-        f"updated_works={stats.updated_works} mirrored={stats.mirrored}"
+        f"artist_qid backfill ({mode}): "
+        f"attempted={stats.attempted} resolved={len(stats.matches)} "
+        f"written={stats.resolved} updated_works={stats.updated_works} mirrored={stats.mirrored}"
     )
     if reasons:
-        print("unresolved reasons:", dict(reasons))
+        print("outcomes:", dict(reasons.most_common()))
+    if args.dry_run or args.limit < DEFAULT_LIMIT:
+        for m in stats.matches:
+            print(f"  {m['name']!r} -> {m['qid']} ({m['method']})  [{m['work_id']}]")
+    if args.dry_run and stats.matches:
+        print("(dry-run: no files written; re-run without --dry-run)")
     return 0
 
 
