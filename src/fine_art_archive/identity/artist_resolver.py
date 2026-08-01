@@ -44,6 +44,7 @@ CURATED_ALIASES: list[dict] = [
         "aliases": [
             "Pieter Bruegel",
             "Pieter Bruegel the Elder",
+            "Pieter Bruegel I",
             "Pieter Brueghel",
             "Pieter Bruegel l'Ancien",
             "Pieter Bruegel d.Ä.",
@@ -275,6 +276,74 @@ def fold_name(s: str) -> str:
     return s
 
 
+def curated_alias_identity_mismatches(entities: dict[str, object]) -> list[str]:
+    """Return Wikidata identity mismatches for the curated alias table.
+
+    ``entities`` is the ``wbgetentities`` ``entities`` object.  Keeping the
+    payload parsing separate from the HTTP call makes the regression coverage
+    hermetic while an opt-in test can still audit the live source of truth.
+    """
+    mismatches: list[str] = []
+    for entry in CURATED_ALIASES:
+        qid = entry["q"]
+        expected_name = entry["display_name"]
+        entity = entities.get(qid)
+        if not isinstance(entity, dict) or "missing" in entity:
+            mismatches.append(f"{qid}: expected {expected_name!r}, but Wikidata returned no entity")
+            continue
+
+        labels = entity.get("labels")
+        aliases = entity.get("aliases")
+        names: list[str] = []
+        if isinstance(labels, dict):
+            english_label = labels.get("en")
+            if isinstance(english_label, dict) and isinstance(english_label.get("value"), str):
+                names.append(english_label["value"])
+        if isinstance(aliases, dict):
+            english_aliases = aliases.get("en")
+            if isinstance(english_aliases, list):
+                names.extend(
+                    alias["value"]
+                    for alias in english_aliases
+                    if isinstance(alias, dict) and isinstance(alias.get("value"), str)
+                )
+
+        expected_names = {
+            fold_name(expected_name),
+            *(fold_name(alias) for alias in entry["aliases"]),
+        }
+        if expected_names.isdisjoint(fold_name(name) for name in names):
+            evidence = ", ".join(repr(name) for name in names) or "no English label or aliases"
+            mismatches.append(f"{qid}: expected {expected_name!r}; Wikidata reports {evidence}")
+    return mismatches
+
+
+def audit_curated_aliases_against_wikidata(*, timeout: int = 15) -> list[str]:
+    """Fetch all curated IDs once and return actionable identity mismatches.
+
+    This is deliberately opt-in: regular test and CI runs must remain
+    hermetic and must not depend on Wikidata availability.
+    """
+    qids = "|".join(entry["q"] for entry in CURATED_ALIASES)
+    query = urllib.parse.urlencode(
+        {
+            "action": "wbgetentities",
+            "format": "json",
+            "props": "labels|aliases",
+            "languages": "en",
+            "ids": qids,
+        }
+    )
+    request = urllib.request.Request(
+        f"https://www.wikidata.org/w/api.php?{query}", headers={"User-Agent": "FAA/0.2"}
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read())
+    if not isinstance(payload, dict) or not isinstance(payload.get("entities"), dict):
+        raise ValueError("Wikidata wbgetentities response did not include an entities object")
+    return curated_alias_identity_mismatches(payload["entities"])
+
+
 # --------------------------------------------------------------------------
 # Alias table
 # --------------------------------------------------------------------------
@@ -425,7 +494,7 @@ def resolve_artist(
             family_key=sub.family_key,
             method=f"multi-primary({sub.method})",
             confidence=sub.confidence * 0.9,
-            notes=f"multi-creator string; primary={primary!r}; " f"co-creators={parts[1:]}",
+            notes=f"multi-creator string; primary={primary!r}; co-creators={parts[1:]}",
         )
 
     folded = fold_name(raw)
