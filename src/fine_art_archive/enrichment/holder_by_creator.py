@@ -126,12 +126,43 @@ def works_by_creator(creator_qid: str, *, client: SparqlQuerier) -> list[Creator
     return works
 
 
-_LOC_STOPWORDS = frozenset({
-    "the", "of", "di", "del", "della", "dei", "de", "la", "le", "il", "a",
-    "chapel", "cappella", "church", "chiesa", "basilica", "cathedral", "duomo",
-    "san", "santa", "santo", "sant", "saint", "st", "museo", "museum", "palazzo",
-    "palace", "gallery", "galleria", "convent", "convento", "monastery",
-})
+_LOC_STOPWORDS = frozenset(
+    {
+        "the",
+        "of",
+        "di",
+        "del",
+        "della",
+        "dei",
+        "de",
+        "la",
+        "le",
+        "il",
+        "a",
+        "chapel",
+        "cappella",
+        "church",
+        "chiesa",
+        "basilica",
+        "cathedral",
+        "duomo",
+        "san",
+        "santa",
+        "santo",
+        "sant",
+        "saint",
+        "st",
+        "museo",
+        "museum",
+        "palazzo",
+        "palace",
+        "gallery",
+        "galleria",
+        "convent",
+        "convento",
+        "monastery",
+    }
+)
 
 
 def _norm_tokens(text: str) -> list[str]:
@@ -156,23 +187,31 @@ def location_from_title(title: str, works: list[CreatorWork]) -> tuple[HolderMat
     title_tokens = set(_norm_tokens(title))
     matched: list[CreatorWork] = []
     for w in locations.values():
-        distinctive = {t for t in _norm_tokens(w.location_label or "") if len(t) >= 4 and t not in _LOC_STOPWORDS}
+        distinctive = {
+            t
+            for t in _norm_tokens(w.location_label or "")
+            if len(t) >= 4 and t not in _LOC_STOPWORDS
+        }
         if distinctive and distinctive & title_tokens:
             matched.append(w)
     if len(matched) != 1:
         return None, "ambiguous" if matched else "no-location-in-title"
     w = matched[0]
-    return HolderMatch(w, 0.95, w.location_qid or "", w.location_label, None, w.location_url, "location"), "match"
+    return HolderMatch(
+        w, 0.95, w.location_qid or "", w.location_label, None, w.location_url, "location"
+    ), "match"
 
 
 def _derive_holder(work: CreatorWork, *, allow_location: bool) -> HolderMatch | None:
     """Prefer a P195 collection; for immovable works fall back to a P276 location."""
     if work.collection_qid and _QID_RE.fullmatch(work.collection_qid):
-        return HolderMatch(work, 0.0, work.collection_qid, work.collection_label,
-                           work.ror, work.url, "collection")
+        return HolderMatch(
+            work, 0.0, work.collection_qid, work.collection_label, work.ror, work.url, "collection"
+        )
     if allow_location and work.location_qid and _QID_RE.fullmatch(work.location_qid):
-        return HolderMatch(work, 0.0, work.location_qid, work.location_label,
-                           None, work.location_url, "location")
+        return HolderMatch(
+            work, 0.0, work.location_qid, work.location_label, None, work.location_url, "location"
+        )
     return None
 
 
@@ -184,30 +223,71 @@ def match_work(
     A P195 collection is the holder; for immovable works (``allow_location``) a
     P276 location is accepted as the holder when no collection is recorded.
     """
+    best, best_score, reason = match_work_entity(title, sidecar_year, works)
+    if best is None:
+        return None, reason
+    holder = _derive_holder(best, allow_location=allow_location)
+    if holder is None:
+        return None, "no-collection"
+    return HolderMatch(
+        best,
+        best_score,
+        holder.holder_qid,
+        holder.holder_label,
+        holder.holder_ror,
+        holder.holder_url,
+        holder.kind,
+    ), "match"
+
+
+def match_work_entity(
+    title: str, sidecar_year: int | None, works: list[CreatorWork]
+) -> tuple[CreatorWork | None, float, str]:
+    """Identify *which* creator work a title refers to, under the shared guards.
+
+    Returns ``(work, score, "match")`` or ``(None, score, reason)``. This is the
+    holder-independent core of :func:`match_work`: it settles work *identity*
+    (best title score >= threshold, unambiguous over the runner-up, year
+    agreement) without requiring the matched work to record a holder -- so a
+    work-QID resolver can accept a match that :func:`match_work` would reject as
+    ``no-collection``.
+    """
     folded = fold_name(title)
     scored = sorted(
         ((SequenceMatcher(None, folded, fold_name(w.label)).ratio(), w) for w in works),
         key=lambda pair: -pair[0],
     )
     if not scored:
-        return None, "no-works"
+        return None, 0.0, "no-works"
     best_score, best = scored[0]
     if best_score < SCORE_THRESHOLD:
-        return None, "below-threshold"
-    if len(scored) > 1 and scored[1][0] >= best_score - AMBIGUITY_MARGIN:
-        return None, "ambiguous"
+        return None, best_score, "below-threshold"
+    # Ambiguity means a *different* work scores within the margin. The SPARQL
+    # returns one row per (work x collection/statement), so a work held in
+    # several collections yields several identical-score rows for the same
+    # work_qid -- those are the same answer, not a competitor, and must not
+    # trip the guard (else a work in >1 collection is never resolvable).
+    for score, work in scored[1:]:
+        if score < best_score - AMBIGUITY_MARGIN:
+            break
+        if work.work_qid != best.work_qid:
+            return None, best_score, "ambiguous"
     work_year = year_of(best.inception)
-    if sidecar_year is not None and work_year is not None and abs(sidecar_year - work_year) > YEAR_TOLERANCE:
-        return None, "year-mismatch"
-    holder = _derive_holder(best, allow_location=allow_location)
-    if holder is None:
-        return None, "no-collection"
-    return HolderMatch(best, best_score, holder.holder_qid, holder.holder_label,
-                       holder.holder_ror, holder.holder_url, holder.kind), "match"
+    if (
+        sidecar_year is not None
+        and work_year is not None
+        and abs(sidecar_year - work_year) > YEAR_TOLERANCE
+    ):
+        return None, best_score, "year-mismatch"
+    return best, best_score, "match"
 
 
 def resolve_holder(
-    title: str, sidecar_year: int | None, creator_qid: str, *, client: SparqlQuerier,
+    title: str,
+    sidecar_year: int | None,
+    creator_qid: str,
+    *,
+    client: SparqlQuerier,
     allow_location: bool = False,
 ) -> tuple[HolderMatch | None, str]:
     """Resolve a holder for one work from its creator's Wikidata works."""
