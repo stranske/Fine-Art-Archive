@@ -89,14 +89,53 @@ def test_name_is_untouched(tmp_path: Path) -> None:
     assert sidecar.load(path)["artist"]["name"] == "Michelangelo Merisi da Caravaggio"
 
 
-def test_skips_when_display_name_present(tmp_path: Path) -> None:
+def test_skips_when_identity_complete(tmp_path: Path) -> None:
     path = _write(
         tmp_path,
         "1111113-c",
-        artist={"name": "x", "wikidata_q": "Q42207", "canonical": {"display_name": "Caravaggio"}},
+        artist={
+            "name": "x",
+            "wikidata_q": "Q42207",
+            "canonical": {"display_name": "Caravaggio", "lifespan": "1571–1610"},
+        },
     )
     stats, _ = backfill(path.parents[1], client=CLIENT, apply=True)
     assert stats.candidates == 0
+
+
+def test_fills_only_missing_lifespan(tmp_path: Path) -> None:
+    # display_name present but no lifespan -> add lifespan, keep display_name
+    path = _write(
+        tmp_path,
+        "1111118-h",
+        artist={
+            "name": "x",
+            "wikidata_q": "Q42207",
+            "canonical": {"display_name": "Il Caravaggio"},
+        },
+    )
+    stats, _ = backfill(path.parents[1], client=CLIENT, apply=True)
+    assert stats.resolved == 1
+    can = sidecar.load_validated(path)["artist"]["canonical"]
+    assert can["display_name"] == "Il Caravaggio"  # existing display_name respected
+    assert can["lifespan"] == "1571–1610"  # lifespan added
+
+
+def test_no_change_when_artist_has_no_dates(tmp_path: Path) -> None:
+    # display_name present, artist has no Wikidata dates -> nothing to add, no write
+    client = FakeEntityClient({"Q7": {"label": "Jacopo di Cambio"}})  # no birth/death
+    path = _write(
+        tmp_path,
+        "1111119-i",
+        # complete except lifespan, which Wikidata also lacks -> nothing to add
+        artist={
+            "name": "x",
+            "wikidata_q": "Q7",
+            "canonical": {"wikidata_q": "Q7", "display_name": "Jacopo di Cambio", "family_key": "cambio"},
+        },
+    )
+    stats, reasons = backfill(path.parents[1], client=client, apply=True)
+    assert stats.resolved == 0 and reasons["no_change"] == 1
 
 
 def test_skips_when_no_qid(tmp_path: Path) -> None:
