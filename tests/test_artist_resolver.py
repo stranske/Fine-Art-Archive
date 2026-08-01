@@ -66,6 +66,7 @@ def test_curated_alias_identity_audit_accepts_english_label_or_alias() -> None:
             "labels": {"en": {"value": "Pieter Brueghel II"}},
             "aliases": {"en": [{"value": "Pieter Brueghel the Younger"}]},
         },
+        "Q209050": {"missing": ""},
     }
 
     mismatches = curated_alias_identity_mismatches(entities)

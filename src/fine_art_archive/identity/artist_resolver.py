@@ -288,7 +288,7 @@ def curated_alias_identity_mismatches(entities: dict[str, object]) -> list[str]:
         qid = entry["q"]
         expected_name = entry["display_name"]
         entity = entities.get(qid)
-        if not isinstance(entity, dict) or entity.get("missing"):
+        if not isinstance(entity, dict) or "missing" in entity:
             mismatches.append(f"{qid}: expected {expected_name!r}, but Wikidata returned no entity")
             continue
 
