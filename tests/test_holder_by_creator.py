@@ -129,6 +129,17 @@ def test_location_from_title_ambiguous_two_sites() -> None:
     assert match is None
 
 
+def test_qid_shaped_label_is_dropped() -> None:
+    # Wikidata's label service returns the bare QID when an entity has no English
+    # label; that must not be stored as the holder name (registry fills it in).
+    client = FakeSparql([_binding("Q1", "The Starry Night", "Q214867", "Q214867")])
+    match, reason = hbc.resolve_holder("The Starry Night", None, "Q296", client=client)
+    assert reason == "match"
+    assert match is not None
+    assert match.holder_qid == "Q214867"
+    assert match.holder_label is None
+
+
 def test_collection_preferred_over_location() -> None:
     client = FakeSparql([_binding("Q1", "The Starry Night", "Q123", "MoMA", loc="Q999")])
     match, _ = hbc.resolve_holder(
