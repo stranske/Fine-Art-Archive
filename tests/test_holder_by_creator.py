@@ -29,9 +29,15 @@ BASE: dict[str, Any] = {
 }
 
 
-def _binding(w: str, label: str, coll: str | None = None, coll_label: str | None = None,
-             inception: str | None = None, loc: str | None = None,
-             loc_label: str | None = None) -> dict[str, Any]:
+def _binding(
+    w: str,
+    label: str,
+    coll: str | None = None,
+    coll_label: str | None = None,
+    inception: str | None = None,
+    loc: str | None = None,
+    loc_label: str | None = None,
+) -> dict[str, Any]:
     row: dict[str, Any] = {
         "w": {"value": f"http://www.wikidata.org/entity/{w}"},
         "wLabel": {"value": label},
@@ -57,10 +63,12 @@ class FakeSparql:
 
 # --- matching guards -------------------------------------------------------
 def test_matches_and_returns_collection() -> None:
-    client = FakeSparql([
-        _binding("Q1", "The Starry Night", "Q123", "MoMA", inception="1889"),
-        _binding("Q2", "Irises", "Q456", "Getty", inception="1889"),
-    ])
+    client = FakeSparql(
+        [
+            _binding("Q1", "The Starry Night", "Q123", "MoMA", inception="1889"),
+            _binding("Q2", "Irises", "Q456", "Getty", inception="1889"),
+        ]
+    )
     match, reason = hbc.resolve_holder("The Starry Night", 1889, "Q296", client=client)
     assert reason == "match"
     assert match is not None
@@ -71,9 +79,13 @@ def test_matches_and_returns_collection() -> None:
 
 def test_immovable_uses_location_when_no_collection() -> None:
     # a fresco has no P195 collection but a P276 location (the church)
-    client = FakeSparql([_binding("Q1", "The Last Judgment", loc="Q47476", loc_label="Sistine Chapel")])
+    client = FakeSparql(
+        [_binding("Q1", "The Last Judgment", loc="Q47476", loc_label="Sistine Chapel")]
+    )
     # default (movable): no collection -> rejected
-    assert hbc.resolve_holder("The Last Judgment", None, "Q5592", client=client)[1] == "no-collection"
+    assert (
+        hbc.resolve_holder("The Last Judgment", None, "Q5592", client=client)[1] == "no-collection"
+    )
     # immovable: location becomes the holder
     match, reason = hbc.resolve_holder(
         "The Last Judgment", None, "Q5592", client=client, allow_location=True
@@ -88,10 +100,12 @@ def test_immovable_uses_location_when_no_collection() -> None:
 def test_location_from_title_when_work_titles_do_not_match() -> None:
     # fresco scan-naming: per-work titles don't match, but the location name is
     # in the title and the creator's works share that P276 location.
-    client = FakeSparql([
-        _binding("Q1", "No. 20 Flight into Egypt", loc="Q47476", loc_label="Scrovegni Chapel"),
-        _binding("Q2", "No. 17 Nativity", loc="Q47476", loc_label="Scrovegni Chapel"),
-    ])
+    client = FakeSparql(
+        [
+            _binding("Q1", "No. 20 Flight into Egypt", loc="Q47476", loc_label="Scrovegni Chapel"),
+            _binding("Q2", "No. 17 Nativity", loc="Q47476", loc_label="Scrovegni Chapel"),
+        ]
+    )
     match, reason = hbc.resolve_holder(
         "Capella dei Scrovegni - 20. Flight", None, "Q7814", client=client, allow_location=True
     )
@@ -102,18 +116,24 @@ def test_location_from_title_when_work_titles_do_not_match() -> None:
 
 
 def test_location_from_title_ambiguous_two_sites() -> None:
-    client = FakeSparql([
-        _binding("Q1", "Fresco A", loc="Q1", loc_label="Assisi Basilica"),
-        _binding("Q2", "Fresco B", loc="Q2", loc_label="Scrovegni Chapel"),
-    ])
+    client = FakeSparql(
+        [
+            _binding("Q1", "Fresco A", loc="Q1", loc_label="Assisi Basilica"),
+            _binding("Q2", "Fresco B", loc="Q2", loc_label="Scrovegni Chapel"),
+        ]
+    )
     # title mentions neither distinctively -> no location-in-title
-    match, reason = hbc.resolve_holder("Untitled fresco", None, "Q7814", client=client, allow_location=True)
+    match, reason = hbc.resolve_holder(
+        "Untitled fresco", None, "Q7814", client=client, allow_location=True
+    )
     assert match is None
 
 
 def test_collection_preferred_over_location() -> None:
     client = FakeSparql([_binding("Q1", "The Starry Night", "Q123", "MoMA", loc="Q999")])
-    match, _ = hbc.resolve_holder("The Starry Night", None, "Q296", client=client, allow_location=True)
+    match, _ = hbc.resolve_holder(
+        "The Starry Night", None, "Q296", client=client, allow_location=True
+    )
     assert match is not None
     assert match.holder_qid == "Q123"
     assert match.kind == "collection"
@@ -121,10 +141,12 @@ def test_collection_preferred_over_location() -> None:
 
 def test_ambiguous_same_title_is_rejected() -> None:
     # two works with the same title (Caravaggio's two St Jeromes) -> no guess
-    client = FakeSparql([
-        _binding("Q1", "St Jerome Writing", "Q123", "Borghese"),
-        _binding("Q2", "St Jerome Writing", "Q456", "Valletta"),
-    ])
+    client = FakeSparql(
+        [
+            _binding("Q1", "St Jerome Writing", "Q123", "Borghese"),
+            _binding("Q2", "St Jerome Writing", "Q456", "Valletta"),
+        ]
+    )
     match, reason = hbc.resolve_holder("St Jerome Writing", None, "Q42207", client=client)
     assert match is None
     assert reason == "ambiguous"
@@ -142,6 +164,28 @@ def test_below_threshold_rejected() -> None:
     match, reason = hbc.resolve_holder("The Starry Night", None, "Q296", client=client)
     assert match is None
     assert reason == "below-threshold"
+
+
+def test_query_groups_by_work_and_is_untruncated() -> None:
+    # one row per distinct work (not per collection row) so LIMIT can't truncate
+    # a prolific artist's oeuvre; a high, non-binding bound; aliases concatenated.
+    q = hbc.creator_works_query("Q5598")
+    assert "GROUP BY ?w" in q
+    assert "GROUP_CONCAT(DISTINCT ?alt" in q
+    assert "LIMIT 4000" in q
+    assert "?w wdt:P170 wd:Q5598" in q
+
+
+def test_works_by_creator_parses_aliases() -> None:
+    binding = {
+        "w": {"value": "http://www.wikidata.org/entity/Q1"},
+        "wLabel": {"value": "Woman with a Parasol"},
+        "alts": {"value": "Madame Monet and Her Son||La Promenade"},
+    }
+
+    works = hbc.works_by_creator("Q296", client=FakeSparql([binding]))
+
+    assert works[0].aliases == ("Madame Monet and Her Son", "La Promenade")
 
 
 def test_statement_hash_collection_rejected() -> None:
@@ -171,7 +215,13 @@ def test_backfill_writes_holder(tmp_path: Path) -> None:
 def test_backfill_skips_existing_holder(tmp_path: Path) -> None:
     meta = deepcopy(BASE)
     meta["title"] = "The Starry Night"
-    meta["holder"] = {"name": "Existing Museum", "wikidata_q": "Q999", "ror": None, "url": None, "accession": None}
+    meta["holder"] = {
+        "name": "Existing Museum",
+        "wikidata_q": "Q999",
+        "ror": None,
+        "url": None,
+        "accession": None,
+    }
     path = tmp_path / "staging" / str(meta["work_id"]) / "meta.json"
     sidecar.write(path, meta)
     client = FakeSparql([_binding("Q1", "The Starry Night", "Q123", "MoMA")])
