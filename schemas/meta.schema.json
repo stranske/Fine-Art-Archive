@@ -733,6 +733,61 @@
         }
       }
     },
+    "modalities": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Alternative imaging modalities of the work (visible, infrared reflectography/underdrawing, X-ray, raking light, UV) presented as switchable layers in the viewer. Files live alongside the master in the work directory.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "modality": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filename": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dimensions_px": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "license": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
     "files": {
       "type": "object",
       "required": [

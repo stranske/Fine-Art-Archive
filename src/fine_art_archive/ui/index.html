@@ -75,6 +75,12 @@
     .subject-tag button:hover { color: #000; font-weight: bold; }
     .filter-tag { background: #fce8d8; border-color: #c98a55; color: #6b3a18; font-weight: 500; }
     .filter-tag.confirmed { background: #fcd8b8; border-color: #c98a55; }
+    .modality-bar { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 4px; }
+    .modality-btn { font: inherit; font-size: 13px; padding: 3px 10px; border: 1px solid #c98a55;
+      border-radius: 4px; background: #fff; color: #6b3a18; cursor: pointer; }
+    .modality-btn.active { background: #6b3a18; color: #fff; border-color: #6b3a18; }
+    body.fullscreen .modality-btn { background: #2a2a2a; color: #d4a878; border-color: #555; }
+    body.fullscreen .modality-btn.active { background: #d4a878; color: #2a2a2a; }
     /* Focused rating view layout: image left, rating right.
        When body.detail-mode is set, the list is hidden and the detail
        panel takes the full viewport width. */
@@ -817,6 +823,7 @@
       // primed for the next openWork.
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       fullResOn = false;
+      currentModality = null;
       document.body.classList.remove("detail-mode", "fullscreen", "full-res-on");
       const btn = document.getElementById("fullres-toggle");
       if (btn) btn.textContent = "Full-res";
@@ -994,6 +1001,21 @@
     // which the CSS uses to hide the page header, shrink the rating-pane
     // gutter, and switch to a dark palette. Esc exits automatically.
     let fullResOn = false; // toggled by Full-res button; reset on exit
+    let currentModality = null; // null = visible master; else a modality code (IRR/XR/RS/UV)
+    function paneImgUrl(wid) {
+      const px = fullResOn ? 8192 : 1600;
+      const w = encodeURIComponent(wid);
+      return currentModality
+        ? `/works/${w}/modality/${encodeURIComponent(currentModality)}/image?max=${px}`
+        : `/works/${w}/image?max=${px}`;
+    }
+    function setModality(wid, mod) {
+      currentModality = mod || null;
+      const img = document.querySelector("#image-pane img");
+      if (img) img.src = paneImgUrl(wid);
+      document.querySelectorAll(".modality-btn").forEach(b =>
+        b.classList.toggle("active", (b.dataset.mod || "") === (mod || "")));
+    }
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         const p = document.documentElement.requestFullscreen?.();
@@ -1059,8 +1081,7 @@
     function updateImageSrc() {
       const img = document.querySelector("#image-pane img");
       if (!img || !currentWorkId) return;
-      const wid = encodeURIComponent(currentWorkId);
-      img.src = fullResOn ? `/works/${wid}/image?max=8192` : `/works/${wid}/image?max=1600`;
+      img.src = paneImgUrl(currentWorkId);
     }
 
     // ----- chip toggle -----
@@ -1313,6 +1334,10 @@
                     alt="${(data.title || "").replace(/"/g,"&quot;")}"
                     onerror="this.outerHTML='<div class=&quot;placeholder&quot;>No image available for this work (${wid})</div>'">
              </div>
+             ${(data.modalities && data.modalities.length) ? `<div class="modality-bar">
+               <button class="modality-btn active" data-mod="" onclick="setModality('${wid}','')">Visible</button>
+               ${data.modalities.map(m => `<button class="modality-btn" data-mod="${m.modality}" onclick="setModality('${wid}','${m.modality}')" title="${(m.source||'') + (m.license?(' · '+m.license):'')}">${m.label || m.modality}</button>`).join("")}
+             </div>` : ""}
              <div class="image-meta">
                <span>${(data.files?.master?.dimensions_px || []).join(" × ") || ""}</span>
                <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>

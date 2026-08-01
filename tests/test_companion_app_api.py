@@ -568,3 +568,30 @@ def test_variant_upgrade_decision_rejects_unknown_work_without_append(
     assert '"existing_wid": "known-work"' in lines[0]
     assert "not-a-real-work" not in lines[0]
     assert "not a real work" not in lines[0]
+
+
+def test_modality_image_serves_and_404s(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from PIL import Image
+
+    work_dir = tmp_path / "works" / "w1"
+    work_dir.mkdir(parents=True)
+    Image.new("RGB", (40, 30), "gray").save(work_dir / "modality_irr.jpg")
+    sidecar = {
+        "work_id": "w1",
+        "modalities": [
+            {"modality": "IRR", "label": "Underdrawing", "filename": "modality_irr.jpg"}
+        ],
+    }
+    monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
+    monkeypatch.setattr(api_main, "_archive_work_dir_checked", lambda wid: work_dir)
+    monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", tmp_path / "cache")
+
+    ok = client.get("/works/w1/modality/IRR/image?max=64")
+    assert ok.status_code == 200
+    assert ok.headers["content-type"] == "image/jpeg"
+
+    # case-insensitive match works, unknown modality 404s
+    assert client.get("/works/w1/modality/irr/image").status_code == 200
+    assert client.get("/works/w1/modality/XR/image").status_code == 404

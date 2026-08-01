@@ -522,26 +522,19 @@ def _master_path(work_id: str) -> Path | None:
     return None
 
 
-@app.get("/works/{work_id}/image")
-def work_image(
-    work_id: str, max: int = Query(1600, ge=64, le=12288, description="Longest side in pixels")
-):
-    """Serve a resized JPEG of the master. Cached on disk."""
-    master = _master_path(work_id)
-    if master is None:
-        raise HTTPException(404, f"no master image for {work_id}")
+def _serve_resized(src: Path, cache_stem: str, max: int) -> FileResponse:
+    """Return a cached, resized JPEG of ``src`` (longest side ``max`` px)."""
     IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    # Cache key: wid + max + mtime of source so a re-promotion invalidates.
-    mtime = int(master.stat().st_mtime)
-    cache_p = IMAGE_CACHE_DIR / f"{work_id}_{max}_{mtime}.jpg"
+    mtime = int(src.stat().st_mtime)  # mtime in key so a re-promote invalidates
+    cache_p = IMAGE_CACHE_DIR / f"{cache_stem}_{max}_{mtime}.jpg"
     if not cache_p.exists():
         try:
             from PIL import Image
         except ImportError:
             raise HTTPException(500, "Pillow not installed") from None
-        Image.MAX_IMAGE_PIXELS = None  # Las Meninas is 158M px
+        Image.MAX_IMAGE_PIXELS = None  # gigapixel Bruegel scans
         try:
-            with Image.open(master) as im:
+            with Image.open(src) as im:
                 im.thumbnail((max, max), Image.Resampling.LANCZOS)
                 if im.mode not in ("RGB", "L"):
                     im = im.convert("RGB")  # type: ignore[assignment]
@@ -551,6 +544,40 @@ def work_image(
     return FileResponse(
         cache_p, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
     )
+
+
+@app.get("/works/{work_id}/image")
+def work_image(
+    work_id: str, max: int = Query(1600, ge=64, le=12288, description="Longest side in pixels")
+):
+    """Serve a resized JPEG of the master. Cached on disk."""
+    master = _master_path(work_id)
+    if master is None:
+        raise HTTPException(404, f"no master image for {work_id}")
+    return _serve_resized(master, work_id, max)
+
+
+@app.get("/works/{work_id}/modality/{modality}/image")
+def modality_image(
+    work_id: str, modality: str,
+    max: int = Query(1600, ge=64, le=12288, description="Longest side in pixels"),
+):
+    """Serve a resized JPEG of an imaging modality (VIS/IRR/XR/RS/UV). Cached."""
+    w = _get_work_checked(work_id)
+    if w is None:
+        raise HTTPException(404, f"no sidecar for {work_id}")
+    entry = next(
+        (m for m in (w.get("modalities") or [])
+         if str(m.get("modality", "")).lower() == modality.lower()),
+        None,
+    )
+    if entry is None or not entry.get("filename"):
+        raise HTTPException(404, f"no {modality} modality for {work_id}")
+    work_dir = _archive_work_dir_checked(work_id)
+    src = _contained_master_filename(work_dir, str(entry["filename"]))
+    if not src.is_file():
+        raise HTTPException(404, f"{modality} file missing for {work_id}")
+    return _serve_resized(src, f"{work_id}_mod_{modality.lower()}", max)
 
 
 @app.get("/works/{work_id}/full")
