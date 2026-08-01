@@ -287,7 +287,8 @@ def test_artist_workshop_of_uses_reference_qid():
         "wikidata_q": "Q5598",  # Rembrandt himself, the reference artist
         "relation": "workshop",
         "attribution_confidence": "scholarly_consensus",
-        "attribution_anchor": "Q23807",  # "workshop" entity on Wikidata
+        # no attribution_anchor: the relation enum + reference wikidata_q carry the
+        # kind for person relations; the anchor is only used for anonymous works.
     }
     assert sidecar.is_valid(meta), sidecar.validate(meta)
 
