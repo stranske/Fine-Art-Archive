@@ -35,8 +35,8 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
-from fine_art_archive.identity.artist_resolver import fold_name  # noqa: E402
 from fine_art_archive.enrichment.wikidata_identity import fetch_identity  # noqa: E402
+from fine_art_archive.identity.artist_resolver import fold_name  # noqa: E402
 
 DEFAULT_LIMIT = 1_000_000
 
@@ -71,30 +71,45 @@ def _needs_canonical(meta: dict[str, Any]) -> bool:
     canonical = artist.get("canonical")
     if not isinstance(canonical, dict):
         return True
-    return not canonical.get("display_name")
+    # identity is display_name + lifespan; fill either when missing
+    return not (canonical.get("display_name") and canonical.get("lifespan"))
 
 
 def _apply_canonical(
     meta: dict[str, Any], display_name: str | None, lifespan: str | None, *, now: str
-) -> None:
+) -> bool:
+    """Fill missing canonical fields from the fetched identity. Returns True if changed.
+
+    Never overwrites an existing ``display_name``/``lifespan``; only adds what is
+    missing, so a re-run that finds nothing new writes nothing (idempotent).
+    """
     artist = meta["artist"]
     qid = artist["wikidata_q"]
     canonical = artist.get("canonical")
     if not isinstance(canonical, dict):
         canonical = {}
-    canonical["wikidata_q"] = qid
-    if not canonical.get("display_name"):
+    changed = False
+    if canonical.get("wikidata_q") != qid:
+        canonical["wikidata_q"] = qid
+        changed = True
+    if not canonical.get("display_name") and display_name:
         canonical["display_name"] = display_name
-    if not canonical.get("lifespan"):
+        changed = True
+    if not canonical.get("lifespan") and lifespan:
         canonical["lifespan"] = lifespan
+        changed = True
     if not canonical.get("family_key") and canonical.get("display_name"):
         canonical["family_key"] = fold_name(str(canonical["display_name"]))
+        changed = True
+    if not changed:
+        return False
     canonical.setdefault("method", "wikidata")
     canonical["confidence"] = 0.9
     canonical["resolved_at"] = now
     artist["canonical"] = canonical
     if lifespan and not artist.get("lifespan"):
         artist["lifespan"] = lifespan
+    return True
 
 
 def _write_existing_mirrors(
@@ -158,12 +173,16 @@ def backfill(
         if qid not in cache:
             cache[qid] = fetch_identity(qid, client=client)
         display_name, lifespan = cache[qid]
-        if not display_name:
+        if not display_name and not lifespan:
             reasons["unresolved"] += 1
             if candidates >= limit:
                 break
             continue
-        _apply_canonical(meta, display_name, lifespan, now=stamp)
+        if not _apply_canonical(meta, display_name, lifespan, now=stamp):
+            reasons["no_change"] += 1  # nothing new to add (e.g. artist has no WD dates)
+            if candidates >= limit:
+                break
+            continue
         sidecar.validate(meta)
         resolved += 1
         reasons["resolved"] += 1
