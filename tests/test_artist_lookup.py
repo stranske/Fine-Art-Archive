@@ -107,3 +107,47 @@ def test_backfill_writes_only_missing(tmp_path: Path) -> None:
     # second run: already has a QID -> not attempted
     stats2, _ = backfill(path.parents[1], client=client)
     assert stats2.attempted == 0
+
+
+def test_dry_run_reports_without_writing(tmp_path: Path) -> None:
+    meta = deepcopy(BASE)
+    meta["artist"] = {"name": "Claude Monet"}
+    path = tmp_path / "staging" / str(meta["work_id"]) / "meta.json"
+    sidecar.write(path, meta)
+    client = FakeClient(["Q296"], {"Q296": _person("Claude Monet", occupations=["Q1028181"])})
+
+    stats, _ = backfill(path.parents[1], client=client, dry_run=True)
+
+    assert stats.attempted == 1
+    assert stats.resolved == 0  # nothing written
+    assert [m["qid"] for m in stats.matches] == ["Q296"]
+    assert "wikidata_q" not in sidecar.load(path)["artist"]  # unchanged on disk
+
+
+def test_only_uncategorized_scopes_the_pass(tmp_path: Path) -> None:
+    client = FakeClient(["Q296"], {"Q296": _person("Claude Monet", occupations=["Q1028181"])})
+
+    # in scope: uncategorized + no work QID
+    in_scope = deepcopy(BASE)
+    in_scope["work_id"] = "2222221-in-scope"
+    in_scope["artist"] = {"name": "Claude Monet"}
+    sidecar.write(tmp_path / "staging" / "2222221-in-scope" / "meta.json", in_scope)
+
+    # out of scope: already categorized
+    categorized = deepcopy(BASE)
+    categorized["work_id"] = "2222223-categorized"
+    categorized["artist"] = {"name": "Claude Monet"}
+    categorized["category"] = "painting"
+    sidecar.write(tmp_path / "staging" / "2222223-categorized" / "meta.json", categorized)
+
+    # out of scope: already has a work QID
+    qided = deepcopy(BASE)
+    qided["work_id"] = "2222224-has-workqid"
+    qided["artist"] = {"name": "Claude Monet"}
+    qided["stable_identifiers"] = {"wikidata_q": "Q111"}
+    sidecar.write(tmp_path / "staging" / "2222224-has-workqid" / "meta.json", qided)
+
+    stats, _ = backfill(tmp_path / "staging", client=client, only_uncategorized=True)
+
+    assert stats.attempted == 1  # only the in-scope work
+    assert [m["work_id"] for m in stats.matches] == ["2222221-in-scope"]
