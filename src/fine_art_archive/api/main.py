@@ -524,7 +524,7 @@ def _master_path(work_id: str) -> Path | None:
 
 @app.get("/works/{work_id}/image")
 def work_image(
-    work_id: str, max: int = Query(1600, ge=64, le=4096, description="Longest side in pixels")
+    work_id: str, max: int = Query(1600, ge=64, le=12288, description="Longest side in pixels")
 ):
     """Serve a resized JPEG of the master. Cached on disk."""
     master = _master_path(work_id)
@@ -555,11 +555,18 @@ def work_image(
 
 @app.get("/works/{work_id}/full")
 def work_full(work_id: str):
-    """Serve the original master file (no resize). For 'open full-res' link."""
+    """Serve the original master file as a download. Gigapixel masters (up to
+    ~1.2 GP for the Bruegel scans) can't be rendered inline by any browser, so
+    this is a download of the true original; use /works/{id}/image?max=8192 for
+    an in-browser high-resolution view."""
     master = _master_path(work_id)
     if master is None:
         raise HTTPException(404, f"no master image for {work_id}")
-    return FileResponse(master)
+    return FileResponse(
+        master,
+        filename=f"{work_id}{master.suffix}",
+        headers={"Content-Disposition": f'attachment; filename="{work_id}{master.suffix}"'},
+    )
 
 
 # --------------------------------------------------------------------------
