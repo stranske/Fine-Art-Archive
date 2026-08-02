@@ -730,6 +730,247 @@
             "string",
             "null"
           ]
+        },
+        "reading": {
+          "type": "array",
+          "description": "PRIMARY. Close-looking: what is happening in the picture, where the eye enters and is led, which details reward a second look. Written for someone standing in front of the work.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "stories": {
+          "type": "array",
+          "description": "PRIMARY. What enthusiasts actually discuss: odd or hidden details, running debates, surprising facts, and the work's cultural afterlife (poems, films, borrowings). Each carries a title.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "composition": {
+          "type": "array",
+          "description": "PRIMARY. How the picture is built — lines, viewpoint, colour structure, spatial devices — and what technical imaging revealed about DESIGN decisions (figures added late, changes of mind). The imaging process itself belongs in technical_note, not here.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "context": {
+          "type": "array",
+          "description": "SECONDARY. Placement in the artist's oeuvre and among other treatments of the theme.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "description": "SECONDARY. Ownership chain, favouring episodes that carry a story over dry transfer records.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "technical_note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "One short sentence on the technical examination and what it revealed, with process detail (equipment, resolutions) deliberately excluded — link out instead."
+        },
+        "research": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "description": "Background research state. `source_pool` is deliberately NOT displayed: it is the seed for a deeper research pass, including leads that were seen but not exploited. `depth` lets a viewer judge whether further work looks promising before spending on it.",
+          "properties": {
+            "source_pool": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "title": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "used | promising | thin | paywalled | unread"
+                  },
+                  "note": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "depth": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "score": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "0-100 composite"
+                },
+                "n_sources": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "n_high_authority": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "n_promising_unread": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "kinds_covered": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "gaps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "design_version": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Which research design produced this, so designs can be honed over time."
+            },
+            "last_developed_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
         }
       }
     },

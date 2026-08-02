@@ -210,6 +210,145 @@ def list_dossiers() -> dict:
 
 
 # --------------------------------------------------------------------------
+# Dossier page + research depth
+# --------------------------------------------------------------------------
+DOSSIER_UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "dossier.html"
+RESEARCH_REQUESTS = env_path(
+    "FAA_RESEARCH_REQUESTS", REPO_ROOT / "data" / "research_requests.jsonl"
+)
+# A request is a standing hint, not an obligation: anything older than this is
+# treated as expired so an un-actioned backlog cannot accumulate.
+RESEARCH_REQUEST_TTL_DAYS = 30
+# Section weights for the depth score — what a reader actually gets, not raw
+# source count. A dossier heavy on provenance but empty on close-looking is
+# shallow for our purposes however many footnotes it carries.
+_DEPTH_SECTIONS = {"reading": 22, "stories": 22, "composition": 18, "context": 8, "provenance": 6}
+
+
+@app.get("/works/{work_id}/dossier", response_class=HTMLResponse)
+def dossier_page(work_id: str) -> FileResponse:
+    """Standalone dossier page, linked from the work detail.
+
+    Kept off the rating view deliberately: the dossier is long-form reading and
+    competes with rating for attention when inlined.
+    """
+    _get_work_checked(work_id)  # 400 on a malformed id before we serve anything
+    if not DOSSIER_UI_FILE.exists():
+        raise HTTPException(404, "dossier UI not found")
+    return FileResponse(
+        DOSSIER_UI_FILE,
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+
+
+def _depth_report(dossier: dict | None) -> dict:
+    """Score how well-developed a dossier is, and say what is missing.
+
+    Exists so a viewer can judge whether commissioning deeper research looks
+    promising *before* paying for it — an empty `reading` section plus a stack
+    of unread promising leads is a much better bet than a dossier that has
+    already mined everything available.
+    """
+    if not dossier:
+        return {"score": 0, "n_sources": 0, "n_high_authority": 0,
+                "n_promising_unread": 0, "kinds_covered": [], "gaps": ["no dossier yet"],
+                "sections": {}, "last_developed_at": None, "design_version": None}
+    refs = dossier.get("references") or []
+    research = dossier.get("research") or {}
+    pool = research.get("source_pool") or []
+    kinds = sorted({str(r.get("kind")) for r in refs if r.get("kind")})
+    high = sum(1 for r in refs if (r.get("authority_score") or 0) >= 8)
+    promising = sum(1 for s in pool if str(s.get("status", "")).lower() in
+                    {"promising", "paywalled", "unread"})
+
+    score = 0.0
+    sections, gaps = {}, []
+    for name, weight in _DEPTH_SECTIONS.items():
+        n = len(dossier.get(name) or [])
+        sections[name] = n
+        # Saturating: the first few items carry most of the value.
+        score += weight * min(n, 5) / 5
+        if n == 0:
+            gaps.append(f"no {name}")
+    score += 12 * min(len(refs), 8) / 8            # breadth of citation
+    score += 12 * min(len(kinds), 5) / 5           # variety of source type
+    if not high:
+        gaps.append("no high-authority source")
+    if len(kinds) <= 2:
+        gaps.append("narrow source mix")
+    return {"score": round(min(score, 100.0), 1), "n_sources": len(refs),
+            "n_high_authority": high, "n_promising_unread": promising,
+            "kinds_covered": kinds, "gaps": gaps, "sections": sections,
+            "last_developed_at": research.get("last_developed_at"),
+            "design_version": research.get("design_version")}
+
+
+@app.get("/works/{work_id}/research")
+def work_research(work_id: str) -> dict:
+    """Depth report for a work. Deliberately does NOT return `source_pool`:
+    the leads are the raw material for a deeper pass, not viewer-facing."""
+    w = _get_work_checked(work_id)
+    if w is None:
+        raise HTTPException(404, f"no sidecar for {work_id}")
+    report = _depth_report(w.get("dossier"))
+    report["work_id"] = work_id
+    report["requested"] = _open_research_request(work_id) is not None
+    return report
+
+
+def _open_research_request(work_id: str) -> dict | None:
+    """Most recent non-expired request for this work, if any."""
+    if not RESEARCH_REQUESTS.exists():
+        return None
+    cutoff = datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
+    latest = None
+    try:
+        for line in RESEARCH_REQUESTS.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get("work_id") != work_id:
+                continue
+            try:
+                ts = datetime.fromisoformat(str(rec.get("ts"))).timestamp()
+            except ValueError:
+                continue
+            if ts >= cutoff:
+                latest = rec
+    except OSError:
+        return None
+    return latest
+
+
+class ResearchRequestIn(BaseModel):
+    note: str | None = Field(default=None, max_length=500)
+    focus: str | None = Field(default=None, max_length=100)
+
+
+@app.post("/works/{work_id}/research_request")
+def request_research(work_id: str, body: ResearchRequestIn) -> dict:
+    """Record that a viewer wants this work researched further.
+
+    Append-only and advisory. A maintainer runs the deepening pass with
+    whatever model they have connected; requests expire after
+    RESEARCH_REQUEST_TTL_DAYS so an unattended queue cannot pile up.
+    """
+    w = _get_work_checked(work_id)
+    if w is None:
+        raise HTTPException(404, f"no sidecar for {work_id}")
+    report = _depth_report(w.get("dossier"))
+    rec = {"ts": datetime.now(UTC).isoformat(), "work_id": work_id,
+           "title": w.get("title"), "note": body.note, "focus": body.focus,
+           "depth_at_request": report["score"],
+           "promising_unread": report["n_promising_unread"]}
+    RESEARCH_REQUESTS.parent.mkdir(parents=True, exist_ok=True)
+    with open(RESEARCH_REQUESTS, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return {"ok": True, "expires_days": RESEARCH_REQUEST_TTL_DAYS, "request": rec}
+
+
+# --------------------------------------------------------------------------
 # Named queues — ordered lists of work_ids the user can load into the
 # rating UI to walk a curated set (e.g. the subject-tagger v1 sample).
 # Queues live as JSON files under data/queues/<name>.json with shape:

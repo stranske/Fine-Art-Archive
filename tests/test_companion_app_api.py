@@ -756,3 +756,61 @@ def test_dossiers_cache_invalidates_on_work_directory_rename(
     os.utime(staging, None)
 
     assert client.get("/dossiers").json()["work_ids"] == ["new-id"]
+
+
+def test_dossier_page_and_depth_report(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sidecar = {
+        "work_id": "w1", "title": "A Work",
+        "dossier": {
+            "viewer_summary": "s",
+            "reading": [{"text": "a"}, {"text": "b"}],
+            "stories": [{"title": "T", "text": "c"}],
+            "composition": [{"text": "d"}],
+            "references": [
+                {"id": "r1", "kind": "close_looking", "authority_score": 9.0},
+                {"id": "r2", "kind": "essay", "authority_score": 4.0},
+            ],
+            "research": {"source_pool": [{"url": "u", "status": "promising"},
+                                         {"url": "v", "status": "thin"}],
+                         "design_version": "v2"},
+        },
+    }
+    monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
+
+    page = client.get("/works/w1/dossier")
+    assert page.status_code == 200
+    assert "text/html" in page.headers["content-type"]
+
+    r = client.get("/works/w1/research").json()
+    assert 0 < r["score"] <= 100
+    assert r["n_sources"] == 2
+    assert r["n_high_authority"] == 1          # only the 9.0 clears the >=8 bar
+    assert r["n_promising_unread"] == 1        # "thin" is not an unread lead
+    assert r["sections"]["reading"] == 2
+    assert "no context" in r["gaps"] and "no provenance" in r["gaps"]
+    # source_pool is background material and must never leak to the viewer
+    assert "source_pool" not in r
+
+
+def test_research_request_records_and_expires(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(api_main, "_get_work_checked",
+                        lambda wid: {"work_id": "w1", "title": "A", "dossier": {}})
+    log = tmp_path / "research_requests.jsonl"
+    monkeypatch.setattr(api_main, "RESEARCH_REQUESTS", log)
+
+    assert client.get("/works/w1/research").json()["requested"] is False
+    ok = client.post("/works/w1/research_request", json={"note": "more on the sign"})
+    assert ok.status_code == 200
+    assert client.get("/works/w1/research").json()["requested"] is True
+    assert '"work_id": "w1"' in log.read_text(encoding="utf-8")
+
+    # An old request must not count — the queue expires so no backlog accumulates.
+    import json as _json
+    old = _json.loads(log.read_text(encoding="utf-8").splitlines()[0])
+    old["ts"] = "2000-01-01T00:00:00+00:00"
+    log.write_text(_json.dumps(old) + "\n", encoding="utf-8")
+    assert client.get("/works/w1/research").json()["requested"] is False
