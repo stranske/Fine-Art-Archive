@@ -814,3 +814,10 @@ def test_research_request_records_and_expires(
     old["ts"] = "2000-01-01T00:00:00+00:00"
     log.write_text(_json.dumps(old) + "\n", encoding="utf-8")
     assert client.get("/works/w1/research").json()["requested"] is False
+
+    # The next write compacts expired entries under the same lock it uses for
+    # reads, so this endpoint's JSONL log cannot grow forever.
+    client.post("/works/w1/research_request", json={"focus": "composition"})
+    records = [_json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["focus"] == "composition"

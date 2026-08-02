@@ -869,7 +869,7 @@
             "null"
           ],
           "additionalProperties": false,
-          "description": "Background research state. `source_pool` is deliberately NOT displayed: it is the seed for a deeper research pass, including leads that were seen but not exploited. `depth` lets a viewer judge whether further work looks promising before spending on it.",
+          "description": "Background research state. `source_pool` is deliberately NOT displayed: it is the seed for a deeper research pass, including leads that were seen but not exploited. The API computes reader-facing research depth from this current dossier state.",
           "properties": {
             "source_pool": {
               "type": "array",
@@ -907,52 +907,6 @@
                       "string",
                       "null"
                     ]
-                  }
-                }
-              }
-            },
-            "depth": {
-              "type": [
-                "object",
-                "null"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "score": {
-                  "type": [
-                    "number",
-                    "null"
-                  ],
-                  "description": "0-100 composite"
-                },
-                "n_sources": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ]
-                },
-                "n_high_authority": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ]
-                },
-                "n_promising_unread": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ]
-                },
-                "kinds_covered": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "gaps": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
                   }
                 }
               }

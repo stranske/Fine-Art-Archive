@@ -134,7 +134,6 @@ async function main() {
   const refIndex = Object.fromEntries(refs.filter(r => r.id).map(r => [r.id, r]));
   document.title = (w.title || WID) + " — dossier";
 
-  const dims = (w.files?.master?.dimensions_px || []).join(" × ");
   let html = `
     <h1>${esc(w.title || "(untitled)")}</h1>
     <p class="byline">${esc(w.artist?.name || "")}</p>
@@ -171,7 +170,7 @@ async function main() {
   document.getElementById("main").innerHTML = html;
 
   // ---- rail: image + research depth ----
-  let rail = `<img class="thumb" src="/works/${encodeURIComponent(WID)}/image?max=700" alt="">`;
+  let rail = `<img class="thumb" src="/works/${encodeURIComponent(WID)}/image?max=700" alt="${attr(w.title || WID)}">`;
   if ((w.deepzoom?.layers || []).length) {
     rail += `<div class="card"><h2>Deep zoom</h2>
       <div>This work has ${w.deepzoom.layers.length} gigapixel layers.</div>

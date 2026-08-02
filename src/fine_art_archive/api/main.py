@@ -225,7 +225,7 @@ RESEARCH_REQUEST_TTL_DAYS = 30
 _DEPTH_SECTIONS = {"reading": 22, "stories": 22, "composition": 18, "context": 8, "provenance": 6}
 
 
-@app.get("/works/{work_id}/dossier", response_class=HTMLResponse)
+@app.get("/works/{work_id}/dossier")
 def dossier_page(work_id: str) -> FileResponse:
     """Standalone dossier page, linked from the work detail.
 
@@ -237,6 +237,7 @@ def dossier_page(work_id: str) -> FileResponse:
         raise HTTPException(404, "dossier UI not found")
     return FileResponse(
         DOSSIER_UI_FILE,
+        media_type="text/html",
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
 
@@ -298,27 +299,37 @@ def work_research(work_id: str) -> dict:
 
 def _open_research_request(work_id: str) -> dict | None:
     """Most recent non-expired request for this work, if any."""
-    if not RESEARCH_REQUESTS.exists():
-        return None
     cutoff = datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
-    latest = None
+    with _sidecar_file_lock(RESEARCH_REQUESTS):
+        records = _active_research_requests(cutoff)
+    return next((rec for rec in reversed(records) if rec.get("work_id") == work_id), None)
+
+
+def _active_research_requests(cutoff: float) -> list[dict]:
+    """Read valid, unexpired request records while the caller holds the lock."""
+    if not RESEARCH_REQUESTS.exists():
+        return []
+    active: list[dict] = []
     try:
         for line in RESEARCH_REQUESTS.read_text(encoding="utf-8").splitlines():
             try:
                 rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if rec.get("work_id") != work_id:
-                continue
-            try:
                 ts = datetime.fromisoformat(str(rec.get("ts"))).timestamp()
-            except ValueError:
+            except (json.JSONDecodeError, TypeError, ValueError):
                 continue
             if ts >= cutoff:
-                latest = rec
+                active.append(rec)
     except OSError:
-        return None
-    return latest
+        return []
+    return active
+
+
+def _replace_research_requests(records: list[dict]) -> None:
+    """Atomically compact the request log; caller must hold its file lock."""
+    payload = "".join(json.dumps(rec, ensure_ascii=False) + "\n" for rec in records)
+    tmp = RESEARCH_REQUESTS.with_suffix(f"{RESEARCH_REQUESTS.suffix}.{os.getpid()}.tmp")
+    tmp.write_text(payload, encoding="utf-8")
+    tmp.replace(RESEARCH_REQUESTS)
 
 
 class ResearchRequestIn(BaseModel):
@@ -330,9 +341,9 @@ class ResearchRequestIn(BaseModel):
 def request_research(work_id: str, body: ResearchRequestIn) -> dict:
     """Record that a viewer wants this work researched further.
 
-    Append-only and advisory. A maintainer runs the deepening pass with
-    whatever model they have connected; requests expire after
-    RESEARCH_REQUEST_TTL_DAYS so an unattended queue cannot pile up.
+    Advisory and bounded. A maintainer runs the deepening pass with whatever
+    model they have connected; expired requests are compacted on each write so
+    an unattended queue cannot grow without limit.
     """
     w = _get_work_checked(work_id)
     if w is None:
@@ -342,9 +353,12 @@ def request_research(work_id: str, body: ResearchRequestIn) -> dict:
            "title": w.get("title"), "note": body.note, "focus": body.focus,
            "depth_at_request": report["score"],
            "promising_unread": report["n_promising_unread"]}
-    RESEARCH_REQUESTS.parent.mkdir(parents=True, exist_ok=True)
-    with open(RESEARCH_REQUESTS, "a", encoding="utf-8") as f:
-        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    with _sidecar_file_lock(RESEARCH_REQUESTS):
+        active = _active_research_requests(
+            datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
+        )
+        active.append(rec)
+        _replace_research_requests(active)
     return {"ok": True, "expires_days": RESEARCH_REQUEST_TTL_DAYS, "request": rec}
 
 
