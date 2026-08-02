@@ -30,3 +30,4 @@ htmlcov/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+automation_logs/

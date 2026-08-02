@@ -178,19 +178,23 @@ def list_works(
 _dossier_cache: dict[str, object] = {"sig": None, "ids": frozenset()}
 
 
-def _dossier_signature() -> tuple[int, int, int] | None:
+def _dossier_signature() -> tuple[int, int, int, int] | None:
     """Cheap change-detector for the staging tree.
 
-    Aggregates the mtime and size of each *meta.json*. Neither STAGING's own
-    mtime nor the per-work directory mtimes work here: rewriting an existing
-    staging_sidecars/<wid>/meta.json in place changes neither of them, and that
-    is the common case — a dossier or subject pass rewrites existing sidecars
-    rather than adding directories. Only the file's own mtime moves.
+    Aggregates the mtime and size of each *meta.json*, plus STAGING's own
+    mtime. Per-work directory mtimes alone are not enough: rewriting an
+    existing staging_sidecars/<wid>/meta.json in place changes neither
+    STAGING's mtime nor the work directory's — only the file's own mtime
+    moves, and that is the common case (dossier/subject passes rewrite
+    existing sidecars). STAGING's mtime is still required so directory
+    rename/move/add/remove operations invalidate the cache even when the
+    individual meta.json mtime+size aggregates would otherwise match.
 
     Costs one stat per sidecar (~0.02 s for 3.4k works) against ~0.7 s to
     re-read them all, so it is cheap enough to run per request.
     """
     try:
+        staging_mtime = STAGING.stat().st_mtime_ns
         mtimes = sizes = count = 0
         for entry in os.scandir(STAGING):
             try:
@@ -200,7 +204,7 @@ def _dossier_signature() -> tuple[int, int, int] | None:
             mtimes += st.st_mtime_ns
             sizes += st.st_size
             count += 1
-        return mtimes, sizes, count
+        return staging_mtime, mtimes, sizes, count
     except OSError:
         return None
 

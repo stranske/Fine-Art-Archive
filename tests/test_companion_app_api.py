@@ -725,3 +725,34 @@ def test_dossiers_cache_invalidates_on_sidecar_edit(
         encoding="utf-8",
     )
     assert client.get("/dossiers").json()["work_ids"] == ["w1"]
+
+
+def test_dossiers_cache_invalidates_on_work_directory_rename(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Renaming a work directory must refresh /dossiers work_ids.
+
+    meta.json mtime+size can stay identical across a rename; STAGING's own
+    mtime must still bust the cache so the renamed parent name is returned.
+    """
+    import json as _json
+    import os
+    import time
+
+    staging = tmp_path / "staging_sidecars"
+    (staging / "old-id").mkdir(parents=True)
+    (staging / "old-id" / "meta.json").write_text(
+        _json.dumps({"work_id": "old-id", "dossier": {"viewer_summary": "hi"}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    api_store._dossier_cache["sig"] = None
+
+    assert client.get("/dossiers").json()["work_ids"] == ["old-id"]
+
+    # Ensure STAGING mtime moves even on fast filesystems.
+    time.sleep(0.01)
+    os.rename(staging / "old-id", staging / "new-id")
+    os.utime(staging, None)
+
+    assert client.get("/dossiers").json()["work_ids"] == ["new-id"]
