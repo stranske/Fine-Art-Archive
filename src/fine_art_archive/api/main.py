@@ -10,9 +10,11 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import stat
 import tempfile
 import threading
+import urllib.request
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +38,10 @@ VARIANT_UPGRADE_CSV = REPO_ROOT / "variant_upgrade_candidates.csv"
 # Canonical archive root where promoted masters live: Art/works/<wid>/master.<ext>
 ART_WORKS_ROOT = env_path("FAA_ART_WORKS_ROOT", DEFAULT_ART_WORKS_ROOT)
 IMAGE_CACHE_DIR = env_path("FAA_IMAGE_CACHE_DIR", REPO_ROOT / "data" / "image_cache")
+# DeepZoom tiles are proxied from the source pyramid and cached here on first
+# view. Kept OFF the (Dropbox-synced) archive by default — hundreds of thousands
+# of tiny tile files must not hit cloud-sync. Override with FAA_TILES_CACHE_DIR.
+TILES_CACHE_DIR = env_path("FAA_TILES_CACHE_DIR", Path.home() / ".faa-tiles")
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
@@ -585,6 +591,79 @@ def modality_image(
     if not src.is_file():
         raise HTTPException(404, f"{modality} file missing for {work_id}")
     return _serve_resized(src, f"{work_id}_mod_{modality.lower()}", max)
+
+
+# --- DeepZoom gigapixel viewer -------------------------------------------
+# The source tile pyramids (insidebruegel.net) are proxied through the app and
+# cached locally on first view, so the browser can pan/zoom to full resolution
+# (OpenSeadragon) without ever downloading a gigapixel flat file. Only the tiles
+# a viewer actually looks at are fetched — polite to the source, and the cache
+# becomes a durable local copy of what's been seen.
+_DZ_TILE_HOST = "khmdata01.universumdigitalis.com"  # SSRF allowlist: the source
+_FID_RE = re.compile(r"^[A-Za-z0-9_]+$")
+_TILE_RE = re.compile(r"^(\d{1,4})_(\d{1,4})\.jpe?g$")
+
+
+@app.get("/works/{work_id}/deepzoom")
+def deepzoom_manifest(work_id: str) -> dict:
+    """Layer descriptors (id, label, full pixel size) for the zoom viewer."""
+    w = _get_work_checked(work_id)
+    if w is None:
+        raise HTTPException(404, f"no sidecar for {work_id}")
+    dz = w.get("deepzoom") or {}
+    layers = [
+        {"layer": e.get("layer"), "label": e.get("label"),
+         "width": (e.get("dimensions_px") or [0, 0])[0],
+         "height": (e.get("dimensions_px") or [0, 0])[1],
+         "source": e.get("source"), "license": e.get("license")}
+        for e in (dz.get("layers") or [])
+        if e.get("dimensions_px") and e.get("fid")
+    ]
+    return {"work_id": work_id, "tile_size": dz.get("tile_size") or 256,
+            "layers": layers}
+
+
+def _dz_layer_entry(work_id: str, layer: str) -> tuple[dict, dict]:
+    w = _get_work_checked(work_id)
+    if w is None:
+        raise HTTPException(404, f"no sidecar for {work_id}")
+    dz = w.get("deepzoom") or {}
+    entry = next((e for e in (dz.get("layers") or [])
+                  if str(e.get("layer", "")).lower() == layer.lower()), None)
+    if entry is None or not entry.get("fid"):
+        raise HTTPException(404, f"no {layer} deepzoom layer for {work_id}")
+    return dz, entry
+
+
+@app.get("/works/{work_id}/dz/{layer}/{level}/{tile}")
+def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> FileResponse:
+    """Serve one DeepZoom tile, proxying + caching from the source pyramid."""
+    dz, entry = _dz_layer_entry(work_id, layer)
+    fid = str(entry["fid"])
+    tile_base = str(dz.get("tile_base") or "")
+    m = _TILE_RE.match(tile)
+    if not m or not _FID_RE.match(fid) or not (0 <= level <= 24):
+        raise HTTPException(404, "bad tile request")
+    col, row = m.group(1), m.group(2)
+    if _DZ_TILE_HOST not in tile_base:  # SSRF guard: only the known source host
+        raise HTTPException(502, "tile source not allowed")
+
+    cache_p = TILES_CACHE_DIR / fid / str(level) / f"{col}_{row}.jpg"
+    if not cache_p.exists():
+        url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 (host-pinned)
+                data = r.read()
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(502, f"tile fetch failed: {type(exc).__name__}") from exc
+        cache_p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = cache_p.with_suffix(f".tmp{os.getpid()}")
+        tmp.write_bytes(data)
+        tmp.replace(cache_p)
+    return FileResponse(cache_p, media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @app.get("/works/{work_id}/full")

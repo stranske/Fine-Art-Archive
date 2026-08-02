@@ -625,3 +625,75 @@ def test_dossiers_lists_only_populated(
     body = r.json()
     assert body["work_ids"] == ["w-has"]
     assert body["total"] == 1
+
+
+def test_deepzoom_manifest_and_tile_proxy_cache(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import urllib.request as _u
+
+    sidecar = {
+        "work_id": "gg1",
+        "deepzoom": {
+            "tile_base": "https://khmdata01.universumdigitalis.com/tiles",
+            "tile_size": 256,
+            "layers": [
+                {"layer": "VIS", "label": "Visible", "fid": "GG_1026_VIS",
+                 "dimensions_px": [79365, 59233], "source": "insidebruegel"},
+                {"layer": "IRR", "label": "Underdrawing", "fid": "GG_1026_IRR",
+                 "dimensions_px": [19842, 14809], "source": "insidebruegel"},
+            ],
+        },
+    }
+    monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
+    monkeypatch.setattr(api_main, "TILES_CACHE_DIR", tmp_path / "tiles")
+
+    # manifest lists both layers with pixel sizes
+    mani = client.get("/works/gg1/deepzoom").json()
+    assert [layer["layer"] for layer in mani["layers"]] == ["VIS", "IRR"]
+    assert mani["layers"][0]["width"] == 79365
+
+    # tile fetch proxies once, then serves from cache (urlopen not called again)
+    calls = {"n": 0}
+
+    class _Resp:
+        def read(self) -> bytes:
+            return b"\xff\xd8\xff\xd0fake-jpeg"
+
+        def __enter__(self) -> _Resp:
+            return self
+
+        def __exit__(self, *a: object) -> None:
+            return None
+
+    def _fake_urlopen(req: object, timeout: int = 30) -> _Resp:
+        calls["n"] += 1
+        return _Resp()
+
+    monkeypatch.setattr(_u, "urlopen", _fake_urlopen)
+
+    r1 = client.get("/works/gg1/dz/VIS/10/3_4.jpg")
+    assert r1.status_code == 200 and r1.headers["content-type"] == "image/jpeg"
+    r2 = client.get("/works/gg1/dz/VIS/10/3_4.jpg")
+    assert r2.status_code == 200
+    assert calls["n"] == 1  # second request served from the on-disk cache
+    assert (tmp_path / "tiles" / "GG_1026_VIS" / "10" / "3_4.jpg").exists()
+
+    # guards: unknown layer 404, malformed tile 404
+    assert client.get("/works/gg1/dz/ZZ/5/0_0.jpg").status_code == 404
+    assert client.get("/works/gg1/dz/VIS/5/notatile.jpg").status_code == 404
+
+
+def test_deepzoom_tile_rejects_foreign_host(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A sidecar pointing at a non-allowlisted host must not be proxied (SSRF).
+    sidecar = {
+        "work_id": "gg2",
+        "deepzoom": {"tile_base": "https://evil.example.com/tiles", "tile_size": 256,
+                     "layers": [{"layer": "VIS", "fid": "GG_1026_VIS",
+                                 "dimensions_px": [100, 100]}]},
+    }
+    monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
+    monkeypatch.setattr(api_main, "TILES_CACHE_DIR", tmp_path / "tiles")
+    assert client.get("/works/gg2/dz/VIS/5/0_0.jpg").status_code == 502

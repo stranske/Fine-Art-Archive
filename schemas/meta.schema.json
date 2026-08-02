@@ -788,6 +788,68 @@
         }
       }
     },
+    "deepzoom": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Gigapixel DeepZoom tile pyramids for pan/zoom in the viewer (OpenSeadragon). Tiles are served through the app, cached from the source pyramid on first view. Each layer maps to a source tile-id (fid) and its full pixel size.",
+      "properties": {
+        "tile_base": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Base URL of the source tile pyramid; tiles at <tile_base>/<fid>/<level>/<col>_<row>.jpg (DeepZoom levels)."
+        },
+        "tile_size": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fid": {
+                "type": "string"
+              },
+              "dimensions_px": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "license": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "files": {
       "type": "object",
       "required": [
