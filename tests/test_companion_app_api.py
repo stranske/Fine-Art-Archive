@@ -697,3 +697,31 @@ def test_deepzoom_tile_rejects_foreign_host(
     monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
     monkeypatch.setattr(api_main, "TILES_CACHE_DIR", tmp_path / "tiles")
     assert client.get("/works/gg2/dz/VIS/5/0_0.jpg").status_code == 502
+
+
+def test_dossiers_cache_invalidates_on_sidecar_edit(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Editing an existing sidecar must refresh /dossiers.
+
+    Regression: the cache was keyed on STAGING's own mtime, which a nested
+    meta.json write does not change -- so a dossier added to an existing work
+    never showed up until restart.
+    """
+    import json as _json
+
+    staging = tmp_path / "staging_sidecars"
+    (staging / "w1").mkdir(parents=True)
+    sidecar = staging / "w1" / "meta.json"
+    sidecar.write_text(_json.dumps({"work_id": "w1"}), encoding="utf-8")
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    api_store._dossier_cache["sig"] = None
+
+    assert client.get("/dossiers").json()["work_ids"] == []
+
+    # Add a dossier to the EXISTING work (no new directory created).
+    sidecar.write_text(
+        _json.dumps({"work_id": "w1", "dossier": {"viewer_summary": "hi"}}),
+        encoding="utf-8",
+    )
+    assert client.get("/dossiers").json()["work_ids"] == ["w1"]

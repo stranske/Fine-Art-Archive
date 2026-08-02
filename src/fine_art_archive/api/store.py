@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 from collections import Counter, defaultdict
 from functools import lru_cache
@@ -177,17 +178,43 @@ def list_works(
 _dossier_cache: dict[str, object] = {"sig": None, "ids": frozenset()}
 
 
+def _dossier_signature() -> tuple[int, int, int] | None:
+    """Cheap change-detector for the staging tree.
+
+    Aggregates the mtime and size of each *meta.json*. Neither STAGING's own
+    mtime nor the per-work directory mtimes work here: rewriting an existing
+    staging_sidecars/<wid>/meta.json in place changes neither of them, and that
+    is the common case — a dossier or subject pass rewrites existing sidecars
+    rather than adding directories. Only the file's own mtime moves.
+
+    Costs one stat per sidecar (~0.02 s for 3.4k works) against ~0.7 s to
+    re-read them all, so it is cheap enough to run per request.
+    """
+    try:
+        mtimes = sizes = count = 0
+        for entry in os.scandir(STAGING):
+            try:
+                st = os.stat(os.path.join(entry.path, "meta.json"))
+            except OSError:
+                continue
+            mtimes += st.st_mtime_ns
+            sizes += st.st_size
+            count += 1
+        return mtimes, sizes, count
+    except OSError:
+        return None
+
+
 def work_ids_with_dossier() -> frozenset[str]:
     """Return the set of work_ids whose sidecar has a populated dossier.
 
-    Scans staging sidecars once and caches the result, keyed on the staging
-    directory's mtime so newly-staged sidecars refresh it without a restart.
-    Uses a cheap substring probe (avoids parsing every sidecar) — a dossier is
-    "populated" when it carries a viewer_summary, key_facts, or references.
+    Result is cached against `_dossier_signature()`, so edits to existing
+    sidecars are picked up without a restart. Uses a cheap substring probe
+    (avoids parsing every sidecar) — a dossier is "populated" when it carries a
+    viewer_summary, key_facts, or references.
     """
-    try:
-        sig = STAGING.stat().st_mtime_ns
-    except OSError:
+    sig = _dossier_signature()
+    if sig is None:
         return frozenset()
     if _dossier_cache["sig"] == sig:
         return _dossier_cache["ids"]  # type: ignore[return-value]
