@@ -79,6 +79,39 @@
     .modality-btn { font: inherit; font-size: 13px; padding: 3px 10px; border: 1px solid #c98a55;
       border-radius: 4px; background: #fff; color: #6b3a18; cursor: pointer; }
     .modality-btn.active { background: #6b3a18; color: #fff; border-color: #6b3a18; }
+    /* Library gallery */
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px; margin-top: 12px; }
+    .card { margin: 0; cursor: pointer; border-radius: 8px; overflow: hidden;
+      background: #fff; border: 1px solid #e6ded1; transition: box-shadow .12s, transform .12s; }
+    .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.14); transform: translateY(-2px); }
+    .card-thumb { position: relative; width: 100%; aspect-ratio: 1 / 1; background: #f3eee4;
+      display: flex; align-items: center; justify-content: center; }
+    .card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-thumb.noimg img { display: none; }
+    .card-thumb.noimg::after { content: "no image"; color: var(--muted); font-size: 12px; }
+    .card-rating { position: absolute; left: 6px; bottom: 6px; }
+    .dossier-dot { position: absolute; right: 6px; top: 6px; color: #c98a55; font-size: 13px;
+      text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+    .card figcaption { padding: 7px 9px; }
+    .card-title { font-size: 13px; font-weight: 600; line-height: 1.25;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-artist { font-size: 12px; margin-top: 2px; }
+    /* Dossier panel */
+    .dossier-h { text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+      font-size: 12px; font-weight: 600; margin: 2px 0 8px; }
+    .dossier-summary { margin: 4px 0 10px; line-height: 1.5; }
+    .dossier-facts { margin: 4px 0 10px; padding-left: 18px; }
+    .dossier-facts li { margin: 2px 0; line-height: 1.4; }
+    .dossier-src { color: #c98a55; font-size: 9px; vertical-align: super; }
+    .dossier-refs-h { font-weight: 600; margin: 8px 0 4px; }
+    .dossier-refs { list-style: none; margin: 0; padding: 0; }
+    .dossier-refs li { margin: 6px 0; line-height: 1.4; }
+    .dossier-auth { display: inline-block; min-width: 20px; margin-right: 6px; padding: 0 5px;
+      border-radius: 8px; background: #6b3a18; color: #fff; font-size: 11px; font-weight: 600; }
+    .dossier-exc { margin: 2px 0 0 26px; font-style: italic; }
+    .dossier-gen { margin-top: 8px; }
+    .pill.warn { background: #f6d9c4; color: #8a3b12; }
     body.fullscreen .modality-btn { background: #2a2a2a; color: #d4a878; border-color: #555; }
     body.fullscreen .modality-btn.active { background: #d4a878; color: #2a2a2a; }
     /* Focused rating view layout: image left, rating right.
@@ -546,6 +579,7 @@
       <select id="queue-picker" onchange="loadQueueFromPicker()" style="margin-right:12px;font:inherit;font-size:14px;padding:4px 8px;border:1px solid #ccc;border-radius:4px">
         <option value="">All works (browse)</option>
       </select>
+      <a id="library-toggle" href="#" onclick="toggleGallery(); return false;" style="margin-right: 16px;" title="Toggle gallery / list view">⊞ Gallery</a>
       <a id="upgrades-link" href="#" onclick="loadUpgrades(); return false;" style="margin-right: 16px;">Variant upgrades →</a>
       <a id="summary-link" href="#" onclick="loadSummary(); return false;">Ratings summary →</a>
     </div>
@@ -588,6 +622,10 @@
     let queueIndex = -1;         // index of currentWorkId in workQueue, or -1
     let currentQueueName = null; // name of the named queue loaded, or null
                                  // for the default "All works" browse list.
+    // Library gallery: visual thumbnail browse over the same /works payload.
+    let galleryMode = (localStorage.getItem("faaGallery") === "1");
+    let dossierSet = null;       // Set of work_ids with a dossier, or null until loaded
+    let lastListPayload = null;  // last {total, works} so a view toggle re-renders w/o refetch
                                  // Persisted in localStorage so the picker
                                  // remembers across reloads.
 
@@ -742,6 +780,44 @@
       </div>
       </div>`;
       return html;
+    }
+
+    // Viewer-facing dossier: plain-language summary, attributed key facts, and
+    // ranked durable source references (live link + archived snapshot).
+    function renderDossier(dos) {
+      const et = (s) => String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const ea = (s) => et(s).replace(/"/g, "&quot;");
+      const hasFacts = dos && (dos.key_facts || []).length;
+      const hasRefs = dos && (dos.references || []).length;
+      if (!dos || (!dos.viewer_summary && !hasFacts && !hasRefs)) {
+        return `<div class="sub">No dossier compiled for this work yet.</div>`;
+      }
+      let h = `<div class="dossier-h">About this work</div>`;
+      if (dos.viewer_summary) h += `<p class="dossier-summary">${et(dos.viewer_summary)}</p>`;
+      if (hasFacts) {
+        h += `<ul class="dossier-facts">` + dos.key_facts.map(f =>
+          `<li>${et(f.text)}${f.source_id ? ` <span class="dossier-src" title="source: ${ea(f.source_id)}">●</span>` : ""}</li>`
+        ).join("") + `</ul>`;
+      }
+      if (hasRefs) {
+        const refs = dos.references.slice().sort((a, b) => (b.authority_score || 0) - (a.authority_score || 0));
+        h += `<div class="dossier-refs-h">Sources</div><ul class="dossier-refs">`;
+        for (const r of refs) {
+          const label = et(r.title || r.live_url || r.id || "source");
+          const live = r.live_url ? `<a href="${ea(r.live_url)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
+          const wb = r.wayback_url ? ` · <a href="${ea(r.wayback_url)}" target="_blank" rel="noopener noreferrer" title="archived snapshot">archived</a>` : "";
+          const pub = r.publisher ? `<span class="sub"> — ${et(r.publisher)}</span>` : "";
+          const auth = (r.authority_score != null) ? `<span class="dossier-auth" title="source authority score (higher = more trustworthy)">${Math.round(r.authority_score * 10) / 10}</span>` : "";
+          const lic = r.license ? `<span class="pill">${et(r.license)}</span>` : "";
+          const flag = r.commerce_flag ? `<span class="pill warn" title="commercial source">commerce</span>` : "";
+          const exc = r.excerpt ? `<div class="dossier-exc sub">“${et(r.excerpt.slice(0, 240))}”</div>` : "";
+          h += `<li>${auth}${live}${wb}${pub} ${lic}${flag}${exc}</li>`;
+        }
+        h += `</ul>`;
+      }
+      if (dos.generated_at) h += `<div class="sub dossier-gen">Compiled ${et(dos.generated_at)}</div>`;
+      return h;
     }
 
     async function subjectAction(wid, action, tag) {
@@ -1403,6 +1479,11 @@
                ${renderSubjectPanel(data)}
              </details>
 
+             <details class="rate-section" id="rs-dossier" ${data.dossier ? "open" : ""}>
+               <summary class="rate-section-summary">Dossier${data.dossier ? "" : ` <span class="sub">(none yet)</span>`}</summary>
+               <div class="dossier-body">${renderDossier(data.dossier)}</div>
+             </details>
+
              <details style="margin-top:8px">
                <summary class="sub">Raw sidecar JSON</summary>
                <pre>${JSON.stringify(data, null, 2)}</pre>
@@ -1606,24 +1687,82 @@
 
     // Renderer factored out so both the htmx list handler and the queue
     // loader can use it. Takes a {total, works:[...]} payload.
+    // Fetch the set of work_ids that have a dossier (once), then re-render the
+    // library so the "has dossier" dots appear. Non-blocking: the grid shows
+    // immediately and dots fill in when this resolves.
+    async function ensureDossierSet() {
+      if (dossierSet !== null) return;
+      dossierSet = new Set();  // guard against concurrent loads
+      try {
+        const r = await fetch("/dossiers");
+        const d = await r.json();
+        dossierSet = new Set(d.work_ids || []);
+        if (galleryMode && lastListPayload) renderListPayload(lastListPayload);
+      } catch (e) { dbg("dossiers.load_error", { error: String(e) }); }
+    }
+
+    function toggleGallery() {
+      galleryMode = !galleryMode;
+      localStorage.setItem("faaGallery", galleryMode ? "1" : "0");
+      const link = document.getElementById("library-toggle");
+      if (link) link.textContent = galleryMode ? "☰ List" : "⊞ Gallery";
+      if (galleryMode) ensureDossierSet();
+      if (lastListPayload) renderListPayload(lastListPayload);
+    }
+
+    function ratingCell(w) {
+      let rcell = "";
+      if (w._last_quality != null || w._last_fit != null) {
+        const q = w._last_quality != null ? w._last_quality : "—";
+        const f = w._last_fit != null ? w._last_fit : "—";
+        rcell = `<span class="rating-badge two-axis" title="Quality × Fit" style="background:var(--accent)">Q${q}·F${f}</span>`;
+      } else if (w._last_rating != null) {
+        rcell = `<span class="rating-badge" data-r="${w._last_rating}" title="legacy single-axis">${ratingLabel(w._last_rating)}</span>`;
+      }
+      if (rcell && w._n_ratings > 1) rcell += `<span class="sub" style="margin-left:6px">×${w._n_ratings}</span>`;
+      return rcell;
+    }
+
     function renderListPayload(d) {
+      lastListPayload = d;
       workQueue = d.works.map(w => w.work_id);
       if (currentWorkId) queueIndex = workQueue.indexOf(currentWorkId);
-      let html = `<div class="sub">${d.total} works · showing ${d.works.length}</div>
-                  <table><thead><tr>
+      const link = document.getElementById("library-toggle");
+      if (link) link.textContent = galleryMode ? "☰ List" : "⊞ Gallery";
+      const head = `<div class="sub">${d.total} works · showing ${d.works.length}</div>`;
+
+      if (galleryMode) {
+        if (dossierSet === null) ensureDossierSet();
+        let html = head + `<div class="gallery">`;
+        for (const w of d.works) {
+          const wid = w.work_id;
+          const safeWid = wid.replace(/'/g, "\\'");
+          const dot = (dossierSet && dossierSet.has(wid))
+            ? `<span class="dossier-dot" title="has dossier">◆</span>` : "";
+          const rc = ratingCell(w);
+          html += `<figure class="card" data-wid="${wid}" onclick="openWork('${safeWid}')" title="${(w.title || "").replace(/"/g, "&quot;")}">
+            <div class="card-thumb">
+              <img loading="lazy" src="/works/${encodeURIComponent(wid)}/image?max=400"
+                   alt="" onerror="this.closest('.card-thumb').classList.add('noimg')">
+              ${rc ? `<span class="card-rating">${rc}</span>` : ""}
+              ${dot}
+            </div>
+            <figcaption>
+              <div class="card-title">${w.title || "(untitled)"}</div>
+              <div class="card-artist sub">${w.artist_name || ""}${w.year ? " · " + w.year : ""}</div>
+            </figcaption>
+          </figure>`;
+        }
+        html += `</div>`;
+        document.getElementById("results").innerHTML = html;
+        return;
+      }
+
+      let html = head + `<table><thead><tr>
                     <th>Title</th><th>Artist</th><th>Year</th><th>Variants</th><th>Rating</th>
                   </tr></thead><tbody>`;
       for (const w of d.works) {
         const wid = w.work_id;
-        let rcell = "";
-        if (w._last_quality != null || w._last_fit != null) {
-          const q = w._last_quality != null ? w._last_quality : "—";
-          const f = w._last_fit != null ? w._last_fit : "—";
-          rcell = `<span class="rating-badge two-axis" title="Quality × Fit" style="background:var(--accent)">Q${q}·F${f}</span>`;
-        } else if (w._last_rating != null) {
-          rcell = `<span class="rating-badge" data-r="${w._last_rating}" title="legacy single-axis">${ratingLabel(w._last_rating)}</span>`;
-        }
-        if (rcell && w._n_ratings > 1) rcell += `<span class="sub" style="margin-left:6px">×${w._n_ratings}</span>`;
         const safeWid = wid.replace(/'/g, "\\'");
         html += `<tr data-wid="${wid}" onclick="openWork('${safeWid}')">
           <td>${w.title || ""}</td>
@@ -1631,7 +1770,7 @@
             ${w.artist_wikidata_q ? `<span class="qid">${w.artist_wikidata_q}</span>` : ""}</td>
           <td>${w.year || ""}</td>
           <td>${w.n_variants || 0}</td>
-          <td class="rating-cell">${rcell}</td>
+          <td class="rating-cell">${ratingCell(w)}</td>
         </tr>`;
       }
       html += "</tbody></table>";

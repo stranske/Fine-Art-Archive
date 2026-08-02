@@ -595,3 +595,33 @@ def test_modality_image_serves_and_404s(
     # case-insensitive match works, unknown modality 404s
     assert client.get("/works/w1/modality/irr/image").status_code == 200
     assert client.get("/works/w1/modality/XR/image").status_code == 404
+
+
+def test_dossiers_lists_only_populated(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json as _json
+
+    staging = tmp_path / "staging_sidecars"
+    # one work WITH a dossier, one without, one with an empty dossier
+    (staging / "w-has").mkdir(parents=True)
+    (staging / "w-has" / "meta.json").write_text(
+        _json.dumps({"work_id": "w-has", "dossier": {"viewer_summary": "hi"}}),
+        encoding="utf-8",
+    )
+    (staging / "w-none").mkdir(parents=True)
+    (staging / "w-none" / "meta.json").write_text(
+        _json.dumps({"work_id": "w-none"}), encoding="utf-8"
+    )
+    (staging / "w-empty").mkdir(parents=True)
+    (staging / "w-empty" / "meta.json").write_text(
+        _json.dumps({"work_id": "w-empty", "dossier": None}), encoding="utf-8"
+    )
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    api_store._dossier_cache["sig"] = None  # bust the mtime cache for the test
+
+    r = client.get("/dossiers")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["work_ids"] == ["w-has"]
+    assert body["total"] == 1
