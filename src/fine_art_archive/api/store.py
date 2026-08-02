@@ -174,6 +174,40 @@ def list_works(
     return {"total": len(rows), "offset": offset, "limit": limit, "works": out}
 
 
+_dossier_cache: dict[str, object] = {"sig": None, "ids": frozenset()}
+
+
+def work_ids_with_dossier() -> frozenset[str]:
+    """Return the set of work_ids whose sidecar has a populated dossier.
+
+    Scans staging sidecars once and caches the result, keyed on the staging
+    directory's mtime so newly-staged sidecars refresh it without a restart.
+    Uses a cheap substring probe (avoids parsing every sidecar) — a dossier is
+    "populated" when it carries a viewer_summary, key_facts, or references.
+    """
+    try:
+        sig = STAGING.stat().st_mtime_ns
+    except OSError:
+        return frozenset()
+    if _dossier_cache["sig"] == sig:
+        return _dossier_cache["ids"]  # type: ignore[return-value]
+    ids: set[str] = set()
+    for meta in STAGING.glob("*/meta.json"):
+        try:
+            text = meta.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if '"dossier"' not in text:
+            continue
+        if not any(k in text for k in ('"viewer_summary"', '"key_facts"', '"references"')):
+            continue
+        ids.add(meta.parent.name)
+    frozen = frozenset(ids)
+    _dossier_cache["sig"] = sig
+    _dossier_cache["ids"] = frozen
+    return frozen
+
+
 def get_manifest_row(work_id: str) -> dict | None:
     """Return a manifest row, or None when unknown.
 

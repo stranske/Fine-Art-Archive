@@ -196,6 +196,13 @@ def list_artists(limit: int = Query(100, ge=1, le=2000)) -> list[dict]:
     return store.list_artists(limit=limit)
 
 
+@app.get("/dossiers")
+def list_dossiers() -> dict:
+    """work_ids that have a populated dossier — lets the library grid mark them."""
+    ids = sorted(store.work_ids_with_dossier())
+    return {"total": len(ids), "work_ids": ids}
+
+
 # --------------------------------------------------------------------------
 # Named queues — ordered lists of work_ids the user can load into the
 # rating UI to walk a curated set (e.g. the subject-tagger v1 sample).
