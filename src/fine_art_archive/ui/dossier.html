@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dossier — Fine Art Archive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --bg:#fafaf7; --ink:#222; --muted:#777; --accent:#5b3a1f; --rule:#e6ded1;
+            --paper:#fff; --warm:#c98a55; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink);
+           font:16px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+    a { color: var(--accent); }
+    header { border-bottom:1px solid var(--rule); background:var(--paper); }
+    .bar { max-width:1180px; margin:0 auto; padding:14px 24px; display:flex;
+           align-items:baseline; gap:16px; }
+    .bar .back { font:14px/1 ui-sans-serif,system-ui,sans-serif; text-decoration:none; }
+    .bar .brand { font:13px/1 ui-sans-serif,system-ui,sans-serif; color:var(--muted);
+                  margin-left:auto; }
+    .wrap { max-width:1180px; margin:0 auto; padding:28px 24px 80px;
+            display:grid; grid-template-columns: minmax(0,1fr) 320px; gap:40px; }
+    @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+    h1 { font-size:34px; line-height:1.15; margin:0 0 4px; font-weight:600; }
+    .byline { font-size:17px; margin:0 0 2px; }
+    .facts { font:13px/1.5 ui-sans-serif,system-ui,sans-serif; color:var(--muted);
+             margin-bottom:22px; }
+    .lede { font-size:19px; line-height:1.55; margin:0 0 30px; }
+    section { margin: 0 0 34px; }
+    h2 { font:600 13px/1 ui-sans-serif,system-ui,sans-serif; letter-spacing:.09em;
+         text-transform:uppercase; color:var(--muted); margin:0 0 14px;
+         padding-bottom:7px; border-bottom:1px solid var(--rule); }
+    .para { margin:0 0 14px; }
+    .story { margin:0 0 18px; }
+    .story h3 { font-size:17px; margin:0 0 3px; font-weight:600; }
+    .cite { font:11px/1 ui-sans-serif,system-ui,sans-serif; color:var(--warm);
+            vertical-align:super; text-decoration:none; margin-left:3px; }
+    .cite:hover { text-decoration:underline; }
+    details.minor > summary { cursor:pointer; font:600 13px/1 ui-sans-serif,system-ui,sans-serif;
+      letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+      padding-bottom:7px; border-bottom:1px solid var(--rule); margin-bottom:14px; }
+    .tech { font-size:15px; color:#444; background:#f3eee4; border-left:3px solid var(--warm);
+            padding:11px 14px; border-radius:0 5px 5px 0; }
+    /* rail */
+    .rail { font:14px/1.55 ui-sans-serif,system-ui,sans-serif; }
+    .card { background:var(--paper); border:1px solid var(--rule); border-radius:9px;
+            padding:16px; margin-bottom:18px; }
+    .card h2 { border:none; padding:0; margin:0 0 12px; }
+    .thumb { width:100%; border-radius:6px; display:block; margin-bottom:14px;
+             border:1px solid var(--rule); }
+    .meter { height:7px; border-radius:4px; background:#e8e2d6; overflow:hidden; margin:6px 0 4px; }
+    .meter > i { display:block; height:100%; background:linear-gradient(90deg,var(--warm),var(--accent)); }
+    .depth-n { font-size:26px; font-weight:600; line-height:1; }
+    .depth-l { color:var(--muted); font-size:13px; }
+    .kv { display:flex; justify-content:space-between; gap:10px; padding:3px 0;
+          border-bottom:1px dotted var(--rule); }
+    .kv:last-child { border:none; }
+    .gap { display:inline-block; background:#f6e6d8; color:#8a4b18; border-radius:10px;
+           padding:1px 8px; margin:2px 3px 0 0; font-size:12px; }
+    button.dev { width:100%; padding:10px 12px; margin-top:12px; border:none; border-radius:7px;
+                 background:var(--accent); color:#fff; font:inherit; font-weight:600;
+                 cursor:pointer; }
+    button.dev:disabled { background:#9c8b7c; cursor:default; }
+    .fineprint { color:var(--muted); font-size:12px; margin-top:8px; }
+    .src { margin:0 0 12px; }
+    .src .t { font-weight:600; }
+    .auth { display:inline-block; min-width:22px; text-align:center; padding:0 5px;
+            border-radius:8px; background:var(--accent); color:#fff; font-size:11px;
+            font-weight:600; margin-right:5px; }
+    .ex { color:#555; font-style:italic; font-size:13px; margin-top:2px; }
+    .empty { color:var(--muted); }
+  </style>
+</head>
+<body>
+  <header><div class="bar">
+    <a class="back" id="back" href="/">← Back to archive</a>
+    <span class="brand">Fine Art Archive — dossier</span>
+  </div></header>
+  <div class="wrap">
+    <main id="main"><p class="empty">Loading…</p></main>
+    <aside class="rail" id="rail"></aside>
+  </div>
+
+<script>
+const WID = decodeURIComponent(location.pathname.replace(/\/dossier\/?$/, "").split("/").pop());
+const esc = s => String(s == null ? "" : s)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const attr = s => esc(s).replace(/"/g,"&quot;");
+
+// Facts carry a source_id; render it as a superscript that jumps to the source.
+function cite(sid, refIndex) {
+  if (!sid || !refIndex[sid]) return "";
+  return `<a class="cite" href="#src-${attr(sid)}" title="${attr(refIndex[sid].title || sid)}">◆</a>`;
+}
+function paras(items, refIndex) {
+  return (items || []).map(i => `<p class="para">${esc(i.text)}${cite(i.source_id, refIndex)}</p>`).join("");
+}
+function stories(items, refIndex) {
+  return (items || []).map(i => `<div class="story">
+    ${i.title ? `<h3>${esc(i.title)}</h3>` : ""}
+    <div>${esc(i.text)}${cite(i.source_id, refIndex)}</div></div>`).join("");
+}
+function section(title, items, refIndex, renderer) {
+  if (!items || !items.length) return "";
+  return `<section><h2>${esc(title)}</h2>${renderer(items, refIndex)}</section>`;
+}
+function minorSection(title, items, refIndex) {
+  if (!items || !items.length) return "";
+  return `<details class="minor"><summary>${esc(title)}</summary>${paras(items, refIndex)}</details>`;
+}
+
+function depthLabel(s) {
+  if (s >= 80) return "well developed";
+  if (s >= 55) return "solid";
+  if (s >= 30) return "partial";
+  if (s > 0)   return "thin";
+  return "not started";
+}
+
+async function main() {
+  let w, research;
+  try {
+    [w, research] = await Promise.all([
+      fetch(`/works/${encodeURIComponent(WID)}`).then(r => r.json()),
+      fetch(`/works/${encodeURIComponent(WID)}/research`).then(r => r.json()).catch(() => null),
+    ]);
+  } catch (e) {
+    document.getElementById("main").innerHTML = `<p class="empty">Could not load ${esc(WID)}.</p>`;
+    return;
+  }
+  document.getElementById("back").href = `/#wid=${encodeURIComponent(WID)}`;
+  const d = w.dossier || {};
+  const refs = (d.references || []).slice()
+    .sort((a, b) => (b.authority_score || 0) - (a.authority_score || 0));
+  const refIndex = Object.fromEntries(refs.filter(r => r.id).map(r => [r.id, r]));
+  document.title = (w.title || WID) + " — dossier";
+
+  let html = `
+    <h1>${esc(w.title || "(untitled)")}</h1>
+    <p class="byline">${esc(w.artist?.name || "")}</p>
+    <p class="facts">${[w.year, w.medium, w.holder?.name].filter(Boolean).map(esc).join(" · ")}</p>
+    ${d.viewer_summary ? `<p class="lede">${esc(d.viewer_summary)}</p>` : ""}
+    ${section("Looking at it", d.reading, refIndex, paras)}
+    ${section("Stories", d.stories, refIndex, stories)}
+    ${section("How it is built", d.composition, refIndex, paras)}
+    ${d.technical_note ? `<section><h2>Beneath the surface</h2>
+        <div class="tech">${esc(d.technical_note)}</div></section>` : ""}
+    ${minorSection("In context", d.context, refIndex)}
+    ${minorSection("Provenance", d.provenance, refIndex)}`;
+
+  // Legacy dossiers (pre-v2) only have key_facts — show them rather than a blank page.
+  if (!d.reading?.length && !d.stories?.length && (d.key_facts || []).length) {
+    html += `<section><h2>Notes</h2>${paras(d.key_facts, refIndex)}</section>`;
+  }
+  if (!d.viewer_summary && !refs.length) {
+    html += `<p class="empty">No dossier has been compiled for this work yet.</p>`;
+  }
+  if (refs.length) {
+    html += `<section><h2>Sources</h2>` + refs.map(r => `
+      <div class="src" id="src-${attr(r.id)}">
+        <div><span class="auth">${r.authority_score != null ? Math.round(r.authority_score * 10) / 10 : "–"}</span>
+          <span class="t">${r.live_url
+            ? `<a href="${attr(r.live_url)}" target="_blank" rel="noopener noreferrer">${esc(r.title || r.id)}</a>`
+            : esc(r.title || r.id)}</span>
+          ${r.publisher ? ` — ${esc(r.publisher)}` : ""}
+          ${r.wayback_url ? ` · <a href="${attr(r.wayback_url)}" target="_blank" rel="noopener noreferrer">archived</a>` : ""}
+        </div>
+        ${r.excerpt ? `<div class="ex">“${esc(r.excerpt)}”</div>` : ""}
+      </div>`).join("") + `</section>`;
+  }
+  document.getElementById("main").innerHTML = html;
+
+  // ---- rail: image + research depth ----
+  let rail = `<img class="thumb" src="/works/${encodeURIComponent(WID)}/image?max=700" alt="${attr(w.title || WID)}">`;
+  if ((w.deepzoom?.layers || []).length) {
+    rail += `<div class="card"><h2>Deep zoom</h2>
+      <div>This work has ${w.deepzoom.layers.length} gigapixel layers.</div>
+      <div class="fineprint">Open the work in the archive and choose “Deep zoom”.</div></div>`;
+  }
+  if (research) {
+    const s = research.score || 0;
+    rail += `<div class="card">
+      <h2>Research depth</h2>
+      <div class="depth-n">${s}<span class="depth-l"> / 100 · ${depthLabel(s)}</span></div>
+      <div class="meter"><i style="width:${Math.max(2, Math.min(100, s))}%"></i></div>
+      <div class="kv"><span>Sources cited</span><b>${research.n_sources || 0}</b></div>
+      <div class="kv"><span>High-authority</span><b>${research.n_high_authority || 0}</b></div>
+      <div class="kv"><span>Leads not yet followed</span><b>${research.n_promising_unread || 0}</b></div>
+      <div class="kv"><span>Source types</span><b>${(research.kinds_covered || []).length}</b></div>
+      ${(research.gaps || []).length
+        ? `<div style="margin-top:9px">${research.gaps.map(g => `<span class="gap">${esc(g)}</span>`).join("")}</div>`
+        : ""}
+      <button class="dev" id="devbtn">Develop this further</button>
+      <div class="fineprint" id="devnote">${
+        research.n_promising_unread
+          ? `${research.n_promising_unread} unexplored lead${research.n_promising_unread === 1 ? "" : "s"} already on file — a deeper pass has somewhere to start.`
+          : `No unexplored leads on file; a deeper pass would start from scratch.`}</div>
+    </div>`;
+  }
+  document.getElementById("rail").innerHTML = rail;
+
+  const btn = document.getElementById("devbtn");
+  if (btn) {
+    if (research.requested) { btn.disabled = true; btn.textContent = "Already requested"; }
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Requesting…";
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(WID)}/research_request`, {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({focus: null, note: null}),
+        });
+        if (!r.ok) throw new Error(r.status);
+        const j = await r.json();
+        btn.textContent = "Requested ✓";
+        document.getElementById("devnote").textContent =
+          `Queued for the next research pass. Expires in ${j.expires_days} days if not picked up.`;
+      } catch (e) {
+        btn.disabled = false; btn.textContent = "Develop this further";
+        document.getElementById("devnote").textContent = "Request failed — try again.";
+      }
+    };
+  }
+}
+main();
+</script>
+</body>
+</html>

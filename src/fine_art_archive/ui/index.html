@@ -130,6 +130,8 @@
       border-radius: 8px; background: #6b3a18; color: #fff; font-size: 11px; font-weight: 600; }
     .dossier-exc { margin: 2px 0 0 26px; font-style: italic; }
     .dossier-gen { margin-top: 8px; }
+    .dossier-more { margin-top: 10px; font-size: 14px; }
+    .dossier-more a { color: var(--accent); font-weight: 600; }
     .pill.warn { background: #f6d9c4; color: #8a3b12; }
     body.fullscreen .modality-btn { background: #2a2a2a; color: #d4a878; border-color: #555; }
     body.fullscreen .modality-btn.active { background: #d4a878; color: #2a2a2a; }
@@ -801,41 +803,33 @@
       return html;
     }
 
-    // Viewer-facing dossier: plain-language summary, attributed key facts, and
-    // ranked durable source references (live link + archived snapshot).
-    function renderDossier(dos) {
+    // On the rating view this stays deliberately SHORT: the summary paragraph
+    // plus a teaser of what the full dossier holds, and a link out to it.
+    // Long-form reading competes with rating for attention when inlined, so
+    // the dossier proper lives on its own page (/works/{id}/dossier).
+    function renderDossierBrief(data, wid) {
       const et = (s) => String(s == null ? "" : s)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const ea = (s) => et(s).replace(/"/g, "&quot;");
-      const hasFacts = dos && (dos.key_facts || []).length;
-      const hasRefs = dos && (dos.references || []).length;
-      if (!dos || (!dos.viewer_summary && !hasFacts && !hasRefs)) {
-        return `<div class="sub">No dossier compiled for this work yet.</div>`;
+      const dos = data.dossier;
+      const href = `/works/${encodeURIComponent(wid)}/dossier`;
+      if (!dos || (!dos.viewer_summary && !(dos.key_facts || []).length
+                   && !(dos.reading || []).length)) {
+        return `<div class="sub">No dossier compiled for this work yet.
+          <a href="${href}" target="_blank" rel="noopener">Open dossier page ↗</a></div>`;
       }
-      let h = `<div class="dossier-h">About this work</div>`;
+      let h = "";
       if (dos.viewer_summary) h += `<p class="dossier-summary">${et(dos.viewer_summary)}</p>`;
-      if (hasFacts) {
-        h += `<ul class="dossier-facts">` + dos.key_facts.map(f =>
-          `<li>${et(f.text)}${f.source_id ? ` <span class="dossier-src" title="source: ${ea(f.source_id)}">●</span>` : ""}</li>`
-        ).join("") + `</ul>`;
-      }
-      if (hasRefs) {
-        const refs = dos.references.slice().sort((a, b) => (b.authority_score || 0) - (a.authority_score || 0));
-        h += `<div class="dossier-refs-h">Sources</div><ul class="dossier-refs">`;
-        for (const r of refs) {
-          const label = et(r.title || r.live_url || r.id || "source");
-          const live = r.live_url ? `<a href="${ea(r.live_url)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
-          const wb = r.wayback_url ? ` · <a href="${ea(r.wayback_url)}" target="_blank" rel="noopener noreferrer" title="archived snapshot">archived</a>` : "";
-          const pub = r.publisher ? `<span class="sub"> — ${et(r.publisher)}</span>` : "";
-          const auth = (r.authority_score != null) ? `<span class="dossier-auth" title="source authority score (higher = more trustworthy)">${Math.round(r.authority_score * 10) / 10}</span>` : "";
-          const lic = r.license ? `<span class="pill">${et(r.license)}</span>` : "";
-          const flag = r.commerce_flag ? `<span class="pill warn" title="commercial source">commerce</span>` : "";
-          const exc = r.excerpt ? `<div class="dossier-exc sub">“${et(r.excerpt.slice(0, 240))}”</div>` : "";
-          h += `<li>${auth}${live}${wb}${pub} ${lic}${flag}${exc}</li>`;
-        }
-        h += `</ul>`;
-      }
-      if (dos.generated_at) h += `<div class="sub dossier-gen">Compiled ${et(dos.generated_at)}</div>`;
+      // Teaser counts tell you whether the dossier is worth opening.
+      const bits = [];
+      const n = (k) => (dos[k] || []).length;
+      if (n("stories")) bits.push(`${n("stories")} stor${n("stories") === 1 ? "y" : "ies"}`);
+      if (n("reading")) bits.push(`${n("reading")} close-looking notes`);
+      if (n("composition")) bits.push(`${n("composition")} on composition`);
+      if ((dos.references || []).length) bits.push(`${dos.references.length} sources`);
+      h += `<div class="dossier-more">
+        <a href="${href}" target="_blank" rel="noopener">Read the full dossier ↗</a>
+        ${bits.length ? `<span class="sub"> — ${et(bits.join(" · "))}</span>` : ""}
+      </div>`;
       return h;
     }
 
@@ -1560,8 +1554,8 @@
              </details>
 
              <details class="rate-section" id="rs-dossier" ${data.dossier ? "open" : ""}>
-               <summary class="rate-section-summary">Dossier${data.dossier ? "" : ` <span class="sub">(none yet)</span>`}</summary>
-               <div class="dossier-body">${renderDossier(data.dossier)}</div>
+               <summary class="rate-section-summary">About${data.dossier ? "" : ` <span class="sub">(none yet)</span>`}</summary>
+               <div class="dossier-body">${renderDossierBrief(data, wid)}</div>
              </details>
 
              <details style="margin-top:8px">
