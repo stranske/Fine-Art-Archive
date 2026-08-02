@@ -23,17 +23,20 @@ search API and a ``.query(sparql)`` client for the candidate-type lookup.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from difflib import SequenceMatcher
 from typing import Any, Protocol
 
 from fine_art_archive.enrichment.holder_by_creator import _score_for, year_of
 
+_WORD_RE = re.compile(r"[^\W\d_]{3,}")  # a >=3-letter word (no digits)
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 _ARTWORK_ROOT = "Q838948"  # work of art (covers every visual-artwork subclass)
 TITLE_THRESHOLD = 0.90
 YEAR_TOLERANCE = 6
-_SEARCH_LIMIT = 12
+_SEARCH_LIMIT = 30  # wide enough that a common title (Self-Portrait, Roses) surfaces
+#                     several same-title artworks -> detected as non-unique, not resolved
 
 
 class JsonGetter(Protocol):
@@ -136,39 +139,46 @@ def resolve_by_title_search(
     json_client: JsonGetter,
     sparql_client: SparqlQuerier,
 ) -> tuple[str | None, str]:
-    """Return ``(work_qid, reason)`` or ``(None, reason)`` for a title search.
+    """Return ``(work_qid, reason)`` for a *creator-unknown* title search.
 
-    ``reason``: ``match-creator`` / ``match-global-unique`` / ``no-search-hit`` /
-    ``no-artwork-hit`` / ``ambiguous``.
+    Only runs when the creator is unknown -- when the creator IS known the
+    by-creator oeuvre enumeration (Stage 1) is authoritative and this must not
+    second-guess it with a search that can't see all of a creator's same-title
+    works. Accepts a **globally-unique artwork**: exactly one artwork among the
+    search hits matches the title, and its year (if both are present) agrees.
+    Uniqueness is judged BEFORE any year filter, so a common title with several
+    same-title artworks ("Self-Portrait", "Roses") is never narrowed to a false
+    single by the year.
+
+    ``reason``: ``match-global-unique`` / ``has-creator`` / ``no-search-hit`` /
+    ``no-artwork-hit`` / ``ambiguous`` / ``year-mismatch``.
     """
+    if creator_qid:
+        return None, "has-creator"
+    # A distinctive title (>= 2 real words) is required without a creator: a bare
+    # number ("22") or single common word matches an unrelated same-title artwork
+    # too easily when there is no creator to anchor it.
+    if len(_WORD_RE.findall(title)) < 2:
+        return None, "title-not-distinctive"
     qids = title_search_candidates(title, client=json_client)
     if not qids:
         return None, "no-search-hit"
     payload = sparql_client.query(candidate_details_query(qids))
     if not isinstance(payload, dict):
         return None, "no-search-hit"
-    rows = payload.get("results", {}).get("bindings", [])
-    candidates = _candidates(title, rows)
+    candidates = _candidates(title, payload.get("results", {}).get("bindings", []))
 
-    def _year_ok(cand: Candidate) -> bool:
-        return not (
-            sidecar_year is not None
-            and cand.year is not None
-            and abs(sidecar_year - cand.year) > YEAR_TOLERANCE
-        )
-
-    strong = [c for c in candidates if c.is_artwork and c.score >= TITLE_THRESHOLD and _year_ok(c)]
-    if not strong:
+    artworks = [c for c in candidates if c.is_artwork and c.score >= TITLE_THRESHOLD]
+    if not artworks:
         return None, "no-artwork-hit"
+    if len(artworks) > 1:
+        return None, "ambiguous"  # non-unique title -> never resolve
 
-    if creator_qid:
-        by_creator = [c for c in strong if creator_qid in c.creators]
-        if len(by_creator) == 1:
-            return by_creator[0].qid, "match-creator"
-        if len(by_creator) > 1:
-            return None, "ambiguous"
-
-    # Globally-unique artwork match (accepted even without a confirmed creator).
-    if len(strong) == 1:
-        return strong[0].qid, "match-global-unique"
-    return None, "ambiguous"
+    only = artworks[0]
+    if (
+        sidecar_year is not None
+        and only.year is not None
+        and abs(sidecar_year - only.year) > YEAR_TOLERANCE
+    ):
+        return None, "year-mismatch"
+    return only.qid, "match-global-unique"

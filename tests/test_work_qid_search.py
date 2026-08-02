@@ -77,43 +77,68 @@ def test_multiple_artwork_hits_is_ambiguous() -> None:
     json_c = FakeJson(["Q1", "Q2"])
     sparql = FakeSparqlDetails(
         [
-            _detail_row("Q1", "Landscape", artwork=True, creators=["Q10"], inception=None),
-            _detail_row("Q2", "Landscape", artwork=True, creators=["Q11"], inception=None),
+            _detail_row("Q1", "River Landscape", artwork=True, creators=["Q10"], inception=None),
+            _detail_row("Q2", "River Landscape", artwork=True, creators=["Q11"], inception=None),
         ]
     )
     qid, reason = wqs.resolve_by_title_search(
-        "Landscape", None, None, json_client=json_c, sparql_client=sparql
+        "River Landscape", None, None, json_client=json_c, sparql_client=sparql
     )
     assert qid is None and reason == "ambiguous"
 
 
-def test_creator_match_preferred_over_ambiguity() -> None:
-    json_c = FakeJson(["Q1", "Q2"])
+def test_known_creator_defers_to_stage1() -> None:
+    # when the creator is known, Stage 1 (oeuvre enumeration) is authoritative;
+    # this creator-independent search must not second-guess it.
+    json_c = FakeJson(["Q1"])
     sparql = FakeSparqlDetails(
-        [
-            _detail_row(
-                "Q1", "Portrait of a Man", artwork=True, creators=["Q297"], inception="1650"
-            ),
-            _detail_row(
-                "Q2", "Portrait of a Man", artwork=True, creators=["Q5598"], inception="1640"
-            ),
-        ]
+        [_detail_row("Q1", "Portrait of a Man", artwork=True, creators=["Q297"], inception="1650")]
     )
     qid, reason = wqs.resolve_by_title_search(
         "Portrait of a Man", None, "Q297", json_client=json_c, sparql_client=sparql
     )
-    assert qid == "Q1" and reason == "match-creator"
+    assert qid is None and reason == "has-creator"
 
 
-def test_year_disagreement_filters_candidate() -> None:
-    json_c = FakeJson(["Q1"])
+def test_common_title_not_narrowed_to_false_single_by_year() -> None:
+    # "Self-Portrait" has several artwork hits; the year must NOT narrow it to one
+    json_c = FakeJson(["Q1", "Q2"])
     sparql = FakeSparqlDetails(
-        [_detail_row("Q1", "Irises", artwork=True, creators=[], inception="1600")]
+        [
+            _detail_row("Q1", "Self-Portrait", artwork=True, creators=[], inception="1861"),
+            _detail_row("Q2", "Self-Portrait", artwork=True, creators=[], inception="1901"),
+        ]
     )
     qid, reason = wqs.resolve_by_title_search(
-        "Irises", 1889, None, json_client=json_c, sparql_client=sparql
+        "Self-Portrait", 1861, None, json_client=json_c, sparql_client=sparql
     )
-    assert qid is None and reason == "no-artwork-hit"  # sole candidate dropped on year
+    assert qid is None and reason == "ambiguous"
+
+
+def test_non_distinctive_title_declines_without_creator() -> None:
+    # a bare number / single word must not resolve globally
+    for title in ("22", "Caucasus", "Roses"):
+        qid, reason = wqs.resolve_by_title_search(
+            title,
+            None,
+            None,
+            json_client=FakeJson(["Q1"]),
+            sparql_client=FakeSparqlDetails(
+                [_detail_row("Q1", title, artwork=True, creators=[], inception=None)]
+            ),
+        )
+        assert qid is None and reason == "title-not-distinctive", title
+
+
+def test_year_disagreement_rejects_sole_candidate() -> None:
+    json_c = FakeJson(["Q1"])
+    sparql = FakeSparqlDetails(
+        [_detail_row("Q1", "Vase of Irises", artwork=True, creators=[], inception="1600")]
+    )
+    qid, reason = wqs.resolve_by_title_search(
+        "Vase of Irises", 1889, None, json_client=json_c, sparql_client=sparql
+    )
+    assert qid is None and reason == "year-mismatch"
 
 
 # --- exhaustion ledger (state machine) ----------------------------------------
