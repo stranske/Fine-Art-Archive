@@ -821,3 +821,42 @@ def test_research_request_records_and_expires(
     records = [_json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
     assert len(records) == 1
     assert records[0]["focus"] == "composition"
+
+
+def test_research_request_read_failure_does_not_replace_log(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failed request-log read must not compact/replace the existing file."""
+    monkeypatch.setattr(
+        api_main,
+        "_get_work_checked",
+        lambda wid: {"work_id": "w1", "title": "A", "dossier": {}},
+    )
+    log = tmp_path / "research_requests.jsonl"
+    existing = (
+        '{"ts": "2099-01-01T00:00:00+00:00", "work_id": "keep-me", '
+        '"title": "Keep", "note": null, "focus": null, '
+        '"depth_at_request": 10, "promising_unread": 0}\n'
+    )
+    log.write_text(existing, encoding="utf-8")
+    monkeypatch.setattr(api_main, "RESEARCH_REQUESTS", log)
+
+    real_read_text = Path.read_text
+
+    def _boom(self: Path, *args: object, **kwargs: object) -> str:
+        if self == log:
+            raise OSError(5, "Input/output error")
+        return real_read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", _boom)
+
+    failed = client.post("/works/w1/research_request", json={"note": "must not land"})
+    assert failed.status_code == 503
+    detail = failed.json()["detail"]
+    assert detail["error"] == "research_request_storage"
+    assert log.read_bytes() == existing.encode("utf-8")
+
+    research = client.get("/works/w1/research")
+    assert research.status_code == 503
+    assert research.json()["detail"]["error"] == "research_request_storage"
+    assert log.read_bytes() == existing.encode("utf-8")

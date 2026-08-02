@@ -297,30 +297,47 @@ def work_research(work_id: str) -> dict:
     return report
 
 
+def _research_request_storage_error(exc: OSError) -> HTTPException:
+    """Retryable failure when the request log cannot be read or rewritten."""
+    return HTTPException(
+        503,
+        {
+            "error": "research_request_storage",
+            "message": exc.strerror or exc.__class__.__name__,
+        },
+    )
+
+
 def _open_research_request(work_id: str) -> dict | None:
     """Most recent non-expired request for this work, if any."""
     cutoff = datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
     with _sidecar_file_lock(RESEARCH_REQUESTS):
-        records = _active_research_requests(cutoff)
+        try:
+            records = _active_research_requests(cutoff)
+        except OSError as exc:
+            raise _research_request_storage_error(exc) from exc
     return next((rec for rec in reversed(records) if rec.get("work_id") == work_id), None)
 
 
 def _active_research_requests(cutoff: float) -> list[dict]:
-    """Read valid, unexpired request records while the caller holds the lock."""
-    if not RESEARCH_REQUESTS.exists():
+    """Read valid, unexpired request records while the caller holds the lock.
+
+    A missing log is empty. Any other read OSError propagates so writers cannot
+    compact/replace a log they failed to load.
+    """
+    try:
+        text = RESEARCH_REQUESTS.read_text(encoding="utf-8")
+    except FileNotFoundError:
         return []
     active: list[dict] = []
-    try:
-        for line in RESEARCH_REQUESTS.read_text(encoding="utf-8").splitlines():
-            try:
-                rec = json.loads(line)
-                ts = datetime.fromisoformat(str(rec.get("ts"))).timestamp()
-            except (json.JSONDecodeError, TypeError, ValueError):
-                continue
-            if ts >= cutoff:
-                active.append(rec)
-    except OSError:
-        return []
+    for line in text.splitlines():
+        try:
+            rec = json.loads(line)
+            ts = datetime.fromisoformat(str(rec.get("ts"))).timestamp()
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+        if ts >= cutoff:
+            active.append(rec)
     return active
 
 
@@ -354,11 +371,14 @@ def request_research(work_id: str, body: ResearchRequestIn) -> dict:
            "depth_at_request": report["score"],
            "promising_unread": report["n_promising_unread"]}
     with _sidecar_file_lock(RESEARCH_REQUESTS):
-        active = _active_research_requests(
-            datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
-        )
-        active.append(rec)
-        _replace_research_requests(active)
+        try:
+            active = _active_research_requests(
+                datetime.now(UTC).timestamp() - RESEARCH_REQUEST_TTL_DAYS * 86400
+            )
+            active.append(rec)
+            _replace_research_requests(active)
+        except OSError as exc:
+            raise _research_request_storage_error(exc) from exc
     return {"ok": True, "expires_days": RESEARCH_REQUEST_TTL_DAYS, "request": rec}
 
 
