@@ -5,6 +5,10 @@
   <title>Fine Art Archive — Companion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/ui/vendor/htmx-1.9.10.min.js" defer></script>
+  <!-- OpenSeadragon powers the gigapixel deep-zoom viewer. Loaded from CDN at
+       runtime; the deep-zoom feature already needs network to pull tiles from
+       the source pyramid, so this adds no new offline dependency. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
   <style>
     :root { --bg: #fafaf7; --ink: #222; --muted: #777; --accent: #5b3a1f;
             --love: #2a7a2a; --like: #6aa86a; --neutral: #aaa;
@@ -79,6 +83,21 @@
     .modality-btn { font: inherit; font-size: 13px; padding: 3px 10px; border: 1px solid #c98a55;
       border-radius: 4px; background: #fff; color: #6b3a18; cursor: pointer; }
     .modality-btn.active { background: #6b3a18; color: #fff; border-color: #6b3a18; }
+    /* DeepZoom gigapixel viewer */
+    .dz-open-btn { font: inherit; font-size: 12px; padding: 2px 10px; border: 1px solid var(--accent);
+      border-radius: 4px; background: var(--accent); color: #fff; cursor: pointer; }
+    .osd-overlay { position: fixed; inset: 0; z-index: 9000; background: #0c0c0e;
+      display: flex; flex-direction: column; }
+    .osd-topbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 14px; background: #17171a; color: #eee; border-bottom: 1px solid #2a2a2e; }
+    .osd-topbar .osd-title { font-weight: 600; margin-right: auto; font-size: 15px; }
+    .osd-layer-btn { font: inherit; font-size: 13px; padding: 4px 12px; border: 1px solid #6b3a18;
+      border-radius: 5px; background: #fff; color: #6b3a18; cursor: pointer; }
+    .osd-layer-btn.active { background: #c98a55; color: #17171a; border-color: #c98a55; }
+    .osd-close { font: inherit; font-size: 18px; line-height: 1; padding: 4px 12px; border: none;
+      border-radius: 5px; background: #333; color: #fff; cursor: pointer; }
+    .osd-canvas { flex: 1; min-height: 0; }
+    .osd-hint { padding: 5px 14px; font-size: 12px; color: #999; background: #17171a; }
     /* Library gallery */
     .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 16px; margin-top: 12px; }
@@ -1092,6 +1111,66 @@
       document.querySelectorAll(".modality-btn").forEach(b =>
         b.classList.toggle("active", (b.dataset.mod || "") === (mod || "")));
     }
+
+    // ----- DeepZoom gigapixel viewer (OpenSeadragon) -----
+    let _osd = null, _dzWid = null, _dzManifest = null;
+    function _dzTileSource(wid, layer) {
+      // DeepZoom descriptor — OpenSeadragon requests {Url}{level}/{x}_{y}.jpg,
+      // which the /works/{id}/dz/{layer}/{level}/{tile} endpoint proxies+caches.
+      return { Image: {
+        xmlns: "http://schemas.microsoft.com/deepzoom/2008",
+        Url: `/works/${encodeURIComponent(wid)}/dz/${encodeURIComponent(layer.layer)}/`,
+        Format: "jpg", Overlap: "0", TileSize: "256",
+        Size: { Width: layer.width, Height: layer.height } } };
+    }
+    async function openDeepZoom(wid, title) {
+      if (typeof OpenSeadragon === "undefined") {
+        toast("Deep-zoom viewer still loading — try again in a second"); return;
+      }
+      let mani;
+      try { mani = await (await fetch(`/works/${encodeURIComponent(wid)}/deepzoom`)).json(); }
+      catch (e) { toast("deep-zoom manifest error: " + e.message); return; }
+      if (!mani.layers || !mani.layers.length) { toast("no deep-zoom layers"); return; }
+      _dzWid = wid; _dzManifest = mani;
+      document.getElementById("osd-overlay")?.remove();
+      const ov = document.createElement("div");
+      ov.id = "osd-overlay"; ov.className = "osd-overlay";
+      const first = mani.layers[0];
+      ov.innerHTML =
+        `<div class="osd-topbar"><span class="osd-title"></span>` +
+        mani.layers.map((l, i) =>
+          `<button class="osd-layer-btn${i === 0 ? " active" : ""}" data-layer="${l.layer}"` +
+          ` onclick="dzSetLayer('${l.layer}')">${l.label || l.layer}</button>`).join("") +
+        `<button class="osd-close" onclick="closeDeepZoom()" title="Close (Esc)">✕</button></div>` +
+        `<div id="osd-canvas" class="osd-canvas"></div>` +
+        `<div class="osd-hint">Scroll / pinch to zoom · drag to pan · tiles stream from ` +
+        `insidebruegel.net (KHM/Getty) and cache locally · ` +
+        `${first.width.toLocaleString()}×${first.height.toLocaleString()} px</div>`;
+      document.body.appendChild(ov);
+      ov.querySelector(".osd-title").textContent = "Deep zoom — " + (title || wid);
+      _osd = OpenSeadragon({
+        element: document.getElementById("osd-canvas"),
+        prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+        showNavigator: true, navigatorPosition: "BOTTOM_RIGHT",
+        maxZoomPixelRatio: 2, animationTime: 0.6, blendTime: 0.1, visibilityRatio: 1,
+        tileSources: _dzTileSource(wid, first),
+      });
+      document.addEventListener("keydown", _dzEsc);
+    }
+    function dzSetLayer(layerName) {
+      if (!_osd || !_dzManifest) return;
+      const l = _dzManifest.layers.find(x => x.layer === layerName);
+      if (!l) return;
+      _osd.open(_dzTileSource(_dzWid, l));
+      document.querySelectorAll("#osd-overlay .osd-layer-btn").forEach(b =>
+        b.classList.toggle("active", b.dataset.layer === layerName));
+    }
+    function closeDeepZoom() {
+      document.removeEventListener("keydown", _dzEsc);
+      if (_osd) { try { _osd.destroy(); } catch (e) { /* ignore */ } _osd = null; }
+      document.getElementById("osd-overlay")?.remove();
+    }
+    function _dzEsc(e) { if (e.key === "Escape") { e.stopPropagation(); closeDeepZoom(); } }
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         const p = document.documentElement.requestFullscreen?.();
@@ -1419,6 +1498,7 @@
                <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>
                <a href="/works/${encodeURIComponent(wid)}/image?max=8192" target="_blank" rel="noopener">View high-res ↗</a>
                <a href="/works/${encodeURIComponent(wid)}/full">Download original ⭳</a>
+               ${data.deepzoom && (data.deepzoom.layers||[]).length ? `<button class="dz-open-btn" onclick="openDeepZoom('${wid}', '${(data.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" title="Pan &amp; zoom the full gigapixel scan — visible, underdrawing, X-ray, raking light">🔍 Deep zoom (gigapixel)</button>` : ""}
              </div>
            </div>
 
