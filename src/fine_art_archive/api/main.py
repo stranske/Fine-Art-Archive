@@ -15,6 +15,7 @@ import stat
 import tempfile
 import threading
 import urllib.request
+import zipfile
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,7 +24,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
 from . import store
@@ -837,9 +838,53 @@ def _dz_layer_entry(work_id: str, layer: str) -> tuple[dict, dict]:
     return dz, entry
 
 
+_TILE_HEADERS = {"Cache-Control": "public, max-age=31536000, immutable"}
+# ZipFile keeps the central directory in memory, so holding the handle open turns
+# every subsequent tile read into a seek — reopening per tile would re-parse a
+# ~100k-entry directory each time. Small, bounded, and safe to share: reads of
+# distinct members do not mutate shared state.
+_dz_zip_cache: dict[str, Any] = {}
+
+
+def _dz_container(work_id: str, layer: str) -> zipfile.ZipFile | None:
+    """Open the work's archived tile container, if it has one.
+
+    Tiles live in the archive as one container per layer beside the master
+    (`deepzoom-<layer>.zip`), not as ~100k loose files — a full pyramid as
+    individual files would be pathological inside a cloud-synced folder.
+    """
+    try:
+        work_dir = _archive_work_dir_checked(work_id)
+    except HTTPException:
+        return None
+    path = work_dir / f"deepzoom-{layer.lower()}.zip"
+    key = str(path)
+    cached = _dz_zip_cache.get(key)
+    try:
+        mtime = path.stat().st_mtime_ns
+    except OSError:
+        _dz_zip_cache.pop(key, None)
+        return None
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    try:
+        zf = zipfile.ZipFile(path)
+    except (OSError, zipfile.BadZipFile):
+        return None
+    if len(_dz_zip_cache) > 24:            # bound the open-handle set
+        _dz_zip_cache.clear()
+    _dz_zip_cache[key] = (mtime, zf)
+    return zf
+
+
 @app.get("/works/{work_id}/dz/{layer}/{level}/{tile}")
-def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> FileResponse:
-    """Serve one DeepZoom tile, proxying + caching from the source pyramid."""
+def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> Response:
+    """Serve one DeepZoom tile.
+
+    Order of preference: the archived container (the archive owns the imagery),
+    then the local proxy cache, then the source pyramid. Once a layer is packed
+    into the archive this never touches the network.
+    """
     dz, entry = _dz_layer_entry(work_id, layer)
     fid = str(entry["fid"])
     tile_base = str(dz.get("tile_base") or "")
@@ -847,29 +892,37 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> FileRespon
     if not m or not _FID_RE.match(fid) or not (0 <= level <= 24):
         raise HTTPException(404, "bad tile request")
     col, row = m.group(1), m.group(2)
-    if _DZ_TILE_HOST not in tile_base:  # SSRF guard: only the known source host
-        raise HTTPException(502, "tile source not allowed")
+
+    zf = _dz_container(work_id, layer)
+    if zf is not None:
+        try:
+            return Response(zf.read(f"{level}/{col}_{row}.jpg"),
+                            media_type="image/jpeg", headers=_TILE_HEADERS)
+        except KeyError:
+            # Absent from the container. A handful of tiles genuinely do not
+            # exist upstream, so fall through rather than 404 outright.
+            pass
 
     cache_p = TILES_CACHE_DIR / fid / str(level) / f"{col}_{row}.jpg"
-    if not cache_p.exists():
-        url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"}
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 (host-pinned)
-                data = r.read()
-        except Exception as exc:  # noqa: BLE001
-            raise HTTPException(502, f"tile fetch failed: {type(exc).__name__}") from exc
-        cache_p.parent.mkdir(parents=True, exist_ok=True)
-        tmp = cache_p.with_suffix(f".tmp{os.getpid()}")
-        tmp.write_bytes(data)
-        tmp.replace(cache_p)
-    return FileResponse(
-        cache_p,
-        media_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    if cache_p.exists():
+        return FileResponse(cache_p, media_type="image/jpeg", headers=_TILE_HEADERS)
+
+    if _DZ_TILE_HOST not in tile_base:  # SSRF guard: only the known source host
+        raise HTTPException(502, "tile source not allowed")
+    url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
+    req = urllib.request.Request(
+        url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"}
     )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 (host-pinned)
+            data = r.read()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(502, f"tile fetch failed: {type(exc).__name__}") from exc
+    cache_p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = cache_p.with_suffix(f".tmp{os.getpid()}")
+    tmp.write_bytes(data)
+    tmp.replace(cache_p)
+    return FileResponse(cache_p, media_type="image/jpeg", headers=_TILE_HEADERS)
 
 
 @app.get("/works/{work_id}/full")
