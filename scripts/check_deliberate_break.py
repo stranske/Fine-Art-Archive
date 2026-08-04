@@ -15,6 +15,7 @@ import tarfile
 import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass
+from importlib import import_module, metadata
 from io import BytesIO
 from pathlib import Path
 
@@ -32,6 +33,9 @@ ASSERTION_DIFF_RE = re.compile(
     r"\b(assert|expect\(|pytest\.raises\(|assert\.)\b",
 )
 DEFAULT_TIMEOUT_SECONDS = 120
+# Keep this pin aligned with the PyYAML entry in requirements.lock.
+PYYAML_VERSION = "6.0.3"
+PYTEST_RUNTIME_DEPENDENCIES = (f"pyyaml=={PYYAML_VERSION}",)
 
 
 @dataclass(frozen=True)
@@ -128,6 +132,53 @@ def parse_deliberate_break_spec(markdown: str) -> DeliberateBreakSpec | None:
 
 def _pytest_command(test_id: str) -> tuple[str, ...]:
     return (sys.executable, "-m", "pytest", test_id, "-q")
+
+
+def _ensure_pytest_runtime_deps() -> None:
+    """Install lightweight dependencies that Gate test-quality may not preinstall.
+
+    Gate's test-quality job installs only ``pytest``. Deliberate-break may still
+    collect tests that import PyYAML (for example via ``sync_manifest_compiler``).
+    Installing here avoids editing ``pr-00-gate.yml``, which forces an
+    Actions ``action_required`` approval wait on workflow-touching PRs.
+    """
+    try:
+        installed_version = metadata.version("PyYAML")
+    except metadata.PackageNotFoundError:
+        installed_version = None
+    import_error: Exception | None = None
+    if installed_version == PYYAML_VERSION:
+        try:
+            import_module("yaml")
+        except Exception as exc:
+            # Any ordinary import-time failure means the installed distribution
+            # is unusable. Reinstall the locked wheel before collecting tests.
+            import_error = exc
+        else:
+            return
+    if installed_version != PYYAML_VERSION or import_error is not None:
+        command = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+        ]
+        if import_error is not None:
+            command.append("--force-reinstall")
+        command.extend(PYTEST_RUNTIME_DEPENDENCIES)
+        subprocess.run(
+            command,
+            check=True,
+            text=True,
+            capture_output=True,
+            timeout=DEFAULT_TIMEOUT_SECONDS,
+        )
+        try:
+            import_module("yaml")
+        except Exception as retry_error:
+            error = ImportError(f"PyYAML remained unimportable after reinstall: {retry_error}")
+            raise error from (import_error or retry_error)
 
 
 def _run(
@@ -244,6 +295,56 @@ def verify_spec(
                     changed_assertions=tampered,
                 )
 
+    except subprocess.TimeoutExpired as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="command-timeout",
+            command=list(exc.cmd) if isinstance(exc.cmd, (tuple, list)) else str(exc.cmd),
+            timeout=exc.timeout,
+        )
+    except subprocess.CalledProcessError as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="tamper-check-failed",
+            command=list(exc.cmd) if isinstance(exc.cmd, (tuple, list)) else str(exc.cmd),
+            returncode=exc.returncode,
+            stdout=exc.stdout,
+            stderr=exc.stderr,
+        )
+
+    try:
+        _ensure_pytest_runtime_deps()
+    except subprocess.TimeoutExpired as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="command-timeout",
+            command=list(exc.cmd) if isinstance(exc.cmd, (tuple, list)) else str(exc.cmd),
+            timeout=exc.timeout,
+        )
+    except subprocess.CalledProcessError as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="dependency-install-failed",
+            command=list(exc.cmd) if isinstance(exc.cmd, (tuple, list)) else str(exc.cmd),
+            returncode=exc.returncode,
+            stdout=exc.stdout,
+            stderr=exc.stderr,
+        )
+    except ImportError as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="dependency-import-failed",
+            detail=str(exc),
+            cause=str(exc.__cause__) if exc.__cause__ is not None else None,
+        )
+    except OSError as exc:
+        return _json_result(
+            VERDICT_BROKEN,
+            reason="dependency-install-unavailable",
+            detail=str(exc),
+        )
+
+    try:
         head_run = _run(spec.command, repo)
     except subprocess.TimeoutExpired as exc:
         return _json_result(
