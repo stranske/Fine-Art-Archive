@@ -879,3 +879,49 @@ def test_research_request_read_failure_does_not_replace_log(
     assert research.status_code == 503
     assert research.json()["detail"]["error"] == "research_request_storage"
     assert log.read_bytes() == existing.encode("utf-8")
+
+
+def test_deepzoom_tile_prefers_archive_container(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Tiles must come from the archived container, not the network.
+
+    The mirrored pyramid lives in the archive as one container per layer
+    (deepzoom-<layer>.zip beside the master) rather than ~100k loose files.
+    Once packed, serving a tile must not touch the source host at all.
+    """
+    import urllib.request as _u
+    import zipfile as _z
+
+    work_dir = tmp_path / "works" / "w1"
+    work_dir.mkdir(parents=True)
+    jpeg = bytes([0xFF, 0xD8]) + b"archived-tile"
+    with _z.ZipFile(work_dir / "deepzoom-vis.zip", "w") as zf:
+        zf.writestr("12/3_4.jpg", jpeg)
+
+    sidecar = {
+        "work_id": "w1",
+        "deepzoom": {
+            "tile_base": "https://khmdata01.universumdigitalis.com/tiles",
+            "tile_size": 256,
+            "layers": [{"layer": "VIS", "fid": "GG_1_VIS", "dimensions_px": [9000, 6000]}],
+        },
+    }
+    monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
+    monkeypatch.setattr(api_main, "_archive_work_dir_checked", lambda wid: work_dir)
+    monkeypatch.setattr(api_main, "TILES_CACHE_DIR", tmp_path / "cache")
+    api_main._dz_zip_cache.clear()
+
+    def _boom(*a: object, **k: object) -> None:  # any network use is a failure here
+        raise AssertionError("network was used despite an archived container")
+
+    monkeypatch.setattr(_u, "urlopen", _boom)
+
+    r = client.get("/works/w1/dz/VIS/12/3_4.jpg")
+    assert r.status_code == 200
+    assert r.content == jpeg
+    assert r.headers["content-type"] == "image/jpeg"
+
+    # A tile absent from the container falls through (some genuinely do not
+    # exist upstream) and only then would the network be consulted.
+    assert client.get("/works/w1/dz/VIS/12/99_99.jpg").status_code == 502
