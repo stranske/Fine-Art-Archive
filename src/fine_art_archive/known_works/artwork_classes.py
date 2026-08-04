@@ -30,7 +30,7 @@ ALLOWED_P31: frozenset[str] = frozenset(
         "Q15711026",  # altarpiece
         "Q11060274",  # print
         "Q18761202",  # watercolor painting
-        "Q838948",  # work of art
+        WORK_OF_ART_QID,  # work of art
         "Q179700",  # statue
         "Q93184",  # drawing
     }
@@ -45,7 +45,7 @@ FORBIDDEN_P31: frozenset[str] = frozenset(
     }
 )
 
-USER_AGENT = "Fine-Art-Archive/0.3 (https://github.com/stranske/Fine-Art-Archive)"
+USER_AGENT = "FineArtArchive/0.3 (tim@stranskemo.com)"
 
 
 def allowed_p31_sparql_values() -> str:

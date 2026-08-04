@@ -9,6 +9,7 @@ import pytest
 from fine_art_archive.known_works.artwork_classes import (
     ALLOWED_P31,
     FORBIDDEN_P31,
+    USER_AGENT,
     WORK_OF_ART_QID,
     allowed_p31_non_artwork_mismatches,
     allowed_p31_sparql_values,
@@ -37,6 +38,10 @@ def test_allowed_p31_includes_drawing_and_excludes_junk() -> None:
     assert WORK_OF_ART_QID in ALLOWED_P31
     assert FORBIDDEN_P31.isdisjoint(ALLOWED_P31)
     assert "Q11086742" not in ALLOWED_P31
+
+
+def test_wikidata_audit_user_agent_includes_contact() -> None:
+    assert "tim@stranskemo.com" in USER_AGENT
 
 
 def test_sparql_values_and_known_works_query_use_shared_allowlist() -> None:
