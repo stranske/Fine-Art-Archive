@@ -82,8 +82,7 @@ class HttpFetchClient:
             return None
 
     def wiki_title_for_qid(self, qid: str, wiki: str = "enwiki") -> str | None:
-        params = {"action": "wbgetentities", "ids": qid, "props": "sitelinks",
-                  "format": "json"}
+        params = {"action": "wbgetentities", "ids": qid, "props": "sitelinks", "format": "json"}
         data = self._json(f"{WD_API}?{urllib.parse.urlencode(params)}")
         try:
             title = data["entities"][qid]["sitelinks"][wiki]["title"]  # type: ignore[index]
@@ -105,9 +104,14 @@ class HttpFetchClient:
     def _labels(self, qids: list[str]) -> dict[str, str]:
         need = [q for q in qids if q not in self._label_cache]
         for i in range(0, len(need), 50):
-            batch = need[i:i + 50]
-            params = {"action": "wbgetentities", "ids": "|".join(batch),
-                      "props": "labels", "languages": "en", "format": "json"}
+            batch = need[i : i + 50]
+            params = {
+                "action": "wbgetentities",
+                "ids": "|".join(batch),
+                "props": "labels",
+                "languages": "en",
+                "format": "json",
+            }
             data = self._json(f"{WD_API}?{urllib.parse.urlencode(params)}") or {}
             for q, ent in (data.get("entities") or {}).items():
                 lbl = ((ent.get("labels") or {}).get("en") or {}).get("value")
@@ -162,7 +166,7 @@ class HttpFetchClient:
         avail = self._json(
             f"https://archive.org/wayback/available?{urllib.parse.urlencode({'url': url})}"
         )
-        snap = (((avail or {}).get("archived_snapshots") or {}).get("closest") or {})
+        snap = ((avail or {}).get("archived_snapshots") or {}).get("closest") or {}
         existing = snap.get("url")
         if snap.get("available") and isinstance(existing, str):
             return existing
@@ -170,7 +174,7 @@ class HttpFetchClient:
         avail = self._json(
             f"https://archive.org/wayback/available?{urllib.parse.urlencode({'url': url})}"
         )
-        snap = (((avail or {}).get("archived_snapshots") or {}).get("closest") or {})
+        snap = ((avail or {}).get("archived_snapshots") or {}).get("closest") or {}
         url_out = snap.get("url")
         return url_out if snap.get("available") and isinstance(url_out, str) else None
 
@@ -204,8 +208,9 @@ def _sidecar_paths(staging_dir: Path) -> list[Path]:
     return sorted(path for path in paths if path.is_file())
 
 
-def build(staging_dir: Path, *, client: Any, limit: int, apply: bool,
-          art_works_root: Path | None = None) -> dict[str, Any]:
+def build(
+    staging_dir: Path, *, client: Any, limit: int, apply: bool, art_works_root: Path | None = None
+) -> dict[str, Any]:
     retrieved_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     attempted = built = 0
     samples: list[dict[str, Any]] = []
@@ -231,14 +236,18 @@ def build(staging_dir: Path, *, client: Any, limit: int, apply: bool,
                     if mp.is_file():
                         sidecar.write(mp, meta)
         if len(samples) < 6:
-            samples.append({
-                "work_id": meta["work_id"],
-                "title": meta.get("title"),
-                "summary": (doss.viewer_summary or "")[:160],
-                "refs": [(r.kind, r.live_url, r.authority_score, r.wayback_url is not None)
-                         for r in doss.references],
-                "facts": [f["text"] for f in doss.key_facts],
-            })
+            samples.append(
+                {
+                    "work_id": meta["work_id"],
+                    "title": meta.get("title"),
+                    "summary": (doss.viewer_summary or "")[:160],
+                    "refs": [
+                        (r.kind, r.live_url, r.authority_score, r.wayback_url is not None)
+                        for r in doss.references
+                    ],
+                    "facts": [f["text"] for f in doss.key_facts],
+                }
+            )
     return {"attempted": attempted, "built": built, "samples": samples}
 
 
@@ -250,14 +259,22 @@ def _env_path(name: str) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
-    parser.add_argument("--staging-dir", type=Path,
-                        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars")
+    parser.add_argument(
+        "--staging-dir",
+        type=Path,
+        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+    )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--apply", action="store_true", help="write dossiers (default: dry-run)")
     args = parser.parse_args(argv)
 
-    result = build(args.staging_dir, client=HttpFetchClient(), limit=args.limit,
-                   apply=args.apply, art_works_root=args.art_works_root)
+    result = build(
+        args.staging_dir,
+        client=HttpFetchClient(),
+        limit=args.limit,
+        apply=args.apply,
+        art_works_root=args.art_works_root,
+    )
     mode = "apply" if args.apply else "dry-run"
     print(f"dossier build ({mode}): attempted={result['attempted']} built={result['built']}")
     for s in result["samples"]:

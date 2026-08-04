@@ -13,13 +13,22 @@ SIDECAR: dict[str, Any] = {
     "medium": "Oil on canvas",
     "category": "painting",
     "artist": {"name": "Peter Blume", "wikidata_q": "Q2990693"},
-    "holder": {"name": "Art Institute of Chicago", "wikidata_q": "Q239303", "url": "https://www.artic.edu"},
+    "holder": {
+        "name": "Art Institute of Chicago",
+        "wikidata_q": "Q239303",
+        "url": "https://www.artic.edu",
+    },
     "stable_identifiers": {"wikidata_q": "Q20268090"},
 }
 
 
 class FakeClient:
-    def __init__(self, *, described_url: str | None = "https://www.artic.edu/artworks/1", commerce: bool = False):
+    def __init__(
+        self,
+        *,
+        described_url: str | None = "https://www.artic.edu/artworks/1",
+        commerce: bool = False,
+    ):
         self.described_url = described_url
         self.commerce = commerce
 
@@ -40,7 +49,14 @@ class FakeClient:
         return facts
 
     def fetch(self, url: str) -> dict[str, Any] | None:
-        return {"status": "live", "text": "Add to cart. Buy this print. $29.99" if self.commerce else "Object page: The Rock, 1944-48, oil on canvas."}
+        return {
+            "status": "live",
+            "text": (
+                "Add to cart. Buy this print. $29.99"
+                if self.commerce
+                else "Object page: The Rock, 1944-48, oil on canvas."
+            ),
+        }
 
     def wayback_save(self, url: str) -> str | None:
         return f"https://web.archive.org/web/2024/{url}"
@@ -63,12 +79,18 @@ def test_auction_houses_are_not_commercial() -> None:
 
 def test_is_commercial_by_signals() -> None:
     assert d.is_commercial("https://blog.example.com", "Add to cart. Buy this poster for $19.")
-    assert not d.is_commercial("https://blog.example.com", "An essay about the painting's composition.")
+    assert not d.is_commercial(
+        "https://blog.example.com", "An essay about the painting's composition."
+    )
 
 
 def test_authority_ordering() -> None:
-    assert d.authority_score("holder_object_page", "https://x.museum/1") > d.authority_score("encyclopedia_work", "https://en.wikipedia.org/x")
-    assert d.authority_score("encyclopedia_work", "https://en.wikipedia.org/x") > d.authority_score("encyclopedia_artist", "https://en.wikipedia.org/y")
+    assert d.authority_score("holder_object_page", "https://x.museum/1") > d.authority_score(
+        "encyclopedia_work", "https://en.wikipedia.org/x"
+    )
+    assert d.authority_score("encyclopedia_work", "https://en.wikipedia.org/x") > d.authority_score(
+        "encyclopedia_artist", "https://en.wikipedia.org/y"
+    )
 
 
 # --- assembly --------------------------------------------------------------
@@ -76,7 +98,11 @@ def test_build_dossier_full() -> None:
     doss = d.build_dossier(SIDECAR, client=FakeClient(), retrieved_at="2026-07-26T00:00:00Z")
     assert doss.viewer_summary and "encyclopedic lead" in doss.viewer_summary
     kinds = [r.kind for r in doss.references]
-    assert "holder_object_page" in kinds and "encyclopedia_work" in kinds and "encyclopedia_artist" in kinds
+    assert (
+        "holder_object_page" in kinds
+        and "encyclopedia_work" in kinds
+        and "encyclopedia_artist" in kinds
+    )
     # sorted by authority, holder page first
     assert doss.references[0].kind == "holder_object_page"
     # durability: wayback + hash + license tagging
@@ -91,7 +117,9 @@ def test_build_dossier_full() -> None:
 
 
 def test_commercial_holder_page_excluded() -> None:
-    doss = d.build_dossier(SIDECAR, client=FakeClient(commerce=True), retrieved_at="2026-07-26T00:00:00Z")
+    doss = d.build_dossier(
+        SIDECAR, client=FakeClient(commerce=True), retrieved_at="2026-07-26T00:00:00Z"
+    )
     assert "holder_object_page" not in [r.kind for r in doss.references]
     # encyclopedic sources still present
     assert any(r.kind == "encyclopedia_work" for r in doss.references)
@@ -99,11 +127,20 @@ def test_commercial_holder_page_excluded() -> None:
 
 def test_no_sources_yields_empty_dossier() -> None:
     class Empty:
-        def wiki_title_for_qid(self, qid: str, wiki: str = "enwiki") -> None: return None
-        def wiki_summary(self, title: str, lang: str = "en") -> None: return None
-        def wikidata_facts(self, qid: str) -> list: return []
-        def fetch(self, url: str) -> None: return None
-        def wayback_save(self, url: str) -> None: return None
+        def wiki_title_for_qid(self, qid: str, wiki: str = "enwiki") -> None:
+            return None
+
+        def wiki_summary(self, title: str, lang: str = "en") -> None:
+            return None
+
+        def wikidata_facts(self, qid: str) -> list:
+            return []
+
+        def fetch(self, url: str) -> None:
+            return None
+
+        def wayback_save(self, url: str) -> None:
+            return None
 
     doss = d.build_dossier(SIDECAR, client=Empty(), retrieved_at="2026-07-26T00:00:00Z")
     assert doss.viewer_summary is None

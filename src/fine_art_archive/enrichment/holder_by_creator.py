@@ -231,8 +231,13 @@ def location_from_title(title: str, works: list[CreatorWork]) -> tuple[HolderMat
     w = matched[0]
     return (
         HolderMatch(
-            w, 0.95, w.location_qid or "", _clean_label(w.location_label),
-            None, w.location_url, "location",
+            w,
+            0.95,
+            w.location_qid or "",
+            _clean_label(w.location_label),
+            None,
+            w.location_url,
+            "location",
         ),
         "match",
     )
@@ -251,13 +256,23 @@ def _derive_holder(work: CreatorWork, *, allow_location: bool) -> HolderMatch | 
     """Prefer a P195 collection; for immovable works fall back to a P276 location."""
     if work.collection_qid and _QID_RE.fullmatch(work.collection_qid):
         return HolderMatch(
-            work, 0.0, work.collection_qid, _clean_label(work.collection_label),
-            work.ror, work.url, "collection",
+            work,
+            0.0,
+            work.collection_qid,
+            _clean_label(work.collection_label),
+            work.ror,
+            work.url,
+            "collection",
         )
     if allow_location and work.location_qid and _QID_RE.fullmatch(work.location_qid):
         return HolderMatch(
-            work, 0.0, work.location_qid, _clean_label(work.location_label),
-            None, work.location_url, "location",
+            work,
+            0.0,
+            work.location_qid,
+            _clean_label(work.location_label),
+            None,
+            work.location_url,
+            "location",
         )
     return None
 

@@ -127,7 +127,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--staging-dir",
         type=Path,
-        default=(Path(os.environ["FAA_STAGING_DIR"]).expanduser() if os.environ.get("FAA_STAGING_DIR") else None),
+        default=(
+            Path(os.environ["FAA_STAGING_DIR"]).expanduser()
+            if os.environ.get("FAA_STAGING_DIR")
+            else None
+        ),
         help="archive sidecar root for --missing-only (default: $FAA_STAGING_DIR)",
     )
     args = parser.parse_args(argv)
