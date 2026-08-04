@@ -21,6 +21,8 @@ import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 
+from fine_art_archive.known_works.artwork_classes import allowed_p31_sparql_values
+
 LOG = logging.getLogger(__name__)
 USER_AGENT = "FineArtArchive/0.3 (tim@stranskemo.com)"
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
@@ -67,11 +69,11 @@ def _norm_title(s: str) -> str:
 # Source 1: Wikidata SPARQL
 # --------------------------------------------------------------------------
 def _wd_sparql_query(artist_q: str) -> str:
+    cls_values = allowed_p31_sparql_values()
     return f"""
 SELECT DISTINCT ?work ?workLabel ?inception ?image ?sitelinks WHERE {{
   ?work wdt:P170 wd:{artist_q} .
-  VALUES ?cls {{ wd:Q3305213 wd:Q4502142 wd:Q11086742 wd:Q15727816
-                  wd:Q15711026 wd:Q11060274 wd:Q18761202 wd:Q860861 }}
+  {cls_values}
   ?work wdt:P31 ?cls .
   OPTIONAL {{ ?work wdt:P571 ?inception . }}
   OPTIONAL {{ ?work wdt:P18 ?image . }}
