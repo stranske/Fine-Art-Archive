@@ -251,16 +251,25 @@ def _depth_report(dossier: dict | None) -> dict:
     already mined everything available.
     """
     if not dossier:
-        return {"score": 0, "n_sources": 0, "n_high_authority": 0,
-                "n_promising_unread": 0, "kinds_covered": [], "gaps": ["no dossier yet"],
-                "sections": {}, "last_developed_at": None, "design_version": None}
+        return {
+            "score": 0,
+            "n_sources": 0,
+            "n_high_authority": 0,
+            "n_promising_unread": 0,
+            "kinds_covered": [],
+            "gaps": ["no dossier yet"],
+            "sections": {},
+            "last_developed_at": None,
+            "design_version": None,
+        }
     refs = dossier.get("references") or []
     research = dossier.get("research") or {}
     pool = research.get("source_pool") or []
     kinds = sorted({str(r.get("kind")) for r in refs if r.get("kind")})
     high = sum(1 for r in refs if (r.get("authority_score") or 0) >= 8)
-    promising = sum(1 for s in pool if str(s.get("status", "")).lower() in
-                    {"promising", "paywalled", "unread"})
+    promising = sum(
+        1 for s in pool if str(s.get("status", "")).lower() in {"promising", "paywalled", "unread"}
+    )
 
     score = 0.0
     sections, gaps = {}, []
@@ -271,17 +280,23 @@ def _depth_report(dossier: dict | None) -> dict:
         score += weight * min(n, 5) / 5
         if n == 0:
             gaps.append(f"no {name}")
-    score += 12 * min(len(refs), 8) / 8            # breadth of citation
-    score += 12 * min(len(kinds), 5) / 5           # variety of source type
+    score += 12 * min(len(refs), 8) / 8  # breadth of citation
+    score += 12 * min(len(kinds), 5) / 5  # variety of source type
     if not high:
         gaps.append("no high-authority source")
     if len(kinds) <= 2:
         gaps.append("narrow source mix")
-    return {"score": round(min(score, 100.0), 1), "n_sources": len(refs),
-            "n_high_authority": high, "n_promising_unread": promising,
-            "kinds_covered": kinds, "gaps": gaps, "sections": sections,
-            "last_developed_at": research.get("last_developed_at"),
-            "design_version": research.get("design_version")}
+    return {
+        "score": round(min(score, 100.0), 1),
+        "n_sources": len(refs),
+        "n_high_authority": high,
+        "n_promising_unread": promising,
+        "kinds_covered": kinds,
+        "gaps": gaps,
+        "sections": sections,
+        "last_developed_at": research.get("last_developed_at"),
+        "design_version": research.get("design_version"),
+    }
 
 
 @app.get("/works/{work_id}/research")
@@ -366,10 +381,15 @@ def request_research(work_id: str, body: ResearchRequestIn) -> dict:
     if w is None:
         raise HTTPException(404, f"no sidecar for {work_id}")
     report = _depth_report(w.get("dossier"))
-    rec = {"ts": datetime.now(UTC).isoformat(), "work_id": work_id,
-           "title": w.get("title"), "note": body.note, "focus": body.focus,
-           "depth_at_request": report["score"],
-           "promising_unread": report["n_promising_unread"]}
+    rec = {
+        "ts": datetime.now(UTC).isoformat(),
+        "work_id": work_id,
+        "title": w.get("title"),
+        "note": body.note,
+        "focus": body.focus,
+        "depth_at_request": report["score"],
+        "promising_unread": report["n_promising_unread"],
+    }
     with _sidecar_file_lock(RESEARCH_REQUESTS):
         try:
             active = _active_research_requests(
@@ -745,7 +765,8 @@ def work_image(
 
 @app.get("/works/{work_id}/modality/{modality}/image")
 def modality_image(
-    work_id: str, modality: str,
+    work_id: str,
+    modality: str,
     max: int = Query(1600, ge=64, le=12288, description="Longest side in pixels"),
 ):
     """Serve a resized JPEG of an imaging modality (VIS/IRR/XR/RS/UV). Cached."""
@@ -753,8 +774,11 @@ def modality_image(
     if w is None:
         raise HTTPException(404, f"no sidecar for {work_id}")
     entry = next(
-        (m for m in (w.get("modalities") or [])
-         if str(m.get("modality", "")).lower() == modality.lower()),
+        (
+            m
+            for m in (w.get("modalities") or [])
+            if str(m.get("modality", "")).lower() == modality.lower()
+        ),
         None,
     )
     if entry is None or not entry.get("filename"):
@@ -785,15 +809,18 @@ def deepzoom_manifest(work_id: str) -> dict:
         raise HTTPException(404, f"no sidecar for {work_id}")
     dz = w.get("deepzoom") or {}
     layers = [
-        {"layer": e.get("layer"), "label": e.get("label"),
-         "width": (e.get("dimensions_px") or [0, 0])[0],
-         "height": (e.get("dimensions_px") or [0, 0])[1],
-         "source": e.get("source"), "license": e.get("license")}
+        {
+            "layer": e.get("layer"),
+            "label": e.get("label"),
+            "width": (e.get("dimensions_px") or [0, 0])[0],
+            "height": (e.get("dimensions_px") or [0, 0])[1],
+            "source": e.get("source"),
+            "license": e.get("license"),
+        }
         for e in (dz.get("layers") or [])
         if e.get("dimensions_px") and e.get("fid")
     ]
-    return {"work_id": work_id, "tile_size": dz.get("tile_size") or 256,
-            "layers": layers}
+    return {"work_id": work_id, "tile_size": dz.get("tile_size") or 256, "layers": layers}
 
 
 def _dz_layer_entry(work_id: str, layer: str) -> tuple[dict, dict]:
@@ -801,8 +828,10 @@ def _dz_layer_entry(work_id: str, layer: str) -> tuple[dict, dict]:
     if w is None:
         raise HTTPException(404, f"no sidecar for {work_id}")
     dz = w.get("deepzoom") or {}
-    entry = next((e for e in (dz.get("layers") or [])
-                  if str(e.get("layer", "")).lower() == layer.lower()), None)
+    entry = next(
+        (e for e in (dz.get("layers") or []) if str(e.get("layer", "")).lower() == layer.lower()),
+        None,
+    )
     if entry is None or not entry.get("fid"):
         raise HTTPException(404, f"no {layer} deepzoom layer for {work_id}")
     return dz, entry
@@ -825,7 +854,8 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> FileRespon
     if not cache_p.exists():
         url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
         req = urllib.request.Request(
-            url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"})
+            url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"}
+        )
         try:
             with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 (host-pinned)
                 data = r.read()
@@ -835,8 +865,11 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> FileRespon
         tmp = cache_p.with_suffix(f".tmp{os.getpid()}")
         tmp.write_bytes(data)
         tmp.replace(cache_p)
-    return FileResponse(cache_p, media_type="image/jpeg",
-                        headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return FileResponse(
+        cache_p,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 @app.get("/works/{work_id}/full")

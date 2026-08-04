@@ -28,22 +28,48 @@ from typing import Any, Protocol
 # --- commerce screening ----------------------------------------------------
 # Domains whose purpose is selling reproductions/products alongside (or instead
 # of) information. These are never cited.
-COMMERCE_DOMAINS = frozenset({
-    "fineartamerica.com", "art.com", "allposters.com", "poster.com",
-    "redbubble.com", "etsy.com", "amazon.", "ebay.", "zazzle.com",
-    "saatchiart.com", "artfinder.com",
-    "shutterstock.com", "gettyimages.", "alamy.com", "istockphoto.com",
-    "1stdibs.com", "society6.com", "canvasprints",
-    "printful.com", "displate.com", "wall-art", "posterlounge.",
-})
+COMMERCE_DOMAINS = frozenset(
+    {
+        "fineartamerica.com",
+        "art.com",
+        "allposters.com",
+        "poster.com",
+        "redbubble.com",
+        "etsy.com",
+        "amazon.",
+        "ebay.",
+        "zazzle.com",
+        "saatchiart.com",
+        "artfinder.com",
+        "shutterstock.com",
+        "gettyimages.",
+        "alamy.com",
+        "istockphoto.com",
+        "1stdibs.com",
+        "society6.com",
+        "canvasprints",
+        "printful.com",
+        "displate.com",
+        "wall-art",
+        "posterlounge.",
+    }
+)
 # Auction houses & art-market databases are a deliberate EXCEPTION: they fund
 # top-tier scholarship (provenance, attribution, condition) and their pages are
 # TRANSIENT (lots come down after sale), so they are high-value and worth
 # capturing aggressively -- never commerce-blocked, but flagged transient.
-TRANSIENT_HIGH_VALUE_DOMAINS = frozenset({
-    "christies.com", "sothebys.com", "bonhams.com", "phillips.com",
-    "dorotheum.com", "invaluable.com", "artnet.com", "mutualart.com",
-})
+TRANSIENT_HIGH_VALUE_DOMAINS = frozenset(
+    {
+        "christies.com",
+        "sothebys.com",
+        "bonhams.com",
+        "phillips.com",
+        "dorotheum.com",
+        "invaluable.com",
+        "artnet.com",
+        "mutualart.com",
+    }
+)
 _COMMERCE_SIGNALS = re.compile(
     r"add to (cart|basket|bag)|buy (this |a )?(print|poster|canvas)|shopping cart|"
     r"checkout|framed print|canvas print|\bshop now\b|add to wishlist|"
@@ -116,13 +142,21 @@ class Reference:
 
     def to_json(self) -> dict[str, Any]:
         return {
-            "id": self.id, "kind": self.kind, "title": self.title,
-            "publisher": self.publisher, "license": self.license,
-            "redistributable": self.redistributable, "live_url": self.live_url,
-            "wayback_url": self.wayback_url, "retrieved_at": self.retrieved_at,
-            "content_hash": self.content_hash, "authority_score": self.authority_score,
-            "commerce_flag": self.commerce_flag, "excerpt": self.excerpt,
-            "local_snapshot_path": self.local_snapshot_path, "status": self.status,
+            "id": self.id,
+            "kind": self.kind,
+            "title": self.title,
+            "publisher": self.publisher,
+            "license": self.license,
+            "redistributable": self.redistributable,
+            "live_url": self.live_url,
+            "wayback_url": self.wayback_url,
+            "retrieved_at": self.retrieved_at,
+            "content_hash": self.content_hash,
+            "authority_score": self.authority_score,
+            "commerce_flag": self.commerce_flag,
+            "excerpt": self.excerpt,
+            "local_snapshot_path": self.local_snapshot_path,
+            "status": self.status,
         }
 
 
@@ -181,18 +215,23 @@ def _sidecar_facts(sidecar: dict[str, Any]) -> list[dict[str, str | None]]:
     return facts
 
 
-def build_dossier(
-    sidecar: dict[str, Any], *, client: FetchClient, retrieved_at: str
-) -> Dossier:
+def build_dossier(sidecar: dict[str, Any], *, client: FetchClient, retrieved_at: str) -> Dossier:
     """Assemble a dossier for one work. Network access is via ``client``."""
     dossier = Dossier(generated_at=retrieved_at)
     dossier.key_facts = _sidecar_facts(sidecar)
 
     seen_urls: set[str] = set()
 
-    def add_reference(kind: str, url: str | None, *, title: str | None,
-                      publisher: str | None, license_: str | None,
-                      redistributable: bool, text: str | None) -> None:
+    def add_reference(
+        kind: str,
+        url: str | None,
+        *,
+        title: str | None,
+        publisher: str | None,
+        license_: str | None,
+        redistributable: bool,
+        text: str | None,
+    ) -> None:
         if not url or url in seen_urls:
             return
         seen_urls.add(url)
@@ -200,9 +239,15 @@ def build_dossier(
             return  # never cite a sales-driven source
         ref = Reference(
             id=f"{kind}:{domain_of(url)}",
-            kind=kind, title=title, publisher=publisher, license=license_,
-            redistributable=redistributable, live_url=url, retrieved_at=retrieved_at,
-            authority_score=authority_score(kind, url), commerce_flag=False,
+            kind=kind,
+            title=title,
+            publisher=publisher,
+            license=license_,
+            redistributable=redistributable,
+            live_url=url,
+            retrieved_at=retrieved_at,
+            authority_score=authority_score(kind, url),
+            commerce_flag=False,
         )
         if text:
             ref.snapshot_text = text
@@ -219,10 +264,12 @@ def build_dossier(
     if described_url:
         page = client.fetch(described_url)
         add_reference(
-            "holder_object_page", described_url,
+            "holder_object_page",
+            described_url,
             title=(sidecar.get("holder") or {}).get("name"),
             publisher=(sidecar.get("holder") or {}).get("name"),
-            license_="restricted", redistributable=False,
+            license_="restricted",
+            redistributable=False,
             text=(page or {}).get("text"),
         )
     for f in facts_extra:
@@ -235,9 +282,12 @@ def build_dossier(
         summary = client.wiki_summary(work_title)
         if summary:
             add_reference(
-                "encyclopedia_work", summary.get("content_url"),
-                title=summary.get("title"), publisher="Wikipedia",
-                license_="CC-BY-SA-4.0", redistributable=True,
+                "encyclopedia_work",
+                summary.get("content_url"),
+                title=summary.get("title"),
+                publisher="Wikipedia",
+                license_="CC-BY-SA-4.0",
+                redistributable=True,
                 text=summary.get("extract"),
             )
             if summary.get("extract") and not dossier.viewer_summary:
@@ -249,9 +299,12 @@ def build_dossier(
         summary = client.wiki_summary(artist_title)
         if summary:
             add_reference(
-                "encyclopedia_artist", summary.get("content_url"),
-                title=summary.get("title"), publisher="Wikipedia",
-                license_="CC-BY-SA-4.0", redistributable=True,
+                "encyclopedia_artist",
+                summary.get("content_url"),
+                title=summary.get("title"),
+                publisher="Wikipedia",
+                license_="CC-BY-SA-4.0",
+                redistributable=True,
                 text=summary.get("extract"),
             )
             if not dossier.viewer_summary and summary.get("extract"):

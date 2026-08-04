@@ -131,7 +131,11 @@ def test_no_change_when_artist_has_no_dates(tmp_path: Path) -> None:
         artist={
             "name": "x",
             "wikidata_q": "Q7",
-            "canonical": {"wikidata_q": "Q7", "display_name": "Jacopo di Cambio", "family_key": "cambio"},
+            "canonical": {
+                "wikidata_q": "Q7",
+                "display_name": "Jacopo di Cambio",
+                "family_key": "cambio",
+            },
         },
     )
     stats, reasons = backfill(path.parents[1], client=client, apply=True)

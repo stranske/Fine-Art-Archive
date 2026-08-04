@@ -638,10 +638,20 @@ def test_deepzoom_manifest_and_tile_proxy_cache(
             "tile_base": "https://khmdata01.universumdigitalis.com/tiles",
             "tile_size": 256,
             "layers": [
-                {"layer": "VIS", "label": "Visible", "fid": "GG_1026_VIS",
-                 "dimensions_px": [79365, 59233], "source": "insidebruegel"},
-                {"layer": "IRR", "label": "Underdrawing", "fid": "GG_1026_IRR",
-                 "dimensions_px": [19842, 14809], "source": "insidebruegel"},
+                {
+                    "layer": "VIS",
+                    "label": "Visible",
+                    "fid": "GG_1026_VIS",
+                    "dimensions_px": [79365, 59233],
+                    "source": "insidebruegel",
+                },
+                {
+                    "layer": "IRR",
+                    "label": "Underdrawing",
+                    "fid": "GG_1026_IRR",
+                    "dimensions_px": [19842, 14809],
+                    "source": "insidebruegel",
+                },
             ],
         },
     }
@@ -690,9 +700,11 @@ def test_deepzoom_tile_rejects_foreign_host(
     # A sidecar pointing at a non-allowlisted host must not be proxied (SSRF).
     sidecar = {
         "work_id": "gg2",
-        "deepzoom": {"tile_base": "https://evil.example.com/tiles", "tile_size": 256,
-                     "layers": [{"layer": "VIS", "fid": "GG_1026_VIS",
-                                 "dimensions_px": [100, 100]}]},
+        "deepzoom": {
+            "tile_base": "https://evil.example.com/tiles",
+            "tile_size": 256,
+            "layers": [{"layer": "VIS", "fid": "GG_1026_VIS", "dimensions_px": [100, 100]}],
+        },
     }
     monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
     monkeypatch.setattr(api_main, "TILES_CACHE_DIR", tmp_path / "tiles")
@@ -762,7 +774,8 @@ def test_dossier_page_and_depth_report(
     client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sidecar = {
-        "work_id": "w1", "title": "A Work",
+        "work_id": "w1",
+        "title": "A Work",
         "dossier": {
             "viewer_summary": "s",
             "reading": [{"text": "a"}, {"text": "b"}],
@@ -772,9 +785,13 @@ def test_dossier_page_and_depth_report(
                 {"id": "r1", "kind": "close_looking", "authority_score": 9.0},
                 {"id": "r2", "kind": "essay", "authority_score": 4.0},
             ],
-            "research": {"source_pool": [{"url": "u", "status": "promising"},
-                                         {"url": "v", "status": "thin"}],
-                         "design_version": "v2"},
+            "research": {
+                "source_pool": [
+                    {"url": "u", "status": "promising"},
+                    {"url": "v", "status": "thin"},
+                ],
+                "design_version": "v2",
+            },
         },
     }
     monkeypatch.setattr(api_main, "_get_work_checked", lambda wid: sidecar)
@@ -786,8 +803,8 @@ def test_dossier_page_and_depth_report(
     r = client.get("/works/w1/research").json()
     assert 0 < r["score"] <= 100
     assert r["n_sources"] == 2
-    assert r["n_high_authority"] == 1          # only the 9.0 clears the >=8 bar
-    assert r["n_promising_unread"] == 1        # "thin" is not an unread lead
+    assert r["n_high_authority"] == 1  # only the 9.0 clears the >=8 bar
+    assert r["n_promising_unread"] == 1  # "thin" is not an unread lead
     assert r["sections"]["reading"] == 2
     assert "no context" in r["gaps"] and "no provenance" in r["gaps"]
     # source_pool is background material and must never leak to the viewer
@@ -797,8 +814,9 @@ def test_dossier_page_and_depth_report(
 def test_research_request_records_and_expires(
     client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(api_main, "_get_work_checked",
-                        lambda wid: {"work_id": "w1", "title": "A", "dossier": {}})
+    monkeypatch.setattr(
+        api_main, "_get_work_checked", lambda wid: {"work_id": "w1", "title": "A", "dossier": {}}
+    )
     log = tmp_path / "research_requests.jsonl"
     monkeypatch.setattr(api_main, "RESEARCH_REQUESTS", log)
 
@@ -810,6 +828,7 @@ def test_research_request_records_and_expires(
 
     # An old request must not count — the queue expires so no backlog accumulates.
     import json as _json
+
     old = _json.loads(log.read_text(encoding="utf-8").splitlines()[0])
     old["ts"] = "2000-01-01T00:00:00+00:00"
     log.write_text(_json.dumps(old) + "\n", encoding="utf-8")

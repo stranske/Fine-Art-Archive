@@ -68,7 +68,9 @@ def test_is_held_matches_qid_and_title() -> None:
     held_qids, held_titles = {"Q100"}, {cli._norm_title("Held By Title")}
     assert cli.is_held(_kw("x", source_ids={"wikidata": "Q100"}), held_qids, held_titles)
     assert cli.is_held(_kw("Held By Title!"), held_qids, held_titles)
-    assert not cli.is_held(_kw("Brand New", source_ids={"wikidata": "Q999"}), held_qids, held_titles)
+    assert not cli.is_held(
+        _kw("Brand New", source_ids={"wikidata": "Q999"}), held_qids, held_titles
+    )
 
 
 def test_load_held_reads_qids_and_titles(tmp_path) -> None:
