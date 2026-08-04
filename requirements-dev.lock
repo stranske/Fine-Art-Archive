@@ -27,7 +27,7 @@ click==8.3.1
     # via
     #   black
     #   uvicorn
-coverage==7.15.2
+coverage==7.15.3
     # via pytest-cov
 fastapi==0.136.3
     # via fine-art-archive (pyproject.toml)
