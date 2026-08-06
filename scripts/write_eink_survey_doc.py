@@ -13,7 +13,9 @@ Analysis prose stays hand-written here; only the tables are derived.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,16 +38,37 @@ def price(x: dict) -> str:
     return f"${p['amount']:,.0f}" if p.get("amount") else "—"
 
 
+def _merge_mod():
+    """Reuse the merge script's brand canonicalisation for the vendor join."""
+    spec = importlib.util.spec_from_file_location(
+        "mg_doc", Path(__file__).resolve().parent / "merge_eink_survey.py")
+    m = importlib.util.module_from_spec(spec)
+    sys.modules["mg_doc"] = m
+    spec.loader.exec_module(m)
+    return m
+
+
 def main() -> int:
     d = json.loads(CFG.read_text())
-    vendors = {v.get("name"): v for v in d.get("vendors") or []}
+    # Join devices to vendors on the canonical BRAND, not the raw name string.
+    # Deduping normalised the device vendor strings, which broke an exact-name
+    # join: 26 of 37 devices stopped resolving and 27 table rows fell back to
+    # "unknown" durability -- including Samsung's, which is the whole point of
+    # the recommendation. Durability is the column this survey exists for, so a
+    # silent "unknown" there is worse than no column.
+    mg = _merge_mod()
+    vendors = {}
+    for v in d.get("vendors") or []:
+        vendors[v.get("name")] = v
+        vendors.setdefault(mg.vendor_key(v), v)
     big = [x for x in d.get("devices") or [] if dia(x) > 15]
 
     def openness(x: dict) -> str:
         return (x.get("integration") or {}).get("openness") or "unknown"
 
     def staying(x: dict) -> str:
-        return (vendors.get(x.get("vendor")) or {}).get("staying_power") or "unknown"
+        v = vendors.get(x.get("vendor")) or vendors.get(mg.brand_of(x)) or {}
+        return v.get("staying_power") or "unknown"
 
     rows = []
     for x in sorted(big, key=lambda y: (OPEN_RANK.get(openness(y), 9),
