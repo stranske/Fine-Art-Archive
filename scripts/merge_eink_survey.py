@@ -99,7 +99,7 @@ OPENNESS_ORDER = ["closed", "partly-open", "open", "unknown"]
 # three different ways -- "PocketBook International S.A.", "InkPoster (brand of
 # PocketBook)", "InkPoster (Pocketbook International)" -- so keying on the raw
 # vendor string counted one product as three. That inflated the corpus to 48
-# devices above 15in when the true distinct count is around 30.
+# devices above 15in; the corrected distinct count is 36.
 #
 # The canonical key is the PRODUCT brand, not the parent company: PocketBook
 # owns InkPoster and IONNYK, but an InkPoster Tela and an IONNYK Jane are
@@ -139,11 +139,16 @@ _MODEL_NOISE = re.compile(
     r"colou?r|monochrome|mono|greyscale|grayscale)\b")
 
 
+def _fallback_vendor_key(name: str) -> str:
+    """Normalize an unrecognized vendor without shortening its identity."""
+    return re.sub(r"[^a-z0-9]+", "", name.lower())
+
+
 def vendor_key(v: dict) -> str:
     """Vendors collapse on the same brand table, so the three spellings of
     PocketBook become one record instead of three."""
     b = brand_of({"vendor": v.get("name") or "", "model": ""})
-    return b or re.sub(r"[^a-z0-9]+", "", (v.get("name") or "").lower())[:20]
+    return b or _fallback_vendor_key(v.get("name") or "")
 
 
 def _hit(hay: str, token: str) -> bool:
@@ -163,7 +168,7 @@ def brand_of(dev: dict) -> str:
     for canon, tokens in BRAND_CANON:
         if any(_hit(hay, t) for t in tokens):
             return canon
-    return re.sub(r"[^a-z0-9]+", "", (dev.get("vendor") or "").lower())[:20]
+    return _fallback_vendor_key(dev.get("vendor") or "")
 
 
 def colour_class(dev: dict) -> str:
@@ -229,7 +234,7 @@ def same_product(a: dict, b: dict) -> bool:
     that CONTAINS another core is treated as the same product -- unless one
     carries a distinctness marker the other lacks.
     """
-    if (mg_brand := brand_of(a)) != brand_of(b):
+    if brand_of(a) != brand_of(b):
         return False
     if colour_class(a) != colour_class(b):
         return False
@@ -252,10 +257,6 @@ def same_product(a: dict, b: dict) -> bool:
         return True
     if min(len(ca), len(cb)) < 5:
         return ca == cb
-    for mk in DISTINCT_MARKERS:
-        if (mk in ca) != (mk in cb):
-            return False
-    del mg_brand
     return ca in cb or cb in ca
 
 

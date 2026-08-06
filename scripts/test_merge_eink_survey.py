@@ -8,7 +8,7 @@ has to collapse spellings without collapsing genuinely different SKUs. Both
 directions have bitten:
 
 * Keying on the raw vendor string counted PocketBook's products three times and
-  inflated the corpus to 48 devices above 15in when the real figure is lower.
+  inflated the corpus to 48 devices above 15in when the corrected figure is 36.
 * Substring brand matching filed "MEiNK" and BLOOMIN8's "EinkCanvas" under
   E Ink Holdings, because both contain the letters "eink".
 * An early attempt stripped "(Color Version)" out of model names, which
@@ -69,6 +69,9 @@ def main() -> int:
           mg.brand_of(dev("IONNYK (brand of Pocketbook)", "IONNYK Jane", 25.0))
           != mg.brand_of(dev("InkPoster (brand of PocketBook)",
                              "InkPoster Tela", 28.5)))
+    check("unrecognized long vendor names do not collide after normalization",
+          mg.vendor_key({"name": "Independent Display Manufacturer Alpha"})
+          != mg.vendor_key({"name": "Independent Display Manufacturer Beta"}))
 
     # ---- must collapse: same product, three spellings ---------------------
     check("PocketBook/InkPoster Tela 40.5 spellings collapse",
