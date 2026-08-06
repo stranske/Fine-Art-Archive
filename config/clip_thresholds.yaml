@@ -1,0 +1,21 @@
+# Vision-tagging policy. Threshold tags need calibrated ground truth; contrastive
+# tags deliberately do not. Their score is meaningful only relative to the
+# configured negative prompts, so they remain explicitly reviewable.
+thresholds: {}
+contrastive_pairs:
+  filter:nudity-full:
+    positive: nude figure
+    negatives: [clothed figure]
+    margin: 0.0
+  filter:nudity-partial:
+    positive: partially nude figure
+    negatives: [fully clothed figure]
+    margin: 0.0
+  filter:weapon-prominent:
+    positive: a weapon held or prominently displayed
+    negatives: [no weapon present]
+    margin: 0.0
+  filter:occult:
+    positive: occult symbol or ritual imagery
+    negatives: [no occult symbol or ritual imagery]
+    margin: 0.0
