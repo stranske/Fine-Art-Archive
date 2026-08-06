@@ -91,10 +91,15 @@ def deep_merge(cur: dict, new: dict, stream: str) -> dict:
                 cur[k]["openness"] = o
         elif isinstance(v, dict) and isinstance(cur.get(k), dict):
             cur[k] = deep_merge(cur[k], v, stream)
-        elif k not in cur or cur[k] in (None, "", [], {}):
-            cur[k] = v
-        elif isinstance(v, str) and isinstance(cur[k], str) and \
-                len(v) > len(cur[k]):
+        elif (
+            k not in cur
+            or cur[k] in (None, "", [], {})
+            or (
+                isinstance(v, str)
+                and isinstance(cur[k], str)
+                and len(v) > len(cur[k])
+            )
+        ):
             cur[k] = v
     cur.setdefault("_streams", [])
     if stream not in cur["_streams"]:

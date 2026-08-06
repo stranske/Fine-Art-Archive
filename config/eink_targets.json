@@ -2590,7 +2590,7 @@
     "amount": 1400,
     "currency": "USD",
     "as_of": "2026-08",
-    "source_url": "https://shopkits.eink.com/en/product/detail/31.5''Spectra6ePaperDisplay_ED2208-QBA"
+    "source_url": null
    },
    "availability": "IN STOCK at E Ink's own developer kit store (shopkits.eink.com) at $1,400, checked 2026-08. Buying the panel direct from the panel maker is the single best hedge against vendor abandonment — the supply does not depend on any frame company surviving.",
    "power": "Panel module only — power and everything else is his design.",
