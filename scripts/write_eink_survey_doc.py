@@ -37,6 +37,14 @@ def price(x: dict) -> str:
     return f"${p['amount']:,.0f}" if p.get("amount") else "—"
 
 
+def clip(text: str, n: int) -> str:
+    """Truncate human-facing table cells on a word boundary."""
+    normalized = " ".join((text or "").split())
+    if len(normalized) <= n:
+        return normalized
+    return normalized[:n].rsplit(" ", 1)[0].rstrip(" ,.;:-") + "…"
+
+
 def _merge_mod():
     """Reuse the merge script's brand canonicalisation for the vendor join."""
     path = Path(__file__).resolve().parent / "merge_eink_survey.py"
@@ -74,8 +82,8 @@ def main() -> int:
     for x in sorted(big, key=lambda y: (OPEN_RANK.get(openness(y), 9),
                                         STAY_RANK.get(staying(y), 9), -dia(y))):
         rows.append(
-            f"| {dia(x):.1f}\" | {(x.get('vendor') or '?')[:26]} | "
-            f"{(x.get('model') or '?')[:40]} | {x.get('status', '?')} | "
+            f"| {dia(x):.1f}\" | {clip(x.get('vendor') or '?', 26)} | "
+            f"{clip(x.get('model') or '?', 40)} | {x.get('status', '?')} | "
             f"{price(x)} | **{openness(x)}** | {staying(x)} |")
     table = "\n".join(rows)
 
@@ -87,14 +95,6 @@ def main() -> int:
                 if (c.get("diagonal_in") or 99) > 15]
     shipped = [c for c in in_scope if c.get("backers_have_units") == "yes"]
     stuck = [c for c in in_scope if c.get("backers_have_units") == "no"]
-
-    def clip(text: str, n: int) -> str:
-        """Truncate on a word boundary; a table cell cut mid-word reads as a
-        rendering bug rather than as an abbreviation."""
-        t = " ".join((text or "").split())
-        if len(t) <= n:
-            return t
-        return t[:n].rsplit(" ", 1)[0].rstrip(" ,.;:-") + "…"
 
     def camp_rows(cs: list) -> str:
         out = []
