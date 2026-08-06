@@ -228,6 +228,7 @@ def list_dossiers() -> dict:
 # it internally with an undocumented pipeline.
 # --------------------------------------------------------------------------
 from fine_art_archive import eink as _eink  # noqa: E402
+from fine_art_archive.eink.targets import FitMode  # noqa: E402
 
 # Writing to a removable volume from an HTTP endpoint deserves a boundary even
 # in a single-user local app: a typo'd path should not be able to scribble into
@@ -240,6 +241,14 @@ EINK_EXPORT_ROOTS = [
     ).split(":")
     if p.strip()
 ]
+
+
+def _coerce_fit(fit: str | None) -> FitMode | None:
+    if fit is None:
+        return None
+    if fit not in ("contain", "cover", "stretch"):
+        raise HTTPException(400, f"unknown fit mode {fit!r}")
+    return fit  # type: ignore[return-value]
 
 
 def _checked_export_dir(raw: str) -> Path:
@@ -326,7 +335,7 @@ def eink_facets() -> dict:
                     for k, v in _eink.PERIODS.items()],
         "genres": [{"value": g, "count": n} for g, n in res.facets["genre"]],
         "artists": [{"value": a, "count": n} for a, n in res.facets["artist"]],
-        "mood_counts": {m: n for m, n in res.facets["mood"]},
+        "mood_counts": dict(res.facets["mood"]),
         "total_works": res.total_candidates,
     }
 
@@ -403,7 +412,9 @@ def eink_preview(
     try:
         with Image.open(master) as im:
             im.draft("RGB", (small.width * 2, small.height * 2))
-            out = _eink.render_for_target(im, small, fit=fit, method=dither)
+            out = _eink.render_for_target(
+                im, small, fit=_coerce_fit(fit), method=dither
+            )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
 
@@ -447,7 +458,7 @@ def eink_playlist_export(body: ExportIn) -> dict:
     try:
         rep = _eink.export(
             items, dest, tgt, master_for=_eink_master, fmt=body.fmt,
-            method=body.dither, fit=body.fit, overwrite=body.overwrite,
+            method=body.dither, fit=_coerce_fit(body.fit), overwrite=body.overwrite,
             dry_run=not body.write, spec=spec.__dict__,
         )
     except FileExistsError as exc:
