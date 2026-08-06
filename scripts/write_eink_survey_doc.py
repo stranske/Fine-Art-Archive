@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -40,12 +39,13 @@ def price(x: dict) -> str:
 
 def _merge_mod():
     """Reuse the merge script's brand canonicalisation for the vendor join."""
-    spec = importlib.util.spec_from_file_location(
-        "mg_doc", Path(__file__).resolve().parent / "merge_eink_survey.py")
-    m = importlib.util.module_from_spec(spec)
-    sys.modules["mg_doc"] = m
-    spec.loader.exec_module(m)
-    return m
+    path = Path(__file__).resolve().parent / "merge_eink_survey.py"
+    spec = importlib.util.spec_from_file_location("mg_doc", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load survey merge helpers from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def main() -> int:
