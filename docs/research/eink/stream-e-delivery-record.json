@@ -1,0 +1,279 @@
+{
+  "headline_answer": "YES. The premise that no >15-inch e-paper frame has ever reached a real owner is FALSE, and it is false twice over. (1) Retail: PocketBook's InkPoster Tela 28.5in ($2,399) and Affresco 31.5in ($1,699) have been on general sale in the US since roughly Nov-Dec 2025, are 'Add to cart' in stock today, and an independent reviewer (Fstoppers, 21 Dec 2025) physically received and photographed one. (2) Crowdfunded: Fraimic's Large Canvas (31.5in Spectra 6) began shipping to Kickstarter backers in the last week of July 2026, and named backers posted receipt confirmations on the campaign's public comment wall on 4-5 Aug 2026 ('the Large frame came today', 'I am backer 1102 and I just received 1 large (31 inch) screen... works great'). So 'open but risky' does NOT collapse into 'does not exist'. What IS true is that the specific vendors the survey flagged as most open are the ones still not delivering at size: BLOOMIN8's 28.5in is ~10 months past its promised October 2025 date with zero backers reporting a unit, and InkJoy's 25.3in/28.5in are ~3 months late with production only targeted for mid-August 2026. Both those vendors HAVE delivered their small (7.3in-13.3in) SKUs, so the pattern is not 'vendor cannot ship', it is 'the large panel is the part that slips'. And the true horror story in this category is Galari (Kyoto): $339,557 from 737 backers in March 2025, promised September 2025, and as of August 2026 still has no supplier for the panel and is redesigning its PCB.",
+  "any_confirmed_delivery_over_15in": true,
+  "campaigns": [
+    {
+      "name": "Fraimic Large Canvas (31.5in)",
+      "vendor": "Fraimic",
+      "diagonal_in": 31.5,
+      "platform": "Kickstarter (fulfilment via Kickstarter Pledge Manager)",
+      "funded_date": "2025-10 (campaign ended October 2025; exact end date not confirmed from a source I fetched)",
+      "promised_ship": "May 2026 (stated as 'Estimated delivery' on every Large reward tier)",
+      "current_status": "SHIPPING AND ARRIVING. Update #15 (21 Jul 2026) 'Large Fraimic Units Have Arrived at the Port! Shipping Begins Soon'. Creator comment 6 days before my read: 'We've officially started shipping Large Fraimic units. Fulfillment is now underway'. Creator 2 days before my read: 'Large units only started shipping last week'. fraimic.com lists Large Canvas at $1,299 (MSRP $1,499), currently 'Sold out', 'Ships Early August', 9 customer reviews.",
+      "delivery_evidence": "DECISIVE, from non-vendor backers on the public Kickstarter comment wall, read 2026-08-05: (a) Jacob Crosetto, ~8 hours before read: 'I received my Standard frame back in June and the Large frame came today. No issues with set up and - while a little slower at displaying the images than expected - I continue to be beyond impressed.' (b) Dwoa/Lex Schut, backer #1102, 1 day before read: 'i just received 1 large (31 inch) screen, but i ordered a set of two... The screen i did receive works great!' Creator replied confirming the second unit had shipped. Reward tiers show roughly 690 pledges containing a Large unit (~900 Large units total). Independent press exists but only tested the 13.3in Standard: New Atlas (Joe Salas) tested a preproduction Standard; Notebookcheck (17 May 2026) tested a pre-release 13.3in sample. Forbes (21 Jul 2026, Mark Sparrow) states 'The Fraimic Smart Canvas is shipping now in two sizes from fraimic.com' but shows no evidence of hands-on testing. So the >15in delivery evidence is backer-reported, not press-reported, but it is multiple named backers with dates and specifics.",
+      "backers_have_units": "yes",
+      "delay_months": 3,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai/comments", "what_it_supports": "Two named backers reporting physical receipt of the 31.5in Large on 4-5 Aug 2026; creator confirming Large shipping started ~last week of July 2026; also the complaint corpus (surprise $300 shipping, FedEx customs re-bills, DDP paperwork mismatch, one backer excluded for not completing the pledge manager, flaky multi-frame 'keep awake', awkward image upload)"},
+        {"url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai/rewards", "what_it_supports": "Promised delivery of May 2026 on every tier; 31.5in Large tiers and their backer counts; 13.3in Standard tiers"},
+        {"url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai/posts", "what_it_supports": "Update timeline: #10 'We're Starting To Ship' 8 May 2026, #12 'Standard Units Have Started Shipping' 17 Jun 2026, #15 'Large Fraimic Units Have Arrived at the Port' 21 Jul 2026; 1,825 backers / $1,120,290"},
+        {"url": "https://fraimic.com/products/large-canvas", "what_it_supports": "31.5in diagonal, 2560x1440, $1,299 sale / $1,499 MSRP, 'Ships Early August', sold out, 9 reviews"},
+        {"url": "https://newatlas.com/around-the-home/fraimic-ai-art-e-ink-frame-review/", "what_it_supports": "Independent multi-month test (13.3in preproduction). Confirms local API on the home network, Home Assistant integration, direct image upload without cloud, and explicitly that 'the frame itself won't turn into a paperweight if Fraimic ever disappears'"},
+        {"url": "https://www.notebookcheck.net/Fraimic-tested-Affordable-e-ink-picture-frame-measures-battery-life-in-years.1282366.0.html", "what_it_supports": "Independent 13.3in test, 17 May 2026; confirms local access at fraimic.local as well as cloud app.fraimic.com; notes pale skin tones and washed intense colours; 150 PPI grain visible close up"},
+        {"url": "https://www.forbes.com/sites/marksparrow/2026/07/21/fraimic-voice-to-art-smart-canvas-can-turn-a-home-into-an-art-gallery/", "what_it_supports": "21 Jul 2026 statement that the canvas is shipping in two sizes; REST API access and local-only mode claimed"}
+      ]
+    },
+    {
+      "name": "InkPoster Tela 28.5in and Affresco 31.5in (retail, not crowdfunded)",
+      "vendor": "PocketBook International SA (InkPoster is a PocketBook spin-off brand)",
+      "diagonal_in": 28.5,
+      "platform": "Direct retail (inkposter.com) and Amazon",
+      "funded_date": null,
+      "promised_ship": "Announced CES January 2025; on sale from roughly Nov-Dec 2025",
+      "current_status": "SHIPPING AND PURCHASABLE TODAY. inkposter.com shows Tela 28.5in $2,399 and Affresco 31.5in $1,699 both with 'Add to cart' (in stock). The 13.3in Affresco is 'Notify me'. Both 40.5in models (Tela 40.5in $4,200, Duna 40.5in Pininfarina $6,500) are 'Notify me' / unbuyable - so the survey's 'announced, unbuyable' note is correct for 40.5in ONLY.",
+      "delivery_evidence": "STRONGEST EVIDENCE IN THE WHOLE CATEGORY. Fstoppers published a hands-on review of the InkPoster Tela 28.5in on 21 Dec 2025 by a reviewer who was mailed a physical unit and tested it with his own photographs. Notebookcheck (11 Nov 2025) reported the 13.3/28.5/31.5in models 'widely available for purchase in the US' with German availability in November. The-eBook-Reader blog (6 Dec 2025) reported both the 28.5in ($2,399) and 31.5in ($1,699) selling on Amazon. This is a normal retail product from a company that has shipped e-readers for years - not a crowdfunding promise.",
+      "backers_have_units": "yes",
+      "delay_months": null,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://inkposter.com/", "what_it_supports": "Live product line and buy status: Tela 28.5in $2,399 in stock, Affresco 31.5in $1,699 in stock, Affresco 13.3in / Tela 40.5in / Duna 40.5in all 'Notify me'; footer 'Pocketbook International SA'"},
+        {"url": "https://inkposter.com/products/inkposter-tela-40-5", "what_it_supports": "Tela 40.5in is sold out / notify-me only, $4,200, 3060x4320, E Ink Spectra 6 with Sharp IGZO, 130 DPI - confirming the 40.5in models are announced but not buyable"},
+        {"url": "https://fstoppers.com/fine-art/inkposter-tela-285-review-future-digital-picture-frames-719866", "what_it_supports": "Independent hands-on of a physical 28.5in unit, 21 Dec 2025. Also the ART-RELEVANT caveats: photos looked 'dark, desaturated, and low resolution'; the panel cannot make pure white, only 'a yellowish grey'; ~1 minute per image update; black-and-white images fare much better than colour"},
+        {"url": "https://www.notebookcheck.net/PocketBook-InkPoster-with-E-Ink-Spectra-6-display-and-one-year-battery-life-now-widely-available.1160581.0.html", "what_it_supports": "11 Nov 2025 - 13.3/28.5/31.5in widely available in the US; US and German pricing"},
+        {"url": "https://blog.the-ebook-reader.com/2025/12/06/pocketbook-now-selling-e-ink-posters-and-you-wont-believe-the-price/", "what_it_supports": "6 Dec 2025 - 28.5in and 31.5in on sale via PocketBook's Amazon store"}
+      ]
+    },
+    {
+      "name": "BLOOMIN8 EinkCanvas Large 28.5in",
+      "vendor": "arpobot / BLOOMIN8 (Sydney, Australia)",
+      "diagonal_in": 28.5,
+      "platform": "Kickstarter",
+      "funded_date": "2025-04-27 (40-day campaign from 18 Mar 2025; AU$2,397,443 from 2,272 backers, 7,991% of a AU$30,000 goal)",
+      "promised_ship": "October 2025 (every Large reward tier states 'Estimated delivery Oct 2025'; the 7.3in and 13.3in tiers said Aug 2025)",
+      "current_status": "STILL NOT DELIVERED at 2026-08-05, roughly 10 months past the promised date. Latest campaign update, #20 on 31 Jul 2026, is titled '28.5\" Large Canvas Is Finally Coming' (backers-only body, title visible publicly). bloomin8.com sells the 28.5in as a PRE-ORDER at $2,399 with 'Expected shipping starts August 2026'.",
+      "delivery_evidence": "NO backer anywhere in the public comment stream reports having received a 28.5in. Comments read 2026-08-05, newest first: Cedric (6 days ago) 'Any updates on the large canva shipping??'; Joshua Koch (8 days) 'Any updates on the 28\" inch model?'; Jochem (about 1 month) same; Steve Burridge (about 2 months) 'I have a 13\" canvas on my wall and am waiting for the 28\" to be completed'; Doug Gross (5 months) 'Has anyone received a 28.5 yet? I thought they were supposed to arrive in March', answered by Brandon Hecker 'they just keep moving it. I think they are later in the summer now'; Steven Alexander (5 months) 'Y'all have gone really quiet with updates this year and it's concerning.' Contrast: the 13.3in SHIPPED - Steven Wong 'I had been using that for almost 6 months', Benjamin 'very happy with my 13.3\" frame', Ricky Ross backer #801 loaded images via SD card. Update #13 'SHIPPING' 1 Dec 2025 and #14 'Shipping Info' 23 Dec 2025 mark the small/medium fulfilment wave. So the vendor ships - just not the big panel.",
+      "backers_have_units": "no",
+      "delay_months": 10,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/comments", "what_it_supports": "Zero receipts of the 28.5in and a continuous stream of 'where is the large' questions through 30 Jul 2026; confirmed receipts of the 13.3in; support pathologies (firmware 1.8.34 bricking a unit to 'No Battery', Wi-Fi transfer failing so a backer resorted to SD card, Home Assistant integration unable to wake the canvas because the Bluetooth wake signal is not exposed, one backer calling it 'the most disappointing gadget ever bought on Kickstarter')"},
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/rewards", "what_it_supports": "Promised 'Estimated delivery Oct 2025' on all 28.5in Large tiers (and Aug 2025 on the 7.3in/13.3in tiers); roughly 600 pledges include at least one Large, including a 4-pack and an 8-pack"},
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/posts", "what_it_supports": "Update log with dates and titles: #20 '28.5\" Large Canvas Is Finally Coming' 31 Jul 2026; #18 'May Update - 28.5\" Canvas and Widgets' 16 May 2026; #16 'A full update on the 28.5\" Large Canvas' 10 Mar 2026; #13 'SHIPPING' 1 Dec 2025. Confirms monthly-ish vendor communication"},
+        {"url": "https://www.kicktraq.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/", "what_it_supports": "AU$2,397,443 raised, 2,272 backers, 7,991% funded, 40-day campaign from 18 March, ended 27 April"},
+        {"url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5", "what_it_supports": "The 28.5in is still a pre-order on the vendor's own store at $2,399 with 'Expected shipping starts August 2026'"},
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-e-ink-canvas-moments-in-blossom", "what_it_supports": "TRUST SIGNAL: arpobot has a NEW Kickstarter, 'BLOOMIN8 E-Ink Canvas - Moments in Blossom' (a 10-inch model), in pre-launch with 2,207 followers and 'We'll see you this August' - i.e. raising again while ~600 Large pledges from April 2025 are undelivered. The page also claims 10,000+ BLOOMIN8 devices activated, and advertises microSD loading, a desktop app, Home Assistant and 'our open API'"}
+      ]
+    },
+    {
+      "name": "InkJoy Frame 25.3in and 28.5in",
+      "vendor": "InkJoy (Hong Kong)",
+      "diagonal_in": 28.5,
+      "platform": "Kickstarter",
+      "funded_date": "2026-01 (campaign ended January 2026; HK$3,232,767 from 676 backers, 8,313% funded - exact end date not confirmed from a source I fetched)",
+      "promised_ship": "May 2026 (Launch Special) / June 2026 (Super Early Bird) for both the 25.3in and 28.5in tiers",
+      "current_status": "LARGE SIZES NOT DELIVERED as of the comment stream I read on 2026-08-05. Creator, ~21 days before read: 'members of our team are currently at the factory conducting on-site inspections... Our current target is to complete production around August 15th, with shipments expected to begin in late August or early September.' The 10in and 13.3in models HAVE shipped and are in owners' hands.",
+      "delivery_evidence": "For >15in: none. A backer asks 'How are things progressing on the larger models?' and gets the August-15 production answer. For the small sizes the evidence is strong and non-vendor: Dain Kaplan 'Just got my 10\" frame'; Jose and Charina Parungao 'Image quality is fantastic. Visitors often confuse it for an actual photograph'; Terry Chiu backer #818 received; Peter received one damaged in transit; Bob Lloyd reports poor battery life; Ryan Haver reports one unit 'bricking itself within minutes of being turned on' and another arriving damaged. Reward tiers show only ~62 pledges for 28.5in and ~50 for 25.3in, so the large SKUs are a small run. A separate risk flag: the creator told a Canadian backer that some regional shipments were held because of 'a banking review process affecting part of the Kickstarter funds'.",
+      "backers_have_units": "no",
+      "delay_months": 3,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/inkjoy/inkjoy-finally-a-true-paper-like-matte-finish-epaper-canvas/comments", "what_it_supports": "No 25.3in/28.5in receipts; creator's mid-July 2026 production target of 15 Aug with shipment late Aug / early Sep; confirmed 10in and 13.3in receipts; bricked unit, shipping damage, battery-life complaints; the banking-review shipment hold; AND the openness discussion - backers 'satinav' and 'John P' pressing for a true offline mode, with InkJoy conceding 'our current product was originally built around a cloud-first architecture' and that the SD-card offline mode still requires an online account and encrypted content"},
+        {"url": "https://www.kickstarter.com/projects/inkjoy/inkjoy-finally-a-true-paper-like-matte-finish-epaper-canvas/rewards", "what_it_supports": "Size/price/promise matrix: 10in (Feb/Apr 2026), 13.3in (Jan/Feb 2026), 25.3in $1,599 MSRP (May/Jun 2026, ~50 backers), 28.5in $1,899 MSRP (May/Jun 2026, ~62 backers); 676 backers, HK$3,232,767"}
+      ]
+    },
+    {
+      "name": "Memoir (Large 31.5in)",
+      "vendor": "Zyvoralabs",
+      "diagonal_in": 31.5,
+      "platform": "Kickstarter",
+      "funded_date": "2026-07-16 (campaign ran 16 June - 16 July 2026, 30 days; 305 backers, HK$1,431,467, 1,789% of a HK$80,000 goal)",
+      "promised_ship": "February 2027 on every reward tier; creator restated in comments ~20 days before my read: 'Our current plan is to begin shipping between January and February 2027'",
+      "current_status": "ANNOUNCED / FUNDED ONLY. Nothing manufactured, nothing shipped, not yet late. Shipping partners not even chosen - creator told an Indian backer 'we haven't finalized our shipping partners'. Three sizes: 7.3in, 13.3in, 31.5in (1440x2560, ~93 PPI, 12V adapter to charge an internal battery).",
+      "delivery_evidence": "None, and none due. Roughly 83 Large (31.5in) units are on order across the two Founder bundles. This is the campaign BLOOMIN8 backers in the comments were openly threatening to defect to ('What sets Bloomin8 apart from Memoir?... I'll gladly wait and pay about half your prices'), which is worth knowing: it is a brand-new entity with zero shipping history taking money against a Feb-2027 date.",
+      "backers_have_units": "no",
+      "delay_months": 0,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/698611014/memoir-a-paper-like-e-ink-digital-frame/rewards", "what_it_supports": "All tiers state 'Estimated delivery Feb 2027'; 31.5in Large appears only in the Founder's Legacy (43 backers) and Founder's Ultimate (20 backers, 2 Large each) bundles"},
+        {"url": "https://www.kickstarter.com/projects/698611014/memoir-a-paper-like-e-ink-digital-frame/comments", "what_it_supports": "Creator's Jan-Feb 2027 shipping statement; per-size PPI figures (7.3in ~128, 13.3in ~150, 31.5in ~93); 31.5in uses a 12V adapter; sync interval is user-configurable and the frame is not always online; shipping partners unchosen"},
+        {"url": "https://www.pledgebox.com/projects/memoir-a-paper-like-e-ink-digital-frame", "what_it_supports": "Campaign window 16 June - 16 July (30 days), HK$1,431,467, 305 backers, 1,789% of goal"}
+      ]
+    },
+    {
+      "name": "Galari: The Ever-Changing Art Frame",
+      "vendor": "Galari (Kyoto, Japan; spun out of Kyoto Institute of Technology). Kickstarter profile: 'First created - 0 backed'",
+      "diagonal_in": null,
+      "platform": "Kickstarter",
+      "funded_date": "2025-03-26 ($339,557 from 737 backers against a $19,056 goal; 'Project We Love')",
+      "promised_ship": "September 2025 on all reward tiers (backers repeatedly cite August 2025 from the campaign timeline)",
+      "current_status": "CATASTROPHIC. As of comments read 2026-08-05 - about 11 months past the promised date - there is still no product. A backer summarising the June 2026 update: 'we get an update you are still searching for a supplier for the panel, need to redesign the pcb'. The creator admitted the demo prototype was 'built using a Raspberry Pi and off-the-shelf Waveshare modules' and that custom PCBs still have to be designed and validated against the supplier's panel batch. Refund requests are being refused. The creator is still posting (roughly monthly) and still replying in comments.",
+      "delivery_evidence": "None. Single unnamed size, MSRP $699. Backer sentiment has turned: 'we all are scammed', 'I don't know if they're scammers or just absolutely dreaming hobbyists', 'Misleading a whole community will lead to lawsuit'. One backer has already bought a competitor product instead and reports it 'works magnificently'. Included here not because it is >15in (size unconfirmed, probably 13.3in) but because it is the single best-documented base-rate failure in this exact product category, from a well-reviewed, Project-We-Love, 1,700%-overfunded campaign.",
+      "backers_have_units": "no",
+      "delay_months": 11,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/galari/galari-the-ever-changing-art-frame", "what_it_supports": "$339,557 / 737 backers / funding period 26 Feb - 26 Mar 2025; Kyoto; 'First created - 0 backed'; SD-card offline path and planned API promised in the campaign copy"},
+        {"url": "https://www.kickstarter.com/projects/galari/galari-the-ever-changing-art-frame/rewards", "what_it_supports": "'Estimated delivery Sep 2025' on every tier; $699 MSRP; single size"},
+        {"url": "https://www.kickstarter.com/projects/galari/galari-the-ever-changing-art-frame/comments", "what_it_supports": "August 2026 state of play: no panel supplier, PCB redesign, prototype was Raspberry Pi + Waveshare, refunds refused, backers alleging fraud, one backer defected to a competitor"}
+      ]
+    },
+    {
+      "name": "Modos Paper Monitor / Paper Dev Kit (Glider controller)",
+      "vendor": "Modos Tech",
+      "diagonal_in": 13.3,
+      "platform": "Crowd Supply",
+      "funded_date": "2025-09-17 (campaign closed; 128% funded)",
+      "promised_ship": null,
+      "current_status": "DELIVERED - but below the 15in scope. Update 4 Feb 2026: 'We've assembled, tested, certified, produced, and started shipping the first batch of Paper Dev Kits!' Update 1 Apr 2026: 'Progress on Shipping, Cases, and Firmware'. Store now shows 'Limited items in stock'. Kit sizes are 6in and 13.3in.",
+      "delivery_evidence": "Vendor-published shipping updates on Crowd Supply (a platform that runs fulfilment through Mouser, so shipping claims there are semi-verified). No independent owner report was located in this session. Relevant as evidence that a tiny open-hardware vendor CAN complete a hardware campaign roughly 5 months after funding.",
+      "backers_have_units": "yes",
+      "delay_months": null,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor/updates", "what_it_supports": "Full update log 2024-2026 including 'First Shipment Starting Soon' (4 Feb 2026) and 'Progress on Shipping, Cases, and Firmware' (1 Apr 2026); campaign launched 4 Aug 2025, funded 11 Sep 2025, closed 17 Sep 2025"}
+      ]
+    },
+    {
+      "name": "Modos Flow",
+      "vendor": "Modos Tech",
+      "diagonal_in": 13.3,
+      "platform": "Crowd Supply",
+      "funded_date": "2026-07-09 ($713,276 raised, 407% of a $175,000 goal, 609 backers)",
+      "promised_ship": null,
+      "current_status": "PRE-ORDER, not shipped. 13.3in E Ink Carta 1300 (mono) or Kaleido 3 (colour), 3200x2400 at 300 PPI, up to 60 Hz, USB-C DisplayPort Alt Mode, $699/$799. BELOW the 15in scope, but the most open device in the category: open hardware, open-source firmware on GitHub, published schematics, public issue tracker, documented display-controller API, standalone operation.",
+      "delivery_evidence": "None yet - funded four weeks before this research. Modos's credibility rests on the Paper Dev Kit having actually shipped ('We launched our Paper Dev Kit here on Crowd Supply. The lessons we learned while manufacturing that product and shipping it to backers has shaped how we're preparing for Flow').",
+      "backers_have_units": "no",
+      "delay_months": 0,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.crowdsupply.com/modos-tech/modos-flow", "what_it_supports": "Funded 9 Jul 2026, $713,276, 609 backers, pre-order status, 13.3in only, full spec table, open-hardware/open-firmware commitments, manufacturing and fulfilment plan via Mouser"}
+      ]
+    },
+    {
+      "name": "MelonFrame",
+      "vendor": "MelonAutomation (Baar, Switzerland). Kickstarter profile: 'First created - 0 backed'",
+      "diagonal_in": 7.3,
+      "platform": "Kickstarter",
+      "funded_date": "campaign live at time of research (ends 27 Aug 2026); $7,829 pledged of a $7,427 goal, 64 backers",
+      "promised_ship": null,
+      "current_status": "OUT OF SCOPE - MelonFrame is 7.3in only. There is no large variant. Worth recording so it is not re-investigated: the survey's inclusion of MelonFrame in a >15in list is a category error.",
+      "delivery_evidence": "N/A (live campaign, 7.3in). Claims 'Engineering, tooling, and pilot production are complete', CE/RoHS done, FCC/RCM in progress. Architecturally interesting: 'The frame works as a standalone device on your local network with the app functioning as a client, where the company's server is a convenience rather than a requirement.'",
+      "backers_have_units": "no",
+      "delay_months": null,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/melonframe/melonframe-paper-like-color-e-ink-frame-in-walnut-or-metal", "what_it_supports": "7.3in Spectra 6 only; Swiss company; live campaign ending 27 Aug 2026; 64 backers; first-time creator; local-network-first architecture claim; AI-assisted campaign copy disclosed"}
+      ]
+    },
+    {
+      "name": "InkPoster Tela 40.5in and Duna 40.5in (Pininfarina)",
+      "vendor": "PocketBook International SA",
+      "diagonal_in": 40.5,
+      "platform": "Direct retail (announced at CES)",
+      "funded_date": null,
+      "promised_ship": null,
+      "current_status": "ANNOUNCED, NOT BUYABLE - the survey's read is correct for these two SKUs. Both show 'Notify me' with the text 'Leave your email and you will have the opportunity to buy the product before others'. Tela 40.5in $4,200 (3060x4320, Spectra 6 + Sharp IGZO, 130 DPI, 1:1.4). Duna 40.5in $6,500.",
+      "delivery_evidence": "No customer or reviewer has been found with a 40.5in unit. However, the vendor's 28.5in and 31.5in are shipping (separate entry), so this is a capacity/rollout gap, not a vendor-existence risk.",
+      "backers_have_units": "no",
+      "delay_months": null,
+      "vendor_still_communicating": true,
+      "sources": [
+        {"url": "https://inkposter.com/products/inkposter-tela-40-5", "what_it_supports": "Sold-out / notify-me status, $4,200, full spec"},
+        {"url": "https://inkposter.com/", "what_it_supports": "Both 40.5in models notify-me while 28.5in and 31.5in are add-to-cart"}
+      ]
+    }
+  ],
+  "historical_precedents": [
+    {
+      "product": "Memento Smart Frame",
+      "vendor": "Memento",
+      "what_happened": "VERIFIED IN SUBSTANCE, WRONG IN ONE DETAIL. The bricking story is real and corroborated by two independent sources. Memento sold a ~35-inch, 3:2, 4K digital art frame for approaching $900, funded via Kickstarter around 2016. The company went out of business in late 2018 / 2018-19. The frame was 100% cloud-dependent: 'The only way to get photos onto the frame is through the app via the cloud servers', and even the USB port required an active server connection, so when the servers went dark owners could not load images and could not even complete initial setup. Frames became, in the sources' words, 'an expensive paperweight'. A small community keeps a minority of units alive. THE CORRECTION: Memento was NOT an e-paper frame - it was a high-resolution emissive panel. Do not cite it as an e-paper precedent; cite it as the canonical cloud-dependency precedent, which is how the independent e-ink frame reviewer actually uses it.",
+      "year": "2018-2019",
+      "sources": [
+        {"url": "https://www.pix-star.com/blog/digital-frames/memento-digital-frames/", "what_it_supports": "Out of business late 2018; ~$900; 35in 4K 3:2; cloud-only image path including a USB port that needed the server; 'expensive paperweight'"},
+        {"url": "https://www.thedigitalpictureframe.com/my-review-of-the-reflection-frame-with-its-paper-like-e-ink-display/", "what_it_supports": "Independent corroboration from an e-ink frame reviewer: 'Memento is a good example of what can go wrong: once its servers were shut down, the owners were left with expensive, essentially useless hardware' - and it is used explicitly as the reason to prefer cloud-free frames"}
+      ]
+    },
+    {
+      "product": "Electric Objects EO1 / EO2 digital art frame",
+      "vendor": "Electric Objects (acquired by GIPHY, 2017)",
+      "what_happened": "A second, independent instance of the same failure mode, and the closest analogue to this buyer's use case (an internet-connected fine-art display). Electric Objects raised on Kickstarter in 2014, shipped EO1 and EO2, was acquired by GIPHY in 2017, and the hardware team was wound down. Years later owners report the EO2 can no longer be reconnected to Wi-Fi because the configuration app is gone from the App Store, so a device that is physically fine is unrecoverable. CAVEAT ON MY SOURCING: the owner report I fetched (comedian Adam Conover's Mastodon post) returned only the opening fragment 'My beloved Electric Objects EO2 digital art frame...' - I could not retrieve the full text or its date from that page, and the supporting detail about the app removal came from search-result summaries I did not independently open. Treat the specifics as medium-confidence; treat the pattern (art-frame company acquired, service and app abandoned, hardware stranded) as well-established.",
+      "year": "2017 acquisition; stranding reported ~2023",
+      "sources": [
+        {"url": "https://mastodon.social/@adamconover/109888870337220152", "what_it_supports": "An owner publicly complaining about an EO2 digital art frame; I could only extract the opening fragment of the post, so this supports 'an owner posted about it', not the full detail"}
+      ]
+    },
+    {
+      "product": "Galari e-paper art frame",
+      "vendor": "Galari (Kyoto)",
+      "what_happened": "The best-documented in-category crowdfunding failure to date, and it is CURRENT, not historical. Funded 26 March 2025 at 1,700% of goal ($339,557 / 737 backers / Project We Love badge), promised September 2025. Seventeen months after funding and eleven months past the promise, there is still no panel supplier and the PCB is being redesigned; the demonstrated prototype turns out to have been a Raspberry Pi driving off-the-shelf Waveshare modules. Refunds are being refused on the grounds that the money is committed. Note that the vendor is still communicating monthly - so 'vendor still posts updates' is NOT a safety signal.",
+      "year": "2025-2026",
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/galari/galari-the-ever-changing-art-frame/comments", "what_it_supports": "Every element above, in the creator's and backers' own words, read 2026-08-05"},
+        {"url": "https://www.kickstarter.com/projects/galari/galari-the-ever-changing-art-frame", "what_it_supports": "Funding total, backer count, funding period, Project We Love badge, first-time creator"}
+      ]
+    },
+    {
+      "product": "Reflection Frame",
+      "vendor": "Creative Design Worx",
+      "what_happened": "POSITIVE precedent. A small design-driven startup ran a Kickstarter in early 2025, overfunded, and moved to retail launch with a Spectra 6 e-ink frame. Its differentiator is architectural: images transfer over NFC/Bluetooth by tapping a phone to the frame's corner, with no cloud storage and no Wi-Fi requirement - explicitly designed so a Memento-style server shutdown cannot brick it. The reviewer did not state backer-delivery dates, so 'delivered to backers on time' is not established, only 'reached retail'. Size not stated in the review; other sources put the Reflection Frame at 13.3in, which I did not verify.",
+      "year": "2025",
+      "sources": [
+        {"url": "https://www.thedigitalpictureframe.com/my-review-of-the-reflection-frame-with-its-paper-like-e-ink-display/", "what_it_supports": "Kickstarter in early 2025, overfunded, retail launch, NFC/BLE local-only transfer with no cloud, and the explicit anti-Memento design rationale; also a note that competitor Nixplay moved to a subscription model"}
+      ]
+    },
+    {
+      "product": "Modos Paper Dev Kit (Glider)",
+      "vendor": "Modos Tech",
+      "what_happened": "POSITIVE precedent for the 'tiny open vendor' archetype specifically. Funded 17 Sep 2025 on Crowd Supply; certified (FCC/CE/UKCA) and first units shipped 4 Feb 2026 - roughly five months from close to first shipment, with follow-up shipping/firmware progress reported 1 Apr 2026. This is the counter-example to 'six-person open startups never deliver': the most open vendor in the category has the cleanest delivery record. Its ceiling is size, not competence - 13.3in maximum.",
+      "year": "2025-2026",
+      "sources": [
+        {"url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor/updates", "what_it_supports": "Funding, certification and first-shipment dates"},
+        {"url": "https://www.crowdsupply.com/modos-tech/modos-flow", "what_it_supports": "Modos's own statement that the Paper Dev Kit shipped to backers, and the Flow spec/openness commitments"}
+      ]
+    },
+    {
+      "product": "BLOOMIN8 EinkCanvas 7.3in / 13.3in",
+      "vendor": "arpobot",
+      "what_happened": "MIXED precedent that isolates the real risk. The same campaign that is 10 months late on 28.5in did ship its 7.3in and 13.3in units - promised August 2025, shipping updates posted 1 and 23 December 2025, so about 4 months late, and owners have been using them for ~6 months. The large panel is what slipped by a year. Post-delivery quality is a separate concern: a firmware update (1.8.34) left at least two units showing 'No Battery' and refusing to change images, Wi-Fi transfer failed badly enough that one backer fell back to SD card, and the advertised Home Assistant integration cannot wake the canvas because the Bluetooth wake signal is not exposed.",
+      "year": "2025-2026",
+      "sources": [
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/comments", "what_it_supports": "Owner reports of 13.3in units in use for months, plus the firmware-bricking, Wi-Fi-transfer and Home-Assistant-wake defects"},
+        {"url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/posts", "what_it_supports": "'SHIPPING' update 1 Dec 2025 and 'Shipping Info' 23 Dec 2025 dating the small/medium fulfilment wave against an Aug 2025 promise"}
+      ]
+    },
+    {
+      "product": "Category-level base rate on Kickstarter",
+      "vendor": "multiple",
+      "what_happened": "Enumerating Kickstarter's own discovery index for this category (searches run 2026-08-05) turns up only seven successfully funded projects matching 'e ink frame' and 25 matching 'epaper' across the whole history of the platform, of which the >15in ones are exactly three: BLOOMIN8 (28.5in, 10 months late, undelivered), Fraimic (31.5in, 3 months late, DELIVERED), InkJoy (25.3in/28.5in, 3 months late, undelivered). So the crowdfunded >15in population is n=3, and the delivery rate at size is 1 of 3, with the other two still live and communicating rather than dead. Two more >15in campaigns are queued: Memoir (31.5in, Feb 2027 promise) and two unlaunched projects, 'Weclay Paper: Self-Updating Color E-Ink Canvas' and Jitrainno's 'World's First AI-Powered Color E-Ink Art Frame'. Every single one of these campaigns overfunded by 700-11,200%, which is itself a risk factor: none of these teams planned the production volume they now have to deliver.",
+      "year": "2025-2026",
+      "sources": [
+        {"url": "https://www.kickstarter.com/discover/advanced?term=e+ink+frame&state=successful&sort=most_funded", "what_it_supports": "The complete set of successfully funded 'e ink frame' projects: BLOOMIN8 (7,991%), Fraimic (11,203%), Memoir (1,789%), PhotoWallet, Moka E-Ink Album, Artink, PixFold"},
+        {"url": "https://www.kickstarter.com/discover/advanced?term=epaper&state=successful&sort=most_funded", "what_it_supports": "25 successful 'epaper' projects; the only >15in frame among the top 12 is InkJoy; the rest are watches, tablets, dev boards, calendars and signage"},
+        {"url": "https://www.kickstarter.com/discover/advanced?term=e+ink&sort=most_funded", "what_it_supports": "Currently live and pre-launch e-ink projects including MelonFrame, 'Weclay Paper: Self-Updating Color E-Ink Canvas', Jitrainno's 'World's First AI-Powered Color E-Ink Art Frame', and BLOOMIN8's second campaign"}
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {"lead": "Backers-only Kickstarter updates for BLOOMIN8 (#16, #18, #20), Fraimic (#15), InkJoy and Memoir. Titles and comment counts are public; bodies require a backer login.", "why_it_matters": "BLOOMIN8 update #20 '28.5\" Large Canvas Is Finally Coming' (31 Jul 2026) almost certainly contains a concrete ship date and the reason for the 10-month slip - the single most decision-relevant unread document for anyone considering the 28.5in."},
+    {"lead": "Trustpilot page for fraimic.com (search results indicate 'Average' 3.1/5). Both trustpilot.com and ie.trustpilot.com blocked automated access (403 / bot-verification wall).", "why_it_matters": "An off-platform review corpus is the best check on whether Fraimic's Large deliveries are going well at volume, independent of a comment wall the vendor moderates."},
+    {"lead": "'Blotch: The World's Best E-ink Smart Frame' on BackerKit - backerkit.com returned 403 to automated fetch.", "why_it_matters": "The only BackerKit-hosted e-ink frame campaign surfaced; its size is unknown and it could be a fourth >15in data point."},
+    {"lead": "Two unlaunched Kickstarter projects: 'Weclay Paper: Self-Updating Color E-Ink Canvas' (Weclay Inc.) and 'World's First AI-Powered Color E-Ink Art Frame' (Jitrainno).", "why_it_matters": "Both are frame-shaped and pre-launch; if either is >15in they change the near-term option set. Neither had a fetchable spec page yet."},
+    {"lead": "'Artink: More than a frame' (AIart, 703% funded, ended) and 'LINKUADRO: MORE THAN A FRAME' (Linkuadro) and 'NowMean Dual-Screen Spectra 6 E-Ink Photo Album'.", "why_it_matters": "Successfully funded frame campaigns whose sizes I did not confirm; any could be an additional >15in delivery or failure data point."},
+    {"lead": "Galari's actual screen diagonal.", "why_it_matters": "If Galari is >15in it becomes the fourth >15in crowdfunded campaign and drops the at-size delivery rate to 1 in 4. The rewards page and campaign body I read never state the diagonal."},
+    {"lead": "Established retail e-paper displays above 15in that are not frames - Dasung Paperlike 253 (25.3in) and Onyx Boox Mira Pro (25.3in) e-paper monitors, sold at retail for years.", "why_it_matters": "If the goal is simply 'a large reflective panel I can drive from my own app', a monitor-class device with an HDMI/USB-C input is a fully deterministic, zero-cloud path that no crowdfunding risk applies to. This session did not evaluate them; the Modos Flow comparison table on Crowd Supply lists both at 13.3in only, so the 25.3in variants need separate confirmation."},
+    {"lead": "Deskmodder's German hands-on of the InkJoy Frame's offline mode (2 Jul 2026), cited by the creator.", "why_it_matters": "Independent test of the SD-card 'offline' path that InkJoy admits still requires an account and server-issued encryption key - directly relevant to whether a self-hosted app can drive it."},
+    {"lead": "The full 249-comment BLOOMIN8 and 617-comment Fraimic threads (I read the newest 25 of each).", "why_it_matters": "Older comments would date the 13.3in delivery wave precisely and might surface an early 28.5in unit I did not see."}
+  ],
+  "unverified_facts": [
+    {"claim": "Fraimic's Kickstarter campaign ended 22-23 October 2025.", "why_unverified": "Repeatedly stated in search-result summaries but I never opened a page that printed the end date; the Kickstarter pages I read show 'Last updated July 21, 2026' and reward/backer data but no campaign close date. The delay figure of ~3 months is anchored on the reward tiers' 'May 2026' promise, which I did verify, so the delay math does not depend on this.", "url": null},
+    {"claim": "InkJoy's campaign ran 25 November 2025 to 9 January 2026 (45 days).", "why_unverified": "From search summaries only. I verified the funding total (HK$3,232,767), backer count (676) and the per-tier delivery promises directly, which is what the delay figure rests on.", "url": null},
+    {"claim": "The Memento frame used an LCD panel rather than e-paper.", "why_unverified": "The page I fetched describes a 35-inch 3:2 4K display but does not name the panel technology; the LCD attribution came from a search-result summary. What IS verified from fetched sources is the size, the ~$900 price, the cloud-only architecture and the bricking. Given a 35in 4K panel in 2016, e-paper is technically implausible, so I am confident it was emissive - but do not cite Memento as an e-paper precedent.", "url": null},
+    {"claim": "Modos Flow ships 10 December 2026.", "why_unverified": "A search summary quoted a Crowd Supply ship date; the Modos Flow page I actually read says only 'Available for pre-order' with no date shown in the extracted text.", "url": null},
+    {"claim": "Fraimic holds a 3.1/5 'Average' rating on Trustpilot.", "why_unverified": "Trustpilot served a bot-verification wall to both WebFetch (403) and the browser. The rating appeared only in a search-result title.", "url": null},
+    {"claim": "The Reflection Frame is 13.3 inches.", "why_unverified": "The review I fetched never states the diagonal. Other sources say 13.3in, which would put it below the 15in scope anyway.", "url": null},
+    {"claim": "Electric Objects EO2 owners specifically cannot re-add Wi-Fi because the configuration app was pulled from the App Store.", "why_unverified": "The Mastodon post I fetched returned only its first line. The mechanism came from search summaries. The underlying fact - Electric Objects' hardware operations ended after the 2017 GIPHY acquisition - is well attested but I did not open a primary source for it in this session.", "url": null},
+    {"claim": "BLOOMIN8's first campaign reached '3,000+ backers' and '10,000+ devices activated'.", "why_unverified": "These are arpobot's own claims on its new pre-launch page. The Kickstarter record shows 2,272 backers; the excess presumably comes from late pledges and direct sales, but it is vendor-asserted and unaudited.", "url": null}
+  ]
+}

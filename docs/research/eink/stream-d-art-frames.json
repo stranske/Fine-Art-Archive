@@ -1,0 +1,1067 @@
+{
+  "devices": [
+    {
+      "model": "Large Canvas 31.5\" (Smart Canvas line)",
+      "vendor": "Fraimic",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "ppi": 94,
+      "panel": "E Ink Spectra 6 (full colour, stated 60,000 gamut volume)",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 1299,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://fraimic.com/products/large-canvas"
+      },
+      "availability": "Direct from fraimic.com. Product page states 'Ships Early August' at $1,299 (list $1,499, '$200 summer discount'); the /collections/shop listing showed BOTH Standard and Large Canvas as 'Sold out' on 2026-08-05. Forbes (2026-07-21) says the canvases are 'shipping now'. BackerGuardian's 2026-07-27 analysis found 'no public confirmation of backer deliveries' against a promised May 2026 Kickstarter ship date. Treat retail availability as real but supply-constrained, and backer fulfilment as unconfirmed.",
+      "power": "10,000 mAh Li-Po, USB-C recharge; 'uses power only when changing images', multi-year battery life claimed (New Atlas quotes 4-5 years per charge from the vendor)",
+      "dimensions": "24 x 36 x 2 in outer frame (dark walnut, removable)",
+      "released": "2026 (Kickstarter closed 2025-10-23; KS shipments promised May 2026; DTC June 2026)",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Marketed as supported. Product page: 'A local-only mode lets you connect directly to your frame over your home Wi-Fi connection...without third-party servers' and 'Local Image Sharing - Print straight to Fraimic without an internet connection.' The device exposes a local dashboard at https://fraimic.local (mDNS). Notebookcheck's CES/KS writeup states 'Images can be updated through a web interface directly accessible over a local Wi-Fi network, eliminating the need for servers, subscriptions or an Internet connection.' New Atlas confirms the local API works with Home Assistant. CAVEAT: the vendor's own Online User Manual documents ONLY the cloud path (account creation with email verification, uploads via app.fraimic.com) and never mentions the local API, local-only mode, Home Assistant, or any endpoint. No public API reference document was findable.",
+        "sd_card": null,
+        "api": "REST API advertised 'For creators & developers'; official Home Assistant integration promised. No published endpoint documentation found on fraimic.com or GitHub as of 2026-08-05. New Atlas's reviewer hit 'invalid API endpoints' on a preproduction unit (said to be fixed quickly).",
+        "cloud_required": false,
+        "subscription": "None for display. 'No Subscription, No Apps'. AI generation is credit-based: 100 free creation credits auto-replenishing yearly, extra packs purchasable. AI generation is the only feature that requires Fraimic's servers; New Atlas says the frame keeps working locally if that service disappears.",
+        "third_party_projects": [],
+        "evidence": "Vendor product page + PR Newswire CES 2026 release + New Atlas hands-on review (13.3\" preproduction unit) + Notebookcheck. Contradicted in emphasis by fraimic.com's own user manual, which is cloud-only. Local API capability is asserted by the vendor and corroborated by one reviewer, but is NOT independently documented or exercised by any third-party project."
+      },
+      "art_suitability": "Best fit in the category on paper: 31.5\" 16:9, 2560x1440 at 94 ppi, matte Spectra 6, gallery-grade wood frame designed to read as printed art, no subscription, and an explicitly advertised no-cloud local path. 94 ppi is coarse for close viewing of detailed archival work; 16:9 is a poor aspect ratio for most paintings (heavy letterboxing on 4:3 and portrait works).",
+      "sources": [
+        {
+          "url": "https://fraimic.com/products/large-canvas",
+          "what_it_supports": "31.5\", 2560x1440, 94 DPI, Spectra 6, 10,000 mAh, 24x36x2in walnut frame, $1,299 (list $1,499), 'Ships Early August', REST API 'For creators & developers', local-only mode wording, local image sharing, 'No Subscription, No Apps', 100 AI credits/yr"
+        },
+        {
+          "url": "https://fraimic.com/collections/shop",
+          "what_it_supports": "Only two SKUs exist: Standard Canvas 13.3\" ($399 sale / $499) and Large Canvas 31.5\" ($1,299 sale / $1,499); both shown Sold out; there is NO separate product named 'Smart Canvas Large'"
+        },
+        {
+          "url": "https://www.prnewswire.com/news-releases/fraimic-to-debut-market-first-voice-to-art-smart-canvas-prototypes-at-ces-2026-302651756.html",
+          "what_it_supports": "CES 2026 debut; Standard Canvas 13.3\" $399 and Large Canvas 31.5\" $999 as originally announced; KS shipments planned May 2026, DTC June 2026; Chicago-based; raised more than $1M USD on Kickstarter; 'REST API access', 'Local only mode', 'No subscription required'"
+        },
+        {
+          "url": "https://newatlas.com/around-the-home/fraimic-ai-art-e-ink-frame-review/",
+          "what_it_supports": "Hands-on with a preproduction 13.3\" unit; local API works on the home network and is compatible with Home Assistant; account needed for cloud features; AI generation needs Fraimic servers but the frame keeps working locally if the service dies; early bugs incl. invalid API endpoints; CEO Anthony Mattana"
+        },
+        {
+          "url": "https://www.notebookcheck.net/Fraimic-automatically-displays-movie-posters-and-album-covers-on-31-5-inch-e-ink-picture-frame.1130803.0.html",
+          "what_it_supports": "Kickstarter prices $299 (13.3\") / $729 (31.5\"); 'Images can be updated through a web interface directly accessible over a local Wi-Fi network, eliminating the need for servers, subscriptions or an Internet connection'; planned Movie Mode / Music Mode; first Kickstarter for the team"
+        },
+        {
+          "url": "https://fraimic.com/pages/fraimic-online-user-manual",
+          "what_it_supports": "COUNTER-EVIDENCE: the official manual documents setup requiring a Fraimic account with email verification and uploads via app.fraimic.com; it mentions https://fraimic.local as the setup QR destination but does not document the local API, local-only mode, Home Assistant, or SD card"
+        },
+        {
+          "url": "https://www.forbes.com/sites/marksparrow/2026/07/21/fraimic-voice-to-art-smart-canvas-can-turn-a-home-into-an-art-gallery/",
+          "what_it_supports": "As of 2026-07-21 the canvases are 'shipping now'; Standard $399 / Large $999 quoted; 'REST API access provides integration options for creators and developers'; 'Local-only mode for server-free connectivity'; Chicago-based team"
+        }
+      ]
+    },
+    {
+      "model": "AI Art Frame 31.5\"",
+      "vendor": "SwitchBot (OneRobotics)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 1299.99,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://www.techlicious.com/blog/hands-on-with-the-switchbot-ai-art-frame/"
+      },
+      "availability": "Shipping since late 2025 via SwitchBot's own store and Amazon. Three sizes: 7.3\" $149.99, 13.3\" $349.99, 31.5\" $1,299.99. Only the 31.5\" is in scope.",
+      "power": "Rechargeable battery; vendor claims up to two years; a reviewer measured 100% -> 91% over two months of testing on the 7.3\" unit",
+      "dimensions": null,
+      "released": "2025-11 (on sale)",
+      "integration": {
+        "openness": "closed",
+        "local_push": "No supported local push. Images go through the SwitchBot phone app; the official Home Assistant integration (`switchbot_cloud`) is IoT class 'Cloud Polling' and exposes only battery status, switch pictures, and current-picture info for the AI Art Frame - it cannot upload an image. A community path exists via undocumented HTTP endpoints on port 8080, reported by a secondary source, unsupported and liable to break on firmware updates - I could not verify that from a primary source.",
+        "sd_card": false,
+        "api": "SwitchBot Open API (cloud, https://api.switch-bot.com) DOES document the AI Art Frame with three commands: `next`, `previous`, and `uploadImage` accepting {\"imageUrl\":\"https://...\"} or {\"imageBase64\":\"data:image/jpeg;base64,...\"}. Status fields: battery, displayMode (0=static,1=slideshow), imageUrl, firmware version; webhook 'changeReport'. So programmatic image push IS possible - but every call traverses SwitchBot's cloud with an account token. GitHub issue #461 ('Add support for CRUD image functionality in AI Art Frame in the API') was still open as of 2026-01-08 asking for exactly this, so `uploadImage` appears to be a recent addition; there is still no documented delete/list.",
+        "cloud_required": true,
+        "subscription": "Not required to display your own photos. 'AI Art Remix' AI generation is $3.99/month (one source says $4) after a 30-day free trial that includes up to 400 AI generations/month; powered by Google's Gemini NanoBanana.",
+        "third_party_projects": [
+          "home-assistant/core `switchbot_cloud` integration (official, cloud-polling, no image upload for the art frame)"
+        ],
+        "evidence": "SwitchBot Open API repo device doc for AI Art Frame (uploadImage command table, cloud base URL), GitHub issue #461, home-assistant.io switchbot_cloud page (Cloud Polling + capability list), plus two hands-on reviews for pricing and subscription terms."
+      },
+      "art_suitability": "Large and cheap for the size, but a cloud counterparty sits in the image path for every automated push, on-device storage is small (one reviewer found the 7.3\" holds only ten photos), and the ecosystem is smart-home rather than gallery-oriented. Resolution for the 31.5\" was not stated on any page I could read; the panel is almost certainly the same 2560x1440 / 94 ppi 31.5\" Spectra 6 module used by Fraimic and InkPoster, but I did not verify that.",
+      "sources": [
+        {
+          "url": "https://www.techlicious.com/blog/hands-on-with-the-switchbot-ai-art-frame/",
+          "what_it_supports": "Three sizes 7.3\"/13.3\"/31.5\" at $149.99/$349.99/$1,299.99; upload via SwitchBot app from phone gallery; 15-30s refresh; 30-day free trial with up to 400 AI generations/month then $3.99/mo AI Art Remix using Gemini NanoBanana; ~2 yr battery claim, measured 100%->91% in two months"
+        },
+        {
+          "url": "https://the-gadgeteer.com/2025/11/22/switchbot-ai-art-frame-review-e-ink-display-ai-artwork-and-photos/",
+          "what_it_supports": "7.3\" model 800x480 at $149.99; images synced one at a time through the SwitchBot app; device holds only ten photos; AI generation '$4 a month after a 30-day trial'; no offline workflow described"
+        },
+        {
+          "url": "https://github.com/OpenWonderLabs/SwitchBotAPI/blob/main/devices/others/ai-art-frame.md",
+          "what_it_supports": "Documented commands next / previous / uploadImage (imageUrl or imageBase64); status fields incl. battery, displayMode, imageUrl, version; changeReport webhook"
+        },
+        {
+          "url": "https://github.com/OpenWonderLabs/SwitchBotAPI",
+          "what_it_supports": "AI Art Frame listed as a supported device with list/status/command/webhook support; API base URL is the cloud endpoint https://api.switch-bot.com"
+        },
+        {
+          "url": "https://github.com/OpenWonderLabs/SwitchBotAPI/issues/461",
+          "what_it_supports": "Open issue (as of 2026-01-08) requesting image CRUD; states the API at that time only exposed battery level and next/previous, not uploading/removing images"
+        },
+        {
+          "url": "https://www.home-assistant.io/integrations/switchbot_cloud/",
+          "what_it_supports": "Official HA integration supports AI Art Frame; IoT class 'Cloud Polling'; exposes battery status, switch pictures, current picture info - no image upload"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Affresco 31.5\"",
+      "vendor": "PocketBook (InkPoster)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "ppi": 94,
+      "panel": "E Ink Spectra 6",
+      "colour": "colour (6-ink Spectra 6, stated 60,000 gamut volume)",
+      "price": {
+        "amount": 1699,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://inkposter.com/products/inkposter-affresco-31-5"
+      },
+      "availability": "In stock on inkposter.com, free FedEx across the USA, 3-10 business days. Germany price EUR 1,999.",
+      "power": "25,000 mAh Li-Po, USB-C; up to 12 months per charge depending on refresh rate",
+      "dimensions": "23.59 x 36.8 x 0.98 in (59.9 x 93.37 x 2.45 cm), 14.8 lb / 6.7 kg",
+      "released": "2025-11 (wide availability USA + Germany)",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented. All uploads go through the InkPoster app; the FAQ states the app is required for initial setup, to connect the InkPoster to Wi-Fi, and to pair it with your account. Bluetooth 5.2 LE and USB-C are present on the spec sheet but no documented image-sideloading path uses them.",
+        "sd_card": false,
+        "api": "No public API, SDK, or developer documentation found. No third-party projects found on GitHub or in Home Assistant.",
+        "cloud_required": true,
+        "subscription": "Currently none, but the FAQ pre-announces one: 'in the future we plan to introduce a paid subscription. However, our rich Core Catalog will always remain completely free.' Personal-image display is not stated to be subscription-gated.",
+        "third_party_projects": [],
+        "evidence": "InkPoster product page (specs, connectivity), InkPoster FAQ (app-mandatory setup, account pairing, planned subscription, power-off image persistence), plus an unsuccessful search for any InkPoster API/HA/reverse-engineering project."
+      },
+      "art_suitability": "Serious hardware: biggest battery in the class, thinnest profile, professional finish, and the only vendor with a real curated-art business behind it. But it is an appliance: your archive would have to be pushed by hand through a phone app owned by the vendor, with no automation path at all. Image persists on-screen with the device powered off, which is a genuine plus for a gallery installation.",
+      "sources": [
+        {
+          "url": "https://inkposter.com/products/inkposter-affresco-31-5",
+          "what_it_supports": "31.5\", 2560x1440, 94 DPI, 16:9, Spectra 6, $1,699 USD, free FedEx USA 3-10 days, 25,000 mAh Li-Po, up to 12 months, 23.59x36.8x0.98in, 14.8 lb, Wi-Fi 2.4/5GHz a/b/g/n/ac/ax, BT 5.2 LE, USB-C, InkPoster App for personal photos"
+        },
+        {
+          "url": "https://inkposter.com/pages/faq",
+          "what_it_supports": "App required for setup, Wi-Fi provisioning and account pairing; uploads and library access all via app; 'in the future we plan to introduce a paid subscription. However, our rich Core Catalog will always remain completely free.'; Power-Off mode keeps the current image visible with zero power; no API/local/SD mentioned"
+        },
+        {
+          "url": "https://inkposter.com/collections/catalog",
+          "what_it_supports": "Full catalogue and stock state on 2026-08-05: Tela 28.5\" $2,399 in stock; Affresco 31.5\" $1,699 in stock; Affresco 13.3\" $499 'Notify me'; Tela 40.5\" $4,200 'Notify me'; Duna 40.5\" $6,500 'Notify me'"
+        },
+        {
+          "url": "https://www.notebookcheck.net/PocketBook-InkPoster-with-E-Ink-Spectra-6-display-and-one-year-battery-life-now-widely-available.1160581.0.html",
+          "what_it_supports": "Three models 13.3\" (150 PPI, 4:3), 28.5\" (131 PPI, 4:3, Spectra 6 + Sharp IGZO), 31.5\" (94 PPI, 16:9); US $699/$1,699/$2,399, Germany EUR 699/1,999/2,699; artwork changed via Bluetooth, Wi-Fi and a smartphone app"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Tela 28.5\"",
+      "vendor": "PocketBook (InkPoster)",
+      "status": "shipping",
+      "diagonal_in": 28.5,
+      "resolution": "2160x3060",
+      "ppi": 132,
+      "panel": "E Ink Spectra 6 with Sharp IGZO backplane",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 2399,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://inkposter.com/products/inkposter-tela-28-5"
+      },
+      "availability": "In stock on inkposter.com, free FedEx across the USA, 3-10 business days. Germany price EUR 2,699. Won a German Design Award 2026.",
+      "power": "25,000 mAh Li-Po, USB-C; up to 12 months per charge",
+      "dimensions": "27.92 x 34.8 x 0.98 in (70.92 x 88.37 x 2.45 cm), 16.5 lb / 7.5 kg",
+      "released": "2025-11",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented - identical app-only, account-paired path to the Affresco.",
+        "sd_card": false,
+        "api": "No public API or third-party integration found.",
+        "cloud_required": true,
+        "subscription": "None today; a paid subscription is pre-announced in the FAQ with the Core Catalog promised to stay free.",
+        "third_party_projects": [],
+        "evidence": "Product page + shared InkPoster FAQ."
+      },
+      "art_suitability": "The strongest pure image quality in the >15\" class: 132 ppi in a 3:4 portrait format at 2160x3060. Portrait 3:4 suits the majority of framed paintings and photographs far better than the 16:9 31.5\" panels. Sharp IGZO backplane. The pixel density is ~40% higher than every 31.5\" option. Its only real defect for this project is the closed image path.",
+      "sources": [
+        {
+          "url": "https://inkposter.com/products/inkposter-tela-28-5",
+          "what_it_supports": "28.5\", 2160x3060, 132 DPI, 3:4, 'E Ink Spectra 6 (with Sharp IGZO technology)', $2,399, free FedEx USA 3-10 days, 25,000 mAh, up to 12 months, 27.92x34.8x0.98in, 16.5 lb, Wi-Fi 2.4/5GHz, BT 5.2 LE, USB-C, InkPoster App for personal images"
+        },
+        {
+          "url": "https://inkposter.com/collections/catalog",
+          "what_it_supports": "In-stock status and $2,399 price on 2026-08-05"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Tela 40.5\" (A1)",
+      "vendor": "PocketBook (InkPoster)",
+      "status": "announced",
+      "diagonal_in": 40.5,
+      "resolution": "3060x4320",
+      "ppi": null,
+      "panel": "E Ink Spectra 6 with Sharp IGZO backplane",
+      "colour": "colour (6-ink Spectra 6, 60,000+ tones claimed)",
+      "price": {
+        "amount": 4200,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://inkposter.com/collections/catalog"
+      },
+      "availability": "NOT purchasable as of 2026-08-05 - the catalogue shows 'Notify me' only. Debuted at CES 2026 (Jan 6-9) as the world's largest colour ePaper art display.",
+      "power": "Up to one year per charge, cordless",
+      "dimensions": "44.56 x 34.83 x 0.98 in",
+      "released": "announced 2026-01 at CES; no ship date published",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented; same InkPoster app path. Vendor wording: 'The InkPoster app turns Tela 40.5\" into a private gallery, with thousands of licensed artworks' and you can 'upload personal images and update artwork from anywhere with one tap' - i.e. remote/cloud by design.",
+        "sd_card": false,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "None today; the pre-announced InkPoster subscription would apply.",
+        "third_party_projects": [],
+        "evidence": "InkPoster CES 2026 announcement blog post + catalogue stock state."
+      },
+      "art_suitability": "Gallery-scale at A1 with 3060x4320 - roughly 106 ppi, the largest colour ePaper art panel on the market. If it ships, it is the only device in the survey that can present a large work at near-print scale. Availability is the entire risk: it has been 'Notify me' for seven months since CES.",
+      "sources": [
+        {
+          "url": "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces",
+          "what_it_supports": "40.5\" A1 format, 3,060x4,320, E Ink Spectra 6 + Sharp IGZO, up to one year battery, 44.56x34.83x0.98 in, $4,200, CES 2026 debut, Duna 40.5\" Pininfarina variant at $6,500, app-based personal image upload 'from anywhere'"
+        },
+        {
+          "url": "https://inkposter.com/collections/catalog",
+          "what_it_supports": "'Notify me' (not purchasable) status at $4,200 on 2026-08-05"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Duna 40.5\" (Pininfarina)",
+      "vendor": "PocketBook (InkPoster)",
+      "status": "announced",
+      "diagonal_in": 40.5,
+      "resolution": "3060x4320",
+      "ppi": null,
+      "panel": "E Ink Spectra 6 with Sharp IGZO backplane",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 6500,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://inkposter.com/collections/catalog"
+      },
+      "availability": "NOT purchasable as of 2026-08-05 - catalogue shows 'Notify me' at $6,500. Engadget reported an April 2026 availability target (after Milan Design Week) at approximately $6,000; that date has passed without the catalogue moving off 'Notify me'.",
+      "power": "Up to one year per charge",
+      "dimensions": null,
+      "released": "announced 2026-01 at CES; April 2026 target missed",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented; InkPoster app only. The app additionally carries Pininfarina archive sketches as content.",
+        "sd_card": false,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "None today; pre-announced InkPoster subscription would apply.",
+        "third_party_projects": [],
+        "evidence": "Engadget launch coverage + InkPoster catalogue stock state + the CES blog post."
+      },
+      "art_suitability": "Same panel as the Tela 40.5\" in a Pininfarina-designed aluminium and stitched Alcantara frame at a $2,300 premium. The design premium buys nothing for image fidelity; the integration story is identical and closed.",
+      "sources": [
+        {
+          "url": "https://www.engadget.com/home/inkposter-launches-a-premium-41-inch-e-paper-display-for-your-home-170000292.html",
+          "what_it_supports": "Duna is A1-sized, Pininfarina-designed, aluminium frame with stitched Alcantara, approx $6,000, availability April 2026 after Milan Design Week, up to one year battery, licensed artwork + personal photos via the InkPoster app, Pininfarina archive sketches in the app"
+        },
+        {
+          "url": "https://inkposter.com/collections/catalog",
+          "what_it_supports": "'Notify me' status at $6,500 on 2026-08-05 - i.e. still not purchasable four months after the stated April availability"
+        }
+      ]
+    },
+    {
+      "model": "EinkCanvas Large 28.5\"",
+      "vendor": "BLOOMIN8 (arpobot)",
+      "status": "preorder",
+      "diagonal_in": 28.5,
+      "resolution": "2160x3060",
+      "ppi": 131,
+      "panel": "E Ink Spectra 6 with Sharp IGZO backplane",
+      "colour": "colour (6-ink Spectra 6, vendor says 65,000 colours)",
+      "price": {
+        "amount": 2399,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5"
+      },
+      "availability": "'Expected shipping starts August 2026' - i.e. right now, unshipped. The 13.3\" and 7.3\" models are already shipping. Crowdfunded on Kickstarter (Mar 18 - Apr 27 2025) raising A$2,397,443 from 2,272 backers against a A$30,000 goal, then continued on Indiegogo InDemand.",
+      "power": "30,000 mAh Li-Po, USB-C; '1-3 years on a daily refresh basis'",
+      "dimensions": "778 x 598 x 28.4 mm (30.63 x 23.54 x 1.12 in), 5.5 kg / 12.13 lb",
+      "released": "13.3\"/7.3\" shipped 2025-2026; 28.5\" expected 2026-08",
+      "integration": {
+        "openness": "open",
+        "local_push": "YES - fully local, and the best in the survey. The vendor ships an MIT-licensed Home Assistant component that connects directly to the device by IP on the LAN, with mDNS discovery or manual IP entry, and no cloud in the path. Images are processed locally (JPEG conversion, optional dithering) and pushed straight to the device. Vendor also advertises a 'Local Desktop App - Cloud-free desktop application for complete privacy'.",
+        "sd_card": null,
+        "api": "A machine-readable OpenAPI spec (openapi.yaml) is published in the vendor's own GitHub repo and the API appears UNAUTHENTICATED on the LAN. Paths: GET /deviceInfo, GET /state, POST /show, POST /showNext, POST /sleep, POST /reboot, POST /clearScreen, POST /settings, GET /whistle, POST /upload (single JPEG, multipart/form-data), POST /image/uploadMulti, POST /image/dataUpload (pre-dithered raw data), POST /image/delete, GET /gallery/list, PUT|GET|DELETE /gallery, GET /playlist/list, PUT|GET|DELETE /playlist. SEPARATELY, docs/Schedule_Pull_API.md documents a 'Schedule Pull' mode purpose-built for exactly this use case: you configure the device with PUT /upstream/pull_settings pointing at YOUR server plus a token and a wake time; the device then wakes on schedule, calls your /eink_pull endpoint for an image URL, displays it, and schedules the next wake from your response's next_cron_time, with an optional /eink_signal callback. No BLOOMIN8 cloud is in that loop at all. Constraints on your static server: correct Content-Length, NO chunked Transfer-Encoding, NO gzip Content-Encoding, baseline (not progressive) JPEG, portrait pixel orientation, _P.jpg / _L.jpg filename suffixes.",
+        "cloud_required": false,
+        "subscription": "None found. Vendor markets buy-once with no fees.",
+        "third_party_projects": [
+          "ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component (vendor-published, MIT licence, HACS-installable, exposes ~20 services incl. upload_image_url, upload_image_data, upload_images_multi, upload_dithered_image_data, delete_image, show_next, sleep, reboot, clear_screen, whistle, update_settings, and gallery/playlist CRUD)"
+        ],
+        "evidence": "Read the vendor's GitHub repo README, its file tree, its openapi.yaml, and docs/Schedule_Pull_API.md directly. This is the only device in the survey where I could read a complete, published local API specification rather than a marketing claim."
+      },
+      "art_suitability": "Same panel class as the InkPoster Tela 28.5\" (2160x3060, 131 ppi, portrait 3:4, Spectra 6 + Sharp IGZO) at the same $2,399 price, but with a documented, unauthenticated local REST API, an MIT-licensed HA component, and a device-pulls-from-your-server scheduling mode. For a self-hosted archive that wants to drive the frame from its own software, this is the reference option. The counterweight is entirely vendor risk, not technical: a six-person startup, and this specific SKU has not shipped yet.",
+      "sources": [
+        {
+          "url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5",
+          "what_it_supports": "28.5\" (72.4cm), 2160x3060, 131 DPI, 'E Ink Spectra 6 with Sharp IGZO', $2,399, 'Expected shipping starts August 2026', 30,000 mAh, 1-3 yr battery, 778x598x28.4mm, 5.5 kg, Wi-Fi 2.4/5GHz, BT 5.2 LE, Home Assistant Integration"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/HEAD/openapi.yaml",
+          "what_it_supports": "The complete local REST API: /deviceInfo, /state, /show, /showNext, /sleep, /reboot, /clearScreen, /settings, /whistle, /upload, /image/uploadMulti, /image/dataUpload, /image/delete, /gallery(/list), /playlist(/list); multipart/form-data uploads; no authentication scheme declared"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/HEAD/docs/Schedule_Pull_API.md",
+          "what_it_supports": "Schedule Pull API: PUT/GET /upstream/pull_settings; device wakes on cron, calls YOUR /eink_pull for an image URL, displays it, sleeps until next_cron_time; optional /eink_signal feedback; explicit static-file server requirements (Content-Length required, no chunked encoding, no gzip, baseline JPEG, portrait orientation, _P/_L suffixes); no BLOOMIN8 cloud in the loop"
+        },
+        {
+          "url": "https://github.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component",
+          "what_it_supports": "MIT licence; local connection by IP with mDNS discovery or manual entry; no cloud for core function; full service list incl. upload_image_url / upload_image_data / upload_images_multi / upload_dithered_image_data / delete_image and gallery+playlist CRUD; images processed locally"
+        },
+        {
+          "url": "https://api.github.com/repos/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/git/trees/HEAD?recursive=1",
+          "what_it_supports": "Repo contains openapi.yaml at the root and docs/Schedule_Pull_API.md, plus api_client.py, ble_wake.py, config_flow.py, media_player.py - confirming the spec files are vendor-published, not community reconstructions"
+        },
+        {
+          "url": "https://bloomin8.com/",
+          "what_it_supports": "13.3\" $499 and 28.5\" $2,399; Spectra 6 65,000 colours; 'Up to 3 years single charge'; developer features listed as 'Local Desktop App - Cloud-free desktop application for complete privacy', 'Home Assistant Integration', 'RESTful APIs - Open APIs for developers to build custom integrations'"
+        },
+        {
+          "url": "https://www.kicktraq.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/",
+          "what_it_supports": "Kickstarter raised A$2,397,443 from 2,272 backers vs A$30,000 goal (7991%), Mar 18 - Apr 27 2025, Sydney AU, tagline includes 'Local Home Assistant Integration'"
+        }
+      ]
+    },
+    {
+      "model": "Linn (Large Format)",
+      "vendor": "IONNYK (owned by PocketBook)",
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": null,
+      "ppi": null,
+      "panel": "Monochrome E Ink (specific panel family not published)",
+      "colour": "monochrome black & white only",
+      "price": {
+        "amount": 3890,
+        "currency": "EUR",
+        "as_of": "2026-08-05",
+        "source_url": "https://www.ionnyk.com/buyionnyk/"
+      },
+      "availability": "Purchasable direct from ionnyk.com (Belgium). EUR 3,890.",
+      "power": "Cordless, battery, up to 1 year autonomy per charge",
+      "dimensions": "Frame 100 x 70 x 2.7 cm; display area 69 x 39 cm (16:9), black aluminium with museum-quality glass",
+      "released": "pre-2025 (IONNYK's established line; acquired by PocketBook 2025-09)",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented. Content is sent to the frame from the IONNYK iOS/Android app. The FAQ does not disclose the transport, does not describe offline operation, and mentions no local capability.",
+        "sd_card": null,
+        "api": "None published; none found.",
+        "cloud_required": true,
+        "subscription": "Effectively yes for content. The standard gallery is professional artists' work only. Purchase includes free access to the entire Discovery catalogue for 3 months, and a subscription is offered at EUR 12.99/month. Critically for an archive project, uploading YOUR OWN images is not a normal app feature - the FAQ routes personal photographs to a separate paid service, the 'exclusive IONNYK Studio Prestige offer', with pricing not published.",
+        "third_party_projects": [],
+        "evidence": "ionnyk.com homepage (model dimensions, 12.99 EUR/month), /buyionnyk (prices, 3-month Discovery trial), /faq (app-only, artists-only gallery, Studio Prestige for personal photos)."
+      },
+      "art_suitability": "DISQUALIFYING for a private art archive despite the beautiful hardware: it is monochrome only, and personal-image display is gated behind a bespoke paid concierge service rather than an ordinary upload. The 31.2\" diagonal is computed from the published 69 x 39 cm display area - IONNYK publishes frame dimensions, not display diagonals, and at least one press roundup mis-reported the FRAME diagonal as the screen size.",
+      "sources": [
+        {
+          "url": "https://www.ionnyk.com/",
+          "what_it_supports": "Three models: Jane 50x40x2.7cm frame / 27x20cm display / 4:3; Linn 100x70x2.7cm frame / 69x39cm display / 16:9; Maxine 127x103x2.8cm frame / 82x61cm display / 4:3; black aluminium + museum-quality glass; app to browse and change pictures; subscription at 12,99 EUR per month"
+        },
+        {
+          "url": "https://www.ionnyk.com/buyionnyk/",
+          "what_it_supports": "JANE EUR 1,790; LINN EUR 3,890; MAXINE price on request; free access to the entire Discovery catalogue for 3 months; 100% wireless with one-year battery; controlled via smartphone app; personal photos framed as an elevate-to-artwork feature"
+        },
+        {
+          "url": "https://www.ionnyk.com/faq/",
+          "what_it_supports": "Artworks sent to the frame via the IONNYK Android/iOS app; the standard gallery is professional artists only; personal photos require the separate 'IONNYK Studio Prestige' offer; frames are black & white only; no API, local network, or offline operation described"
+        },
+        {
+          "url": "https://pocketbook.ch/en-ch/news/pocketbook-ionnyk-ch",
+          "what_it_supports": "PocketBook acquired IONNYK, 'the Belgian luxury maker of monochrome ePaper art frames'; flagship Maxine cited at 127 x 103 cm; IONNYK and InkPoster shown together at IFA Berlin 2025"
+        }
+      ]
+    },
+    {
+      "model": "Maxine (Masterpiece)",
+      "vendor": "IONNYK (owned by PocketBook)",
+      "status": "shipping",
+      "diagonal_in": 40.2,
+      "resolution": null,
+      "ppi": null,
+      "panel": "Monochrome E Ink (specific panel family not published)",
+      "colour": "monochrome black & white only",
+      "price": {
+        "amount": null,
+        "currency": "EUR",
+        "as_of": "2026-08-05",
+        "source_url": "https://www.ionnyk.com/buyionnyk/"
+      },
+      "availability": "'Price on request' on ionnyk.com - no published price, effectively a made-to-order luxury item.",
+      "power": "Cordless, battery, up to 1 year autonomy per charge",
+      "dimensions": "Frame 127 x 103 x 2.8 cm; display area 82 x 61 cm (4:3)",
+      "released": "pre-2025",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented - identical to Linn.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "Same as Linn: EUR 12.99/month art subscription, 3-month Discovery trial included, personal photos routed to the paid Studio Prestige service.",
+        "third_party_projects": [],
+        "evidence": "ionnyk.com homepage and FAQ."
+      },
+      "art_suitability": "The largest frame in the survey by outer dimensions (127 x 103 cm), but that is the FRAME - the display area is 82 x 61 cm, i.e. ~40.2\" diagonal, essentially the same class as the InkPoster 40.5\" A1 panels. Any '~62 inch' figure for Maxine is the frame diagonal (~163 cm / 64 in), not the viewing area. Monochrome and no self-serve personal-image path rule it out for a colour art archive.",
+      "sources": [
+        {
+          "url": "https://www.ionnyk.com/",
+          "what_it_supports": "Maxine Masterpiece: 127x103x2.8cm frame, 82x61cm display, 4:3, black aluminium + museum-quality glass"
+        },
+        {
+          "url": "https://www.ionnyk.com/faq/",
+          "what_it_supports": "Black & white only; app-only delivery; Studio Prestige for personal photographs"
+        }
+      ]
+    },
+    {
+      "model": "Jane (Classic Format)",
+      "vendor": "IONNYK (owned by PocketBook)",
+      "status": "shipping",
+      "diagonal_in": 13.2,
+      "resolution": null,
+      "ppi": null,
+      "panel": "Monochrome E Ink",
+      "colour": "monochrome black & white only",
+      "price": {
+        "amount": 1790,
+        "currency": "EUR",
+        "as_of": "2026-08-05",
+        "source_url": "https://www.ionnyk.com/buyionnyk/"
+      },
+      "availability": "Purchasable direct from ionnyk.com at EUR 1,790.",
+      "power": "Cordless, up to 1 year autonomy",
+      "dimensions": "Frame 50 x 40 x 2.7 cm; display area 27 x 20 cm (4:3)",
+      "released": "pre-2025",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "EUR 12.99/month; personal photos via paid Studio Prestige.",
+        "third_party_projects": [],
+        "evidence": "ionnyk.com homepage, /buyionnyk, /faq."
+      },
+      "art_suitability": "OUT OF SCOPE ON SIZE. Included only to correct a live error in the secondary literature: a Good e-Reader roundup lists Jane as 'approximately 32.8-inch diagonal' by reading the 50 x 40 cm FRAME as the screen. The actual display area is 27 x 20 cm, a 13.2\" diagonal - i.e. an ordinary 13.3\"-class panel in a large mat, at EUR 1,790.",
+      "sources": [
+        {
+          "url": "https://www.ionnyk.com/",
+          "what_it_supports": "Jane: frame 50x40x2.7cm, DISPLAY 27x20cm, 4:3 - giving a 13.2 in display diagonal"
+        },
+        {
+          "url": "https://goodereader.com/blog/e-paper/here-are-the-best-e-ink-picture-frames-worth-buying",
+          "what_it_supports": "The erroneous claim being corrected: this roundup states 'Jane: 50cm x 40cm (approximately 32.8-inch diagonal)' - which is neither the display diagonal (13.2 in) nor even the frame diagonal (25.2 in)"
+        }
+      ]
+    },
+    {
+      "model": "Aura Ink",
+      "vendor": "Aura (Pushd, Inc.)",
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "ppi": 150,
+      "panel": "E Ink Spectra 6 with front light",
+      "colour": "colour (6-ink Spectra 6) with adaptive front light that turns off in the dark",
+      "price": {
+        "amount": 499,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://auraframes.com/digital-frames/color/aura-ink-graphite"
+      },
+      "availability": "In stock at auraframes.com, 'ships by August 6th'. ONE SIZE ONLY.",
+      "power": "Rechargeable, USB-C (9 ft cable); up to three months per charge at one photo change per day",
+      "dimensions": "14.1 x 11.4 x 0.6 in, 3.2 lb; tabletop stand or wall mount; dual orientation",
+      "released": "2025-10-21",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None. Photo delivery is explicitly cloud-based and a Wi-Fi connection is required for photos to display. Contribution paths are the Aura app, email, connected cloud photo accounts, invited friends and family, and texting photos to the frame after setup.",
+        "sd_card": false,
+        "api": "No public API, SDK, or developer documentation. No third-party project found.",
+        "cloud_required": true,
+        "subscription": "None - and this is a genuine differentiator for Aura: unlimited photo storage with 'no subscriptions or fees'.",
+        "third_party_projects": [],
+        "evidence": "Aura product page (specs, cloud-based updates, Wi-Fi requirement), Aura's own launch post (unlimited storage, no subscription, delivery methods), E Ink's launch press release (panel, form factor, battery)."
+      },
+      "art_suitability": "OUT OF SCOPE ON SIZE - this is the headline reversal of this survey. Aura Ink is a single 13.3\" SKU; Aura has announced no larger e-paper model, and Aura's largest frame of any kind is the 15\" Walden, which is a backlit HD LCD and therefore also out of scope. So the best-capitalised, longest-lived brand in the category does not compete in the >15\" segment at all. Even setting size aside, its integration is fully closed and cloud-mediated - the worst possible fit for pushing from a self-hosted archive - so it would not have won on the second criterion either. As a 13.3\" device it is excellent: 150 ppi, front-lit, 0.6 in thin, three-month battery, no subscription.",
+      "sources": [
+        {
+          "url": "https://auraframes.com/digital-frames/color/aura-ink-graphite",
+          "what_it_supports": "13.3\" diagonal, 1600x1200, 4:3, E Ink Spectra 6, 14.1x11.4x0.6 in, 3.2 lb, front light with ambient adaptation, up to 3 months battery, USB-C, Wi-Fi 2.4/5GHz required, cloud-based photo delivery, unlimited photos with no subscription, $499, in stock shipping by Aug 6"
+        },
+        {
+          "url": "https://auraframes.com/news/introducing-ink-auras-all-new-cordless-e-paper-frame-worthy-of-your-gallery",
+          "what_it_supports": "Aura's own launch post: 13.3\" display, $499, available now, 'unlimited storage without subscriptions or fees', photo transfer via mobile app / email / cloud accounts / invited contributors, no larger size mentioned or planned"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/aura-launches-ink-featuring-spectra-6",
+          "what_it_supports": "E Ink's launch release (2025-10-21): 13.3\" Spectra 6, 0.6-inch ultra-slim profile, up to three months battery, front light, proprietary Aura dithering; no mention of other sizes, API, or local networking"
+        }
+      ]
+    },
+    {
+      "model": "Reflection Frame Skipper 13.3\" / Ringlet 10\"",
+      "vendor": "Creative Design Worx",
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "ppi": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 349.99,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://www.reflectionframe.com/"
+      },
+      "availability": "13.3\" Skipper: 'Order today, ships tomorrow', $349.99-$369.00 by finish. 10\" Ringlet: pre-order at $199.99 early bird ($249.99 regular), delivery October 2026. No size above 13.3\" exists or is announced.",
+      "power": "Rechargeable battery, vendor claims months to over a year; the crowdfunding-era spec cited a 5,000 mAh cell",
+      "dimensions": null,
+      "released": "2025 (Kickstarter, over-funded)",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Notable for the right reasons even though it is out of scope: image transfer is NFC 'Tap-to-Print' - hold the phone to the frame's bottom-left corner. The vendor states the device operates without Wi-Fi or cloud dependency and that 'Your photos remain private and are never sent to our servers.' That is a genuinely cloud-free path, but it is a manual, physically-present one - it cannot be driven by a self-hosted server.",
+        "sd_card": null,
+        "api": "None published; no developer documentation found.",
+        "cloud_required": false,
+        "subscription": "None. Curated image access is included free.",
+        "third_party_projects": [],
+        "evidence": "reflectionframe.com product/marketing pages read directly."
+      },
+      "art_suitability": "OUT OF SCOPE ON SIZE - the largest model is 13.3\". Worth recording because its architecture is the inverse of everyone else's: no cloud at all, but also no network automation, so an archive server cannot reach it.",
+      "sources": [
+        {
+          "url": "https://www.reflectionframe.com/",
+          "what_it_supports": "Company Creative Design Worx; models 10\" Ringlet and 13.3\" Skipper only; 10\" $199.99 pre-order / $249.99 regular, delivery Oct 2026; 13.3\" $349.99-$369.00 shipping now; NFC Tap-to-Print; 'operates without WiFi or cloud dependency'; 'Your photos remain private and are never sent to our servers'; no subscription; E Ink Spectra 6"
+        },
+        {
+          "url": "https://goodereader.com/blog/e-paper/here-are-the-best-e-ink-picture-frames-worth-buying",
+          "what_it_supports": "Context for the 13.3\"-class market (Frame Labs 6\"/9.7\"/13.3\" at EUR 349-899), confirming that 13.3\" is the ceiling for the consumer photo-frame tier"
+        }
+      ]
+    },
+    {
+      "model": "InkJoy Frame",
+      "vendor": "InkJoy",
+      "status": "preorder",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6 driven by a proprietary 'ISFR' (Intelligent Spectrum/Spectra Fusion Rendering) image pipeline",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": null,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": null
+      },
+      "availability": "Kickstarter, launched around 2025-11-24. The campaign was very small when observed: about $22,699 pledged against a $5,001 goal from 54 backers. The vendor says only that 'multiple frame sizes will be available'; I could not find a published size list, and no size above 13.3\" is claimed anywhere I could read. I could not fetch the Kickstarter page (Kickstarter returns 403 to this tool) or the one review that carries specs.",
+      "power": "Cordless, vendor claims years between charges",
+      "dimensions": null,
+      "released": "campaign launched 2025-11",
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Unknown. The only delivery mechanism described is 'remote photo sharing, allowing loved ones to send images directly to the frame', which implies a cloud relay, but the vendor does not say.",
+        "sd_card": null,
+        "api": "No API or SDK mentioned in any vendor material I could read.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Vendor press release only. Sizes, resolution, price, and the entire integration story are unverified."
+      },
+      "art_suitability": "Probably out of scope on size, and unverifiable. The founder pedigree is the one real asset: Dr. Ray Chen, co-founder and former CTO of Dasung, who left Dasung in 2024 to start InkJoy - so this is a genuine ePaper engineer, not a marketing shell. But a $22K campaign from a first-year company is the weakest staying-power profile in the survey. The 'Mini Apps' concept (weather, calendar, greetings on the frame) signals a smart-display product, not an art-reproduction product.",
+      "sources": [
+        {
+          "url": "https://www.einpresswire.com/article/869748000/inkjoy-launches-full-color-epaper-frame-for-art-photos-and-mini-apps",
+          "what_it_supports": "InkJoy based in Boston MA, led by Dr. Ray Chen (co-founder/former CTO of Dasung); Kickstarter launch; 'multiple frame sizes will be available' with no sizes given; ISFR engine on E Ink Spectra 6; 'remote photo sharing'; Mini Apps for weather/calendar/greetings; no API, subscription or pricing disclosed"
+        },
+        {
+          "url": "https://en.epaperia.com/News/599.html",
+          "what_it_supports": "Founder background: Dr. Ray Chen has over a decade optimising ePaper, stepped down as DASUNG CTO in 2024 to launch InkJoy after a 2023 home renovation; pre-launch site inkjoyframe.com; ISFR engine. Confirms no published size or price list."
+        }
+      ]
+    },
+    {
+      "model": "MelonFrame (walnut / anodised aluminium)",
+      "vendor": "MelonAutomation",
+      "status": "preorder",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6, matte finish",
+      "colour": "colour (6-ink Spectra 6)",
+      "price": {
+        "amount": 99,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": null
+      },
+      "availability": "Kickstarter, reward frames reported as starting from $99. I could not fetch the Kickstarter page (403) and neither melonframe.com nor its support pages publish a size or resolution. Given the $99 entry price the range is almost certainly 7.3\"-13.3\"; I found no claim of any size above 15\" and am recording 13.3 as an unverified upper bound.",
+      "power": "Built-in battery, 'one charge can last up to a few months', no wires",
+      "dimensions": "Modular - interchangeable solid walnut or anodised aluminium surrounds",
+      "released": "Kickstarter campaign live in 2026",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Interesting but under-documented. The vendor's headline claim is 'Buy once - no monthly fee, no cloud charges. Images stay local on your phone', and playlists can be pointed 'at any web URL or RSS feed to keep it fresh'. A URL/RSS pull is exactly the hook a self-hosted archive needs - your server publishes a feed and the frame fetches from it - but no endpoint, auth, polling-interval or format documentation exists on the vendor site or its support pages, and the support pages do not even explain the image transport.",
+        "sd_card": null,
+        "api": "No documented API. Wi-Fi is 2.4 GHz 802.11 b/g/n only.",
+        "cloud_required": null,
+        "subscription": "None claimed.",
+        "third_party_projects": [],
+        "evidence": "melonframe.com marketing page and /pages/support read directly; the support page covers setup, gestures, playlists, scheduling, charging and mounting but explicitly does not describe the image-delivery architecture."
+      },
+      "art_suitability": "Almost certainly out of scope on size, and the size is unconfirmed. Recorded because the 'point a playlist at any web URL or RSS feed' capability is the second-best self-hosting hook found in the whole survey after BLOOMIN8's Schedule Pull API - if MelonAutomation ever builds a >15\" model, that mechanism is worth re-checking.",
+      "sources": [
+        {
+          "url": "https://melonframe.com/",
+          "what_it_supports": "Spectra 6 matte colour E Ink; solid walnut or anodised aluminium modular frames; battery lasts up to a few months; playlists scheduled by time of day from the phone; 'Point a playlist at any web URL or RSS feed to keep it fresh'; 'No subscription' / 'Buy once - no monthly fee, no cloud charges. Images stay local on your phone'; iOS and Android apps; no sizes or resolutions published"
+        },
+        {
+          "url": "https://melonframe.com/pages/support",
+          "what_it_supports": "Wi-Fi 2.4GHz 802.11 b/g/n; covers setup, buttons, gestures, playlists, scheduling, charging, mounting, troubleshooting - but publishes no screen size, no resolution, and no description of the image-delivery mechanism"
+        }
+      ]
+    },
+    {
+      "model": "Memoir E-Ink Digital Frame",
+      "vendor": "Memoir",
+      "status": "preorder",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink (colour; specific panel not published)",
+      "colour": "colour",
+      "price": {
+        "amount": 149,
+        "currency": "USD",
+        "as_of": "2026-08-05",
+        "source_url": "https://thegadgetflow.com/product/memoir-e-ink-digital-frame/"
+      },
+      "availability": "Pre-order, listed on Gadget Flow at $149 (from $199). 'Three size choices' are advertised but no dimensions are published anywhere I could read.",
+      "power": null,
+      "dimensions": null,
+      "released": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Unknown. Only 'iOS and Android support lets you refresh photos and curated moments from your phone' is stated.",
+        "sd_card": null,
+        "api": "None mentioned.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "A single aggregator listing. No vendor site, no specification sheet, no review found. This is the thinnest-evidenced entry in the survey."
+      },
+      "art_suitability": "Almost certainly out of scope on size - a $149 pre-order price point is consistent with a 7.3\"-10\" device, not a >15\" one. Treat the 13.3 diagonal above as an unverified upper bound, not a measurement. Nothing about this product is verifiable at present.",
+      "sources": [
+        {
+          "url": "https://thegadgetflow.com/product/memoir-e-ink-digital-frame/",
+          "what_it_supports": "Pre-order status, $149 (from $199), 'Three size choices' with no dimensions given, iOS/Android app refresh, no subscription or API information"
+        }
+      ]
+    }
+  ],
+  "vendors": [
+    {
+      "name": "SwitchBot (brand of OneRobotics (Shenzhen) Co., Ltd.)",
+      "country": "China (Shenzhen), listed in Hong Kong; Wonderlabs, Inc. used as the US/Japan trading name",
+      "corporate_form": "Publicly listed joint-stock company",
+      "ownership": "Public shareholders; founded 2015 as Woan Technology by Li Zhichen and Pan Yang (both Harbin Institute of Technology alumni)",
+      "public_ticker": "HKEX: 6600 (6600.HK)",
+      "funding": "Raised at least RMB 128M (~USD 17.6M) in 2021 from Source Code Capital, Yintai Capital and Hillhouse Capital; valued at RMB 4.05bn (~USD 555M) in May 2025; then IPO'd on HKEX 2025-12-30 raising HK$1.64bn (~USD 206M), retail tranche oversubscribed 200x+",
+      "revenue_scale": "RMB 275M revenue in 2022 (net loss RMB 87M) -> RMB 610M in 2024 (net loss narrowed to RMB 3.1M) -> RMB 396M in H1 2025 with net income of RMB 27.9M, i.e. newly profitable. Over 95% of 2024 revenue from outside China (Japan 57.7%, Europe 21.4%, North America 15.9%). Market cap reached HK$23.11bn (~USD 2.96bn) by 2026-01-06.",
+      "headcount": "Not reliably established; one aggregator says 40, which is implausibly low for a company at this revenue and is not trusted",
+      "hardware_track_record": "A decade of shipped smart-home hardware since 2015 (SwitchBot Bot finger robot, Curtain, locks, hubs, vacuums), sold globally through Amazon and its own stores, with an official public Open API and first-party Home Assistant support - i.e. a real, sustained developer posture, not a one-off",
+      "abandonment_history": "None found in this research. Caveat: the IPO prospectus narrative is heavily weighted to embodied AI robotics (plush companion robot, wheeled humanoid, tennis robot), with 66.5% of proceeds earmarked for home robotics. The AI Art Frame is a peripheral SKU in that story and could be deprioritised even if the company thrives.",
+      "staying_power": "high",
+      "rationale": "By a wide margin the strongest counterparty in this category and the single clearest reversal of the brief's premise. It is the only vendor here that is publicly traded, at roughly USD 3bn market cap, with audited revenue over RMB 600M growing, freshly profitable, and USD 206M of IPO cash raised eight months ago. Aura - the assumed safe choice - is a private venture-backed company roughly two orders of magnitude smaller. The risk with SwitchBot is not corporate death, it is product-line indifference plus a mandatory cloud in the image path.",
+      "sources": [
+        {
+          "url": "https://www.caixinglobal.com/2025-12-31/smart-home-startup-onerobotics-lands-206-million-in-hk-ipo-bets-big-on-ai-bots-102398920.html",
+          "what_it_supports": "OneRobotics (Shenzhen) Co., Ltd.; IPO 2025-12-30 raising HK$1.64bn (USD 206M); 'best known for its SwitchBot line'; 2022 revenue RMB 275M / net loss RMB 87M; 2024 revenue RMB 610M / net loss RMB 3.1M; H1 2025 revenue RMB 396M / net income RMB 27.9M; expansion into AI home robots"
+        },
+        {
+          "url": "https://robotbelt.com/onerobotics-hkex-ipo-shenzhen-ai-robotics/",
+          "what_it_supports": "HKEX stock code 6600.HK; listing date 2025-12-30; revenue growth ¥275M -> ¥610M; market cap HK$23.11bn (USD 2.96bn) by 2026-01-06; SwitchBot Bot origin story"
+        },
+        {
+          "url": "https://en.tmtpost.com/post/7597701",
+          "what_it_supports": "Founded 2015 in Shenzhen as Woan Technology by Li Zhichen and Pan Yang; over 95% of 2024 revenue international (Japan 57.7%, Europe 21.4%, North America 15.9%); RMB 4.05bn (USD 555M) valuation in May 2025"
+        },
+        {
+          "url": "https://github.com/OpenWonderLabs/SwitchBotAPI",
+          "what_it_supports": "A maintained, first-party public Open API with per-device documentation - evidence of a durable developer posture"
+        }
+      ]
+    },
+    {
+      "name": "PocketBook International SA (InkPoster; owner of IONNYK; shareholder in Bigme)",
+      "country": "Switzerland (HQ), with the acquired IONNYK team and production/development capacity in Belgium",
+      "corporate_form": "Private Swiss company (SA)",
+      "ownership": "Privately held. Verified roll-up: (a) InkPoster is PocketBook's own brand, not a separate company - inkposter.com's about page names 'Pocketbook International SA' and says InkPoster was 'Designed by PocketBook, a Swiss-based global leader... nearly two decades of innovation'; (b) PocketBook acquired IONNYK, announced 2025-09, price undisclosed, IONNYK founders staying on and the Belgian team fully integrated; (c) PocketBook became 'a substantial shareholder and co-owner' of Chinese maker Bigme in 2024.",
+      "public_ticker": null,
+      "funding": "No external funding disclosed; self-funded from a long-running e-reader business",
+      "revenue_scale": "Not disclosed. Inferable scale: a global e-reader brand shipping since 2012 across the US and EU, now running a five-SKU art-display line from $499 to $6,500 with US and German distribution and free FedEx fulfilment.",
+      "headcount": "Not disclosed",
+      "hardware_track_record": "Strongest hardware pedigree in the category after SwitchBot: nearly two decades of shipped e-readers, plus co-developed products with Bigme (PocketBook InkPad EO derived from the Bigme InkNote Color+ with PocketBook firmware). Executed the InkPoster launch on time into two major markets and won a German Design Award 2026 for the Tela 28.5\".",
+      "abandonment_history": "None found for e-readers. Two cautions from this research: the Tela 40.5\" and Duna 40.5\" have been 'Notify me' since CES 2026, and Engadget reported an April 2026 availability target for the Duna that has visibly slipped by four months; and the InkPoster FAQ pre-announces a future paid subscription, which is a policy-change risk on a device you already own.",
+      "staying_power": "medium-high",
+      "rationale": "Second-strongest counterparty. Confirms the brief's suspicion in full and then some: InkPoster, IONNYK and Bigme are all one counterparty, so three apparently independent shortlist entries collapse into a single point of failure. Diversification across those three brands buys nothing. Against that, PocketBook is the only vendor in the category with two decades of e-paper hardware behind it and a real European manufacturing footprint acquired specifically to reduce Asia/US supply dependence. Its weakness for this project is not survival, it is posture: zero developer surface, no API, app-and-account mandatory, and a subscription explicitly on the roadmap.",
+      "sources": [
+        {
+          "url": "https://inkposter.com/pages/about-us",
+          "what_it_supports": "InkPoster's corporate entity is Pocketbook International SA, Switzerland; 'Designed by PocketBook, a Swiss-based global leader known for its award-winning E Ink e-readers and nearly two decades of innovation'"
+        },
+        {
+          "url": "https://pocketbook.ch/en-ch/news/pocketbook-ionnyk-ch",
+          "what_it_supports": "PocketBook acquired IONNYK (announced Sept 2025), the Belgian luxury maker of monochrome ePaper art frames; IONNYK founders remain and the Belgian team is fully integrated; gives PocketBook production and development capacity in Europe, reducing dependence on Asia and the USA; acquisition price undisclosed; InkPoster and IONNYK shown together at IFA Berlin 2025"
+        },
+        {
+          "url": "https://goodereader.com/blog/electronic-readers/pocketbook-is-now-a-co-owner-of-bigme",
+          "what_it_supports": "PocketBook became 'a substantial shareholder and co-owner of Bigme'; described as its first considerable acquisition since releasing e-readers in 2012; cross-shared R&D produced the PocketBook InkPad EO from Bigme's InkNote Color+ hardware with PocketBook firmware"
+        },
+        {
+          "url": "https://inkposter.com/pages/faq",
+          "what_it_supports": "Forward risk: 'in the future we plan to introduce a paid subscription'; app and account mandatory for setup and all uploads"
+        },
+        {
+          "url": "https://www.engadget.com/home/inkposter-launches-a-premium-41-inch-e-paper-display-for-your-home-170000292.html",
+          "what_it_supports": "Duna availability was stated as April 2026 at ~$6,000 - a date that had slipped by four months as of 2026-08-05"
+        }
+      ]
+    },
+    {
+      "name": "Aura (legal entity Pushd, Inc.; trading as Aura Frames / Aura Home)",
+      "country": "United States (New York)",
+      "corporate_form": "Private venture-backed C-corp",
+      "ownership": "Founders Abdur Chowdhury (CEO) and Eric Jensen (CTO) plus institutional investors",
+      "public_ticker": null,
+      "funding": "Approximately USD 39M as of the 2022 round: ~USD 13M of prior equity plus USD 26M in mixed debt and equity led by Lago Innovation Fund. Investors include Spark Capital, SV Angel, Betaworks, DCVC and the Levy Family Office. (An aggregator puts lifetime funding at USD 46.9M over 8 rounds and headcount at 125; I did not verify those directly and do not rely on them.)",
+      "revenue_scale": "Not directly disclosed. Proxies from 2022: ~1,000,000 frames sold cumulatively, ~3,000,000 app users, ~100% year-on-year growth for three consecutive years, collectively showing about 1 billion pictures daily. At a $149-$499 ASP that implies a business in the low hundreds of millions cumulative - far larger than the $3.7M 'ARR' figure floated by one revenue-estimate aggregator, which appears to be nonsense and is discarded.",
+      "headcount": "Not disclosed in any source I read",
+      "hardware_track_record": "Founded as Pushd, renamed Aura before its first frame in 2016; a decade of continuously shipped consumer frames (Carver, Walden, Aspen, Mason and now Ink) sold at retail and through Amazon. Aura Ink shipped on schedule after its 2025-10-21 announcement and remains in stock. The most consumer-credible brand in the category.",
+      "abandonment_history": "None found. Aura's standing commitment to unlimited photo storage with no subscription across a decade of frames is the opposite of an abandonment signal, and it is the reason the brand has the reputation it does.",
+      "staying_power": "medium-high",
+      "rationale": "Aura is a genuinely durable consumer brand and the brief's instinct about it was right in kind - but it is decisively NOT the answer for this project, for two independent reasons that both emerged from primary sources. First, size: Aura Ink is a single 13.3\" SKU, Aura has announced nothing larger in e-paper, and its largest frame of any kind is the 15\" Walden which is backlit LCD - so Aura does not compete in the >15\" reflective segment at all. Second, integration: photo delivery is explicitly cloud-based, Wi-Fi is required for photos to display, there is no API, no SD card and no third-party project - the most closed device in the survey. On staying power alone it is also no longer the leader: SwitchBot's publicly traded ~USD 3bn parent outranks a private company that has raised ~USD 39M.",
+      "sources": [
+        {
+          "url": "https://techcrunch.com/2022/11/22/aura-the-frame-and-photo-startup-raises-26m-as-app-users-near-3m-and-frames-sold-pass-500k/",
+          "what_it_supports": "Founded as Pushd, renamed Aura before the first frame in 2016; founders Abdur Chowdhury and Eric Jensen; ~USD 39M raised total (~$13M prior equity + $26M debt/equity led by Lago Innovation Fund); investors Spark Capital, SV Angel, Betaworks, DCVC, Levy Family Office; ~997,000 frames sold; ~3M app users; ~1bn pictures shown daily"
+        },
+        {
+          "url": "https://auraframes.com/digital-frames/color/aura-ink-graphite",
+          "what_it_supports": "Aura Ink is 13.3\" only; cloud-based photo delivery with Wi-Fi required to display photos; no API, no SD card; unlimited photos with no subscription; $499, in stock"
+        },
+        {
+          "url": "https://auraframes.com/news/introducing-ink-auras-all-new-cordless-e-paper-frame-worthy-of-your-gallery",
+          "what_it_supports": "Aura's own launch communication names one size (13.3\") and no larger model, and confirms the no-subscription unlimited-storage policy"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/aura-launches-ink-featuring-spectra-6",
+          "what_it_supports": "E Ink's 2025-10-21 partner announcement describes a single 13.3\" device"
+        }
+      ]
+    },
+    {
+      "name": "Fraimic",
+      "country": "United States (Chicago, Illinois)",
+      "corporate_form": "Private startup; legal entity name not published on the site",
+      "ownership": "Founder-owned. CEO Anthony Mattana, described as a Broadway sound designer turned hardware founder.",
+      "public_ticker": null,
+      "funding": "Kickstarter USD 1,120,290 from 1,825 backers against a USD 10,000 goal (campaign 2025-09-23 to 2025-10-23), plus direct sales. No institutional funding disclosed anywhere I could read.",
+      "revenue_scale": "Crowdfunding plus early DTC only. Both SKUs were showing Sold out on 2026-08-05, so unit volume is small.",
+      "headcount": "Described only as 'a Chicago-based team made up of artists, engineers and designers'; no number published. Manufacturing partner named as Sungale Electronics.",
+      "hardware_track_record": "Mixed but real. Fraimic itself is a first product under its own name. The founder previously ran two Kickstarter hardware campaigns through Hooke Audio (Hooke Verse and Hooke Lav; Hooke Lav hit its $10K goal with $100K in eight hours but ran into pandemic-era parts lead times), and one podcast interview says he sold a previous company to Logitech - I could not verify which company or confirm the Logitech transaction from a primary source. So: a repeat crowdfunding hardware founder who has delivered before, not a first-timer, but not an established manufacturer either.",
+      "abandonment_history": "No abandoned product found. Two live warning signs: the May 2026 Kickstarter ship date had no public confirmation of backer deliveries as of 2026-07-27, and the Large Canvas list price rose about 50% from the announced $999 retail to a $1,499 list. Early software shipped buggy on preproduction units (broken dashboard redirects, invalid API endpoints), reportedly fixed quickly.",
+      "staying_power": "low",
+      "rationale": "A single-product, first-product company with about $1.1M of crowdfunding, no disclosed institutional backing, an unconfirmed backer-fulfilment record, and a 50% price increase between announcement and shipping. On a three-year horizon this is the highest-risk vendor among the credible >15\" options. The mitigation is real but conditional: because the frame is claimed to work fully over the LAN with no server dependency, company death would cost you AI generation and firmware updates but not the device - New Atlas's reviewer made exactly that argument. That mitigation is only worth what the local API is worth, and the local API is asserted by the vendor, corroborated by one reviewer, and documented by nobody.",
+      "sources": [
+        {
+          "url": "https://backerguardian.com/campaign/fraimic-eink-canvas",
+          "what_it_supports": "Kickstarter USD 1,120,290 from 1,825 backers vs a USD 10,000 goal, 2025-09-23 to 2025-10-23; 'no public confirmation of backer deliveries found' as of 2026-07-27 against a promised May 2026 date; trust score 75/100 (Medium-Low), 'Strong Concept, First-Time Hardware Creator'; manufacturing partner Sungale Electronics; founder's prior Hooke Audio campaigns (Hooke Verse, Hooke Lav); Large Canvas list price up ~50% from $999 to $1,499; early buggy pre-production software"
+        },
+        {
+          "url": "https://www.crowdcrux.com/ep-541-the-launch-formula-behind-a-7-figure-kickstarter-fraimic/",
+          "what_it_supports": "Fraimic raised over $1.1M on Kickstarter; Anthony Mattana went from Broadway sound designer to hardware founder, launched multiple hardware products on Kickstarter, and previously sold a company to Logitech (company not named in the source)"
+        },
+        {
+          "url": "https://www.prnewswire.com/news-releases/fraimic-to-debut-market-first-voice-to-art-smart-canvas-prototypes-at-ces-2026-302651756.html",
+          "what_it_supports": "Chicago-based; raised more than $1M USD on Kickstarter; CES 2026 prototypes; original pricing $399 / $999"
+        },
+        {
+          "url": "https://www.forbes.com/sites/marksparrow/2026/07/21/fraimic-voice-to-art-smart-canvas-can-turn-a-home-into-an-art-gallery/",
+          "what_it_supports": "'a Chicago-based team made up of artists, engineers and designers' founded by Anthony Mattana; devices shipping as of 2026-07-21; no company size or backing disclosed"
+        },
+        {
+          "url": "https://newatlas.com/around-the-home/fraimic-ai-art-e-ink-frame-review/",
+          "what_it_supports": "Independent reviewer's abandonment-risk assessment: local API support means 'this frame is good enough to pass down through generations'; the frame continues functioning locally if Fraimic's AI service disappears; early preproduction bugs incl. invalid API endpoints"
+        }
+      ]
+    },
+    {
+      "name": "arpobot (BLOOMIN8)",
+      "country": "Australia (Sydney - D9/161 Arthur Street, Homebush West 2140) with a Shenzhen office (307 Chongwen Park, Nanshan District)",
+      "corporate_form": "Private startup; no legal entity name published on its about page",
+      "ownership": "Founder-owned; the about page pictures six people (Francis as Creator, Eric supply chain, Piper marketing, Evan and Linda engineering)",
+      "public_ticker": null,
+      "funding": "Kickstarter A$2,397,443 from 2,272 backers against an A$30,000 goal (7991%), 2025-03-18 to 2025-04-27, average pledge A$1,055; continued afterwards on Indiegogo InDemand. No institutional funding disclosed.",
+      "revenue_scale": "Crowdfunding plus DTC; roughly A$2.4M of campaign revenue plus subsequent store sales. Small.",
+      "headcount": "Six people pictured on the about page",
+      "hardware_track_record": "Two products in three years: the Arpobot Smart Shade in 2023, then the BLOOMIN8 Canvas line. The 7.3\" and 13.3\" Canvas models are shipping; the 28.5\" is the last and largest SKU, expected to start shipping August 2026. So they have demonstrably delivered hardware to backers at the smaller sizes - which is more than Fraimic has publicly confirmed - but the specific in-scope SKU is still unshipped.",
+      "abandonment_history": "None found - the company is too young to have one. The relevant durability signal here is different and unusually strong: they publish their device's OpenAPI specification and an MIT-licensed Home Assistant component in a public repo. That means the local control surface survives the company. If arpobot folds, a competent owner can still drive the frame from a self-hosted server using the published spec, and the Schedule Pull mode means the frame is already designed to fetch from your server rather than theirs.",
+      "staying_power": "low",
+      "rationale": "As a corporate counterparty this is the weakest credible option: a six-person, three-year-old, crowdfunded startup with no institutional backing. But staying power and openness interact here in a way that matters more than the raw rating. For every other vendor, company death means a bricked or content-starved frame, because the image path runs through their servers. For BLOOMIN8 the image path is documented, unauthenticated, on your LAN, and published under MIT - so vendor death degrades to a hardware-warranty problem rather than a functionality problem. Weigh the low rating accordingly rather than treating it as disqualifying.",
+      "sources": [
+        {
+          "url": "https://bloomin8.com/pages/about",
+          "what_it_supports": "Sydney AU and Shenzhen CN offices with street addresses; journey began in 2023 with the Arpobot Smart Shade; six team members pictured; no legal entity name or funding disclosed"
+        },
+        {
+          "url": "https://www.kicktraq.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame/",
+          "what_it_supports": "A$2,397,443 raised from 2,272 backers vs A$30,000 goal (7991%), 2025-03-18 to 2025-04-27, average pledge A$1,055, Sydney AU, 'Funding Successful'"
+        },
+        {
+          "url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5",
+          "what_it_supports": "The in-scope 28.5\" SKU is 'Expected shipping starts August 2026' - i.e. not yet delivered"
+        },
+        {
+          "url": "https://github.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component",
+          "what_it_supports": "Vendor-published, MIT-licensed HA component with local IP + mDNS connection and full local image-upload services - the durability argument that survives the company"
+        }
+      ]
+    },
+    {
+      "name": "IONNYK",
+      "country": "Belgium",
+      "corporate_form": "Formerly independent; now a brand and integrated team inside PocketBook International SA",
+      "ownership": "Acquired by PocketBook, announced September 2025; price undisclosed; founders remained and the Belgian team was fully integrated, giving PocketBook European production and development capacity",
+      "public_ticker": null,
+      "funding": "Not disclosed",
+      "revenue_scale": "Luxury low-volume: EUR 1,790 / EUR 3,890 / price-on-request, sold direct and through luxury retailers and design channels",
+      "headcount": "Not disclosed",
+      "hardware_track_record": "A long-running, well-regarded monochrome ePaper art-frame line with genuine design credibility (Belgian design channels, Maison&Objet, museum-quality glass and aluminium construction). PocketBook calls it 'the Belgian luxury maker of monochrome ePaper art frames'.",
+      "abandonment_history": "None found as an independent. The forward risk is now acquisition-driven: IONNYK's monochrome line and PocketBook's colour InkPoster line overlap in market position, and PocketBook's own framing is that the two brands unite 'InkPoster's vibrant color capability and IONNYK's restrained monochrome elegance' - a rationalisation story. A monochrome premium line inside a colour-focused parent is a plausible candidate for eventual consolidation.",
+      "staying_power": "medium",
+      "rationale": "Inherits PocketBook's balance sheet, which raises its floor, but loses independence and takes on portfolio-rationalisation risk. Irrelevant for this project regardless: monochrome-only, and the FAQ routes personal photographs to a bespoke paid 'Studio Prestige' service rather than an ordinary upload, so a private colour art archive cannot use it as designed. Also note the counterparty collapse - choosing IONNYK is choosing PocketBook.",
+      "sources": [
+        {
+          "url": "https://pocketbook.ch/en-ch/news/pocketbook-ionnyk-ch",
+          "what_it_supports": "Acquisition announced September 2025; 'the Belgian luxury maker of monochrome ePaper art frames'; founders remain, Belgian team fully integrated, European production/development capacity gained; joint IFA Berlin 2025 stand; the 'colour + monochrome' portfolio framing"
+        },
+        {
+          "url": "https://www.ionnyk.com/faq/",
+          "what_it_supports": "Black & white only; standard gallery is professional artists' work; personal photographs require the separate paid 'IONNYK Studio Prestige' offer; no API or local capability described"
+        },
+        {
+          "url": "https://www.ionnyk.com/buyionnyk/",
+          "what_it_supports": "JANE EUR 1,790, LINN EUR 3,890, MAXINE price on request - luxury low-volume positioning"
+        }
+      ]
+    },
+    {
+      "name": "Creative Design Worx (Reflection Frame)",
+      "country": "United States (not confirmed from a primary source; components sourced from Asian manufacturers)",
+      "corporate_form": "Private startup",
+      "ownership": "Founder-owned; described in coverage as a small design-driven startup",
+      "public_ticker": null,
+      "funding": "Kickstarter, over-funded (exact total not verified from a source I could fetch)",
+      "revenue_scale": "Small DTC; $199.99-$369.00 price points",
+      "headcount": "Not disclosed",
+      "hardware_track_record": "Delivered: the 13.3\" Skipper is in stock and shipping next-day from the vendor's own store, and a second product (10\" Ringlet) is on pre-order for October 2026. That is a completed crowdfunding-to-retail transition, which most of this cohort has not achieved.",
+      "abandonment_history": "None found",
+      "staying_power": "low",
+      "rationale": "Small single-line startup, but with the distinguishing feature that it has actually converted a campaign into a shipping retail product. Out of scope for this project on size (13.3\" ceiling) and on mechanism - its NFC tap-to-transfer architecture is admirably cloud-free but cannot be driven by a server.",
+      "sources": [
+        {
+          "url": "https://www.reflectionframe.com/",
+          "what_it_supports": "Company name Creative Design Worx; 13.3\" Skipper shipping next-day, 10\" Ringlet on pre-order for October 2026; NFC Tap-to-Print with no WiFi or cloud dependency; 'Your photos remain private and are never sent to our servers'; no subscription"
+        }
+      ]
+    },
+    {
+      "name": "InkJoy",
+      "country": "United States (Boston, Massachusetts)",
+      "corporate_form": "Private startup, founded 2024",
+      "ownership": "Founded and led by Dr. Ray Chen, co-founder and former CTO of Dasung, who stepped down from DASUNG in 2024 to start InkJoy",
+      "public_ticker": null,
+      "funding": "Kickstarter only; approximately USD 22,699 pledged against a USD 5,001 goal from 54 backers when observed - by far the smallest raise in this cohort",
+      "revenue_scale": "Pre-revenue / negligible",
+      "headcount": "Not disclosed",
+      "hardware_track_record": "None under the InkJoy name. The founder's Dasung CTO tenure is a real ePaper engineering credential - Dasung has shipped ePaper monitors for years - but that track record belongs to a company he has left.",
+      "abandonment_history": "No history yet",
+      "staying_power": "low",
+      "rationale": "Lowest-capitalised vendor in the survey. Strong founder credential, essentially no company behind it, no published size or price list, and no disclosed integration story. Not investable for a three-year-horizon installation on current evidence.",
+      "sources": [
+        {
+          "url": "https://www.einpresswire.com/article/869748000/inkjoy-launches-full-color-epaper-frame-for-art-photos-and-mini-apps",
+          "what_it_supports": "InkJoy based in Boston MA; led by Dr. Ray Chen, co-founder and former CTO of Dasung; Kickstarter launch; ISFR engine on E Ink Spectra 6; no sizes, prices, API or subscription disclosed"
+        },
+        {
+          "url": "https://en.epaperia.com/News/599.html",
+          "what_it_supports": "Dr. Ray Chen has over a decade optimising ePaper and stepped down as DASUNG CTO in 2024 to found InkJoy; pre-launch site inkjoyframe.com"
+        }
+      ]
+    },
+    {
+      "name": "MelonAutomation (MelonFrame)",
+      "country": "Not established from any source I could read",
+      "corporate_form": "Private startup running a Kickstarter",
+      "ownership": "Not disclosed",
+      "public_ticker": null,
+      "funding": "Kickstarter (total not verified - Kickstarter blocks this tool)",
+      "revenue_scale": "Pre-revenue / campaign-stage; reward frames reported from $99",
+      "headcount": "Not disclosed",
+      "hardware_track_record": "None established. The brand name suggests a home-automation lineage but I found no prior shipped product.",
+      "abandonment_history": "No history yet",
+      "staying_power": "low",
+      "rationale": "Campaign-stage vendor with no published specifications - the support pages do not even state the screen size or how images reach the device. Cannot be assessed for a three-year horizon. Its URL/RSS playlist-source feature is the only thing here worth revisiting.",
+      "sources": [
+        {
+          "url": "https://melonframe.com/",
+          "what_it_supports": "Product positioning, Spectra 6 matte panel, walnut/aluminium modular frames, 'Point a playlist at any web URL or RSS feed', 'no monthly fee, no cloud charges', 'Images stay local on your phone'; page defers all products and pricing to Kickstarter"
+        },
+        {
+          "url": "https://melonframe.com/pages/support",
+          "what_it_supports": "The support documentation publishes no screen size, no resolution, and no image-delivery architecture - only Wi-Fi 2.4GHz b/g/n and app-driven playlists"
+        }
+      ]
+    },
+    {
+      "name": "Memoir",
+      "country": "Unknown",
+      "corporate_form": "Unknown",
+      "ownership": "Unknown",
+      "public_ticker": null,
+      "funding": "Unknown - listed as a pre-order/crowdfunding product on an aggregator",
+      "revenue_scale": "Unknown",
+      "headcount": "Unknown",
+      "hardware_track_record": "Unknown",
+      "abandonment_history": "Unknown",
+      "staying_power": "unknown",
+      "rationale": "I could not locate a vendor website, a specification sheet, a review, or a named company - only a Gadget Flow aggregator listing at $149 pre-order with 'three size choices' and no dimensions. On the evidence available this is not a assessable counterparty, and the price point makes a >15\" model very unlikely.",
+      "sources": [
+        {
+          "url": "https://thegadgetflow.com/product/memoir-e-ink-digital-frame/",
+          "what_it_supports": "The only source located: pre-order at $149 (from $199), 'Three size choices' with no dimensions, iOS/Android refresh, no company details"
+        }
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {
+      "lead": "SwitchBot AI Art Frame undocumented local HTTP endpoints on port 8080. A secondary source states that the pragmatic path for Home Assistant users is 'local network polling via undocumented HTTP endpoints (port 8080), which may break with firmware updates'. I could not confirm this from any primary source, forum thread, or repo.",
+      "why_it_matters": "If real, it would convert the single strongest-staying-power vendor in the category from 'closed / cloud-required' to 'partly-open', and would make the 31.5\" SwitchBot the best combined bet in the survey. This is the highest-value open question remaining. Verify by putting a unit on a LAN and port-scanning it, or by searching the Home Assistant community forum and the switchbot subreddit for 'port 8080'."
+    },
+    {
+      "lead": "Fraimic's actual local REST API surface. The vendor advertises a REST API and a local-only mode and exposes https://fraimic.local, but publishes no endpoint reference; the official user manual documents only the cloud path. Kickstarter returns 403 to this tool so I could not read the campaign FAQ where the API may be described.",
+      "why_it_matters": "Fraimic Large Canvas is the leading candidate on hardware and price, and its entire abandonment-risk mitigation rests on the local API being real and complete. 'Marketing claims a local API' and 'a documented local API exists' are very different purchases. Verify by browsing http://fraimic.local on a unit and enumerating routes, or by asking Fraimic support directly for the API reference."
+    },
+    {
+      "lead": "Whether the BLOOMIN8 mobile app / initial provisioning requires an arpobot account or cloud round-trip, even though steady-state control is local. support.bloomin8.com returns 403 to this tool and I could not read the Home Assistant support article or the account/privacy documentation.",
+      "why_it_matters": "A cloud-mandatory first-boot would mean the device bricks on activation if arpobot disappears before you set it up, undermining the otherwise excellent survives-the-vendor argument. It would also affect whether a second unit could be commissioned years later."
+    },
+    {
+      "lead": "Resolution and PPI of the SwitchBot AI Art Frame 31.5\". No page I could read states it. The Fraimic and InkPoster 31.5\" units are both 2560x1440 at 94 ppi, strongly suggesting a common E Ink 31.5\" Spectra 6 module, but I did not verify SwitchBot uses it.",
+      "why_it_matters": "If SwitchBot's 31.5\" is the same 2560x1440 panel, then at $1,299.99 shipping today from a publicly traded vendor it is directly price-comparable to Fraimic's $1,299 and undercuts InkPoster's $1,699 for identical image quality, and the decision reduces cleanly to integration openness versus vendor risk."
+    },
+    {
+      "lead": "Six additional colour-ePaper frame brands exhibited at E Ink's photo-frame theme wall at COMPUTEX 2026 that I did not investigate: Aelig, Kokonna, SMARTWIZ+ art, SWISH, YeconTech, and Aipusi (alongside Aura, Bloomin8, InkJoy, PocketBook, Reflection Frame and SwitchBot).",
+      "why_it_matters": "One of these could be a >15\" entrant nobody has covered. The same source notes the exhibited range spans 7.3\" to 40.5\" but that '10-inch and 13.3-inch [are] the current mainstream specifications', so the prior is that they are all small - which is why I deprioritised them. Worth a single sweep if the shortlist needs widening."
+    },
+    {
+      "lead": "InkPoster Tela 40.5\" and Duna 40.5\" real ship dates. Both have been 'Notify me' on the vendor's own catalogue for seven months since CES 2026, and the Duna's Engadget-reported April 2026 availability has slipped by four months with no public explanation.",
+      "why_it_matters": "These are the only >40\" colour options in existence. If they ship, they change the top of the market; if the slip continues, the practical ceiling for a colour art wall stays at 31.5\". Worth a direct sales enquiry rather than more web research."
+    },
+    {
+      "lead": "Whether any of the 28.5\"/31.5\" frames can be driven at native resolution without the vendor's dithering pipeline. Fraimic (proprietary dithering), Aura (proprietary dithering algorithm), and InkJoy (ISFR engine) all promote in-house image processing; BLOOMIN8 alone exposes an /image/dataUpload endpoint accepting pre-dithered raw data.",
+      "why_it_matters": "For an art archive, colour fidelity on a 6-ink panel is decided almost entirely by the dithering algorithm. The ability to supply your own pre-dithered data - which only BLOOMIN8 documents - means you can tune reproduction per artwork rather than accepting the vendor's generic photo-optimised pipeline. This may matter more to final image quality than the ppi differences between devices."
+    },
+    {
+      "lead": "Visionect (Slovenia) 32\" Place & Play e-paper display, positioned as digital signage rather than art.",
+      "why_it_matters": "A >15\" reflective e-paper device from a company with a long B2B track record and, being a signage product, likely a far more open management/API story than any consumer art frame. It is monochrome and not marketed as art, so it falls outside the literal scope, but as a self-hosted-archive display it may be a better engineering fit than several in-scope consumer frames. I did not research it."
+    }
+  ],
+  "unverified_facts": [
+    {
+      "claim": "SwitchBot AI Art Frame can be controlled locally over HTTP on port 8080 without the SwitchBot cloud.",
+      "why_unverified": "Asserted by a single secondary aggregator page that surfaced in search results. No primary source, no repo, no forum thread, and no vendor documentation corroborates it. I did not read the page it came from and am not citing it. Treat as rumour until tested on hardware.",
+      "url": null
+    },
+    {
+      "claim": "The SwitchBot AI Art Frame 31.5\" uses a 2560x1440 panel at ~94 ppi.",
+      "why_unverified": "Inferred from the fact that both other 31.5\" Spectra 6 art frames (Fraimic Large Canvas and InkPoster Affresco 31.5\") independently specify 2560x1440 at 94 DPI, implying a single E Ink module. No SwitchBot page I could read states any resolution for the 31.5\" model.",
+      "url": null
+    },
+    {
+      "claim": "Anthony Mattana (Fraimic CEO) sold a previous company to Logitech.",
+      "why_unverified": "Stated in a podcast show-notes page, which did not name the company. His documented prior venture is Hooke Audio. I found no filing, press release, or Logitech announcement confirming an acquisition, and no source connecting him to the 2014 Hush smart-earplug campaign despite the surface similarity.",
+      "url": null
+    },
+    {
+      "claim": "IONNYK Linn and Maxine display diagonals are 31.2\" and 40.2\" respectively.",
+      "why_unverified": "Computed by me from the display AREAS published on ionnyk.com (69 x 39 cm and 82 x 61 cm). IONNYK publishes frame dimensions and display areas but never a diagonal or a resolution, and I could not reach any retailer spec sheet (luxuryformen returns 403). Published secondary figures for these frames are unreliable - one roundup reports IONNYK sizes by taking the frame dimensions as the screen.",
+      "url": null
+    },
+    {
+      "claim": "Aura Frames has raised USD 46.9M lifetime over 8 rounds and has 125 employees; and separately, that its revenue is USD 3.7M ARR.",
+      "why_unverified": "Both come from data-aggregator pages (Tracxn, GetLatka) that appeared in search results and that I did not fetch. The $3.7M revenue figure is flatly inconsistent with ~1M frames sold at $149-$499 and is very likely wrong. The verified figure is ~USD 39M raised as of the 2022 TechCrunch round.",
+      "url": null
+    },
+    {
+      "claim": "MelonFrame's largest model is 13.3\" and Memoir's three sizes are all under 15\".",
+      "why_unverified": "Neither vendor publishes a screen size anywhere I could read, including MelonFrame's own support pages. Kickstarter returns 403 to this tool. The 13.3 diagonals recorded for both are upper-bound inferences from price points ($99 and $149 entry) and from the fact that the E Ink consumer frame market's stated mainstream sizes are 10\" and 13.3\". They are not measurements.",
+      "url": null
+    },
+    {
+      "claim": "InkJoy Frame will be offered in a size larger than 13.3\".",
+      "why_unverified": "The vendor says only that 'multiple frame sizes will be available' and publishes no list. I could not fetch the Kickstarter campaign (403) or the one review carrying specs (content truncated). The 13.3 recorded is an assumption, not a fact.",
+      "url": null
+    },
+    {
+      "claim": "Fraimic Large Canvas units are actually in customers' hands.",
+      "why_unverified": "Three sources disagree as of early August 2026: Forbes (2026-07-21) says 'shipping now'; fraimic.com's product page says 'Ships Early August'; the shop collection shows both SKUs 'Sold out'; and BackerGuardian (2026-07-27) found no public confirmation of any backer delivery against a promised May 2026 date. The only reviewed unit anywhere was a preproduction 13.3\". No independent confirmation of a delivered 31.5\" exists.",
+      "url": null
+    },
+    {
+      "claim": "The BLOOMIN8 local REST API is genuinely unauthenticated on the LAN.",
+      "why_unverified": "The published openapi.yaml declares no security scheme and the HA component README documents no authentication, which together strongly imply an open endpoint - but absence of a declaration in a spec is not proof of absence in firmware, and the Schedule Pull configuration does involve a token for the upstream direction. Confirm on hardware before designing around it, and note that an unauthenticated endpoint is itself a LAN security consideration for the installation.",
+      "url": null
+    },
+    {
+      "claim": "PocketBook International SA is the direct legal owner of the IONNYK entity (as opposed to an affiliate or holding company being the acquirer).",
+      "why_unverified": "The acquisition is well documented in PocketBook's own announcement and in trade press, but no source I read named the acquiring legal entity or disclosed the transaction structure or price. The InkPoster-to-PocketBook relationship IS directly verified (inkposter.com's about page names Pocketbook International SA).",
+      "url": null
+    }
+  ]
+}

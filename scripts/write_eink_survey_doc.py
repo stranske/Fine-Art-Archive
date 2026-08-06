@@ -1,4 +1,100 @@
-# Large-format e-paper survey — development target
+#!/usr/bin/env python3
+"""Regenerate docs/EINK_DEVICE_SURVEY.md from config/eink_targets.json.
+
+The first version of the doc was hand-written around a table produced by a
+throwaway snippet, and it collapsed rows by (vendor, size) -- which hid real
+SKUs rather than duplicates, and left a whole category (consumer art frames)
+out of the summary entirely. Generating the tables from the config means the
+doc cannot silently disagree with the data again.
+
+Analysis prose stays hand-written here; only the tables are derived.
+
+    python3 scripts/merge_eink_survey.py && python3 scripts/write_eink_survey_doc.py
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CFG = ROOT / "config" / "eink_targets.json"
+OUT = ROOT / "docs" / "EINK_DEVICE_SURVEY.md"
+
+OPEN_RANK = {"open": 0, "partly-open": 1, "unknown": 2, "closed": 3}
+STAY_RANK = {"high": 0, "medium-high": 1, "medium": 2, "unknown": 3, "low": 4}
+
+
+def dia(x: dict) -> float:
+    try:
+        return float(x.get("diagonal_in") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def price(x: dict) -> str:
+    p = x.get("price") or {}
+    return f"${p['amount']:,.0f}" if p.get("amount") else "—"
+
+
+def main() -> int:
+    d = json.loads(CFG.read_text())
+    vendors = {v.get("name"): v for v in d.get("vendors") or []}
+    big = [x for x in d.get("devices") or [] if dia(x) > 15]
+
+    def openness(x: dict) -> str:
+        return (x.get("integration") or {}).get("openness") or "unknown"
+
+    def staying(x: dict) -> str:
+        return (vendors.get(x.get("vendor")) or {}).get("staying_power") or "unknown"
+
+    rows = []
+    for x in sorted(big, key=lambda y: (OPEN_RANK.get(openness(y), 9),
+                                        STAY_RANK.get(staying(y), 9), -dia(y))):
+        rows.append(
+            f"| {dia(x):.1f}\" | {(x.get('vendor') or '?')[:26]} | "
+            f"{(x.get('model') or '?')[:40]} | {x.get('status', '?')} | "
+            f"{price(x)} | **{openness(x)}** | {staying(x)} |")
+    table = "\n".join(rows)
+
+    dl = d.get("delivery_record") or {}
+    # Only >15in campaigns belong in a >15in survey. Modos (13.3in) and
+    # MelonFrame (7.3in) were researched to establish the base rate and are
+    # discussed in prose, not listed as if they were candidates.
+    in_scope = [c for c in (dl.get("campaigns") or [])
+                if (c.get("diagonal_in") or 99) > 15]
+    shipped = [c for c in in_scope if c.get("backers_have_units") == "yes"]
+    stuck = [c for c in in_scope if c.get("backers_have_units") == "no"]
+
+    def clip(text: str, n: int) -> str:
+        """Truncate on a word boundary; a table cell cut mid-word reads as a
+        rendering bug rather than as an abbreviation."""
+        t = " ".join((text or "").split())
+        if len(t) <= n:
+            return t
+        return t[:n].rsplit(" ", 1)[0].rstrip(" ,.;:-") + "…"
+
+    def camp_rows(cs: list) -> str:
+        out = []
+        for c in sorted(cs, key=lambda x: -(x.get("diagonal_in") or 0)):
+            promised = clip(c.get("promised_ship") or "—", 26)
+            out.append(f"| {clip(c.get('name', '?'), 30)} | "
+                       f"{(c.get('diagonal_in') or '—')}\" | "
+                       f"{promised} | "
+                       f"{clip(c.get('current_status', '?'), 84)} |")
+        return "\n".join(out)
+
+    ps = d.get("panel_supply") or {}
+    alts = [p for p in (ps.get("panel_makers") or [])
+            if p.get("credible_alternative_to_eink") in ("yes", "partial")
+            and (p.get("largest_reflective_panel_in") or 0) > 15]
+    alt_rows = "\n".join(
+        f"| {p.get('name', '?')[:26]} | {p.get('largest_reflective_panel_in')}\" | "
+        f"{(p.get('technology') or '?')[:30]} | "
+        f"{'own film' if p.get('makes_own_electrophoretic_film') else 'not EPD film'} | "
+        f"{p.get('credible_alternative_to_eink')} |"
+        for p in sorted(alts, key=lambda x: -(x.get("largest_reflective_panel_in") or 0)))
+
+    doc = f"""# Large-format e-paper survey — development target
 
 Machine-readable companion: `config/eink_targets.json`.
 Raw researcher output: `docs/research/eink/stream-*.json`, merged by
@@ -17,8 +113,8 @@ push, and to stay readable during development. Two criteria dominate:
 2. **Integration openness** — can this app push images over the local network,
    with no vendor cloud in the path?
 
-**Coverage:** 47 device records (37 above 15"),
-54 vendors, 59 recorded
+**Coverage:** {len(d.get('devices') or [])} device records ({len(big)} above 15"),
+{len(d.get('vendors') or [])} vendors, {len(d.get('leads_not_followed') or [])} recorded
 leads, from six researcher streams across two rounds.
 
 ---
@@ -108,43 +204,7 @@ Sorted by openness, then vendor durability, then size.
 
 | Size | Vendor | Model | Status | Price | Openness | Durability |
 |---|---|---|---|---|---|---|
-| 31.5" | Samsung Electronics | Samsung Color E-Paper EMDX / EM32DX-A (3 | shipping | $1,350 | **open** | high |
-| 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | $2,300 | **open** | medium |
-| 31.2" | Visionect d.o.o. | Visionect Place & Play 32" Development K | dev-kit | $6,000 | **open** | medium |
-| 31.5" | E Ink Holdings | E Ink 31.5" Spectra 6 ePaper Display mod | shipping | — | **open** | unknown |
-| 31.5" | Dalian Good Display Co., L | Good Display GDEP315C01(E6) 31.5" Spectr | shipping | — | **open** | unknown |
-| 31.5" | Dalian Good Display / E In | GDEP315C01(E6) - 31.5" bare panel (E Ink | dev-kit | — | **open** | unknown |
-| 25.3" | Onyx International Inc. (B | BOOX Mira Pro (monochrome) 25.3" | shipping | — | **open** | unknown |
-| 25.3" | Dalian Good Display | GDEP253C02(E6) - 25.3" bare panel | dev-kit | $898 | **open** | unknown |
-| 25.3" | DASUNG Tech Co., Ltd. | Dasung Paperlike 253 / 253U and Paperlik | shipping | $1,698 | **partly-open** | medium |
-| 25.3" | DASUNG Tech Co., Ltd. | DASUNG Paperlike 253 (Revolutionary) 25. | shipping | $1,549 | **partly-open** | medium |
-| 25.3" | Bigme (brand of Xinruizhi  | Bigme B251 Pro 25.3 colour e-ink monitor | shipping | $1,349 | **partly-open** | medium |
-| 32.0" | PPDS (TP Vision Europe B.V | Philips Tableaux 5150I 32in (and 25in Ta | shipping | — | **partly-open** | unknown |
-| 31.5" | PPDS / TP Vision / MMD (TP | Philips Tableaux 5150I — 32BDL5150I/00 ( | shipping | — | **partly-open** | unknown |
-| 31.5" | Dalian Good Display Co., L | DMPH315E62 — 31.5" Spectra 6 finished e- | shipping | $1,636 | **partly-open** | unknown |
-| 31.5" | SEEKINK (Jiangxi Xingtai T | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | unknown |
-| 31.5" | MEiNK (sold by media mea) | MEiNK 32" E Ink Spectra 6 ePaper Signage | shipping | $1,850 | **partly-open** | unknown |
-| 31.2" | Digital View | Digital View 32in Outdoor E Paper Displa | shipping | — | **partly-open** | unknown |
-| 28.5" | BLOOMIN8 (arpobot) | BLOOMIN8 E-Ink Canvas Large 28.5 | preorder | $2,399 | **partly-open** | unknown |
-| 25.3" | Onyx International Inc. (B | Boox Mira Pro Color 25.3 (and Mira Pro 2 | shipping | $1,899 | **partly-open** | unknown |
-| 25.3" | PPDS / TP Vision / MMD (TP | Philips Tableaux 25BDL4050I/00 (25.3") | shipping | — | **partly-open** | unknown |
-| 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") / EPC3 | shipping | — | **partly-open** | unknown |
-| 25.3" | Dalian Good Display | DMPH253E61 (25.3") and DMPH315E61 (31.5" | shipping | $1,636 | **partly-open** | unknown |
-| 31.5" | Fraimic | Large Canvas 31.5" (Smart Canvas line) | preorder | $1,299 | **partly-open** | low |
-| 75.0" | Samsung Electronics | Color E-Paper EMDX 75" | announced | — | **unknown** | high |
-| 31.5" | ePaint (Anhui Yutu Technol | e-Chroma 28" / 31.5" (indoor) and e-Pola | shipping | — | **unknown** | unknown |
-| 28.5" | Dalian Good Display | GDES285E01(E6) - 28.5" A2 bare panel | dev-kit | — | **unknown** | unknown |
-| 25.3" | E Ink Holdings | E Ink 25.3" Spectra 6 ePaper Display mod | shipping | $1,400 | **unknown** | unknown |
-| 31.5" | Fraimic | Fraimic Smart Canvas Large 31.5 | preorder | $999 | **unknown** | low |
-| 40.2" | IONNYK (brand of Pocketboo | IONNYK Jane (~25in), Linn (~50in), Maxin | shipping | — | **closed** | medium |
-| 75.0" | E Ink Corporation / E Ink  | E Ink Spectra 6 75" module (single) and  | announced | — | **closed** | unknown |
-| 40.5" | InkPoster (brand of Pocket | PocketBook InkPoster Tela 40.5" | announced | $4,200 | **closed** | unknown |
-| 40.5" | InkPoster (brand of Pocket | PocketBook InkPoster Duna 40.5" (designe | announced | $6,500 | **closed** | unknown |
-| 32.0" | Papercast | Papercast 32" Indoor E-Paper Display — D | shipping | — | **closed** | unknown |
-| 31.5" | InkPoster (brand of Pocket | PocketBook InkPoster Affresco 31.5" | shipping | $1,699 | **closed** | unknown |
-| 31.5" | SwitchBot (Woan Technology | SwitchBot AI Art Frame 31.5 | shipping | $1,300 | **closed** | unknown |
-| 31.2" | IONNYK (owned by PocketBoo | Linn (Large Format) | shipping | $3,890 | **closed** | unknown |
-| 28.5" | PocketBook International S | PocketBook InkPoster Tela 28.5" | shipping | $2,399 | **closed** | unknown |
+{table}
 
 ---
 
@@ -157,18 +217,13 @@ options were vapour.
 
 | Campaign / product | Size | Promised | Status |
 |---|---|---|---|
-| Fraimic Large Canvas (31.5in) | 31.5" | May 2026 (stated as… | SHIPPING AND ARRIVING. Update #15 (21 Jul 2026) 'Large Fraimic Units Have Arrived… |
-| InkPoster Tela 28.5in and… | 28.5" | Announced CES January… | SHIPPING AND PURCHASABLE TODAY. inkposter.com shows Tela 28.5in $2,399 and Affresco… |
+{camp_rows(shipped) or "| _(none recorded)_ | | | |"}
 
 **Funded or announced, no >15" unit delivered:**
 
 | Campaign / product | Size | Promised | Status |
 |---|---|---|---|
-| InkPoster Tela 40.5in and… | 40.5" | — | ANNOUNCED, NOT BUYABLE - the survey's read is correct for these two SKUs. Both show… |
-| Memoir (Large 31.5in) | 31.5" | February 2027 on every… | ANNOUNCED / FUNDED ONLY. Nothing manufactured, nothing shipped, not yet late… |
-| BLOOMIN8 EinkCanvas Large… | 28.5" | October 2025 (every Large… | STILL NOT DELIVERED at 2026-08-05, roughly 10 months past the promised date. Latest… |
-| InkJoy Frame 25.3in and 28.5in | 28.5" | May 2026 (Launch Special)… | LARGE SIZES NOT DELIVERED as of the comment stream I read on 2026-08-05. Creator… |
-| Galari: The Ever-Changing Art… | —" | September 2025 on all… | CATASTROPHIC. As of comments read 2026-08-05 - about 11 months past the promised… |
+{camp_rows(stuck) or "| _(none recorded)_ | | | |"}
 
 **The pattern is that the size slips, not the vendor.** BLOOMIN8 and InkJoy both
 shipped their 7.3"/10"/13.3" SKUs and both are stuck on the big panel.
@@ -184,7 +239,7 @@ monthly updates.
 ## Is E Ink really a monopoly? Partly.
 
 This was briefed as an attempt to **refute** the claim, because it carries the
-whole counterparty argument. Verdict: **partly-refuted**.
+whole counterparty argument. Verdict: **{ps.get('monopoly_claim_verdict', 'unknown')}**.
 
 **What survives.** For multi-pigment *colour* electrophoretic film — what a
 colour art frame needs — every large-format alternative collapses into E Ink's
@@ -199,11 +254,7 @@ module assembly. Tianma is at 6.7" prototypes; CLEARink never shipped.
 
 | Maker | Largest | Technology | Film | Alternative? |
 |---|---|---|---|---|
-| Anhui Yutu Technology (ePa | 32" | Cholesteric liquid crystal (Ch | not EPD film | partial |
-| Sun Vision Display (New Vi | 32" | Reflective LCD (RLCD) -- a dif | not EPD film | partial |
-| IRIS Optronics | 31.5" | Full-colour Cholesteric LCD (C | not EPD film | yes |
-| Guangzhou OED Technologies | 31.2" | Microcapsule electrophoretic,  | own film | partial |
-| HANNstar / HANNspree (ecoV | 28" | Reflective LCD marketed as 'ec | not EPD film | partial |
+{alt_rows or "| _(none found)_ | | | | |"}
 
 **Guangzhou OED** makes its own microcapsule film on its own IP (175 granted
 patents), survived E Ink's 2012–15 patent suit, and put a **31.2" colour panel
@@ -279,3 +330,14 @@ called Morispace", and a CLEARink executive transition that is actually a
 different company's — are recorded as unverified rather than repeated. This
 discipline exists because an early researcher fabricated 17 of 30 URLs, caught
 by link-checking.
+"""
+    OUT.write_text(doc)
+    print(f"wrote {OUT.relative_to(ROOT)} ({len(doc):,} chars)")
+    print(f"  {len(big)} devices >15\" in table")
+    print(f"  delivered: {len(shipped)}   stuck: {len(stuck)}")
+    print(f"  alternative panel makers >15\": {len(alts)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

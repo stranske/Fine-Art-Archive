@@ -1,0 +1,487 @@
+{
+  "monopoly_claim_verdict": "partly-refuted",
+  "verdict_reasoning": "Split the claim into its two halves and it fails differently on each. (1) For MULTI-PIGMENT COLOUR electrophoretic film -- the thing a colour art frame actually needs -- the claim is essentially correct and I could not refute it. Every large-format 'alternative' vendor I tested turns out to be downstream of E Ink's Front Plane Laminate (FPL). E Ink's own 2024 annual report states its primary business is 'Front Plane Laminate (FPL) Film and E-Paper Display (EPD)' and calls itself 'the uncontested world leader in ePaper technologies'; its press releases name BOE, DKE, Jiangxi Xingtai (Seekink), Innolux, Qingyue and Yes Optoelectronics as MODULE partners to whom E Ink 'supplies color ePaper materials (FPL)'. LG's 32in e-paper signage is an E Ink Spectra 6 panel; Sharp supplies only the IGZO oxide-TFT backplane; the AUO deal is a module-assembly JV (and still only a term sheet as of both companies' own announcements) in which E Ink retains materials; Melford, Agile, Praevar, DynaScan, Samsung and PPDS are integrators around E Ink panels. Tianma's micro-fluidic e-paper is a 6.7in prototype; CLEARink never shipped; Plastic Logic is an OTFT backplane house that E Ink invested in and now targets smart cards/wearables, not >15in. (2) But the claim as WRITTEN -- 'near-monopoly on e-paper panels', with the implication that no second source of large reflective panels exists -- is refuted at >15in on two independent fronts. (a) Guangzhou OED Technologies makes its OWN microcapsule electrophoretic film on its own IP (306 patent applications / 175 granted; it survived E Ink's 2012-2015 patent suit) and in March 2025 put a 31.2in colour e-paper into mass production -- larger than any single E Ink Spectra 6 panel. Chinese industry analysis names only E Ink, OED and Wuxi Winflex as mass producers of e-paper film, and invidis/sixteen-nine ran the story under the headline 'Turns Out E Ink Not The Only Company Making, Marketing Large Format Color E-Paper Displays'. (b) Cholesteric LCD (ChLCD) is a genuinely independent bistable reflective technology built on ORDINARY LCD lines, so it has no E Ink chokepoint at all: IRIS Optronics ships a 31.5in full-colour bistable ChLCD (1920x1080, >16M colours, sub-second refresh, -30 to +85C) via LCD-fab partners, has a JV with Kent Displays, and Anhui Yutu's ePaint offers 13.3/28/32in ChLCD at 16.77M colours. Below bistability there is also reflective LCD at these sizes (Sun Vision 32in, HANNstar ecoVISION 23.8/28in, Sharp/NEC). A third, separate finding materially undercuts the survey's ADVICE rather than its premise: E Ink's own large-format capability is brand new and immature. Its 2024 annual report declares 2025 'the First Year of Large-Size ePaper' and concedes that 'since its establishment in 1992, E Ink has consistently focused on the research and manufacturing of small-size displays'. The largest single Spectra 6 panel is 31.5in; the 75in unit is six tiled modules with visible seams. So 'buy close to the panel supplier' buys proximity to a product line the supplier itself only began in 2025 -- which is a different and arguably larger risk than the counterparty risk the survey describes.",
+  "panel_makers": [
+    {
+      "name": "E Ink Holdings",
+      "country": "Taiwan",
+      "public_ticker": "TPEx:8069",
+      "makes_own_electrophoretic_film": true,
+      "largest_reflective_panel_in": 31.5,
+      "technology": "Microcapsule electrophoretic (EPD). Product families: Carta (mono), Kaleido 3 (RGB colour-filter array over mono, 4096 colours), Gallery 3 / Gallery Plus (multi-pigment ACeP), Spectra 6 (6-colour pigment), Marquee (4-particle, in development), Prism 3 (variable colour material).",
+      "colour_capable": "Yes - the only supplier of multi-pigment colour electrophoretic film (Spectra 6, Gallery). Spectra 6 is a 6-colour palette; Kaleido 3 gives 4096 colours via CFA at reduced colour PPI.",
+      "commercially_available_to_third_parties": "Yes, two ways: complete EPD modules, or cut FPL film for customers who supply their own TFT backplane ('for those customers who are able to provide their own TFT or backplane integration, or for those looking for solutions in the architecture and design markets, we offer our films for sale'). Film sales are handled case-by-case through sales, not published as an open catalogue.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Largest SINGLE panel is 31.5in (2560x1440, ~93-94ppi; the 31.2in mono VA3200-QAA is 2560x1440 at 94ppi). The 75in Spectra 6 is six tiled modules -- 'The seams are indisputably minimal, but they are there.' The 75in Kaleido 3 shown at ISE 2025 was a proof of concept of two units tiled with a horizontal seam. 2024 revenue NT$32.163bn; 2024 capex NT$5.33bn; 2026 capex plan NT$5-8bn (US$157-251m). H5 line entered volume production late 2025 making 32in and 55in signage panels; H6 at Hsinchu starts large panels later in 2026; further lines planned at Taoyuan Guanyin and in the US. E Ink acquired its only real EPD rival, SiPix (microcup), in 2012.",
+      "sources": [
+        {"url": "https://www.eink.com/upload/2025_04_28/51_20250428155204i9ls2kL8C5.pdf", "what_it_supports": "E Ink 2024 annual report (fetched and text-extracted locally): primary business is 'Front Plane Laminate (FPL) Film and E-Paper Display (EPD)'; 'E Ink is the uncontested world leader in ePaper technologies and products'; 2025 declared 'First Year of Large-Size ePaper' with the admission that since 1992 E Ink focused on small-size displays; Marquee described as 4-particle, -20 to 65C, 5-7s refresh, development goal up to 75in; headcount 2,898 (2024) and 2,857 at 2025-03-30; 2024 revenue NT$32.163bn; capex NT$5,328,418 thousand."},
+        {"url": "https://www.eink.com/tech/detail/Electronic_Ink_Film", "what_it_supports": "E Ink sells cut film separately to customers who laminate it to their own backplane; joint development partnerships for customers with in-house module/TFT capacity."},
+        {"url": "https://invidis.com/sixteen-nine/2025/04/22/e-inks-premium-richer-color-spectra-6-displays-coming-by-end-of-year-as-75-inch-poster-replacements/", "what_it_supports": "The 75in Spectra 6 is six tiled modules with minimal but visible seams; cost premium described as eye-watering, with a long-run target of 1.5-2x competing LCD."},
+        {"url": "https://shopkits.eink.com/en/product/detail/31.2''MonochromeePaperDisplay(VA3200-QAA)", "what_it_supports": "E Ink's own 31.2in monochrome module: 2560x1440, 94ppi, 16 grey levels, glass substrate, 494g."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-75-Spectra-6-Display-Vivid%20-Sustainable-Digital-Signage", "what_it_supports": "E Ink's own 75in Spectra 6 announcement; initial sample modules Q4 2025 to Touch Taiwan partners only."},
+        {"url": "https://invidis.com/sixteen-nine/2026/03/16/demand-for-low-power-signage-pushing-e-ink-to-expand-large-format-e-paper-production/", "what_it_supports": "H5 line in volume production late 2025 making 32in and 55in signage panels; H6 second large-format line; new facilities in Taiwan and the US; NT$5-8bn 2026 capex."},
+        {"url": "https://www.digitimes.com/news/a20250529PD209/e-ink-e-paper-esl-technology-2025.html", "what_it_supports": "Chairman Johnson Lee calling 2025 'the first year of large-format e-paper'; a pivot from 33 years of small-display focus requiring a complete upgrade in product strategy and operations."}
+      ]
+    },
+    {
+      "name": "Guangzhou OED Technologies (广州奥翼电子)",
+      "country": "China",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": true,
+      "largest_reflective_panel_in": 31.2,
+      "technology": "Microcapsule electrophoretic, independently developed ('neutral particle - single-charge particle - microcapsule' route). Product range explicitly includes e-paper display FILM (电子纸显示膜片) as well as modules and finished applications. Also demonstrated graphene e-paper.",
+      "colour_capable": "Yes, but apparently via colour-filter array over monochrome film rather than multi-pigment ink: its 10.3in panel is quoted at 272 PPI monochrome / 136 PPI colour, the classic CFA signature. The 31.2in unit is described as colour with 18 fps video capability.",
+      "commercially_available_to_third_parties": "Yes in China (supplies Alibaba among others; ~1/3 of South China domestic demand claimed). Western availability is thin and unproven: MEV Elektronik GmbH lists OED as a supplier, and OED exhibited at electronica, but I found no published Western distributor, datasheet, or price for the 31.2in panel.",
+      "credible_alternative_to_eink": "partial",
+      "notes": "This is the single finding that most damages the survey's claim. OED is the one company besides E Ink that verifiably mass-produces electrophoretic film with its own IP: 306 patent applications / 175 granted, 11 years and RMB 300m of R&D, and it successfully defended E Ink's 2012-2015 patent litigation. In March 2025 it announced mass production of a 31.2in colour e-paper with an 18 fps refresh -- the world's first >30in video-capable e-paper -- and Chinese state media describes OED as 'one of only two companies globally capable of mass-producing e-paper display materials'. Caveats a buyer must weigh: (i) no evidence of a multi-pigment colour ink comparable to Spectra 6 or Gallery, so absolute colour quality is likely below E Ink's best; (ii) resolution is likely lower than E Ink at equivalent size; (iii) no Western supply chain, support or datasheets found; (iv) there is genuine reporting ambiguity because a 31.2in video e-paper was also demoed by Geniatech at Embedded World 2025 and attributed to E Ink, with invidis explicitly wondering whether that demo was in fact the OED panel.",
+      "sources": [
+        {"url": "https://www.thepaper.cn/newsDetail_forward_9181840", "what_it_supports": "OED as one of the world's only two e-paper display suppliers; 306 patent applications / 175 granted; 11 years and RMB 300m R&D on its own microcapsule electrophoretic technology; successful defence against E Ink's 2012-2015 patent litigation; ~1m units/yr and ~1/3 of South China domestic demand."},
+        {"url": "https://www.quanchu.com.cn/zh-cn/media-center/hykxcn/2023/5yue/2.html", "what_it_supports": "OED Technology Park in Nansha, Guangzhou, ~70,000 sqm including flexible display MATERIAL production; OED described as 'one of only two companies globally capable of mass-producing e-paper display materials'."},
+        {"url": "https://news.dayoo.com/finance/202503/27/171077_54804534.htm", "what_it_supports": "OED's 31.2in video e-paper: 18 fps, colour, entered mass production, market launch expected within two months (March 2025); co-developed algorithms/FPGA with Shenzhen Jinyatai."},
+        {"url": "https://invidis.com/sixteen-nine/2025/03/28/turns-out-e-ink-not-the-only-company-making-marketing-large-format-color-e-paper-displays/", "what_it_supports": "Western trade press acknowledging OED as a second maker/marketer of large-format colour e-paper at 30in+, 31.2in shipping, and noting long-running E Ink/OED IP disputes; also the explicit uncertainty over whether the Geniatech demo was actually the OED panel."},
+        {"url": "https://news.qq.com/rain/a/20241110A053QW00", "what_it_supports": "OED positioned as challenging E Ink's ~90% share; proprietary electrophoretic materials; 17ms refresh; multi-level greyscale colour rather than dithering; 10.3in panel at 272 PPI mono / 136 PPI colour."},
+        {"url": "https://www.chinadaily.com.cn/a/202503/27/WS67e52dc1a3101d4e4dc2b3c0.html", "what_it_supports": "World's first e-paper display 30in and above, 18 fps, in mass production."},
+        {"url": "https://www.channelnews.com.au/chinese-firm-unveils-worlds-largest-color-e-paper-display/", "what_it_supports": "Independent (non-Chinese) coverage of the 31.2in colour e-paper, mass production started, target applications outdoor signage and public information."},
+        {"url": "https://www.chinadaily.com.cn/business/tech/2016-03/21/content_23983295.htm", "what_it_supports": "OED founded 2008, 'one of the two major electronic-paper display suppliers in the world', thin-film electrophoretic displays, mass production since late 2011, Chengdu factory."},
+        {"url": "https://www.chinabaogao.com/detail/617498.html", "what_it_supports": "Chinese industry-chain analysis naming e-paper FILM makers as E Ink, OED and Wuxi Winflex; module CR4 concentration 78.2% in H1 2022; module makers listed as E Ink, Winflex, OED, BOE, Helitai, Dongfang Kema, Yashi, Qingyue."},
+        {"url": "https://www.mev-elektronik.com/en/lieferanten/oed-en/", "what_it_supports": "A European distributor (MEV Elektronik, Germany) lists OED and its O-paper microcapsule electrophoretic displays, though with no catalogue, sizes or prices published."},
+        {"url": "https://www.oedtech.com/", "what_it_supports": "OED's own site confirms it is an e-paper manufacturer, but published no product/size detail I could retrieve."},
+        {"url": "https://armordigitalscreen.com/top-10-e-ink-display-manufacturers/", "what_it_supports": "Low-confidence trade/SEO source, used only as corroboration that OED is one of only two companies with core R&D and manufacturing capability for ePaper MATERIALS, with all other listed players (DKE, PDI, Plastic Logic, CLEARink, Sony, BOE, Visionect, Armor) characterised as module makers or integrators."}
+      ]
+    },
+    {
+      "name": "BOE Technology Group",
+      "country": "China",
+      "public_ticker": "SZSE:000725",
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": null,
+      "technology": "E-paper MODULE manufacture using E Ink FPL laminated to BOE backplanes. BOE is a co-founder of E Ink's ePaper Industry Alliance and an executive council member.",
+      "colour_capable": "Yes, but only as far as the E Ink film it buys allows (Gallery Palette / Gallery Plus colour modules).",
+      "commercially_available_to_third_parties": "Yes, as modules -- BOE is one of the largest e-paper module suppliers in the world, reportedly ~40% of the e-paper shelf-label module market and a lead supplier on Walmart's ESL rollout.",
+      "credible_alternative_to_eink": "no",
+      "notes": "This is the target that most clearly FAILS to refute the claim, and it matters because BOE is the most-cited hypothetical challenger. I found no evidence BOE makes its own electrophoretic film. E Ink names BOE explicitly as a MODULE partner to which it supplies 'color ePaper materials (FPL)'; DigiTimes describes E Ink as the film supplier to BOE/DKE/Xingtai; BOE's own e-paper blog positions BOE as a display and product maker and refers to E Ink as the centralised supplier. BOE's scale means it could in principle attack the film layer, but nothing I found shows it doing so. Note also a cross-holding that cuts the other way: BOE held ~25% of VusionGroup as of May 2025, i.e. BOE is an owner of E Ink's largest demand channel, not an insurgent against it. Caution: an earlier search-engine summary asserted a 'BOE e-paper division called Morispace' investing RMB 2.8bn -- I could not verify that from any primary or credible source and treat it as unreliable.",
+      "sources": [
+        {"url": "https://www.eink.com/news/detail/E_Ink_Joins_Forces_with_Six_Module_Partners_to_Promote_Color_ePaper_and_Aim_to_Reduce_CO2_Emissions", "what_it_supports": "E Ink names its six colour module partners -- BOE, DKE, Jiangxi Xing Tai, Innolux, Qingyue, Yes Optoelectronics -- and states E Ink supplies 'color ePaper materials (FPL)' while partners manufacture the modules."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Full partner taxonomy: BOE listed among 'module manufacturing partners' (with DKE, Yes Optoelectronics, Qingyue, Innolux, Xingtai, MVE, Ink Cubic); Sharp listed separately under oxide TFT backplane; Hanshow/Pricer/SES-imagotag/SoluM as integrators."},
+        {"url": "https://www.digitimes.com/news/a20250902PD201/esl-e-paper-shipments-e-ink-growth-2025.html", "what_it_supports": "324m e-paper shelf-label modules in H1 2025 (+244% YoY); BOE, Dongfang Kema and Xingtai lead Walmart's ESL projects; BOE ~40% of the module market; E Ink identified as the principal supplier of e-paper FILM material to these module makers."},
+        {"url": "https://blog.boe.com/what-is-e-paper-technology-and-how-e-paper-displays-work", "what_it_supports": "BOE's own e-paper content positions BOE as a display/product maker and refers to E Ink as a separate, centralised supplier with strong lifecycle control -- not a claim to make its own electrophoretic material."},
+        {"url": "https://www.epaperia.org/Intro.html", "what_it_supports": "ePaper Industry Alliance co-founded April 2021 by E Ink, BOE and Seekink; 260+ members by June 2026 -- i.e. BOE sits inside E Ink's ecosystem."},
+        {"url": "https://goodereader.com/blog/e-paper/e-ink-with-boe-and-mediatek-want-to-grow-e-paper-ecosystem", "what_it_supports": "April 2023: BOE integrates E Ink's e-paper technology into its ESL systems; E Ink gains access to BOE manufacturing."},
+        {"url": "https://en.wikipedia.org/wiki/VusionGroup", "what_it_supports": "BOE reduced its VusionGroup holding to 25% as of May 2025; E Ink and Qualcomm are also shareholders."}
+      ]
+    },
+    {
+      "name": "LG Electronics / LG Display",
+      "country": "South Korea",
+      "public_ticker": "KRX:066570 (LG Electronics), KRX:034220 (LG Display)",
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 32,
+      "technology": "The 32RS1Q-B 'LG E-Paper Display' is a finished signage product wrapped around an E Ink Spectra 6 panel. LG contributes industrial design, webOS/SuperSign CMS, an ultra-low-power SoC, a 72Wh detachable magnetic battery with Qi wireless charging, and its own image-optimisation algorithm.",
+      "colour_capable": "Yes - E Ink Spectra 6 six-colour pigment system, 2560x1440 at 32in.",
+      "commercially_available_to_third_parties": "As a finished commercial-signage unit only: Korea early June 2026, Europe and US July 2026. LG does not sell the panel.",
+      "credible_alternative_to_eink": "no",
+      "notes": "The reported battery-powered 32in unit is real, but the panel is E Ink's, not LG Display's. LG's own newsroom describes the technology generically ('moves and positions electrically charged colour particles') and does NOT name E Ink; invidis states plainly that it 'is based on E Ink's Spectra 6 technology, like most comparable solutions.' 17.8mm thick (8.6mm at thinnest), 3.1kg, 3-hour charge, indoor only 0-40C, direct sunlight restricted -- worth noting for an art-frame use case. LG Display did historically build electrophoretic panels (a 6in LB060S01 EPD, and a 19in flexible e-paper demo circa 2010) but I found no evidence of a current LG Display large-format e-paper panel programme; I could not fetch the 2010 Fast Company article (403) so I have not relied on it.",
+      "sources": [
+        {"url": "https://invidis.com/news/2026/06/e-paper-lg-adds-battery-powered-e-ink-display-to-signage-portfolio/", "what_it_supports": "The LG 32in e-paper signage panel is based on E Ink's Spectra 6; LG does not manufacture the panel. 32in QHD, 72Wh battery with wireless charging, 0.7in/0.3in thickness, 6.8lb."},
+        {"url": "https://www.lg.com/global/newsroom/news/media-entertainment-solution/lg-electronics-launches-ultra-low-power-lg-e-paper-display-for-commercial-spaces/", "what_it_supports": "LG's own announcement: 32in QHD 2560x1440, 17.8mm/8.6mm, 3.1kg, 72Wh, ~3h charge, webOS + SuperSign, Korea June 2026 / Europe+US July 2026, indoor only 0-40C, direct sunlight restricted. Notably does NOT name E Ink as the panel supplier."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-to-Showcase-75-E-Ink-Kaleido3-Outdoor-Large-Area-Color-Signage-at-Integrated-Systems-Europe-2025", "what_it_supports": "LG Electronics shown as one of four booth partners displaying E Ink's 75in Kaleido 3 Outdoor at ISE 2025 (with Samsung, DynaScan and Agile) -- i.e. LG as an E Ink channel partner."}
+      ]
+    },
+    {
+      "name": "Tianma Microelectronics",
+      "country": "China",
+      "public_ticker": "SZSE:000050",
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 6.7,
+      "technology": "Tianma's own reflective bet is 'micro-Fluidic' e-paper, an alternative to electrophoretics; it also agreed in 2019 to build TFT backplanes and module assemblies for CLEARink's TIR-based ePaper 2.0.",
+      "colour_capable": "Yes at prototype level - mono and colour 6.7in panels at 960x1920 / 320 PPI shown at Display Week 2024.",
+      "commercially_available_to_third_parties": "No evidence of commercial availability at any size, let alone >15in. Prototypes only.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Tianma is not a factor for large-format reflective. Its micro-fluidic work is at 6.7in prototype scale and I found no production status; its CLEARink partnership is dead because CLEARink is. Tianma's strength (LTPS backplanes) is on the backplane side, which is exactly the layer E Ink does NOT monopolise.",
+      "sources": [
+        {"url": "https://www.e-ink-info.com/tianma-develop-tfts-and-modules-clearink-color-tablet-e-paper-displays", "what_it_supports": "Feb 2019 MoU: Tianma develops TFT backplanes and module assemblies for CLEARink; CLEARink prototypes were 9.7in, 227 DPI, 4096 colours, 24-30fps."}
+      ]
+    },
+    {
+      "name": "AUO / AUO Display Plus (ADP)",
+      "country": "Taiwan",
+      "public_ticker": "TWSE:2409",
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": null,
+      "technology": "Large-sized EPD MODULE production lines at AUO's Longke site, Taoyuan, as a JV with E Ink. AUO contributes panel design, smart manufacturing and production management; E Ink contributes 'critical technologies and materials'.",
+      "colour_capable": "Yes - large-sized colour ePaper modules for smart retail, enterprise displays and advertising signage, but colour comes from E Ink's film.",
+      "commercially_available_to_third_parties": "Modules, once the JV runs. Mass production targeted Q4 2025.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Direct answer to the brief's question: as of the latest announcements from BOTH companies, this is still a TERM SHEET, not a definitive agreement. AUO's own newsroom and E Ink's own release (both 2 April 2025) describe signing a term sheet to form a JV -- ADP 51% / E Ink 49%, paid-in capital TWD 390m, Longke site Taoyuan, mass production expected Q4 2025. I found no subsequent announcement of a definitive agreement, incorporation or production start. Critically, the scope is MODULE ASSEMBLY ONLY: it entrenches E Ink's film position rather than creating a second source. It is best read as evidence that E Ink lacked in-house large-format module capacity, not that AUO is becoming a rival.",
+      "sources": [
+        {"url": "https://auo.com/en-global/New_Archive/detail/News_Archive_Product_20250402", "what_it_supports": "AUO's own announcement, 2 April 2025: a TERM SHEET (not definitive); ADP 51% / E Ink 49%; TWD 390m paid-in capital; Longke, Taoyuan; large-sized EPD module production lines; E Ink provides critical technologies and materials, AUO provides panel design and manufacturing."},
+        {"url": "https://www.eink.com/news/detail/e-ink-and-AUO-display-plus-to-form-joint-venture-for-large-sized-ePaper-module-production", "what_it_supports": "E Ink's matching announcement: term sheet; same ownership split, capital, site; mass production expected Q4 2025; scope is module production, with E Ink retaining ePaper materials leadership."},
+        {"url": "https://invidis.com/news/2025/04/new-joint-venture-auo-e-ink-invest-in-large-scale-e-paper-production/", "what_it_supports": "Independent trade coverage: large-format EPD modules combining E Ink materials with ADP panel design/manufacturing; TWD 390m (~EUR 10.7m); Taoyuan; mass production from Q4 2025."}
+      ]
+    },
+    {
+      "name": "Plastic Logic (Plastic Logic Germany, Dresden)",
+      "country": "Germany / UK origin",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": null,
+      "technology": "Organic TFT (OTFT) BACKPLANES on plastic, enabling glass-free flexible EPDs. The electrophoretic layer itself comes from E Ink -- their joint flexible colour display used E Ink's Advanced Color ePaper.",
+      "colour_capable": "Yes, but only via E Ink ACeP film; the demonstrated flexible colour part was 2.1in.",
+      "commercially_available_to_third_parties": "Yes, as flexible EPD modules, but in small formats. Current 2026 focus is biometric smart cards, wearable medical monitors and rugged industrial badges.",
+      "credible_alternative_to_eink": "no",
+      "notes": "E Ink's June 2019 strategic investment is real, and it is telling about the market structure: E Ink bought into the BACKPLANE layer, not a rival material. Plastic Logic is a Cambridge spin-out (2000), Dresden fab opened 2008, cancelled the QUE reader in 2010, exited e-reader manufacture in 2012, was acquired by Rusnano in 2015; Rusnano moved to initiate bankruptcy of the Russian vehicle in early 2024 while Plastic Logic Germany continues independently in Dresden. Nothing here approaches >15in. I could not fetch the OPE Journal 'ceases mass production in Dresden' article (host redirect), so I have not relied on it.",
+      "sources": [
+        {"url": "https://en.wikipedia.org/wiki/Plastic_Logic", "what_it_supports": "Founded 2000 as a Cambridge spin-out; Dresden mass-production factory opened Sept 2008; QUE proReader cancelled Aug 2010; e-reader manufacture discontinued May 2012; pivoted to licensing and supplying flexible displays; Plastic Logic Germany operates independently from Dresden making OTFT-based flexible EPD."}
+      ]
+    },
+    {
+      "name": "Sharp Corporation",
+      "country": "Japan",
+      "public_ticker": "TSE:6753",
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 42,
+      "technology": "Sharp supplies the IGZO oxide-TFT BACKPLANE and builds finished ePoster products; the electrophoretic layer is E Ink's (Gallery Plus, later Spectra 6). Separately, Sharp/NEC market a reflective LCD with a proprietary reflective structure and low-frequency IGZO driver, which unlike e-paper can show moving images.",
+      "colour_capable": "Yes on both lines - colour ePoster via E Ink Gallery Plus / Spectra 6; reflective LCD is full colour.",
+      "commercially_available_to_third_parties": "As finished displays. Sharp/Philips-class e-poster displays at 25-32in sell for roughly USD 2,000+.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Sharp is the clearest illustration of the survey's underlying point being half-right: E Ink's own partner list files Sharp under 'Oxide TFT backplane', i.e. Sharp is a backplane supplier TO the E Ink stack, not a substitute for it. Sharp's reflective LCD line is a genuinely separate technology but is not bistable and I could not confirm its sizes.",
+      "sources": [
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Sharp categorised by E Ink as its oxide-TFT backplane partner."},
+        {"url": "https://invidis.com/news/2024/01/ces-2024-sharp-nec-to-showcase-reflective-lcd/", "what_it_supports": "Sharp/NEC reflective LCD using ambient light with a proprietary reflective structure and low-frequency IGZO driver; unlike e-paper it can display moving images. Sizes and bistability not specified."},
+        {"url": "https://invidis.com/news/2026/07/haynes-column-e-ink-getting-serious-about-e-paper-digital-signage-but-price-still-a-barrier/", "what_it_supports": "Sharp and Samsung manufacture e-paper displays 'at their core' using E Ink technology with proprietary electronics; Sharp/Philips 25-32in e-posters at ~USD 2,000+; E Ink functions as technology supplier to manufacturers who set retail prices."}
+      ]
+    },
+    {
+      "name": "IRIS Optronics",
+      "country": "Taiwan",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 31.5,
+      "technology": "Full-colour Cholesteric LCD (ChLCD) e-paper -- a stacked three-layer bistable reflective liquid-crystal structure that reflects red, green and blue. NOT electrophoretic, therefore structurally independent of E Ink's film. Founded 2012, Tainan.",
+      "colour_capable": "Yes, and better than E Ink on colour count: >16 million colours vs Spectra 6's 6-colour palette / Kaleido's 4096. IRIS claims 1-2s for a full-colour update against ~15s for a 6-colour Spectra 6 refresh, and a newer stacked bistable structure raising reflectance from an industry-standard 30% to 50%.",
+      "commercially_available_to_third_parties": "Yes - modules at 10in, 13.3in and 31.5in, plus the Infinity Display solar-powered outdoor sign and a B3-size product; Tokyo office opened; won the 2026 Japan Digital Signage Award. Panels are built through LCD-fab partners (Solomon Goldentek Display, GiantPlus), and there is a US JV with Kent Displays and Ebulent (Aug 2024) which produced a 27.6in outdoor full-colour e-paper display.",
+      "credible_alternative_to_eink": "yes",
+      "notes": "This is the strongest genuine second source of >15in reflective panels available today, and the one the survey misses entirely. The strategic point is that ChLCD runs on EXISTING LCD production lines -- IRIS's Touch Taiwan 2026 showing with Solomon Goldentek demonstrated 'a pathway toward large-format displays using existing production lines' -- so there is no material chokepoint equivalent to E Ink's FPL. Trade-offs against E Ink for an art frame: the 31.5in is only 1920x1080 (~70 ppi vs E Ink's ~93 ppi at 31.5in), and IRIS itself concedes EPD wins on contrast, with blacks darker and whites whiter. Wide operating range -30 to +85C. Note also that ChLCD is a camp, not a company: DigiTimes reports Chinese colour e-paper competition framed as E Ink's EPD camp versus the IRIS/GeneTouch ChLCD camp.",
+      "sources": [
+        {"url": "https://iris-opt.com/en/products/full-color-chlcd/", "what_it_supports": "IRIS module sizes 10in, 13.3in and 31.5in; the 31.5in is 1920x1080, >16 million colours, sub-one-second refresh, 30% reflectivity, 1.86kg, -30 to +85C; available to third parties via direct engagement."},
+        {"url": "https://iris-opt.com/en/blog/epd-vs-chlcd/", "what_it_supports": "IRIS's own comparison: ChLCD >16.78m colours vs EPD 4096; 1-2s full-colour update vs ~15s for a 6-colour Spectra 6; -20 to 70C roughly twice EPD's range; but EPD retains the contrast advantage for text."},
+        {"url": "https://www.prnewswire.com/news-releases/iris-optronics-leads-the-new-era-of-chlcd-e-paper-touch-taiwan-2026-showcases-full-color-e-paper-and-sustainable-display-future-302739222.html", "what_it_supports": "Touch Taiwan 2026: Solomon Goldentek Display co-exhibiting a scalable modular tiling system demonstrating a pathway to large-format displays using EXISTING production lines; stacked bistable ChLCD raising reflectance from 30% to 50%; >16m colours; partners Askey, Green Ideas, GiantPlus."},
+        {"url": "https://www.prnewswire.com/apac/news-releases/iris-optronics-receives-2026-japan-digital-signage-award-for-full-color-chlcd-e-paper-innovation-302796618.html", "what_it_supports": "2026 Japan Digital Signage Award from the Digital Signage Consortium; B3-size product recently launched; Tokyo office; 16-million-colour capability."},
+        {"url": "https://www.prnewswire.com/news-releases/kent-displays-inc-iris-optronics-and-ebulent-technologies-corp-form-joint-venture-to-drive-chlcd-color-e-paper-innovation-302219903.html", "what_it_supports": "Aug 2024 JV between Kent Displays (Ohio; makes the liquid crystal materials and drivers), IRIS Optronics and Ebulent; announced an upgraded 27.6in outdoor full-colour e-paper display with double the contrast and ~50% higher colour saturation."},
+        {"url": "https://www.digitimes.com/news/a20240102PD218/china-e-paper-competition-e-ink-holdings-genetouch.html", "what_it_supports": "Competition in China's colour e-paper market framed as E Ink's electrophoretic camp versus the Iris Optronics / GeneTouch cholesteric LCD camp (article otherwise paywalled)."}
+      ]
+    },
+    {
+      "name": "Anhui Yutu Technology (ePaint)",
+      "country": "China",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 32,
+      "technology": "Cholesteric liquid crystal (Ch-LCD) colour e-paper, described as independently developed by Anhui Yutu and covered by its own invention patents; three stacked liquid-crystal layers reflecting red, green and blue. Optional built-in micro-photovoltaic and hidden front light.",
+      "colour_capable": "Yes - 16.77 million colours, and it advertises fast (millisecond-class) refresh and zero standby power.",
+      "commercially_available_to_third_parties": "Marketed at 13.3in, 28in and 32in with a UK/London sales presence; no published resolution, price or datasheet found, so treat commercial readiness as unproven.",
+      "credible_alternative_to_eink": "partial",
+      "notes": "A second, independent ChLCD source at exactly the sizes an art frame wants (28in and 32in), with far more colours than Spectra 6 and -20 to 60C operation. Downgraded from 'yes' to 'partial' only because I could not verify resolution, real availability, or any third-party deployment -- the public material is marketing-led. Resolution is the specific unknown that matters most for artwork.",
+      "sources": [
+        {"url": "https://www.epaint.global/epaint", "what_it_supports": "ePaint ChLCD sizes 13.3in, 28in and 32in; 16.77 million colours, fast refresh, energy-saving, sub-zero capability. No resolution, power or price published."}
+      ]
+    },
+    {
+      "name": "Sun Vision Display (New Vision Display)",
+      "country": "USA",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 32,
+      "technology": "Reflective LCD (RLCD) -- a diffused mirror behind the liquid-crystal layer replaces the backlight. Not bistable: it draws continuous power (<6W) and can show full-motion video.",
+      "colour_capable": "Yes, full-colour full-HD, but as a reflective LCD its colour is dimmer than an emissive LCD and it is not a pigment-based paper look.",
+      "commercially_available_to_third_parties": "Yes - 32in shipping (rE Monitor); 43in and 55in stated as coming; tileable 2x2 and 3x3.",
+      "credible_alternative_to_eink": "partial",
+      "notes": "A real >15in reflective panel from outside the E Ink chain, and it does 1920x1080 at 32in, but it is the wrong shape of alternative for a battery-powered art frame: no bistability means no zero-power image hold, so its ~6W continuous draw versus e-paper's zero-power-at-rest is decisive. Include it as a substitute only for mains-powered, video-capable applications. Sun Vision does not disclose who fabricates the panels.",
+      "sources": [
+        {"url": "https://www.sunvisiondisplay.com/technology", "what_it_supports": "Reflective LCD with each pixel formed by a diffused mirror using ambient light; <6W, 12V-battery operable, ~95% lower power than backlit; -20 to +70C; rE Monitor 32in; panel manufacturer not identified; no bistability claimed."}
+      ]
+    },
+    {
+      "name": "HANNstar / HANNspree (ecoVISION)",
+      "country": "Taiwan",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 28,
+      "technology": "Reflective LCD marketed as 'ecoVISION Paper Display' - LCD without an internal light source, 8-bit colour, 7ms response, ~80% less power than a backlit LCD. Not bistable.",
+      "colour_capable": "Yes, full colour with video.",
+      "commercially_available_to_third_parties": "Yes as finished signage: a 23.8in mobile sign with a 9600mAh battery and a 28in fixed-mount sign.",
+      "credible_alternative_to_eink": "partial",
+      "notes": "Same category as Sun Vision: genuinely non-E-Ink reflective at >15in, genuinely low power, but not bistable so it cannot hold an image at zero power. Notable that invidis's own signage analysts repeatedly point to reflective LCD as the pragmatic alternative to e-paper for large formats.",
+      "sources": [
+        {"url": "https://invidis.com/sixteen-nine/2025/03/18/heres-a-31-inch-color-e-paper-display-running-full-motion-video/", "what_it_supports": "Analyst argument that for practical large-format use, reflective LCDs such as HANNstar's EcoVision deliver full video and colour with better energy efficiency than backlit LCD -- and that pushing video onto e-paper destroys e-paper's power advantage because images then change ~30 times per second."}
+      ]
+    },
+    {
+      "name": "CLEARink Displays",
+      "country": "USA",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 9.7,
+      "technology": "TIR (total internal reflection) 'ePaper 2.0' -- a distinct reflective technology, never electrophoretic.",
+      "colour_capable": "Yes at prototype level: 4096 colours, 1:16 colour contrast, 24-30fps.",
+      "commercially_available_to_third_parties": "No. Never commercialised.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Dead end, and worth stating plainly because CLEARink is often cited as an E Ink challenger. Despite Lenovo backing, a CES 2017 Best of Show, a Tianma backplane MoU and a decade of funding, it never released a product; by June 2020 its website was down. A search summariser in this session incorrectly attributed a Freshworks CEO transition to CLEARink -- that is false and I discarded it. Max demonstrated size 9.7in, far below the threshold that matters here.",
+      "sources": [
+        {"url": "https://goodereader.com/blog/e-paper/the-clearink-website-is-down", "what_it_supports": "June 2020: CLEARink's website down; prototypes reached 200ppi and 16:1 colour / 20:1 mono contrast on 9.7in, best-in-show at CES 2017, but a product never materialised despite Lenovo investment."},
+        {"url": "https://www.e-ink-info.com/tianma-develop-tfts-and-modules-clearink-color-tablet-e-paper-displays", "what_it_supports": "Feb 2019 Tianma MoU and CLEARink's 9.7in / 227 DPI / 4096-colour prototype specs; prior TIR references."}
+      ]
+    },
+    {
+      "name": "Melford Technologies",
+      "country": "United Kingdom",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 75,
+      "technology": "None of its own. Melford is a UK integrator that builds ruggedised, IP-rated enclosures in Amersham around E Ink panels.",
+      "colour_capable": "Yes, via the E Ink panels it buys.",
+      "commercially_available_to_third_parties": "Yes as finished, ruggedised displays for marine, transport, military, retail and hospitality.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Direct answer to the brief: the underlying panel maker is E Ink, and the 75in is very probably an E Ink Kaleido 3 Outdoor-class panel rather than Spectra 6. The tell is in Melford's own spec: 5120x2880 and 4096 COLOURS. 4096 colours is the Kaleido 3 colour-filter-array signature, and 5120x2880 at 75in is exactly the resolution reported for the 75in Kaleido 3 Outdoor platform. Spectra 6 is a six-colour pigment system, not a 4096-colour one. Melford's colour 13.3/25.3/28/32in line is described as 'High contrast BWRY TFT' -- black/white/red/yellow, i.e. E Ink Spectra-class four-pigment. Melford's own partnership post describes an integrator relationship with E Ink, with no panel manufacturing and no claimed authorised-reseller designation. Buying from Melford therefore adds a UK integrator layer on top of E Ink risk; it does not diversify it.",
+      "sources": [
+        {"url": "https://www.melfordtechnologies.com/products/e-ink/e-paper-poster-displays", "what_it_supports": "Melford's 75in colour e-paper poster display: 5120x2880, 4096-colour display; cabinet and open-frame variants; references E Ink technology generically without naming a product line; no price or availability published."},
+        {"url": "https://www.melfordtechnologies.com/products/e-ink/colour-e-ink-displays", "what_it_supports": "Melford's colour range at 13.3/25.3/28/32in using 'the latest E Ink display technology' and a 'High contrast BWRY TFT display screen'; no resolutions, no panel line named, no independent panel source."},
+        {"url": "https://www.melfordtechnologies.com/products/e-ink/e-ink-displays", "what_it_supports": "Melford's monochrome 28/32/42in line, again E Ink-based, specs only in downloadable datasheets."},
+        {"url": "https://www.melfordtechnologies.com/post/melford-technologies-e-ink-partnership-for-rugged-e-paper-solutions", "what_it_supports": "Melford is an integrator, not a panel maker: it partners with E Ink and manufactures ruggedised, IP-rated, weatherproof enclosures in Amersham for the UK transport and public sector; no authorised-reseller designation stated."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-to-Showcase-75-E-Ink-Kaleido3-Outdoor-Large-Area-Color-Signage-at-Integrated-Systems-Europe-2025", "what_it_supports": "E Ink's 75in Kaleido 3 Outdoor: 4096 colours via RGB colour filter array, -15 to 65C, shown at ISE 2025 -- the 4096-colour figure that matches Melford's 75in spec."}
+      ]
+    },
+    {
+      "name": "Agile Display Solutions",
+      "country": "Taiwan",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 75,
+      "technology": "Integrator. Builds the 75in E Ink Kaleido 3 Outdoor totem plus the Agile Conversion Engine (ACE) middleware, which converts and orchestrates content for e-paper and now interoperates with Navori Labs' CMS so e-paper signage can be driven from the same enterprise workflows as LCD/LED.",
+      "colour_capable": "Yes - 4096 colours via E Ink Kaleido 3's RGB colour-filter array.",
+      "commercially_available_to_third_parties": "Yes as finished DOOH units; Agile reports its Kaleido-based outdoor units cost roughly 1.5x a comparable high-brightness LCD.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Answers the brief's Agile question directly: the 75in Kaleido 3 is E Ink's panel, developed with Agile as ecosystem partner, and the world-first 75in unit shown at ISE 2025 was a proof of concept made of TWO units tiled one above the other with a small horizontal seam. ACE is genuinely useful IP -- it is the software layer that makes e-paper manageable from a normal CMS -- but it is middleware, not silicon. Agile is a reason to buy an E Ink display, not a hedge against E Ink.",
+      "sources": [
+        {"url": "https://invidis.com/sixteen-nine/2025/01/10/75-inch-color-e-paper-display-for-dooh-networks-showing-at-ise/", "what_it_supports": "Agile Display Solutions (Taiwan) as maker of the world's first full-colour 75in e-paper display, using an E Ink Kaleido or Spectra 6 panel; E Ink's stated goal of reaching 1.5-2x conventional flat-panel cost; e-paper limited to static visuals, no video or animation."},
+        {"url": "https://invidis.com/news/2026/06/infocomm-2026-e-ink-debuts-at-proav-trade-show/", "what_it_supports": "At InfoComm 2026 E Ink showed a 75in tiled Spectra 6 and a 75in Kaleido 3 developed with partner Agile; partners named include BOE, Sharp, Agile, Mercury, Navori and BMW."},
+        {"url": "https://invidis.com/news/2026/07/haynes-column-e-ink-getting-serious-about-e-paper-digital-signage-but-price-still-a-barrier/", "what_it_supports": "Agile reports its Kaleido-based outdoor units cost roughly 1.5x comparable high-brightness LCD; Dynascan and Agile create totem products around E Ink panels; the Marquee array shown was 2 wide by 3 tall of 40.5in panels."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "E Ink's own InfoComm 2026 release naming Agile as developer of the 75in Kaleido 3 with ACE middleware, Navori Labs CMS integration, and the 75in TILED Spectra 6."}
+      ]
+    },
+    {
+      "name": "Dalian Good Display",
+      "country": "China",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 42,
+      "technology": "Independent e-paper module maker and reseller, active since 2007, laminating E Ink film/panels and selling modules plus dev kits (STM32/ESP32/Arduino). Also resells a 3in ChLCD panel, i.e. it is not exclusive to E Ink.",
+      "colour_capable": "Yes for smaller sizes (it lists E Ink Spectra 6 including a 31.5in 2560x1440 QSPI module), but its 10.2-42in large-format catalogue is monochrome E Ink Carta 1000/1300.",
+      "commercially_available_to_third_parties": "Yes - open catalogue, buy-online storefronts (good-display.com, buy-lcd.com, e-paper-display.com), global distribution.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Direct answer to the brief: I found NO evidence of formal authorised standing with E Ink. Good Display is not listed among the module partners E Ink names in its own ecosystem releases (BOE, DKE, Yes Optoelectronics, Qingyue, Innolux, Xingtai, MVE, Ink Cubic), and neither Good Display's own about/company pages nor E Ink's material state a partnership, licence or authorisation. It is best characterised as an independent module maker and reseller inside the E Ink supply chain. For contrast, E Ink DOES publicly announce named reseller agreements when they exist -- e.g. DATA MODUL for the US and European markets covering 1.1 to 42in. Practical consequence for an art-frame buyer: Good Display is a convenient, catalogue-priced route to E Ink panels up to 42in mono and 31.5in Spectra 6, but it carries no contractual continuity guarantee from E Ink.",
+      "sources": [
+        {"url": "https://www.good-display.com/product/91/", "what_it_supports": "Good Display's large-size range 10.2-42in; largest is the 42in GDEP420T01; 32in and 42in specified as E Ink Carta 1300, 10.3/13.3in as E Ink Carta 1000; the whole 10.2-42in large range is black & white."},
+        {"url": "https://www.good-display.com/blank5.html", "what_it_supports": "Good Display's own company page: identifies as Dalian Good Display Co., Ltd., an e-paper display product maker, with NO stated partnership, licence or authorised status with E Ink and no claim to make its own film."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-DATA-MODUL-Partner-to-Expand-Color-ePaper-Display-Applications", "what_it_supports": "E Ink publicly announces named reseller relationships when they exist -- DATA MODUL as reseller for US and European markets across black-and-white, tri-colour and full-colour displays from 1.1 to 42in -- which Good Display notably lacks."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "E Ink's named module partner list, which does NOT include Good Display."}
+      ]
+    },
+    {
+      "name": "Seekink (Jiangxi Xingtai Technology)",
+      "country": "China",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": 42,
+      "technology": "E-paper module manufacture using E Ink FPL; invests in LTPS, IGZO and GOA for its own e-paper TFT backplane design. Co-founder of E Ink's ePaper Industry Alliance.",
+      "colour_capable": "Yes - offers BW, BWR, BWRY and full colour.",
+      "commercially_available_to_third_parties": "Yes - modules across <3in to >15in, largest listed a 42in airport-terminal screen (S420EC).",
+      "credible_alternative_to_eink": "no",
+      "notes": "One of the three largest module makers named on Walmart's ESL rollout alongside BOE and Dongfang Kema. E Ink names Jiangxi Xing Tai explicitly as one of the six colour module partners receiving E Ink FPL. Seekink's own site does not state where its e-ink material comes from, but E Ink's release settles it.",
+      "sources": [
+        {"url": "https://www.seekink.com/large-e-ink-screen/", "what_it_supports": "Seekink size bands including >15in, largest listed the 42in S420EC; colour options BW, BWR, BWRY and full colour; investment in LTPS/IGZO/GOA e-paper TFT backplane design; source of the e-ink material not stated."},
+        {"url": "https://www.eink.com/news/detail/E_Ink_Joins_Forces_with_Six_Module_Partners_to_Promote_Color_ePaper_and_Aim_to_Reduce_CO2_Emissions", "what_it_supports": "Jiangxi Xing Tai named as one of six module partners supplied with E Ink colour FPL."}
+      ]
+    },
+    {
+      "name": "Wuxi Winflex",
+      "country": "China",
+      "public_ticker": null,
+      "makes_own_electrophoretic_film": false,
+      "largest_reflective_panel_in": null,
+      "technology": "DES (a plasma/electronic-fluid style reflective display), NOT electrophoretic. Own IP announced 2019.",
+      "colour_capable": "Unverified.",
+      "commercially_available_to_third_parties": "No evidence of market products.",
+      "credible_alternative_to_eink": "no",
+      "notes": "Included because one Chinese industry-chain report lists Winflex alongside E Ink and OED as an e-paper film maker, which would make three sources rather than two. On inspection it does not survive: Winflex is on a different technology route (DES), its site news stopped updating in August 2022, and its social-insurance headcount fell from 120 (end 2020) to 67 (end 2023). Treat the 'three film makers' framing as effectively 'two'. I have flagged the headcount and status detail as unverified because it came from a search summary, not a page I fetched.",
+      "sources": [
+        {"url": "https://www.chinabaogao.com/detail/617498.html", "what_it_supports": "Chinese industry-chain report listing e-paper film makers as mainly E Ink, OED and Wuxi Winflex; module makers as E Ink, Winflex, OED, BOE, Helitai, Dongfang Kema, Yashi and Qingyue; module CR4 78.2% in H1 2022."}
+      ]
+    }
+  ],
+  "eink_structure": {
+    "partner_model": "E Ink is a materials company that has deliberately federated everything downstream. Its own annual report defines the primary business as 'Front Plane Laminate (FPL) Film and E-Paper Display (EPD)' -- it makes the ink and the FPL, and sells either finished EPD modules or cut film. Around that sits a layered partner ecosystem it curates and publicises: IC design partners (Fitipower, Himax, UltraChip, Solomon, Realtek, IST, MediaTek, Novatek); an oxide-TFT backplane partner (Sharp); MODULE manufacturing partners to whom it supplies 'color ePaper materials (FPL)' -- BOE, DKE, Yes Optoelectronics, Qingyue, Innolux, Jiangxi Xingtai/Seekink, MVE, Ink Cubic; system integrators and ESL players (Hanshow, Pricer, SES-imagotag/VusionGroup, SoluM, Netronix); signage integrators (Agile, DynaScan, Praevar, PPDS/Philips, Samsung, Sharp, StellarLink, Melford); named resellers (DATA MODUL for US/Europe, 1.1-42in); and a formal trade body, the ePaper Industry Alliance, which E Ink CO-FOUNDED in April 2021 with BOE and Seekink and which had 260+ members by June 2026. E Ink also buys in TFT substrates, touch panels and driver ICs, and states each of these key raw materials has at least two primary suppliers -- E Ink protects itself from single-sourcing even as it IS the single source for everyone else. The structural consequence for a frame buyer: 'buying close to the panel supplier' in practice means buying from an integrator that buys a module from a module partner that buys film from E Ink -- three layers, only one of which is irreplaceable.",
+    "good_display_standing": "No formal standing with E Ink that I could verify. Dalian Good Display (founded 2007) is absent from every E Ink-published partner list I read -- it is not among the eight module manufacturing partners E Ink names, nor among its announced resellers. Its own company page states no partnership, licence or authorisation, and makes no claim to produce e-paper film. It is best described as an INDEPENDENT module maker and reseller operating inside the E Ink supply chain, buying E Ink panels/film and selling catalogue modules and dev kits worldwide through good-display.com / buy-lcd.com / e-paper-display.com. The contrast is instructive: when E Ink does appoint a reseller it says so publicly, as with DATA MODUL for the US and European markets across 1.1-42in. Good Display is a convenient, transparent-priced route to E Ink panels (42in mono Carta 1300, 31.5in Spectra 6 colour), but it confers no contractual continuity and it is not a second source.",
+    "marquee": "E Ink Marquee is E Ink's newest colour ePaper platform, aimed at large-area outdoor signage and DOOH. It uses a NEW four-particle colour system (distinct from Spectra 6's six-colour pigment set) with dithering to reach millions of colours, a 22:1 contrast ratio, a 5-7 second refresh, and an extended -20 to +65C operating range that is its main differentiator. It needs no cooling system, unlike LCD/LED. STATUS IS PRE-PRODUCTION: E Ink's own brand page labels the numbers 'preliminary performance metrics', and its 2024 annual report describes 75in as a DEVELOPMENT GOAL rather than a shipping size. Resolution is not published. What has actually been shown is a tiled array at InfoComm 2026 -- 2 panels wide by 3 tall of 40.5in panels, assembled to the dimensions of a typical large-format DOOH display. For an art-frame programme the practical read is: Marquee is not a purchasable panel today, it is outdoor/DOOH-optimised rather than fine-art-optimised, its colour comes from dithering four particles, and at these sizes it is a tiling system rather than a single sheet.",
+    "capex_direction": "Sharply up, and pointed specifically at large format -- but from a standing start. E Ink's 2024 capex was NT$5.33bn (up from NT$2.89bn in 2023), and it plans NT$5-8bn (US$157-251m) for 2026 explicitly to expand ESL and signage capacity. Its H5 line entered volume production in late 2025 making 32in and 55in signage panels; a second dedicated large-format line, H6 at Hsinchu, starts large-panel production later in 2026; the board approved NT$3.37bn (US$107.8m) for land and a leased facility at Taoyuan's Guanyin District; and further capacity is planned in the United States. The AUO Display Plus JV (term sheet, TWD 390m, ADP 51% / E Ink 49%, Longke Taoyuan, mass production targeted Q4 2025) adds large-sized MODULE lines. R&D direction over the coming five years is stated as large size, colourisation, lightweight, touch, writability and flexibility. The honest framing: the capex is real and material, but it is building a capability E Ink itself calls new -- 2025 was declared 'the First Year of Large-Size ePaper', with the concession that since 1992 the company had consistently focused on small-size displays.",
+    "headcount": "2,898 at end-2024 and 2,857 as of 30 March 2025 (2,787 at end-2023), split manager 288 / IDL non-manager 1,356 / DL 1,213 as of March 2025. Average age 39.8, average tenure 7.9 years. Source is E Ink's own 2024 annual report, section 4.3 Human Resources. Note that third-party databases (Revelio Labs, ZoomInfo) report roughly 1,493-1,537 -- about half the true figure -- so do not use those. For scale: 2024 consolidated revenue NT$32.163bn with a 23.7% operating margin and NT$8.867bn net income; 2025 revenue reported at ~NT$36.1bn with record net profit ~NT$10.52bn.",
+    "abandonment_precedents": [
+      {
+        "what": "E Ink stranded the Gallery 3 generation: over $100M spent, shipped in one size, then dropped",
+        "verified": false,
+        "detail": "PARTLY TRUE, MATERIALLY OVERSTATED AS WRITTEN -- and the survey should not lean on it in this form. What holds up: Gallery 3 launched in 2022 and E Ink's own brand page still lists only an 8in module; E Ink's 2024 focus reporting foregrounded Kaleido 3 and Spectra 6; and Good e-Reader reports E Ink spent 'over USD 100 million on Gallery 3 development for e-readers', that E Ink never augmented it beyond 8in, that only Bigme and Sharp commercialised devices while PocketBook's Viva slipped repeatedly, and that inadequate technical documentation left manufacturers unable to tune responsiveness. What does NOT hold up: (a) 'shipped in one size' is wrong -- the reMarkable Paper Pro ships an 11.8in 4:3 Gallery 3 panel at 2160x1620, confirmed by E Ink's own blog; (b) 'then dropped' is wrong for the period claimed -- E Ink shipped an upgraded Gallery 3 in 2024 cutting response time from 300ms to 100ms via a Himax T2000 timing controller, and its brand page still actively promotes Gallery 3 with ComfortGaze front light; (c) the >$100M figure appears in only one outlet (Good e-Reader) and I could find no corroboration in E Ink's filings or any second source, so treat it as single-sourced. Marked verified:false because the specific compound assertion is not supportable, not because nothing happened. The DEFENSIBLE version of the point is narrower and still useful: Gallery 3 was slow to proliferate across sizes, was under-documented for integrators, and has been visibly deprioritised in E Ink's marketing relative to Spectra 6 and Kaleido 3."
+      },
+      {
+        "what": "E Ink closed the Hydis subsidiary in 2015",
+        "verified": true,
+        "detail": "TRUE, BUT IT IS THE WRONG PRECEDENT FOR THIS ARGUMENT. Hydis Technologies' board resolved in January 2015 to close its Incheon-area factories; E Ink, as largest shareholder, called for the halt and told Korean government agencies it would close the plants and discontinue production; roughly 70% of employees accepted early retirement in March 2015; E Ink booked NT$960m (~US$31.4m) in losses, chiefly one-off preferential retirement payments. E Ink attributed it to chronic losses and faced local criticism for having acquired Hydis largely for its technology without adequate investment. The nuance that matters: Hydis was an LCD business -- it made fringe-field-switching (FFS) high-resolution LCD panels for smartphones -- NOT e-paper. E Ink explicitly noted the closure would not affect its FFS licensing royalty income. So this is evidence that E Ink will shut a loss-making non-core subsidiary and monetise the IP, which is a real disposition signal about management temperament, but it is not an instance of E Ink abandoning an e-paper product line or leaving e-paper customers stranded."
+      },
+      {
+        "what": "E Ink acquired its only comparable EPD rival rather than competing with it",
+        "verified": true,
+        "detail": "Additional precedent, not in the survey, that supports the concentration concern more cleanly than either of the above. E Ink signed a definitive agreement on 3 August 2012 to acquire SiPix Technology and SiPix Imaging -- the microcup electrophoretic rival -- completing the purchase of 82.7% of shares, folding SiPix's electrophoretic patents into E Ink's portfolio. Contemporary analyst commentary warned it would give E Ink complete control of electrophoretic display technology. This is the structural act that created the near-monopoly the survey describes; it is better evidence for the survey's thesis than the Gallery 3 story."
+      }
+    ],
+    "sources": [
+      {"url": "https://www.eink.com/upload/2025_04_28/51_20250428155204i9ls2kL8C5.pdf", "what_it_supports": "Primary source for: business scope as FPL film + EPD; headcount table (2,787 / 2,898 / 2,857); average age and tenure; 2024 revenue NT$32.163bn, operating margin 23.7%, net income NT$8.867bn; capex NT$5,328,418k (2024) vs NT$2,885,629k (2023); the Competition section ('E Ink is the uncontested world leader in ePaper technologies and products'); the 2025 'First Year of Large-Size ePaper' declaration and admission of a 1992-onwards small-size focus; Marquee's four-particle system, -20 to 65C, 5-7s refresh and 75in development goal; the statement that each key raw material (TFT backplane, touch panel, driver IC) has at least two primary suppliers; five-year R&D direction on large size, colour, lightweight, touch, writability, flexibility; Philips Tableaux, Samsung and Sharp as signage collaborators."},
+      {"url": "https://www.eink.com/tech/detail/Electronic_Ink_Film", "what_it_supports": "E Ink sells both complete modules and cut film; joint development partnerships for customers with their own TFT/backplane; film sales handled case-by-case via sales."},
+      {"url": "https://www.eink.com/news/detail/E_Ink_Joins_Forces_with_Six_Module_Partners_to_Promote_Color_ePaper_and_Aim_to_Reduce_CO2_Emissions", "what_it_supports": "The six colour module partners (BOE, DKE, Jiangxi Xing Tai, Innolux, Qingyue, Yes Optoelectronics) and the explicit statement that E Ink supplies 'color ePaper materials (FPL)' while they build modules; Innolux joint development of 28in full-colour signage."},
+      {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Full ecosystem taxonomy by category: IC design (Fitipower, Himax, UltraChip, Solomon, Realtek, IST, MediaTek, Novatek), oxide TFT backplane (Sharp), module (BOE, DKE, Yes Optoelectronics, Qingyue, Innolux, Xingtai, MVE, Ink Cubic), integrators (Hanshow, Pricer, Netronix, SES-imagotag, SoluM), plus TPV, Wacom and Exeger."},
+      {"url": "https://www.eink.com/news/detail/E-Ink-and-DATA-MODUL-Partner-to-Expand-Color-ePaper-Display-Applications", "what_it_supports": "E Ink's named reseller model: DATA MODUL for US and European markets, 1.1-42in, black-and-white, tri-colour and full-colour, across industrial/IoT/medical/retail."},
+      {"url": "https://www.epaperia.org/Intro.html", "what_it_supports": "ePaper Industry Alliance established April 2021, co-founded by E Ink, BOE and Seekink; 260+ member companies as of June 2026."},
+      {"url": "https://www.eink.com/brand/detail/marquee", "what_it_supports": "Marquee: four-particle colour system, 22:1 contrast, 5-7s refresh, -20 to 65C, development goal up to 75in, and the explicit label 'preliminary performance metrics' indicating pre-production status."},
+      {"url": "https://invidis.com/news/2026/07/haynes-column-e-ink-getting-serious-about-e-paper-digital-signage-but-price-still-a-barrier/", "what_it_supports": "The Marquee array demonstrated was 2 wide by 3 tall of 40.5in panels; Marquee reaches millions of colours by dithering; Kaleido and Marquee support tiling; E Ink is a technology supplier to manufacturers who set retail prices, which is why pricing is opaque; Sharp/Philips 25-32in e-posters at ~USD 2,000+."},
+      {"url": "https://www.e-ink-info.com/e-ink-holdings-invest-157-250-million-2026-increase-its-esl-and-signage-production-capacity", "what_it_supports": "2026 capex of US$157-250m for ESL and signage capacity; H6 Hsinchu large panels later in 2026; new line at Taoyuan Guanyin; US expansion; president Johnson Lee citing rising energy costs."},
+      {"url": "https://invidis.com/sixteen-nine/2026/03/16/demand-for-low-power-signage-pushing-e-ink-to-expand-large-format-e-paper-production/", "what_it_supports": "H5 line in volume production from late 2025 producing 32in and 55in signage panels; H6 as second dedicated large-format line; new facilities planned in Taiwan and the US; NT$5-8bn 2026 capex."},
+      {"url": "https://www.digitimes.com/news/a20250529PD209/e-ink-e-paper-esl-technology-2025.html", "what_it_supports": "Chairman Johnson Lee on 2025 as 'the first year of large-format e-paper', a pivot from 33 years of small-display focus requiring a complete upgrade in product strategy, market thinking and operations."},
+      {"url": "https://invidis.com/sixteen-nine/2025/04/22/e-inks-premium-richer-color-spectra-6-displays-coming-by-end-of-year-as-75-inch-poster-replacements/", "what_it_supports": "75in Spectra 6 = six tiled modules with minimal but present seams; eye-watering cost delta today against a stated long-run target of 1.5-2x competing LCDs."},
+      {"url": "https://www.eink.com/brand/detail/Gallery_3", "what_it_supports": "Gallery 3 brand page listing only an 8in module as related product, still actively promoted with ComfortGaze front light and the reMarkable Paper Pro showcase."},
+      {"url": "https://goodereader.com/blog/e-paper/what-happened-to-all-the-gallery-3-e-readers", "what_it_supports": "The single source for 'over USD 100 million on Gallery 3 development'; the claim that E Ink never augmented Gallery 3 beyond 8in; no mention of Gallery 3 in E Ink's 2024 focus report; only Bigme and Sharp commercialised devices; PocketBook Viva delayed; inadequate technical documentation for integrators."},
+      {"url": "https://blog.eink.com/new-remarkable-paper-pro", "what_it_supports": "REFUTES the 'one size only' half of the Gallery 3 claim: reMarkable Paper Pro uses an 11.8in 4:3 E Ink Gallery 3 display at 2160x1620."},
+      {"url": "https://goodereader.com/blog/electronic-readers/e-ink-has-dramatically-improved-upon-gallery-3-color-e-paper", "what_it_supports": "REFUTES 'then dropped': E Ink delivered an upgraded Gallery 3 in 2024, cutting response time from 300ms to 100ms via the Himax T2000 timing controller. Also notes no $100m figure appears here."},
+      {"url": "http://www.taipeitimes.com/News/biz/archives/2015/05/23/2003618918", "what_it_supports": "Hydis: board decided to close factories January 2015; NT$960m (US$31.43m) loss chiefly from one-off preferential retirement payments; ~70% of employees took early retirement in March 2015; Hydis made FFS high-resolution LCDs for smartphones, not e-paper; closure did not affect FFS royalty income; attributed to chronic losses."},
+      {"url": "https://displaydaily.com/hydis-closes-facilities-due-to-financial-struggles/", "what_it_supports": "January 2015; E Ink as largest shareholder initiated the closure and called for a halt to factory operations over serious financial difficulties; local criticism that E Ink acquired Hydis mainly for its technology without adequate investment; Hydis retained FFS technology rights."},
+      {"url": "https://news.qq.com/rain/a/20241110A053QW00", "what_it_supports": "Independent characterisation of E Ink as holding roughly 90% of the global e-paper market -- useful calibration for the 'near-monopoly' language."}
+    ]
+  },
+  "demand_side_anchors": [
+    {
+      "name": "VusionGroup (formerly SES-imagotag)",
+      "ticker": "Euronext Paris: VU / SESL",
+      "role": "The largest ESL system integrator in the world and E Ink's biggest single demand channel. ~314 million labels in its cloud installed base at end-Q3 2025, up from ~135m a year earlier; Q3 2025 adjusted sales EUR 355m (+59% YoY) with nine-month adjusted sales above EUR 1bn and rolling 12-month order entries of EUR 1.76bn; customers include Walmart, Carrefour, Lidl and Edeka across 60+ countries. E Ink names SES-imagotag among its smart-retail integrator partners. Crucially it is also cross-owned: BOE held ~25% as of May 2025, and E Ink itself is a shareholder alongside Qualcomm.",
+      "effect_on_supply_stability": "STRONGLY STABILISING for the existence and funding of E Ink's film business, and mildly DESTABILISING for a niche art-frame buyer's access and pricing. Positive: ESL is the volume engine -- 324m e-paper shelf-label modules shipped in H1 2025 alone, +244% YoY -- which underwrites E Ink's fabs, funds the NT$5-8bn 2026 capex, and makes it near-inconceivable that E Ink exits e-paper film. The cross-shareholdings (BOE 25%, E Ink a shareholder) tie the demand side into the supply side, which further reduces the chance of an abrupt supply break. Negative for a small buyer: those same anchors set E Ink's priorities. ESL is small-format; the large-format art-frame sizes are a new, low-volume line competing for the same fab capacity. Independent buying guidance in this market already tells purchasers to secure supply agreements 6-12 months ahead. A buyer ordering tens or hundreds of 32in panels has no leverage against a customer ordering hundreds of millions of small ones, and will be the first deprioritised in an allocation squeeze. The correct conclusion is the inverse of the survey's: the ESL anchors make the SUPPLIER stable while making the specific PANEL GENERATION a buyer depends on less stable, because the anchors do not care about it.",
+      "sources": [
+        {"url": "https://www.vusion.com/newsroom/vusiongroup-third-quarter-2025-sales-strong-growth-full-year-outlook-confirmed/", "what_it_supports": "Q3 2025 adjusted sales EUR 355m (+59%); nine-month adjusted sales above EUR 1bn; cloud installed base 314m labels at end-Q3 2025 vs ~135m a year earlier; rolling 12-month order entries EUR 1.76bn; US momentum and the Walmart contract. Notably contains NO discussion of e-paper supply chain or component sourcing."},
+        {"url": "https://en.wikipedia.org/wiki/VusionGroup", "what_it_supports": "Euronext Paris listing, CAC Mid 60; ~EUR 1.5bn 2025 revenue; installed base cited at 650m ESLs in 75,000 stores; BOE reduced its holding to 25% as of May 2025; E Ink and Qualcomm also shareholders; customers Walmart, Carrefour, Lidl, Edeka in 60+ countries."},
+        {"url": "https://www.digitimes.com/news/a20250902PD201/esl-e-paper-shipments-e-ink-growth-2025.html", "what_it_supports": "324m e-paper shelf-label modules in H1 2025, +244.4% YoY; ESL shipments near 300m units in H1 2025, +211.4%; E Ink's H1 2025 revenue, operating profit and net income all at historic highs on accelerated ESL orders; E Ink as principal film supplier to the module makers."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "SES-imagotag (VusionGroup) named among E Ink's smart-retail system integrator partners."}
+      ]
+    },
+    {
+      "name": "Pricer AB",
+      "ticker": "Nasdaq Stockholm: PRIC B",
+      "role": "The other listed ESL pure-play and a named E Ink integrator partner. Has delivered over 380 million electronic shelf labels into more than 28,000 stores across more than 80 countries. Q4 2025 net sales SEK 572.6m (down from SEK 630.0m in Q4 2024) with Q4 order intake SEK 581.2m (down from SEK 916.1m) and a 3.5% Q4 operating margin (4.2% adjusted); full-year 2025 profitable with improvement on the year.",
+      "effect_on_supply_stability": "MILDLY STABILISING, and materially smaller than VusionGroup -- roughly a fifth to a sixth of Vusion's revenue, and shrinking in Q4 2025 while Vusion grew 59%. That asymmetry matters: Pricer is not a swing underwriter of E Ink's capacity, VusionGroup is. Notably, neither Pricer's Q4/full-year 2025 report nor its 2025 annual and sustainability report discusses display component supply, names E Ink, or discloses supplier-concentration risk -- an absence worth flagging, since a genuine single-source dependency on E Ink film would normally warrant a risk disclosure in a listed company's reporting. Third-party market analysis asserts that Pricer, SES-imagotag and Hanshow rely almost entirely on e-paper panels from E Ink and regional module makers, and characterises E Ink's near-monopoly as a restraint that limits OEM pricing leverage. Net effect for an art-frame buyer: Pricer adds incremental volume that keeps E Ink's lines busy, but it neither diversifies supply nor gives a niche buyer any pricing shelter.",
+      "sources": [
+        {"url": "https://www.pricer.com/press-release/year-end-report-january-december-2025-pricer-ab", "what_it_supports": "Q4 2025 net sales SEK 572.6m vs SEK 630.0m; Q4 order intake SEK 581.2m vs SEK 916.1m; Q4 operating margin 3.5% (4.2% adjusted); full-year profitable; over 380m ESLs delivered in 28,000+ stores across 80+ countries; and the notable ABSENCE of any display component supply, e-paper supplier or supply constraint discussion."},
+        {"url": "https://www.pricer.com/hubfs/Pricer-Annual-Report-and-Sustainability-Report-2025.pdf", "what_it_supports": "Fetched Pricer's 2025 annual and sustainability report; no substantive discussion of e-paper supplier concentration, named display suppliers or sourcing strategy was retrievable from it."},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Pricer named among E Ink's smart-retail system integrator partners."}
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {
+      "lead": "OED's actual purchasability in the West at 31.2in -- no datasheet, price, lead time, MOQ or named Western distributor for the large panel was found. MEV Elektronik (Germany) lists OED as a supplier but publishes no catalogue; OED has exhibited at electronica in Munich.",
+      "why_it_matters": "This is the single question that decides whether the refutation is commercially actionable or merely technically true. If OED will quote a 31.2in colour panel to a Western buyer with documentation and support, the survey's 'buy close to the panel supplier' advice needs rewriting around dual-sourcing. If it will not, E Ink remains the only practical option and the advice stands with a caveat. A direct RFQ to OED (info via oedtech.com) and to MEV Elektronik would resolve it in days."
+    },
+    {
+      "lead": "Whether the 31.2in video e-paper demoed by Geniatech at Embedded World 2025 was an OED panel or an E Ink panel with custom firmware. invidis explicitly flagged the ambiguity, noting the very specific 31.2in size, while the interview appeared to reference E Ink. E Ink separately sells a 31.2in monochrome module (VA3200-QAA, 2560x1440, 94ppi).",
+      "why_it_matters": "If the celebrated 31.2in colour video demo was actually an E Ink panel, OED's large-format claim is weaker than the Chinese coverage suggests and the refutation narrows. The identical 31.2in dimension across both companies is suspicious enough to warrant resolving before the survey relies on it."
+    },
+    {
+      "lead": "OED's colour architecture at 31.2in -- specifically whether it is a colour filter array over monochrome film (as the 10.3in panel's 272 PPI mono / 136 PPI colour split implies) or a multi-pigment ink, and what the panel's actual resolution and colour gamut are.",
+      "why_it_matters": "For artwork reproduction this is the whole game. A CFA-over-mono panel at ~136 PPI colour will look materially worse than E Ink Spectra 6 for fine art, so OED could be a valid second source for signage while being unusable for the archive's actual purpose. No OED datasheet was obtainable."
+    },
+    {
+      "lead": "IRIS Optronics' and Anhui Yutu's real production volumes, unit pricing, lead times, and whether either will supply a Western buyer in small quantities. IRIS's panels are built by LCD-fab partners (Solomon Goldentek, GiantPlus) rather than an owned fab; the DigiTimes piece on IRIS's 2025 production expansion is paywalled.",
+      "why_it_matters": "ChLCD is the most structurally interesting alternative because it needs no E Ink material and runs on commodity LCD lines -- but 'technically independent' is worthless if nobody will sell you fifty 31.5in panels. The paywalled DigiTimes article almost certainly contains the capacity and customer detail."
+    },
+    {
+      "lead": "Whether the E Ink / AUO Display Plus term sheet ever converted into a definitive agreement and whether the Longke lines actually started mass production in Q4 2025 as targeted.",
+      "why_it_matters": "If it quietly lapsed, E Ink's large-format module capacity is thinner than the roadmap implies and delivery risk on 32in+ panels is higher than the survey assumes. If it completed, large-format module supply is genuinely broadening. Fifteen months on from the April 2025 term sheet there is no public follow-up announcement, which is itself weakly informative. AUO's investor relations or the Taiwan MOPS filings would settle it."
+    },
+    {
+      "lead": "Actual delivered panel PPI at 25-32in across all candidates, normalised: E Ink Spectra 6 31.5in is 2560x1440 (~93 ppi); IRIS ChLCD 31.5in is 1920x1080 (~70 ppi); ePaint publishes no resolution; OED publishes none.",
+      "why_it_matters": "For a fine-art archive, PPI and colour gamut are the acceptance criteria, and every one of these sits far below print. The survey's counterparty argument may be moot if none of the available panels clears the quality bar -- that is a more decision-relevant question than who makes the film."
+    },
+    {
+      "lead": "OED's active patent opposition against E Ink's core electrophoretic patents at the European Patent Office, referenced in a search summary as ongoing in 2026 but not verified from any page I fetched.",
+      "why_it_matters": "If OED is clearing E Ink's European patent thicket, that is the precondition for OED panels being legally sellable in Europe and would transform the second-source picture within the survey's planning horizon. Verifiable directly in the EPO register."
+    },
+    {
+      "lead": "Whether E Ink's 55in single panel (reported in volume production on the H5 line from late 2025) exists as a purchasable single-sheet panel, and its resolution.",
+      "why_it_matters": "If a genuine single-sheet 55in exists, the 'largest single panel is 31.5in / everything above is tiled' constraint -- which is probably the most important physical finding here for an art frame -- would need revising upward. Only one trade source mentions 55in and E Ink's own product pages do not."
+    },
+    {
+      "lead": "Dongfang Kema (DKE), Qingyue, Innolux, MVE and Ink Cubic were confirmed as E Ink module partners but not individually investigated for independent film capability or maximum size.",
+      "why_it_matters": "Low expected yield -- E Ink's own release states it supplies them FPL -- but Innolux in particular has its own TFT fabs and a history of 28in colour co-development, so it is the most plausible of the group to attempt backward integration."
+    }
+  ],
+  "unverified_facts": [
+    {
+      "claim": "E Ink spent 'over USD 100 million' developing Gallery 3.",
+      "why_unverified": "Appears in exactly one outlet (Good e-Reader) and is absent from E Ink's 2024 annual report, which contains no Gallery 3 spend disclosure. A second Good e-Reader article on Gallery 3 improvements does not repeat the figure. Single-sourced; do not present as fact.",
+      "url": null
+    },
+    {
+      "claim": "BOE has an e-paper division named 'Morispace' that announced RMB 2.8 billion (~USD 390m) of capacity investment in 2025 to scale electrophoretic and electrowetting production at Hefei and Chengdu.",
+      "why_unverified": "This came from a search-engine synthesis apparently derived from an SEO content site (jiclcd.com). I could not corroborate 'Morispace', the RMB 2.8bn figure, or the Hefei/Chengdu e-paper lines in BOE's own materials, Chinese financial press, or any primary source. It contradicts everything else found about BOE's role as an E Ink module partner. Treat as probable AI-generated slop and do not repeat it.",
+      "url": null
+    },
+    {
+      "claim": "Wuxi Winflex's website news stopped updating in August 2022 and its social-insurance-covered headcount fell from 120 (end 2020) to 67 (end 2023), indicating the company is moribund.",
+      "why_unverified": "From a search summary of Chinese sources I did not successfully fetch. The directional conclusion (Winflex is not a viable third film source, and is on a different DES technology rather than electrophoretics) is consistent with its absence from all Western and E Ink-adjacent coverage, but the specific figures are unconfirmed.",
+      "url": null
+    },
+    {
+      "claim": "E Ink is 'the only company capable of producing colour electronic ink films', with OED limited to monochrome ink films at significantly lower resolution.",
+      "why_unverified": "Asserted by a marketing/insight page (tejwin.com) that I did fetch, but it is a vendor-adjacent content source, not an industry analyst, and it is contradicted in part by OED's own 31.2in colour launch and by Chinese coverage of OED's colour e-paper. The underlying distinction is probably right in substance -- OED's colour looks like CFA-over-monochrome rather than multi-pigment ink, judging by the 272 PPI mono / 136 PPI colour split on its 10.3in panel -- but the flat 'only company' claim is not established.",
+      "url": null
+    },
+    {
+      "claim": "E Ink Holdings controls approximately 78% of electrophoretic display manufacturing, and Chinese competitors will grow from 12% to 18% share by 2034.",
+      "why_unverified": "From search summaries of market-research vendor pages I did not fetch and would not trust if I had. The order of magnitude (E Ink dominant, 80-90%+) is corroborated by sources I did fetch, but these precise figures and the 2034 forecast are not.",
+      "url": null
+    },
+    {
+      "claim": "OED has active patent opposition proceedings against E Ink's core electrophoretic patents at the European Patent Office in 2026.",
+      "why_unverified": "Appeared only in a search-result synthesis; no page I fetched states it. The related, verified fact is that OED successfully defended E Ink's patent litigation between 2012 and 2015, and that invidis refers to years of E Ink/OED IP disputes.",
+      "url": null
+    },
+    {
+      "claim": "E Ink's H5 line produces a single-sheet 55-inch panel.",
+      "why_unverified": "Stated in one trade article (invidis, March 2026) alongside 32in. E Ink's own product and brand pages do not list a 55in Spectra 6 or Marquee panel, and its largest confirmed single panel remains 31.5in with 75in achieved by tiling six modules. The 55in may be a roadmap or tiled figure.",
+      "url": null
+    },
+    {
+      "claim": "The specific panel behind Melford's 75-inch colour poster display is E Ink Kaleido 3 Outdoor.",
+      "why_unverified": "This is my inference, not a stated fact. It rests on Melford's published 5120x2880 / 4096-colour spec matching the 75in Kaleido 3 Outdoor platform's 4096-colour CFA and reported resolution, and on Melford being an integrator with no panel of its own. Melford itself names only 'E Ink technology' generically. Confirmable from Melford's downloadable datasheet, which I did not retrieve.",
+      "url": null
+    },
+    {
+      "claim": "Sharp/NEC's reflective LCD is available at sizes relevant to a >15in art frame.",
+      "why_unverified": "The invidis CES 2024 piece I fetched confirms the technology (proprietary reflective structure, low-frequency IGZO driver, ambient light, can show moving images) but explicitly does not state screen sizes, bistability, power figures or the panel manufacturer. A separate search summary suggested reflective signage models from 13 to 32in across vendors, but I could not verify Sharp/NEC's own range.",
+      "url": null
+    },
+    {
+      "claim": "Japan Display has a current large-format reflective LCD product relevant as a substitute.",
+      "why_unverified": "I found only a reference to a Japan Display paper-like reflective colour LCD with ~3mW still-image power via a search summary of a 2012-era New Atlas article I did not fetch. No evidence of a current, large-format, commercially available JDI reflective product. Treat JDI as not a factor absent better evidence.",
+      "url": null
+    },
+    {
+      "claim": "Plastic Logic ceased mass production in Dresden on a specific date, and current headcount is ~145 with ~EUR 43m revenue.",
+      "why_unverified": "The OPE Journal article reporting the cessation redirected to an unrelated host and could not be fetched; the headcount and revenue figures come from third-party company-data aggregators surfaced in search summaries. Wikipedia (fetched) confirms the Dresden fab, the 2012 exit from e-reader manufacture, the Rusnano acquisition and that Plastic Logic Germany operates independently, which is sufficient for the conclusion that Plastic Logic is not a >15in panel source.",
+      "url": null
+    }
+  ]
+}
