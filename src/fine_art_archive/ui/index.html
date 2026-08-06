@@ -746,7 +746,7 @@
         return `<div class="subject-panel">
           <h3>Subject</h3>
           <div class="sub">No subject tags yet.
-          <button onclick="runTagger('${data.work_id}')" style="margin-left:8px;padding:3px 10px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:12px">Propose tags now</button></div>
+          <button onclick="runTagger('${data.work_id}', this)" style="margin-left:8px;padding:3px 10px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:12px">Propose tags now</button></div>
         </div>`;
       }
       const tags = subj.content_tags || [];
@@ -776,8 +776,16 @@
             `<button title="reset" onclick="subjectAction('${wid}','reset','${safeTag}')">↺</button>`;
         return `<span class="subject-tag ${cls}">${t.id}${ctrls}<span class="src">${srcAbbr}</span></span>`;
       };
+      // The tagger button used to live ONLY in the no-subject-block empty
+      // state. Once Tier 3 runs it writes a genre for nearly every work, so
+      // that branch stops being reached and the button would become
+      // permanently unreachable — exactly when re-running it is most useful
+      // (a CLIP genre sits around F1 0.6, so re-checking one is a normal act).
       let html = `<div class="subject-panel">
-        <h3>Subject — ${subj.needs_review ? "needs review" : "all reviewed"}</h3>
+        <h3>Subject — ${subj.needs_review ? "needs review" : "all reviewed"}
+          <button onclick="runTagger('${wid}', this)" title="Re-run the CLIP tagger for this work"
+            style="margin-left:8px;padding:2px 8px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:11px;font-weight:400">Re-run tagger</button>
+        </h3>
         <div style="margin-bottom:8px"><strong>Genre:</strong>
           <span class="subject-tag ${(gsrc.includes("clip") || gsrc.includes("wikidata") || gsrc.includes("heuristic")) ? "proposed" : "confirmed"}">${genre}<span class="src">${gsrc.replace("title-heuristic","title").replace("clip-vit-large-patch14","clip")}</span></span>
         </div>`;
@@ -892,8 +900,40 @@
       } catch (e) { toast("error: " + e.message); }
     }
 
-    async function runTagger(wid) {
-      toast("tagger run not yet wired — use the CLI for now");
+    async function runTagger(wid, btn) {
+      // Cold start loads ~890 MB of CLIP weights, so this can take ~30 s the
+      // first time. Disable the button and say so rather than looking hung.
+      const label = btn ? btn.textContent : null;
+      if (btn) { btn.disabled = true; btn.textContent = "Tagging…"; }
+      toast("running CLIP tagger — first run loads the model, ~30s");
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(wid)}/propose_tags`,
+                              { method: "POST" });
+        const d = await r.json();
+        if (!r.ok) { toast(d.detail || `tagger failed (${r.status})`); return; }
+        if (d.error) { toast(`tagger: ${d.error}`); return; }
+
+        const n = (d.proposals || []).length;
+        if (!n) {
+          // An empty result is the common case and needs explaining: the
+          // calibration quality gate suppresses most of the taxonomy, so
+          // "nothing proposed" means "nothing among the tags CLIP is good
+          // enough at", not "the tagger is broken".
+          const en = d.tags_enabled || [];
+          toast(`no tags proposed — only ${en.length} tag(s) pass the `
+                + `calibration gate (${en.join(", ") || "none"})`);
+        } else {
+          const added = d.clip_tags_added || 0;
+          const g = d.genre_source === d.model ? `, genre → ${d.genre}` : "";
+          toast(`${n} proposal(s), ${added} new${g}`);
+        }
+        // Re-read the work so the subject panel shows what was written.
+        await openWork(wid);
+      } catch (e) {
+        toast(`tagger error: ${e && e.message ? e.message : e}`);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+      }
     }
 
     // ----- queue navigation -----

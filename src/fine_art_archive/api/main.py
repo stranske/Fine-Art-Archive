@@ -12,6 +12,8 @@ import math
 import os
 import re
 import stat
+import subprocess
+import sys
 import tempfile
 import threading
 import urllib.request
@@ -603,6 +605,81 @@ def _append_subject_tag_event(event: dict) -> None:
     SUBJECT_TAG_EVENTS.parent.mkdir(parents=True, exist_ok=True)
     with open(SUBJECT_TAG_EVENTS, "a") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+
+# --------------------------------------------------------------------------
+# Tier-3 (CLIP) tagger, on demand for one work.
+#
+# The tagger is a subprocess rather than an in-process import on purpose: it
+# pulls in torch + transformers and loads ~890 MB of CLIP weights, and the app
+# should stay startable on a machine that has neither. If the script is absent
+# the button reports that plainly instead of the endpoint 500ing.
+#
+# It runs with --apply, so the merge rules in merge_into_sidecar are what
+# protect existing Wikidata/reviewer data -- see that function and its gate at
+# Claude Project/scripts/test_vision_tag_merge.py.
+# --------------------------------------------------------------------------
+DEFAULT_TAGGER_SCRIPT = (
+    Path.home() / "Library" / "CloudStorage" / "Dropbox" / "Pictures"
+    / "Claude Project" / "scripts" / "vision_tag_works.py"
+)
+TAGGER_SCRIPT = env_path("FAA_TAGGER_SCRIPT", DEFAULT_TAGGER_SCRIPT)
+TAGGER_PYTHON = os.environ.get("FAA_TAGGER_PYTHON") or sys.executable
+# Cold start is model load (~10-25 s) plus one gigapixel decode; a warm
+# encoding cache makes repeats fast. Generous, but bounded.
+TAGGER_TIMEOUT_S = int(os.environ.get("FAA_TAGGER_TIMEOUT_S", "300"))
+
+
+@app.post("/works/{work_id}/propose_tags")
+def propose_tags(work_id: str) -> dict:
+    """Run the CLIP tagger for one work and return what it proposed."""
+    try:
+        store.validate_work_id(work_id)
+    except ValueError:
+        raise HTTPException(400, "invalid work_id") from None
+    if not TAGGER_SCRIPT.exists():
+        raise HTTPException(
+            503,
+            f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+            f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+        )
+    cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id,
+           "--json", "--apply"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              timeout=TAGGER_TIMEOUT_S, check=False)
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+    if proc.returncode != 0:
+        tail = (proc.stderr or "").strip().splitlines()[-4:]
+        raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+    try:
+        payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        tail = (proc.stderr or "").strip().splitlines()[-4:]
+        raise HTTPException(
+            500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+    works = payload.get("works") or []
+    w = works[0] if works else {}
+    # No cache to invalidate: store keys sidecar reads on the file's
+    # (mtime, size) signature, so the subprocess's write is picked up on the
+    # next read without help.
+    return {
+        "work_id": work_id,
+        "model": payload.get("model"),
+        "written": w.get("written", False),
+        "error": w.get("error"),
+        "proposals": w.get("proposals") or [],
+        "clip_tags_added": w.get("clip_tags_added", 0),
+        "genre": w.get("genre"),
+        "genre_source": w.get("genre_source"),
+        # Surfaced so the UI can explain an empty result: most of the taxonomy
+        # is deliberately suppressed by the calibration quality gate.
+        "tags_enabled": (payload.get("gate") or {}).get("tags_enabled") or [],
+        "elapsed_ms": w.get("elapsed_ms"),
+    }
 
 
 @app.post("/works/{work_id}/subject_action")
