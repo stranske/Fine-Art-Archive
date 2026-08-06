@@ -781,8 +781,34 @@
       // that branch stops being reached and the button would become
       // permanently unreachable — exactly when re-running it is most useful
       // (a CLIP genre sits around F1 0.6, so re-checking one is a normal act).
+      // Provenance, not an obligation. ~1,961 of 3,393 works carry a machine
+      // proposal, so labelling each of them "needs review" asserts a backlog
+      // that would take 5-21 weeks of the whole attention budget to clear and
+      // that nothing depends on — CLIP output is corrected by source authority
+      // (a later Wikidata pass outranks and overwrites it), not by attention.
+      // See DECISIONS.md D019.
+      //
+      // A binary needs-review/all-reviewed badge also read the same on almost
+      // every work, so it said nothing. Name the sources actually present
+      // instead, strongest first; that is information the per-tag chips only
+      // give you one tag at a time.
+      const srcAbbrev = (s) => (s || "")
+        .replace(/^wikidata:P\d+$/, "wikidata")
+        .replace("title-heuristic", "title")
+        .replace("clip-vit-large-patch14", "clip")
+        .replace("tag-fallback", "inferred");
+      const srcOrder = ["human", "wikidata", "title", "inferred", "clip"];
+      const present = new Set();
+      for (const t of tags) {
+        present.add(["confirmed", "added"].includes(t.state)
+                    ? "human" : srcAbbrev(t.source));
+      }
+      if (gsrc && gsrc !== "none") present.add(srcAbbrev(gsrc));
+      const srcList = srcOrder.filter(s => present.has(s));
+      for (const s of [...present]) if (!srcOrder.includes(s) && s) srcList.push(s);
+
       let html = `<div class="subject-panel">
-        <h3>Subject — ${subj.needs_review ? "needs review" : "all reviewed"}
+        <h3>Subject${srcList.length ? ` — ${srcList.join(" + ")}` : ""}
           <button onclick="runTagger('${wid}', this)" title="Re-run the CLIP tagger for this work"
             style="margin-left:8px;padding:2px 8px;border:1px solid var(--accent);background:white;color:var(--accent);border-radius:4px;cursor:pointer;font-size:11px;font-weight:400">Re-run tagger</button>
         </h3>
