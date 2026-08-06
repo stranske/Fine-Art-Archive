@@ -7,6 +7,7 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import io
 import json
 import math
 import os
@@ -210,6 +211,256 @@ def list_dossiers() -> dict:
     """work_ids that have a populated dossier — lets the library grid mark them."""
     ids = sorted(store.work_ids_with_dossier())
     return {"total": len(ids), "work_ids": ids}
+
+
+# --------------------------------------------------------------------------
+# E-paper output: playlist → render → SD card
+#
+# The survey (docs/EINK_DEVICE_SURVEY.md) found three unrelated ways to get an
+# image onto a >15in panel and no single one safe to bet on, so the pipeline is
+# device-agnostic in the middle: select works, render to a panel's palette, then
+# hand the result to whichever transport the device offers. SD/USB is
+# implemented first because it is the only ingest path every open device shares,
+# needs no network, and keeps working after a vendor folds.
+#
+# Dithering happens HERE rather than on the device. It is the largest single
+# determinant of how a reproduction looks and every vendor except BLOOMIN8 does
+# it internally with an undocumented pipeline.
+# --------------------------------------------------------------------------
+from fine_art_archive import eink as _eink  # noqa: E402
+
+# Writing to a removable volume from an HTTP endpoint deserves a boundary even
+# in a single-user local app: a typo'd path should not be able to scribble into
+# the archive or a system directory. Exports must land under one of these roots.
+EINK_EXPORT_ROOTS = [
+    Path(p).expanduser().resolve(strict=False)
+    for p in os.environ.get(
+        "FAA_EINK_EXPORT_ROOTS",
+        f"/Volumes:{Path.home() / 'Desktop'}:{Path.home() / 'eink-cards'}",
+    ).split(":")
+    if p.strip()
+]
+
+
+def _checked_export_dir(raw: str) -> Path:
+    if not raw or not raw.strip():
+        raise HTTPException(400, "export path required")
+    cand = Path(raw).expanduser().resolve(strict=False)
+    for root in EINK_EXPORT_ROOTS:
+        if cand == root or root in cand.parents:
+            return cand
+    raise HTTPException(
+        400,
+        f"export path must be under one of {[str(r) for r in EINK_EXPORT_ROOTS]} "
+        f"(set FAA_EINK_EXPORT_ROOTS to change). Got: {cand}",
+    )
+
+
+def _eink_master(work_id: str) -> Path | None:
+    try:
+        work_dir = _archive_work_dir_checked(work_id)
+    except HTTPException:
+        return None
+    if not work_dir.is_dir():
+        return None
+    for ext in ("jpeg", "jpg", "png", "tif", "tiff", "webp"):
+        cand = work_dir / f"master.{ext}"
+        if cand.exists():
+            return cand
+    found = sorted(work_dir.glob("master.*"))
+    return found[0] if found else None
+
+
+def _all_sidecars() -> list[tuple[str, dict]]:
+    out: list[tuple[str, dict]] = []
+    root = store.STAGING
+    if not root.is_dir():
+        return out
+    for d in sorted(root.iterdir()):
+        p = d / "meta.json"
+        if not p.is_file():
+            continue
+        try:
+            out.append((d.name, json.loads(p.read_text())))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+class PlaylistIn(BaseModel):
+    spec: dict = Field(default_factory=dict)
+    target: str = "gooddisplay-315-diy"
+    sample: int = Field(default=24, ge=0, le=200)
+
+
+class ExportIn(BaseModel):
+    spec: dict = Field(default_factory=dict)
+    target: str = "gooddisplay-315-diy"
+    path: str
+    dither: str = "floyd-steinberg"
+    fit: str | None = None
+    fmt: str = "png"
+    write: bool = False
+    overwrite: bool = False
+
+
+@app.get("/eink/targets")
+def eink_targets() -> dict:
+    return {
+        "targets": [t.as_dict() for t in _eink.TARGETS.values()],
+        "export_roots": [str(r) for r in EINK_EXPORT_ROOTS],
+        "palette_warning":
+            "All palettes are ESTIMATES. No vendor publishes a colour profile "
+            "at these sizes, so on-panel colour will differ until a real panel "
+            "is measured.",
+    }
+
+
+@app.get("/eink/facets")
+def eink_facets() -> dict:
+    """Everything the playlist builder needs to populate its controls."""
+    res = _eink.build(_all_sidecars(), _eink.PlaylistSpec(sort="as-filtered"))
+    return {
+        "moods": [{"key": k, "label": v["label"]} for k, v in _eink.MOODS.items()],
+        "periods": [{"key": k, "label": v[0], "from": v[1], "to": v[2]}
+                    for k, v in _eink.PERIODS.items()],
+        "genres": [{"value": g, "count": n} for g, n in res.facets["genre"]],
+        "artists": [{"value": a, "count": n} for a, n in res.facets["artist"]],
+        "mood_counts": {m: n for m, n in res.facets["mood"]},
+        "total_works": res.total_candidates,
+    }
+
+
+@app.post("/eink/playlist/preview")
+def eink_playlist_preview(body: PlaylistIn) -> dict:
+    try:
+        spec = _eink.PlaylistSpec.from_dict(body.spec)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+    sidecars = _all_sidecars()
+    ratings = _eink.load_ratings(store.RATINGS_LOG)
+    try:
+        res = _eink.build(sidecars, spec, ratings=ratings,
+                          dossier_ids=set(store.work_ids_with_dossier()))
+    except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    by_id = dict(sidecars)
+    from fine_art_archive.eink.playlist import _artist_of, parse_year
+    items = []
+    for wid in res.work_ids[: body.sample]:
+        sc = by_id.get(wid) or {}
+        items.append({
+            "work_id": wid, "title": sc.get("title") or "",
+            "artist": _artist_of(sc), "year": parse_year(sc.get("year")),
+            "has_master": _eink_master(wid) is not None,
+        })
+    return {
+        "total_candidates": res.total_candidates,
+        "matched": res.matched,
+        "selected": len(res.work_ids),
+        "coverage": res.coverage,
+        "facets": {k: [list(t) for t in v] for k, v in res.facets.items()},
+        "items": items,
+        "work_ids": res.work_ids,
+    }
+
+
+@app.get("/works/{work_id}/eink_preview")
+def eink_preview(
+    work_id: str,
+    target: str = "gooddisplay-315-diy",
+    dither: str = "floyd-steinberg",
+    fit: str | None = None,
+    max_px: int = Query(900, ge=120, le=2400),
+) -> Response:
+    """A rendered preview of what the panel would actually show.
+
+    Rendered at reduced size for speed, but through the SAME pipeline as the
+    card — fit, range compression, then dither — so the preview shows the real
+    posterisation and dither texture rather than a smooth approximation.
+    """
+    master = _eink_master(work_id)
+    if master is None:
+        raise HTTPException(404, f"no local master for {work_id}")
+    try:
+        tgt = _eink.get_target(target)
+    except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    # Local import to match the surrounding style (the resize endpoint below
+    # does the same) and to keep module import cheap. Not a guard against a
+    # missing dependency: pillow and numpy are both REQUIRED in pyproject.toml,
+    # so `fine_art_archive.eink` above can import them at module scope safely.
+    from PIL import Image
+
+    scale = min(1.0, max_px / max(tgt.width, tgt.height))
+    small = _eink.RenderTarget(
+        key=tgt.key, label=tgt.label,
+        width=max(8, int(tgt.width * scale)), height=max(8, int(tgt.height * scale)),
+        palette_name=tgt.palette_name, fit=tgt.fit, rotate=tgt.rotate,
+    )
+    try:
+        with Image.open(master) as im:
+            im.draft("RGB", (small.width * 2, small.height * 2))
+            out = _eink.render_for_target(im, small, fit=fit, method=dither)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, f"render failed: {exc}") from exc
+
+    buf = io.BytesIO()
+    out.save(buf, format="PNG")
+    return Response(
+        buf.getvalue(), media_type="image/png",
+        headers={"Cache-Control": "no-store",
+                 "X-Palette-Measured": str(tgt.palette.measured)},
+    )
+
+
+@app.post("/eink/playlist/export")
+def eink_playlist_export(body: ExportIn) -> dict:
+    dest = _checked_export_dir(body.path)
+    try:
+        spec = _eink.PlaylistSpec.from_dict(body.spec)
+        tgt = _eink.get_target(body.target)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    sidecars = _all_sidecars()
+    try:
+        res = _eink.build(sidecars, spec,
+                          ratings=_eink.load_ratings(store.RATINGS_LOG),
+                          dossier_ids=set(store.work_ids_with_dossier()))
+    except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    by_id = dict(sidecars)
+    from fine_art_archive.eink.playlist import _artist_of, parse_year
+    items = [
+        _eink.ExportItem(
+            work_id=wid,
+            title=(by_id.get(wid) or {}).get("title") or "",
+            artist=_artist_of(by_id.get(wid) or {}),
+            year=parse_year((by_id.get(wid) or {}).get("year")),
+        )
+        for wid in res.work_ids
+    ]
+    try:
+        rep = _eink.export(
+            items, dest, tgt, master_for=_eink_master, fmt=body.fmt,
+            method=body.dither, fit=body.fit, overwrite=body.overwrite,
+            dry_run=not body.write, spec=spec.__dict__,
+        )
+    except FileExistsError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    out = rep.as_dict()
+    out.update({
+        "path": str(dest), "target": tgt.key, "selected": len(items),
+        "palette_measured": tgt.palette.measured,
+    })
+    return out
 
 
 # --------------------------------------------------------------------------
