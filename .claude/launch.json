@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "faa-companion",
+      "runtimeExecutable": "/private/tmp/claude-502/-Users-teacher-Library-CloudStorage-Dropbox-Learning-Code/3523455e-4614-4e5e-9394-809dfe95a596/scratchpad/run_faa.sh",
+      "runtimeArgs": [],
+      "port": 8932
+    }
+  ]
+}

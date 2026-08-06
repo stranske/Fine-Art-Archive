@@ -40,7 +40,56 @@ STREAMS = [
     ("shipping", RESEARCH / "stream-a-shipping.json"),
     ("upcoming-openhw", RESEARCH / "stream-b-upcoming-openhw.json"),
     ("vendor-viability", RESEARCH / "stream-c-vendor-viability.json"),
+    ("art-frames", RESEARCH / "stream-d-art-frames.json"),
 ]
+
+# Round-2 streams that are not device/vendor shaped. They answer one question
+# each rather than cataloguing hardware, so they ride alongside the device list
+# instead of being merged into it.
+SIDECAR_STREAMS = [
+    ("delivery_record", RESEARCH / "stream-e-delivery-record.json"),
+    ("panel_supply", RESEARCH / "stream-f-panel-supply.json"),
+]
+
+# Facts a later stream established that an earlier one got wrong. The merge
+# rules cannot express this on their own: for a non-string field the first
+# non-empty value wins, and for a string the LONGEST wins, so a wrong number or
+# a wordier wrong sentence would outrank a researched correction. Each entry
+# says who corrected what and why, so the override stays auditable.
+CORRECTIONS: list[dict] = [
+    {
+        "match_brand": "ionnyk",
+        # Scoped to the WRONG value only. A brand-wide match clobbered Jane
+        # (13.2in) and Linn (31.2in), which were already correct -- a
+        # correction must not become its own error.
+        "only_if": {"diagonal_in": 62},
+        "set": {"diagonal_in": 40.2},
+        "why": "IONNYK publishes FRAME dimensions, not screen sizes. The 62in "
+               "figure in round 1 is Maxine's frame diagonal; its display is "
+               "~40.2in (Jane is 13.2in, Linn ~31.2in). Corrected by the "
+               "art-frames stream, which read IONNYK's own spec pages.",
+        "by": "art-frames",
+    },
+]
+
+
+def apply_corrections(devices: dict) -> list[str]:
+    applied = []
+    for c in CORRECTIONS:
+        for dev in devices.values():
+            if brand_of(dev) != c["match_brand"]:
+                continue
+            guard = c.get("only_if") or {}
+            if any(dev.get(gk) != gv for gk, gv in guard.items()):
+                continue
+            for k, v in c["set"].items():
+                if dev.get(k) != v:
+                    dev.setdefault("_corrections", []).append(
+                        {"field": k, "was": dev.get(k), "now": v,
+                         "why": c["why"], "by": c["by"]})
+                    dev[k] = v
+                    applied.append(f"{c['match_brand']}.{k}: {dev['_corrections'][-1]['was']} -> {v}")
+    return applied
 
 # Most restrictive first.
 OPENNESS_ORDER = ["closed", "partly-open", "open", "unknown"]
@@ -305,12 +354,20 @@ def main() -> int:
             unverified.append({"_stream": stream, **u} if isinstance(u, dict)
                               else {"_stream": stream, "fact": u})
 
+    corrections_applied = apply_corrections(devices)
     devices = consolidate(devices, {k: (v.get("_streams") or ["merged"])[0]
                                     for k, v in devices.items()})
     dev_list = sorted(devices.values(),
                       key=lambda x: -(x.get("diagonal_in") or 0))
+    sidecars = {}
+    for key, path in SIDECAR_STREAMS:
+        if path.exists():
+            sidecars[key] = json.loads(path.read_text())
+        else:
+            print(f"MISSING {path}")
+
     out = {
-        "_schema": "faa-eink-targets/1",
+        "_schema": "faa-eink-targets/2",
         "_purpose": "Development target for the archive's E-Ink display push. "
                     "Ranked on vendor staying power and integration openness, "
                     "not on spec sheets.",
@@ -322,6 +379,8 @@ def main() -> int:
         "vendors": sorted(vendors.values(), key=lambda x: x.get("name") or ""),
         "leads_not_followed": leads,
         "unverified_facts": unverified,
+        "corrections_applied": corrections_applied,
+        **sidecars,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
@@ -331,6 +390,11 @@ def main() -> int:
     print(f"merged : {len(dev_list)} devices ({len(big)} above 15in), "
           f"{len(vendors)} vendors, {len(leads)} leads, "
           f"{len(unverified)} unverified facts")
+    for c in corrections_applied:
+        print(f"correction: {c}")
+    for k, v in sidecars.items():
+        n = len(v.get("campaigns") or v.get("panel_makers") or [])
+        print(f"sidecar: {k} ({n} records)")
     print(f"wrote  : {OUT.relative_to(ROOT)}")
     return 0
 
