@@ -3,3 +3,4 @@ finalize_acquisition
 perceptual_dedupe
 propose_subject_tags
 visual_dedupe
+vision_tag_works

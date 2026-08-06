@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -36,23 +37,37 @@ def load_config(path: Path = DEFAULT_CONFIG) -> dict[str, Any]:
 
 
 def tag_one(
-    tag: str, scores: Mapping[str, float], config: Mapping[str, Any]
+    tag: str,
+    scores: Mapping[str, float],
+    config: Mapping[str, Any],
+    *,
+    allow_contrastive: bool = True,
+    min_f1: float | None = None,
 ) -> dict[str, Any] | None:
     """Return a proposal when ``tag`` clears its calibrated or contrastive gate."""
     pairs = config.get("contrastive_pairs", {})
     pair = pairs.get(tag) if isinstance(pairs, Mapping) else None
-    if isinstance(pair, Mapping):
-        positive = str(pair["positive"])
+    if allow_contrastive and isinstance(pair, Mapping):
+        positive_value = pair.get("positive")
+        if not isinstance(positive_value, str) or not positive_value.strip():
+            raise ValueError(f"contrastive tag {tag} needs a non-empty positive prompt")
+        positive = positive_value
         negatives = pair.get("negatives", [])
         if not isinstance(negatives, list) or not negatives:
             raise ValueError(f"contrastive tag {tag} needs non-empty negatives")
         prompts = [positive, *(str(item) for item in negatives)]
         if any(prompt not in scores for prompt in prompts):
             return None
-        positive_score = float(scores[positive])
-        negative_score = max(float(scores[prompt]) for prompt in prompts[1:])
-        margin = float(pair.get("margin", 0.0))
-        if positive_score <= negative_score + margin:
+        try:
+            positive_score = float(scores[positive])
+            negative_score = max(float(scores[prompt]) for prompt in prompts[1:])
+            margin = float(pair.get("margin", 0.0))
+        except (TypeError, ValueError):
+            return None
+        if not all(math.isfinite(value) for value in (positive_score, negative_score, margin)):
+            return None
+        cutoff = negative_score + margin
+        if positive_score <= cutoff or math.isclose(positive_score, cutoff, abs_tol=1e-12):
             return None
         return {
             "id": tag,
@@ -65,23 +80,55 @@ def tag_one(
         }
 
     thresholds = config.get("thresholds", {})
-    threshold = thresholds.get(tag) if isinstance(thresholds, Mapping) else None
-    if threshold is None or tag not in scores:
+    policy = thresholds.get(tag) if isinstance(thresholds, Mapping) else None
+    if policy is None or tag not in scores:
         return None
-    if float(scores[tag]) < float(threshold):
+    if isinstance(policy, Mapping):
+        threshold = policy.get("threshold")
+        f1 = policy.get("f1")
+    else:
+        threshold, f1 = policy, None
+    try:
+        score = float(scores[tag])
+        threshold_value = float(threshold)
+        f1_value = float(f1) if f1 is not None else None
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(value) for value in (score, threshold_value)):
+        return None
+    if f1_value is not None and not math.isfinite(f1_value):
+        return None
+    if min_f1 is not None and (f1_value is None or f1_value < min_f1):
+        return None
+    if score < threshold_value:
         return None
     return {"id": tag, "state": "proposed", "source": "vision:threshold", "basis": "threshold"}
 
 
 def propose(
-    scores: Mapping[str, float], config: Mapping[str, Any], *, no_contrastive: bool = False
+    scores: Mapping[str, float],
+    config: Mapping[str, Any],
+    *,
+    no_contrastive: bool = False,
+    min_f1: float | None = None,
 ) -> list[dict[str, Any]]:
     """Produce all policy-approved proposals from a single work's score map."""
     tags = set((config.get("thresholds") or {}).keys())
     if not no_contrastive:
         tags.update((config.get("contrastive_pairs") or {}).keys())
     return [
-        proposal for tag in sorted(tags) if (proposal := tag_one(tag, scores, config)) is not None
+        proposal
+        for tag in sorted(tags)
+        if (
+            proposal := tag_one(
+                tag,
+                scores,
+                config,
+                allow_contrastive=not no_contrastive,
+                min_f1=min_f1,
+            )
+        )
+        is not None
     ]
 
 
@@ -94,15 +141,18 @@ def merge_into_sidecar(sidecar: dict[str, Any], proposals: list[dict[str, Any]])
     if not isinstance(current, list):
         raise ValueError("subject.content_tags must be a list when present")
     by_id = {item.get("id"): item for item in current if isinstance(item, dict) and item.get("id")}
+    changed = False
     for proposal in proposals:
         existing = by_id.get(proposal["id"])
         if existing and (
             existing.get("source") == "wikidata:P180" or existing.get("state") != "proposed"
         ):
             continue
-        by_id[proposal["id"]] = proposal
+        if by_id.get(proposal["id"]) != proposal:
+            by_id[proposal["id"]] = proposal
+            changed = True
     subject["content_tags"] = [by_id[key] for key in sorted(by_id)]
-    if proposals:
+    if changed:
         subject["needs_review"] = True
     return sidecar
 
@@ -128,6 +178,7 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--no-contrastive", action="store_true")
+    parser.add_argument("--min-f1", type=float, default=None)
     args = parser.parse_args()
     config = load_config(args.config)
     contrastive = sorted(config["contrastive_pairs"])
@@ -138,7 +189,12 @@ def main() -> int:
     work_ids = sorted(path.name for path in STAGING.iterdir() if path.is_dir())[: args.limit]
     counts = dict.fromkeys(contrastive, 0)
     for work_id in work_ids:
-        proposals = propose(scores.get(work_id, {}), config, no_contrastive=args.no_contrastive)
+        proposals = propose(
+            scores.get(work_id, {}),
+            config,
+            no_contrastive=args.no_contrastive,
+            min_f1=args.min_f1,
+        )
         for proposal in proposals:
             if proposal["basis"] == "contrastive":
                 counts[proposal["id"]] += 1
@@ -153,12 +209,16 @@ def main() -> int:
     report = {
         "generated_at": datetime.now(utc).isoformat(),
         "contrastive_counts": counts,
+        "contrastive_policies": config["contrastive_pairs"],
         "scored_works": len(scores),
     }
     (ROOT / "clip_calibration_report.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
     print(json.dumps(report, sort_keys=True))
+    if args.limit is None and scores and counts.get("filter:nudity-full", 0) <= 30:
+        print("contrastive coverage check failed: filter:nudity-full must flag more than 30 works")
+        return 1
     return 0
 
 
