@@ -13,14 +13,20 @@ it, because those are the failures worth locking down:
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 from PIL import Image
 
 from fine_art_archive.eink import (
-    MONO1BIT, MOODS, PERIODS, SPECTRA6, ExportItem, PlaylistSpec,
-    build, dither_error, export, get_palette, get_target, quantize,
+    SPECTRA6,
+    ExportItem,
+    PlaylistSpec,
+    build,
+    dither_error,
+    export,
+    get_palette,
+    get_target,
+    quantize,
 )
 from fine_art_archive.eink.playlist import _artist_of, parse_year
 from fine_art_archive.eink.targets import fit_to_target, render_for_target

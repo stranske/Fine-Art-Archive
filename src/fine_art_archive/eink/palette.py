@@ -38,7 +38,7 @@ produce throws away headroom at the top of the range.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
@@ -91,7 +91,10 @@ class Palette:
         """Assert the palette invariant. Returns (ok, offending colours)."""
         arr = np.asarray(img.convert("RGB")).reshape(-1, 3)
         present = {tuple(int(v) for v in row) for row in np.unique(arr, axis=0)}
-        illegal = present - {tuple(c) for c in self.colours}
+        legal = {tuple(c) for c in self.colours}
+        illegal: set[tuple[int, int, int]] = {
+            (c[0], c[1], c[2]) for c in present if c not in legal
+        }
         return (not illegal, illegal)
 
     def array(self) -> np.ndarray:
