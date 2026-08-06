@@ -594,6 +594,13 @@
               "string",
               "null"
             ]
+          },
+          "prior_value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The value this field held before the pass that wrote this provenance record. Set by passes that overwrite an existing value (e.g. the artist-QID triage pass records the superseded QID here) so a correction is reversible."
           }
         }
       }
@@ -1129,6 +1136,13 @@
                   "null"
                 ],
                 "description": "Pre-Phase-3 path relative to Art/; source of rel_path until migration rewrites it."
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Free-text provenance for this variant, e.g. which duplicate work it was merged from when two records for the same painting were consolidated. Written by the duplicate-merge pass."
               }
             }
           }
