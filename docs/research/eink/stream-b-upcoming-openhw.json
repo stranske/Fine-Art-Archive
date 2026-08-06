@@ -1,0 +1,1882 @@
+{
+  "devices": [
+    {
+      "model": "EinkCanvas 28.5\" (Large)",
+      "vendor": "BLOOMIN8 (arpobot)",
+      "status": "preorder",
+      "diagonal_in": 28.5,
+      "resolution": "2160x3060",
+      "ppi": 131,
+      "panel": "E Ink Spectra 6 on Sharp IGZO backplane",
+      "colour": "full-colour 6-primary (E Ink Spectra 6); vendor says full colour achieved via dithering algorithm",
+      "refresh": "~20 s per image change (vendor states the campaign GIF was sped up); static image persists with zero power",
+      "front_light": false,
+      "price": {
+        "amount": 2399,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5"
+      },
+      "availability": "Global; vendor store states 'Expected shipping starts August 2026'. Kickstarter (AU) campaign closed Apr 2025; 13.3\" units already fulfilled. Kickstarter price for the large model was USD 1,499 (some listings show USD 1,899 list / 1,499 sale).",
+      "power": "Internal 30,000 mAh Li-Po, USB-C charging; vendor claims 1-3 years on daily refresh",
+      "dimensions": "778 x 598 x 28.4 mm (30.63 x 23.54 x 1.12 in), 5.5 kg; aluminium frame with white mat; drops into IKEA RODALM frames",
+      "released": "2026-08",
+      "integration": {
+        "openness": "open",
+        "api": "Local HTTP REST API on the device itself, discovered over mDNS (_http._tcp), verified with GET /deviceInfo. Service calls documented in the vendor's Home Assistant component include upload_image_url, upload_dithered_image_data, create_gallery, show_playlist, show_next, sleep, reboot, clear_screen. Vendor states plainly: 'we have RESTful APIs for developers'.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Firmware is not user-replaceable and is not open source, but the documented local REST API means custom software is unnecessary - a self-hosted app can drive the frame directly over LAN. Community repo fwmone/bloomin8_pull implements a self-hosted 'endpoint provider' the frame pulls from, which is close to the client's exact architecture.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "Genuinely active third-party ecosystem - 19 repositories match 'bloomin8' on GitHub. Vendor-published: ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component (HACS, Python, 55 stars, updated within the last week). Community: seanhub2000/bloomin8-canvas-desktop-app (native macOS manager, updated hours before this survey), mrud/bloomin8-cli (Node/JS CLI with Spectra 6 dithering and multi-device control), jacobstim/bloomin8-python, moifort/bloomin8 (Swift local server), Dopiz/bloomin8-canvas-skills (LAN control), mistrsoft/bloomin8_bt_wake (BLE wake), gabe-sky/bloomin8-simulacrum, PhilWheat/Bloomin8HermesSkill.",
+        "evidence_urls": [
+          "https://raw.githubusercontent.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/main/README.md",
+          "https://github.com/search?q=bloomin8&type=repositories",
+          "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame",
+          "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5"
+        ],
+        "notes": "This is the strongest personalisation-openness result in the whole announced/in-development slice, and it is above 15 in. Vendor markets a 'Fully Local Solution' explicitly: an SD card slot where you drop images pre-resized to panel resolution, plus a Home Assistant custom integration that uploads and displays 'images 100% locally over your home Wi-Fi network. No third-party servers'. CAVEAT: the vendor's cloud/mobile app carries an AI-generation subscription ('Premium plans offer up to 300 generations monthly'), but that is orthogonal to local image push. SECOND CAVEAT: the GitHub account github.com/bloomin8 has zero public repositories - the real code lives under the ARPOBOT-BLOOMIN8 org, so do not conclude from the bare vendor name that nothing is published. The vendor FAQ does not document the API; the API contract is effectively defined by the HA component source, which is a single-vendor dependency risk if they stop publishing it."
+      },
+      "art_suitability": {
+        "gamut_notes": "E Ink Spectra 6 six-primary; E Ink and Good Display quote 4,096 addressable colours and ~85% NTSC coverage for the Spectra 6 platform, with ~30:1 contrast. Vendor claims 'Colour Calibration - it is not easy to calibrate a colour e-ink display, but we did it'. An independent hands-on found the matte finish made it 'really look like an actual painting', and judged both photographs and oil-based paintings suitable. Note that 6-primary Spectra 6 reaches intermediate colours by spatial dithering, so effective colour resolution is materially below the 131 PPI geometric resolution - this is the central art-reproduction limitation of the whole Spectra 6 generation, not a vendor-specific flaw.",
+        "ghosting": "Not documented by the vendor; the independent hands-on did not address ghosting or refresh artefacts. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5",
+          "what_it_supports": "Diagonal, 2160x3060, 131 DPI, Spectra 6 + Sharp IGZO, USD 2,399, 'Expected shipping starts August 2026', 30,000 mAh battery, dimensions/weight, Wi-Fi 2.4/5 GHz, BT 5.2 LE, USB-C, Home Assistant integration",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame",
+          "what_it_supports": "AU$2,397,443 pledged of AU$30,000 goal from 2,272 backers; Sydney AU; 'Fully Local Solution' with SD card slot; Home Assistant custom integration 100% local; 'RESTful APIs for developers'; ~20 s refresh; IKEA RODALM compatibility; colour-calibration claim; prior Arpobot Smart Shade campaign with 600+ backers fulfilled",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/main/README.md",
+          "what_it_supports": "Local HTTP REST API, mDNS discovery, GET /deviceInfo, upload_image_url / upload_dithered_image_data / create_gallery / show_playlist service calls, HACS install",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/search?q=bloomin8&type=repositories",
+          "what_it_supports": "19 matching repositories; names/owners/descriptions of the third-party ecosystem",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/bloomin8",
+          "what_it_supports": "Negative evidence: the bare 'bloomin8' GitHub account is a personal account with zero public repositories",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.trustedreviews.com/opinion/i-used-an-e-ink-canvas-that-will-change-your-family-photos-forever",
+          "what_it_supports": "Independent hands-on: matte finish reads as a painting, photos and oil paintings both suitable, SD card slot as a load path, IKEA RODALM fit. NOTE this article states 200 ppi, which conflicts with the vendor's 131 DPI; 131 PPI is arithmetically correct for 3060 px over a 28.5 in 12:17 panel, so treat the 200 ppi figure as an error",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://bloomin8.com/pages/faq",
+          "what_it_supports": "1-year warranty; premium AI plans up to 300 generations monthly; last image stays displayed if Wi-Fi drops; FAQ does NOT document the API, Home Assistant, SD card or local mode",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://epaperia.substack.com/p/discover-bloomin8-ai-epaper-art-frames",
+          "what_it_supports": "Kickstarter total 'over $1.65M' (note: differs from the AU$2.397M figure on the campaign page itself - likely USD vs AUD), 13.3 in and 28.5 in models, CES 2026 presence",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "Large Canvas 31.5\"",
+      "vendor": "Fraimic",
+      "status": "preorder",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Vendor claims a new AI-generated image appears 'within seconds'; no measured full-refresh time published",
+      "front_light": false,
+      "price": {
+        "amount": 1299,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://fraimic.com/collections/shop"
+      },
+      "availability": "Sold out on the vendor store as of 2026-08 (listed USD 1,299, reduced from USD 1,499; the CES press release quoted USD 999). Kickstarter fulfilment in progress: Standard 13.3\" units began shipping 2026-06-17; Large 31.5\" units 'Have Arrived at the Port! Shipping Begins Soon' as of update #15, 2026-07-21. So the >15 in variant had NOT reached backers when this survey was taken.",
+      "power": "Internal 10,000 mAh battery, cordless; vendor claims multi-year life because power is drawn only on image change",
+      "dimensions": "Display 31.5 in inside a 24 x 36 x 2 in frame; designed to drop into any same-size standard frame (IKEA, thrifted, artisan) with minimal modification",
+      "released": "2026-07",
+      "integration": {
+        "openness": "partly-open",
+        "api": "No public API documentation found. Content is loaded from a mobile web page rather than an app.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "No. Locked vendor firmware (versioned - v2.26 was pushed 2026-06-29). No sideloading, no published SDK.",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None found. No GitHub organisation or third-party repositories surfaced.",
+        "evidence_urls": [
+          "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai",
+          "https://www.prnewswire.com/news-releases/fraimic-to-debut-market-first-voice-to-art-smart-canvas-prototypes-at-ces-2026-302651756.html",
+          "https://fraimic.com/"
+        ],
+        "notes": "Fraimic advertises the single most on-point marketing claim in this survey: 'Local-Only Freedom. No Internet Required. ... A local-only mode lets you connect directly to your frame without internet. Upload and change art instantly from your device, without third-party servers.' The CES press release independently lists 'Local-only connectivity mode (no cloud dependency)' and 'Image upload via mobile site (no app required)'. Campaign banner reads 'No apps | No subscriptions'. HOWEVER, this is rated partly-open rather than open because there is a direct contradiction to resolve: fraimic.com states users must 'Create an account or log in at app.fraimic.com' to operate the device, and the AI features run on vendor infrastructure with purchasable AI credits. Nothing found documents the local-mode protocol, so a self-hosted app cannot be written against it today - it is a human-driven browser upload, not a machine-drivable API. Treat local-only as 'vendor-asserted, protocol undocumented'."
+      },
+      "art_suitability": {
+        "gamut_notes": "Spectra 6 six-primary, so the same 4,096-colour / ~85% NTSC / ~30:1 platform envelope applies. Vendor published comparison photographs of the display next to a framed magazine cover and next to an original oil painting, and markets style presets specifically as a defence against 'AI Slop'. No gamut figures, no measurements.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/fraimic-to-debut-market-first-voice-to-art-smart-canvas-prototypes-at-ces-2026-302651756.html",
+          "what_it_supports": "CES 2026 debut (Jan 6-9) of pre-production prototypes; Standard Canvas 13.3 in / Large Canvas 31.5 in; Spectra 6; USD 399 and USD 999; 'Local-only connectivity mode (no cloud dependency)'; upload via mobile site with no app; multi-year battery; Kickstarter shipments May 2026, DTC June 2026; Chicago-based; founder Anthony Mattana; Kickstarter raised more than USD 1 million",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai",
+          "what_it_supports": "USD 1,120,290 pledged of a USD 10,000 goal from 1,825 backers; campaign 2025-09-23 to 2025-10-23; 'Local-Only Freedom. No Internet Required'; 'No apps | No subscriptions'; 10,000 mAh battery; fits any frame; fulfilment begins Spring 2026; promoted by Jellop; 30+ years combined team experience",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai/posts",
+          "what_it_supports": "Delivery timeline evidence: update #12 'Standard Units Have Started Shipping!' 2026-06-17; update #13 firmware v2.26 on 2026-06-29; update #15 'Large Fraimic Units Have Arrived at the Port! Shipping Begins Soon' 2026-07-21; 17 updates total, last activity 2026-07-21",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://fraimic.com/collections/shop",
+          "what_it_supports": "Standard Canvas 13.3 in USD 399 (from 499) and Large Canvas 31.5 in USD 1,299 (from 1,499), both Sold out",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://fraimic.com/",
+          "what_it_supports": "Contradicting evidence for cloud dependence: 'Create an account or log in at app.fraimic.com'; upload from a web page with no app; Met and open art APIs for public-domain artwork; gallery-quality dark wood frame, swappable for same-size frames",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Tela 40.5\"",
+      "vendor": "InkPoster (Pocketbook International SA)",
+      "status": "announced",
+      "diagonal_in": 40.5,
+      "resolution": "3060x4320",
+      "ppi": 130,
+      "panel": "E Ink Spectra 6 on Sharp IGZO backplane",
+      "colour": "full-colour 6-primary (E Ink Spectra 6); vendor claims 'over 60,000 natural tones'",
+      "refresh": "Not published",
+      "front_light": false,
+      "price": {
+        "amount": 4200,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://inkposter.com/"
+      },
+      "availability": "Announced at CES 2026 as, per the vendor, the world's largest colour ePaper art display, in A1 format. Not purchasable as of 2026-08: the product page shows a 'Notify me' state and every InkPoster SKU across the range reads sold out / unavailable.",
+      "power": "Cordless, internal battery; vendor claims up to one year on a single charge; image remains visible when powered off",
+      "dimensions": "44.56 x 34.83 x 0.98 in; wall-mountable vertical or horizontal",
+      "released": "2026-01",
+      "integration": {
+        "openness": "closed",
+        "api": "None documented. Control is via the InkPoster app on Google Play / Apple App Store.",
+        "local_network_no_cloud": false,
+        "push_supported": false,
+        "custom_software": "No. Locked vendor firmware, no SDK, no sideloading path found.",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://inkposter.com/",
+          "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces"
+        ],
+        "notes": "Worst-fit device in this slice for the client's decisive criterion despite being the most impressive panel. The value proposition is explicitly a curated licensed-art catalogue 'handpicked by expert Art consultants', delivered through the vendor app, with 'exclusive collections through the subscription'. Personal-photo upload is supported, but only through that app. No API, no local-network path, no SD/USB path documented, and no homebrew community. For a client whose whole point is pushing his own gigapixel-derived renders from his own server, this is an app-shaped product with a content business attached - the exact architecture he needs to avoid. Rated closed rather than unknown because the vendor documents the app-only path affirmatively; the residual uncertainty is only whether an undocumented local endpoint exists."
+      },
+      "art_suitability": {
+        "gamut_notes": "The single best geometric resolution found above 15 in: 3060x4320 over A1 works out to roughly 130 PPI, matching the 28.5 in models' pixel pitch at far greater size. Sharp IGZO backplane. The '60,000 natural tones' claim is a dithered-output claim, not a primary count - the panel is still 6-primary Spectra 6. Portrait A1 aspect suits framed single works well.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces",
+          "what_it_supports": "CES debut; 40.5 in A1; 3060x4320; Spectra 6 with Sharp IGZO; 'over 60,000 natural tones'; USD 4,200; up to one year battery; dimensions; app-based artwork access and personal image upload; remote updates; Duna designed by Pininfarina at USD 6,500",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://inkposter.com/",
+          "what_it_supports": "Full price list and stock state as of 2026-08 (Affresco 13.3 in USD 499, Affresco 31.5 in USD 1,699, Tela 28.5 in USD 2,399, Tela 40.5 in USD 4,200, Duna 40.5 in USD 6,500 - all unavailable); app on Google Play and App Store; subscription collections; operating entity 'Pocketbook International SA'; 'nearly 20 years of ePaper expertise'",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "InkPoster Duna 40.5\" (Pininfarina)",
+      "vendor": "InkPoster (Pocketbook International SA)",
+      "status": "announced",
+      "diagonal_in": 40.5,
+      "resolution": "3060x4320",
+      "ppi": 130,
+      "panel": "E Ink Spectra 6 on Sharp IGZO backplane",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Not published",
+      "front_light": false,
+      "price": {
+        "amount": 6500,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://inkposter.com/"
+      },
+      "availability": "Announced at CES 2026 alongside the Tela 40.5. Unavailable in all three finishes (Brown, Black, White) as of 2026-08.",
+      "power": "Cordless, internal battery; up to one year per charge claimed",
+      "dimensions": "44.56 x 34.83 x 0.98 in",
+      "released": "2026-01",
+      "integration": {
+        "openness": "closed",
+        "api": "None documented; same InkPoster app stack as the Tela.",
+        "local_network_no_cloud": false,
+        "push_supported": false,
+        "custom_software": "No",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://inkposter.com/",
+          "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces"
+        ],
+        "notes": "Identical electronics and integration posture to the Tela 40.5; the USD 2,300 premium buys the Pininfarina industrial design and finish options only. Same closed app-and-subscription model."
+      },
+      "art_suitability": {
+        "gamut_notes": "Same panel as Tela 40.5. Design-led SKU.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces",
+          "what_it_supports": "Duna 40.5 in at USD 6,500, designed by Pininfarina, same 3060x4320 panel and dimensions, unavailable in Brown/Black/White",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://inkposter.com/",
+          "what_it_supports": "Price and unavailable stock state as of 2026-08",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "GDEP253C02(E6) - 25.3\" bare panel",
+      "vendor": "Dalian Good Display",
+      "status": "dev-kit",
+      "diagonal_in": 25.3,
+      "resolution": "3200x1800",
+      "ppi": 163,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (E Ink Spectra 6); vendor quotes 4,096 colours, 85% NTSC coverage",
+      "refresh": "Not stated on the panel page; Good Display's finished 25.3\" product built on this panel quotes full refresh <=15 s",
+      "front_light": false,
+      "price": {
+        "amount": 898.2,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://www.buy-lcd.com/products/gdep253c02"
+      },
+      "availability": "Bare panel, made-to-order; listed at USD 898.20 (10% off USD 998.00) on Good Display's own storefront buy-lcd.com but showing 0 in stock with a Notify Me option as of 2026-08. Bulk tiers 2% off at 2+, 5% off at 3+. Ships from Dalian, China.",
+      "power": "None - glass panel only. Requires an external TCON, an EPD power supply generating the +/-15 V rails, and a host controller.",
+      "dimensions": "Outline 576.5 x 333.0 x 0.85 mm; active area 560.0 x 315.0 mm; pixel pitch 0.175 x 0.175 mm; glass backplane; anti-glare surface",
+      "released": null,
+      "integration": {
+        "openness": "open",
+        "api": "No vendor API - this is a raw mini-LVDS panel. You supply the driving stack. Two documented routes: (1) Good Display's own 25.3\" TCON board plus Android system motherboard, which ships with an SDK and takes images from a USB drive prepared by a Windows tool, or over Wi-Fi/Bluetooth; (2) the open-source Modos Caster/Glider FPGA controller, whose documentation explicitly covers the LVDS signalling used on 'higher resolution panels (such as 25.3\" ones ...)'.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Entirely yours. Nothing to sideload around - you own the whole stack from framebuffer to waveform.",
+        "sd_or_usb": true,
+        "open_firmware": true,
+        "community": "Modos Caster/Glider (CERN-OHL, GitLab/GitHub mirrors) is the only open controller documented as reaching this panel class. EPDiy, the other well-known open ESP32 e-paper driver, tops out around 13.3\" and its README lists nothing above ~7.8-13.3\" and no Spectra 6 support.",
+        "evidence_urls": [
+          "https://www.good-display.com/product/476.html",
+          "https://raw.githubusercontent.com/Modos-Labs/Glider/master/README.md",
+          "https://www.buy-lcd.com/products/gdep253c02",
+          "https://raw.githubusercontent.com/vroland/epdiy/main/README.md"
+        ],
+        "notes": "This is the highest-resolution >15 in colour e-paper panel found anywhere in this survey at 163 PPI - substantially sharper than every 31.5\" option (~93 PPI) and sharper than the 28.5\" A2 panels (~131 PPI). For a fine-art application that is the single most important spec, and it makes this panel the best raw substrate available. Two hard caveats. FIRST, an important and under-appreciated compatibility risk: Caster's own documentation says it 'supports electrophoretic display panels with parallel I/F (Eink, OED and DES)' and is 'compatible with both monochrome and color-filter-array based screens'. Spectra 6 is NOT a colour-filter-array device - it is a four-pigment microcup system needing its own multi-pass waveform set. So Caster driving this panel's LVDS timing is documented, but Caster rendering correct Spectra 6 COLOUR is not, and would likely need new waveform work. Treat 'open controller drives the 25.3\" in full colour' as INFERENCE, not fact, until demonstrated. SECOND, Glider's README notes a constraint that X resolution multiplied by Y resolution must be a multiple of 128; 3200 x 1800 = 5,760,000, which divides by 128 exactly (45,000), so this panel does satisfy it. The pragmatic route for a determined builder is Good Display's own TCON plus Android motherboard with SDK, which is a known-good colour stack, and to treat the open FPGA path as a research project."
+      },
+      "art_suitability": {
+        "gamut_notes": "163 PPI, 4,096 colours, 85% NTSC, ~30:1 contrast, anti-glare glass. Best pixel density above 15 in that this survey found. Because Spectra 6 reaches intermediate colours by dithering, high PPI matters disproportionately here - dither noise is what limits perceived quality, and 163 PPI hides it far better than 93 PPI. Operating range 0-50 C; storage -25 to 60 C.",
+        "ghosting": "Not documented by the vendor. Spectra 6 large-format modules generally require full-panel refresh for image changes; the finished products built on this panel quote <=15 s full refresh, which implies a multi-pass waveform and therefore visible transition activity rather than instant swap.",
+        "bit_depth": "4,096 addressable colours quoted at panel level (equivalent to 12-bit total via dithered primaries, not per-channel)",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.good-display.com/product/476.html",
+          "what_it_supports": "25.3 in, 3200x1800, 0.175 mm pitch (=163 PPI), mini-LVDS interface, 6-colour Spectra 6, 4,096 colours / 85% NTSC, outline and active-area dimensions, 0-50 C operating, made-to-order, and the existence of a companion TCON board plus Android system motherboard development solution with Wi-Fi/Bluetooth and SDK",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.buy-lcd.com/products/gdep253c02",
+          "what_it_supports": "USD 898.20 (from USD 998.00), 0 in stock, bulk discount tiers, and that the linked development solution is a 25.3 in TCON plus Android motherboard with USB image upload and SDK",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/Modos-Labs/Glider/master/README.md",
+          "what_it_supports": "Open controller support for panels up to 25.3 in; handling of LVDS signalling on 'higher resolution panels (such as 25.3\" ones, and 11.8\" Gallery 3 panel)'; the X*Y multiple-of-128 constraint; parallel-interface E Ink/OED/DES support and colour-filter-array compatibility; CERN-OHL-S hardware licence and MIT firmware",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/vroland/epdiy/main/README.md",
+          "what_it_supports": "Negative evidence: EPDiy's supported-panel table runs 4.7 in to 13.3 in with no Spectra 6 and nothing above 15 in; CC-BY-SA hardware, LGPLv3 firmware",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "GDEP315C01(E6) - 31.5\" bare panel (E Ink part EL315TW1 / kit part ED2208-QBA)",
+      "vendor": "Dalian Good Display / E Ink Corporation",
+      "status": "dev-kit",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "ppi": 93,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (E Ink Spectra 6); 4,096 colours, 85% NTSC per Good Display; E Ink lists the six primaries as red/green/blue/yellow/black/white",
+      "refresh": "Finished products on this panel quote full refresh <=15 s",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Available two ways. Good Display lists GDEP315C01 with no public price. E Ink sells the identical module directly through its own kit store as ED2208-QBA, which was Out of Stock as of 2026-08; that listing states explicitly that the 'Driving Board is not included in the display module package' and points to the separately sold Vision Driving Board. Also resold as a bare panel by third parties.",
+      "power": "None - module only. Needs a driving board.",
+      "dimensions": "703.52 x 406.48 x 0.85 mm; active area 696.32 x 391.68 mm; pixel pitch 0.272 x 0.272 mm; 582 +/- 20 g; glass backplane; anti-glare",
+      "released": "2023-11",
+      "integration": {
+        "openness": "open",
+        "api": "None at panel level. Documented driving routes: Good Display's DEAM-315E1 ESP32-S3 development kit (QSPI, Wi-Fi web upload, hot-swappable SD card, Arduino IDE); Good Display's 31.2\" Android motherboard + TCON + power-supply board set driven by USB stick via the XTacepSetup Windows tool; or E Ink's own Vision evaluation kit / Vision Driving Board.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Yes - you write it. Arduino/ESP-IDF for the DEAM-315E1 route; Android for the TCON+motherboard route.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "No open-hardware controller found for this panel. Note the interface difference that matters: this 31.5\" panel is QSPI, whereas the 25.3\" is mini-LVDS. Modos Caster/Glider documents LVDS and parallel interfaces, NOT QSPI - so the open-hardware route that plausibly reaches the 25.3\" panel does not obviously reach this one.",
+        "evidence_urls": [
+          "https://www.good-display.com/product/560.html",
+          "https://www.good-display.com/product/686.html",
+          "https://shopkits.eink.com/en/product/detail/31.5''Spectra6ePaperDisplay_ED2208-QBA",
+          "https://www.good-display.com/product/870.html"
+        ],
+        "notes": "The most widely second-sourced large colour e-paper panel in existence - it is the substrate under the Philips Tableaux 5150I, Geniatech EPC3200, SEEKINK S315E6, MEiNK 31.5\", StellarLink aecoPost, InkPoster Affresco 31.5, Fraimic Large Canvas and Good Display's own DMPH315E61. That breadth is itself the strongest single staying-power signal in the category: if any one integrator folds, the panel and its driving ecosystem persist. The cost of that ubiquity is resolution - 93 PPI is coarse for art reproduction, roughly half the linear density of the 25.3\" panel."
+      },
+      "art_suitability": {
+        "gamut_notes": "93 PPI (0.272 mm pitch) is the weak point for fine art - at normal viewing distance the Spectra 6 dither pattern is closer to visible than on the 163 PPI 25.3\" panel. 4,096 colours, 85% NTSC, ~30:1 contrast, anti-glare. 16:9 landscape aspect, which suits few framed artworks without letterboxing.",
+        "ghosting": "Not documented at panel level; <=15 s full refresh on finished products implies multi-pass waveform activity during change.",
+        "bit_depth": "4,096 addressable colours",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.good-display.com/product/560.html",
+          "what_it_supports": "GDEP315C01, 31.5 in, 2560x1440, 93.37 PPI, QSPI, 6 colours, 4,096 colours / 85% NTSC, outline 703.52x406.48x0.85 mm, active 696.32x391.68 mm, 0.272 mm pitch, 0-50 C operating / -25 to 50 C storage, recommended development kit DEAM-315E1, downloadable spec sheet",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/product/detail/EL315TW1",
+          "what_it_supports": "E Ink's own listing of the 31.5 in Spectra 6 module: 2560x1440, 703.52 x 406.48 x 0.85 mm, 582 +/- 20 g, glass backplane, anti-glare, microcup, 0-50 C, available through E Ink's online shop",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://shopkits.eink.com/en/product/detail/31.5''Spectra6ePaperDisplay_ED2208-QBA",
+          "what_it_supports": "Part number ED2208-QBA, six primaries named, 0.272 mm pitch, Out of Stock, 'Driving Board is not included in the display module package', compatible driving-board list including Vision/HULK/THOR/ICE/Salt/Luvia/FLASH/Loki/Scarlet/RedHulk, and the E Ink Vision evaluation kit",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/686.html",
+          "what_it_supports": "DEAM-315E1 development kit: drives GDEP315C01, ESP32-S3, QSPI plus USB and SD slot, Wi-Fi web-based image transfer, hot-swappable SD card with priority boot 'ideal for offline environments', Arduino IDE compatible with ready-to-use code examples, DC 12 V/2 A, 0-50 C, no public price",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/870.html",
+          "what_it_supports": "A 31.2 in large-format driver-board solution comprising Android motherboard plus TCON plus power-supply board, supporting EC/EG/E6 panel types, Type-C image upload, USB-stick cyclic playback with no programming required, XTacepSetup Windows tool (v25.02.25) for building image packages with configurable refresh intervals, 5 V/2 A",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://shopkits.eink.com/en/product/list/DrivingBoard",
+          "what_it_supports": "E Ink sells driving boards directly under the names HULK, ICE, THOR, Luvia, Salt, CONCERTO, Venus, Scarlet and Vision; the category listing does not publish per-board panel compatibility or prices",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "GDES285E01(E6) - 28.5\" A2 bare panel",
+      "vendor": "Dalian Good Display",
+      "status": "dev-kit",
+      "diagonal_in": 28.5,
+      "resolution": "2160x3060",
+      "ppi": 131,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": null,
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Listed by Good Display but the product page is a stub - it renders 'No content information display available', with no interface, dimensions, refresh, price or stock data populated. Contact required. Portrait A2 format.",
+      "power": "None - module only",
+      "dimensions": null,
+      "released": null,
+      "integration": {
+        "openness": "unknown",
+        "api": "Not documented; no recommended development kit named on the page. Interface not published, so drivability by any given controller cannot be assessed.",
+        "local_network_no_cloud": null,
+        "push_supported": null,
+        "custom_software": null,
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None specific to this panel.",
+        "evidence_urls": [
+          "https://www.good-display.com/product/676.html"
+        ],
+        "notes": "Included because this is the panel underneath the two most interesting >15 in consumer frames - BLOOMIN8 EinkCanvas 28.5 and InkPoster Tela 28.5 both state 2160x3060 Spectra 6 on Sharp IGZO, and Geniatech's EPC2850 quotes the same 2160x3060. The A2 portrait aspect and 131 PPI are a genuinely good combination for framed single works. But Good Display has not published a datasheet page for it, so a build-it-yourself route at this size is not currently documented. The realistic path to this panel today is buying a finished frame that already uses it - which is why the BLOOMIN8 unit matters so much."
+      },
+      "art_suitability": {
+        "gamut_notes": "131 PPI in A2 portrait - the best aspect-and-density compromise among widely available large Spectra 6 panels. Spectra 6 platform limits apply (4,096 colours, ~85% NTSC, ~30:1).",
+        "ghosting": null,
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.good-display.com/product/676.html",
+          "what_it_supports": "Existence of GDES285E01(E6), 28.5 in A2, 2160x3060, Spectra 6, low power - and that the page is otherwise unpopulated with no specs, price, availability or recommended driver board",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "Modos Flow (13.3\") and Modos Paper Dev Kit (6\" / 13\")",
+      "vendor": "Modos Tech, Inc.",
+      "status": "preorder",
+      "diagonal_in": 13.3,
+      "resolution": "3200x2400 (Flow); 1600x1200 (13\" Dev Kit, ED133UT3 Carta 1000)",
+      "ppi": 300,
+      "panel": "E Ink Carta 1300 or E Ink Kaleido 3 (Flow); E Ink Carta 1000 (Dev Kit)",
+      "colour": "Kaleido 3 colour-filter-array on the colour Flow (4,096 colours, 16 grey levels); monochrome otherwise",
+      "refresh": "Up to 60 Hz (Flow, 40 Hz on bus power alone); 75 Hz (Dev Kit); sub-100 ms latency; ~50 ms pixel response on the newest panel; regional/partial update with per-pixel early cancellation",
+      "front_light": true,
+      "price": {
+        "amount": 699,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://www.crowdsupply.com/modos-tech/modos-flow"
+      },
+      "availability": "BELOW the survey's 15 in floor - included only because the assignment names Modos and because its controller is the open-hardware route to larger panels. Flow: USD 699 mono / USD 799 colour, pre-order, funded 2026-07-09 at USD 713,276 against a USD 175,000 goal (407%) from 609 backers, orders placed now ship 2026-12-10/11. Paper Dev Kit: USD 199 (6\") / USD 599 (13\"), the 13\" is In stock, earlier campaign raised USD 197,588 against USD 110,000 from 422 backers and funded 2025-09-18. Sold and fulfilled by Crowd Supply via Mouser.",
+      "power": "Flow: USB Type-C bus power at up to 40 Hz, additional power for full 60 Hz. Dev Kit driver board: EPD supply rated 'up to 1 A peak current on the +/-15 V rail to support large panel sizes'.",
+      "dimensions": "Flow 31.5 x 25.4 x 1.6 cm, 0.69 kg (1.19 kg with cover/stand); VESA-compatible",
+      "released": "2026-12",
+      "integration": {
+        "openness": "open",
+        "api": "Documented and published. glider-api is a 'Common API for interacting with e-ink displays' over USB HID with Python, Rust and C bindings; commands include set_mode() for per-region refresh-mode selection and multi-zone layouts. Modos also ships a C API for screen and mode selection. Caveat from the repo itself: not yet installable as a Python wheel or Rust crate - build from source.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Fully. Flow presents as a standard USB-C DisplayPort monitor to Linux, macOS and Windows, so any local application drives it with no vendor involvement whatsoever. Firmware source, changelogs and versioned releases are published; standalone operation is supported via the on-board STM32H750.",
+        "sd_or_usb": true,
+        "open_firmware": true,
+        "community": "Real and active. Public issue tracker, Discord, Matrix, Mastodon, Bluesky. Community contributions already landing - a member implemented Atkinson dithering on Flow, tuning error diffusion and artefact reduction, which is directly relevant to image quality on e-paper. Conference talk record spanning FOSDEM 2024, Supercon 2024, Latch-up 2024 and FOSDEM 2026.",
+        "evidence_urls": [
+          "https://www.crowdsupply.com/modos-tech/modos-flow",
+          "https://www.crowdsupply.com/modos-tech/modos-paper-monitor",
+          "https://github.com/orgs/Modos-Labs/repositories",
+          "https://raw.githubusercontent.com/Modos-Labs/glider-api/main/README.md",
+          "https://raw.githubusercontent.com/Modos-Labs/Caster/master/README.md",
+          "https://raw.githubusercontent.com/Modos-Labs/Glider/master/README.md"
+        ],
+        "notes": "Openness here is in a different league from every commercial vendor in this survey - CERN-OHL licensed hardware, published schematics, open gateware, a real host API, and an as-a-monitor path that needs no integration work at all. This is the clearest instance of the pattern the brief asked to be called out: Modos wins criterion 2 outright and loses criterion 1 badly, being a two-person company. THE SIZE PROBLEM, stated plainly: the Dev Kit's Glider Mega Adapter covers 4.3\" to 13.3\" only - the published adapter list ends at 13.3\" (ES133UTx/ED133UTx/EC133UJ1) and 11.3\" (ED113TCx), and the campaign says 'Compatible with a wide range of screens - from 6-inch up to 13.3-inch'. Flow itself is marked 'Works With Other Panels: No'; only the Dev Kit is 'Yes'. So there is no ready-made Modos product above 15 in. The path that exists is: buy the 13\" Dev Kit for its Caster driver board, and drive a 25.3\" LVDS panel per the Glider documentation - a bring-up project, not a purchase."
+      },
+      "art_suitability": {
+        "gamut_notes": "300 PPI is far beyond anything available above 15 in, but Kaleido 3 is a colour-filter-array over a monochrome panel: colour resolution is a fraction of the mono resolution and saturation is markedly lower than Spectra 6. For colour art reproduction Kaleido 3 is the weaker technology; for monochrome/graphite/etching reproduction at 300 PPI it is the best option in this entire survey. Amber-tinted frontlight is available, which is a colour-accuracy negative for art viewing.",
+        "ghosting": "Actively engineered against - hybrid binary-then-16-level-greyscale mode updates fast first and refines to greyscale as the image settles, explicitly to minimise latency and visual flashing. Hardware Bayer, blue-noise and error-diffusion dithering with no added latency. Vendor addresses panel wear directly and states fast refresh does not increase total refresh cycles.",
+        "bit_depth": "Binary, 4-level and 16-level greyscale output modes; 4,096 colours with 16 grey levels on the colour model",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-flow",
+          "what_it_supports": "USD 713,276 raised of USD 175,000 (407%), 609 backers, funded 2026-07-09, ship dates 2026-12-10/11, USD 699/799, 13.3 in 3200x2400 300 PPI Carta 1300 or Kaleido 3, 60 Hz, sub-100 ms latency, USB-C DP Alt Mode, dimensions and weight, VESA, open hardware with source files and schematics plus public issue tracker, Modos Flow API for key-bound mode switching, Atkinson dithering community contribution, AMD Zynq 7000 XC7Z010, Boston MA, founders Alexander Soto and Wenting Zhang, panels sourced directly from E Ink, Mouser fulfilment, comparison table marking 'Works With Other Panels: No' for Flow",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor",
+          "what_it_supports": "USD 197,588 raised of USD 110,000 (179%), 422 backers, funded 2025-09-18, 13 in kit In stock at USD 599 and 6 in at USD 199, Glider Mega Adapter panel list spanning 4.3 in to 13.3 in with explicit part numbers, 'from 6-inch up to 13.3-inch' compatibility statement, Spartan-6 LX16 FPGA with DDR3-800, HDMI and USB-C inputs, STM32H750, '+/-15 V rail to support large panel sizes', Caster support for parallel-interface E Ink/OED/DES and CFA screens, binary/4-level/16-level modes, hardware dithering, C API, 'Works With Other Panels: Yes' for the Dev Kit, and NLnet NGI0 Entrust Fund partial funding",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/orgs/Modos-Labs/repositories",
+          "what_it_supports": "Public repos Caster (CERN-OHL-P, Verilog, 301 stars), Glider (2.5k stars), glider-api (Rust, 28 stars), Concept-Designs, Lancer EPD laptop prototype",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/Modos-Labs/glider-api/main/README.md",
+          "what_it_supports": "USB HID transport, Python/Rust/C bindings, set_mode() and multi-zone layouts, and that the package is not yet installable as a wheel or crate",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/Modos-Labs/Caster/master/README.md",
+          "what_it_supports": "CERN-OHL-P permissive licence for the core design, separately licensed Xilinx IP cores, MIT simulation code",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/Modos-Labs/Glider/master/README.md",
+          "what_it_supports": "Support for panels up to 25.3 in and LVDS signalling on higher-resolution panels; CERN-OHL-S hardware licence; MIT firmware; X*Y multiple-of-128 constraint; pixel-rate limits of 133 MP/s with dithering and 280 MP/s without",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://spectrum.ieee.org/modos-e-paper-monitor",
+          "what_it_supports": "Two-person startup, founders named, prior Dev Kit raised nearly USD 220,000 at double its USD 110,000 goal with 75 Hz refresh, community-driven rather than VC-funded, ~50 ms pixel response vs ~100 ms on earlier E Ink generations, new Enchanter controller with larger FPGA and Chrontel CH7516 DisplayPort 1.1 support",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.modos.tech/",
+          "what_it_supports": "Legal entity Modos Tech, Inc. at 867 Boylston St., Boston, MA 02116; open-source firmware with user updates; open-hardware repairable design; Reading/Browsing/Watching/Writing modes; Mac/Windows/Linux support",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "EPC2530 (25.3\") / EPC2850 (28.5\") / EPC3200 (31.5\")",
+      "vendor": "Geniatech",
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": "3200x1800 (EPC2530); 2160x3060 (EPC2850); 2560x1440 (EPC3200)",
+      "ppi": 163,
+      "panel": "E Ink Spectra 6 (PEARL monochrome variant optional on the 25.3 and 31.5)",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Not published as a time. Notable capability: Geniatech's own TCON supports 'multi-region partial update' / 'multi-zone irregular partial refresh', and the product family is marketed with an 'Art Refresh' mode.",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Listed as active products, sales-enquiry only, no public pricing and no stated MOQ. Shenzhen, China. Sold as complete end-to-end EPD solutions rather than modules.",
+      "power": "EPC2530: battery with optional solar input. EPC2850: external high-capacity pack with solar charging option. EPC3200: external high-capacity battery pack.",
+      "dimensions": "EPC2530 604 x 359 x 24 mm, <5 kg. EPC2850 464 x 638 x 8.4 mm (max 22 mm with battery), <=5.3 kg. EPC3200 843.2 x 560 x 36 mm, <=7 kg, full metal, anti-glare, 170+ degree viewing angle.",
+      "released": null,
+      "integration": {
+        "openness": "partly-open",
+        "api": "Vendor states 'Open API & SDK for 3rd party CMS' across the family, with a free/lite CMS bundled. No public API documentation URL found, so the contract is unpublished and presumably obtained under a sales relationship.",
+        "local_network_no_cloud": null,
+        "push_supported": true,
+        "custom_software": "Yes, and this is the key attraction: these run Android 11 on a quad-core Cortex-A55 with 2 GB LPDDR4 and 16-32 GB eMMC. An Android device at 25.3-31.5 in means a self-hosted app can plausibly be delivered as a sideloaded APK that pulls from the client's own server, bypassing the vendor CMS entirely.",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://www.geniatech.com/product/epc2530/",
+          "https://www.geniatech.com/product/epc2850/",
+          "https://www.geniatech.com/product/epc3200/",
+          "https://www.geniatech.com/solution/e-ink-spectra6/"
+        ],
+        "notes": "Best openness-per-unit-of-corporate-durability trade in the whole slice, and the most under-recognised vendor found. Geniatech is a 27-year-old Shenzhen ARM embedded design house with its own 30,000+ sq m factory, 100+ R&D engineers and 2,000+ claimed clients - not a frame startup - and it sells all three interesting sizes (25.3, 28.5, 31.5) as complete units with an Android SoC, a TCON it designs itself, and an explicitly open API/SDK. The EPC2530 in particular pairs the 163 PPI 25.3 in panel with Android 11, which on paper is the single best combination of image quality and drivability found above 15 in. Rated partly-open only because none of the API documentation is public - everything is behind a sales conversation, cloud CMS is the default content path, and local-only operation is not affirmatively documented. Worth a direct enquiry: ask for the SDK docs, whether the CMS can be self-hosted or bypassed, and whether APK sideloading is permitted. Downside for a private client: this is a B2B signage vendor, so expect MOQ friction, no consumer support, and industrial rather than gallery-grade finish (though the EPC3200 is full metal)."
+      },
+      "art_suitability": {
+        "gamut_notes": "Panel-level Spectra 6 limits apply. The EPC2530's 25.3 in 3200x1800 panel at ~163 PPI is the best-resolution large option; the EPC2850's 28.5 in A2 portrait 2160x3060 at ~131 PPI is the best aspect ratio for framed works; the EPC3200's 31.5 in 2560x1440 at ~93 PPI is the coarsest. 'Art Refresh' is marketed but undefined. Operating range 0-50 C on the 25.3/28.5, 0-40 C on the 31.5. CE and FCC on the EPC3200.",
+        "ghosting": "Multi-zone irregular partial refresh is claimed, which on Spectra 6 is unusual and would reduce whole-panel flashing on partial changes. No ghosting characterisation published. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.geniatech.com/product/epc2530/",
+          "what_it_supports": "25.3 in, 3200x1800, Spectra 6 with optional PEARL, TCON with smooth/artistic and multi-region partial update, quad-core Cortex-A55, Android 11, 2 GB LPDDR4 / 32 GB eMMC, 2.4G/5G Wi-Fi, BT 5.0, cloud CMS with bundled lite CMS, 'Open API & SDK for 3rd party CMS', 604x359x24 mm and <5 kg, battery with solar input option, 0-50 C",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/product/epc2850/",
+          "what_it_supports": "28.5 in, 2160x3060, home-made TCON with multi-zone irregular partial refresh, quad-core Cortex-A55, Android 11, 2 GB / 16 GB, dual-band Wi-Fi, BT 4.0, optional 3G/4G, open API and SDK plus free CMS, 464x638x8.4 mm (max 22 mm with battery), <=5.3 kg, external battery with solar option, 0-50 C",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/product/epc3200/",
+          "what_it_supports": "31.5 in, 2560x1440 16:9, Spectra 6 with optional PEARL, 170+ degree viewing, anti-glare, quad-core Cortex-A55, Android 11, 2 GB / 16 GB, 2.4G/5G Wi-Fi, BT 4.0, optional built-in CMS, 843.2x560x36 mm, <=7 kg, full metal, 0-40 C, CE/FCC, wiring-free install",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/solution/e-ink-spectra6/",
+          "what_it_supports": "Confirms the Spectra 6 line-up as EPC3200 31.5 in, EPC2850 28.5 in, EPC2530 25.3 in and EPC1330 13.3 in, all marketed with 'Art Refresh', and full support for TCON boards, CMS platforms and wireless connectivity",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/",
+          "what_it_supports": "Vendor durability evidence: 27+ years in ARM embedded design and manufacturing, Shenzhen HQ, 100+ R&D engineers, own production factory of 30,000+ sq m, 2,000+ claimed partners and clients, six product lines including e-paper signage, semiconductor partnerships with NXP, Rockchip, Renesas, Hailo",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "DMPH253E61 (25.3\") and DMPH315E61 (31.5\") e-paper poster displays",
+      "vendor": "Dalian Good Display",
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": "3200x1800 (DMPH253E61); 2560x1440 (DMPH315E61)",
+      "ppi": 163,
+      "panel": "E Ink Spectra 6 (GDEP253C02 / GDEP315C01)",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Full refresh <=15 s",
+      "front_light": false,
+      "price": {
+        "amount": 1636.2,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://www.buy-lcd.com/products/dmph315e62"
+      },
+      "availability": "Finished wall-mount units. The 31.5 in DMPH315E61 is listed at USD 1,636.20 (10% off USD 1,818.00) on Good Display's buy-lcd.com storefront but showed 0 in stock as of 2026-08. No public price found for the 25.3 in DMPH253E61. Ships from Dalian, China. Note an earlier 25.3 in monochrome sibling, DMPH253EG1, is marked EOL - evidence that this vendor does retire product lines.",
+      "power": "Built-in 50.4 Wh lithium battery (16.8 V / 3500 mAh), Type-C PD charging; 5.5 W max while refreshing, 0.01 W standby (31.5 in quotes 6 W max)",
+      "dimensions": "DMPH253E61: 584 x 340 x 30.5 mm sheet-metal (4.5 kg) or 608 x 364 x 34.5 mm water-transfer print (7 kg), VESA 100x100 M4. DMPH315E61: 747 x 442 x 30.5-34.5 mm, 9-9.7 kg.",
+      "released": null,
+      "integration": {
+        "openness": "partly-open",
+        "api": "No published API. Three content paths documented: USB drive plug-and-play, a cloud platform for remote management and scheduling, and a 'Smart EPD' Android app for wireless control.",
+        "local_network_no_cloud": true,
+        "push_supported": false,
+        "custom_software": "Differs sharply by model, and this matters. The 25.3 in DMPH253E61 runs a quad-core ARM Cortex-A7 at 1.2 GHz with Ethernet (RJ45), 2x USB 2.0 (one HOST, one OTG) and an HDMI output - a real applications processor. The 31.5 in DMPH315E61 is only an ESP32-S3-WROOM-1U microcontroller, so it is firmware-locked with no scope for custom applications.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://www.good-display.com/product/582.html",
+          "https://www.good-display.com/product/578.html",
+          "https://www.buy-lcd.com/products/dmph315e62"
+        ],
+        "notes": "The USB-stick path is the practically important feature here: it is a genuine no-cloud, no-account delivery route that the client's app could target by writing files to removable media, and it works offline. The 25.3 in variant is the more interesting of the two on every axis - 163 PPI instead of 93, a Cortex-A7 instead of an ESP32, wired Ethernet, and a 4.5 kg body versus 9 kg. Neither model supports push from a self-hosted server; both are pull-or-sneakernet. Also worth noting for supply-chain reasoning: the DMPH315E61's dimensions (747 x 442 x 34.5 mm), 3500 mAh battery and <=6 W refresh figure match SEEKINK's S315E6 exactly, so these are near-certainly the same ODM chassis sold under multiple brands - an inference, but a well-supported one."
+      },
+      "art_suitability": {
+        "gamut_notes": "25.3 in model: 163 PPI, 16:9, VESA 100 mountable, 4.5 kg - the most practical high-density large option that arrives as a working product. 31.5 in model: 93 PPI. Both anti-glare Spectra 6 with the platform's 4,096 colours / ~85% NTSC / ~30:1 envelope.",
+        "ghosting": "<=15 s full refresh implies multi-pass waveform; no partial-update or ghosting characterisation published for these finished units.",
+        "bit_depth": "4,096 addressable colours at panel level",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.good-display.com/product/582.html",
+          "what_it_supports": "DMPH253E61: 25.3 in, 3200x1800, 6 colours Spectra 6, <=15 s refresh, active area 560x315 mm, 16:9, dimensions and weights for both finishes, VESA 100x100 M4, 50.4 Wh battery, 5.5 W refresh / 0.01 W standby, Type-C PD, Wi-Fi 2.4 GHz, BT 4.0, 10/100M RJ45, 2x USB 2.0 (HOST + OTG), HDMI-out 1920x1080, quad-core Cortex-A7 1.2 GHz, USB plug-and-play plus cloud plus 'Smart EPD' Android app, no public price",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/578.html",
+          "what_it_supports": "DMPH315E61: 31.5 in, 2560x1440, six colours, GDEP315C01 panel, <=15 s refresh, 747x442x30.5-34.5 mm, 9-9.7 kg, 50.4 Wh / 16.8 V / 3500 mAh battery, 6 W max refreshing and 0.01 W standby, Type-C PD, Wi-Fi 2.4 GHz, BT 5.0, image update via USB drive or cloud platform, ESP32-S3-WROOM-1U mainboard, finished product not a module",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.buy-lcd.com/products/dmph315e62",
+          "what_it_supports": "Good Display's own storefront (Dalian Good Display Co., Ltd.) price of USD 1,636.20 from USD 1,818.00, 0 in stock, plus RJ45 and 4G-reserved connectivity, Android app over Wi-Fi and cloud sync as load paths",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "S315E6 Spectra 6 wall-mounted billboard",
+      "vendor": "SEEKINK (Jiangxi Xingtai Technology Inc.)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "ppi": 93,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (red, yellow, blue, white, green, black)",
+      "refresh": "Not stated as a time; <=6 W consumed per refresh",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Listed product, no public price. Named by E Ink among ecosystem partners showcasing at InfoComm 2026 (in the Prism 3 context). China-based.",
+      "power": "3500 mAh lithium, plugged-in design, Type-C PD with optional 65 W adapter; vendor claims 6 months at 5 refreshes per day",
+      "dimensions": "747 x 442 x 34.5 mm, 8.35 kg, wood-grain frame, wall mount horizontal or vertical",
+      "released": null,
+      "integration": {
+        "openness": "partly-open",
+        "api": "No published API. Content refresh 'Via USB Flash Disk, Cloud, or App'. Accepts JPG, BMP and PNG.",
+        "local_network_no_cloud": true,
+        "push_supported": false,
+        "custom_software": "No - runs an RTOS, not a general-purpose OS. No sideloading, no SDK.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://www.seekink.com/product/s315e6-spectra-6-e-ink-wall-mounted-billboard/"
+        ],
+        "notes": "Included primarily as evidence of the vendor expansion the client observed, and as a documented instance of chassis sharing: dimensions, battery capacity and refresh power are identical to Good Display's DMPH315E61, but the SoC is an RTOS device rather than an ESP32/Android, so the two are differently specified builds of a common mechanical platform. The USB-flash-disk path with plain JPG/PNG acceptance is a usable no-cloud route; the RTOS makes anything more sophisticated impossible."
+      },
+      "art_suitability": {
+        "gamut_notes": "93 PPI at 31.5 in; ~30:1 contrast quoted; the page's '200 ppi' text is a platform-capability statement inherited from E Ink marketing and contradicts its own 93 ppi spec figure - trust 93. Wood-grain frame is closer to a picture frame than most signage.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.seekink.com/product/s315e6-spectra-6-e-ink-wall-mounted-billboard/",
+          "what_it_supports": "S315E6, 31.5 in, 2560x1440, 93 ppi, six named primaries, ~30:1 contrast, <=6 W per refresh, refresh via USB flash disk / cloud / app, Wi-Fi 2.4G or optional 4G, 1x USB 2.0, 3500 mAh lithium with Type-C PD and optional 65 W adapter, 6 months at 5 refreshes/day, 747x442x34.5 mm, 8.35 kg, wall mount, wood-grain frame, RT OS, JPG/BMP/PNG, 0-50 C operating, legal entity Jiangxi Xingtai Technology Inc.",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+          "what_it_supports": "Seekink named among E Ink ecosystem partners at InfoComm 2026",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "MEiNK 32\" E Ink Spectra 6 ePaper Signage",
+      "vendor": "MEiNK (sold by media mea)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Not published; power required only for content refresh",
+      "front_light": false,
+      "price": {
+        "amount": 1850,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://mediamea.store/products/meink-32-e-ink-spectra-6-epaper-signage"
+      },
+      "availability": "In stock at USD 1,850 as of 2026-08 - one of the few >15 in colour e-paper products actually purchasable off the shelf with a listed price. Sold through media mea's store; underlying ODM not disclosed.",
+      "power": "AC adapter, internal battery, or external power bank; power drawn only on refresh",
+      "dimensions": null,
+      "released": null,
+      "integration": {
+        "openness": "partly-open",
+        "api": "No published API. Content loads over Wi-Fi, LTE, or from a MicroSD card slot.",
+        "local_network_no_cloud": true,
+        "push_supported": false,
+        "custom_software": "Not documented; OS/SoC not disclosed.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://mediamea.store/products/meink-32-e-ink-spectra-6-epaper-signage"
+        ],
+        "notes": "Notable only for being in stock with a real price, and for the MicroSD slot as an offline load path. Everything else about it is undocumented - no resolution, no dimensions, no OS, no SDK, and no disclosed manufacturer behind the MEiNK brand, which is itself a staying-power concern. Listed size is '32\"' but E Ink's only panel in that class is the 31.5 in module, so 31.5 is recorded here."
+      },
+      "art_suitability": {
+        "gamut_notes": "Presumed the 31.5 in 2560x1440 / ~93 PPI Spectra 6 module, but the listing publishes no resolution figure, so this is inference. Reflective, no backlight.",
+        "ghosting": null,
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://mediamea.store/products/meink-32-e-ink-spectra-6-epaper-signage",
+          "what_it_supports": "MEiNK 32 in branding, E Ink Spectra 6, USD 1,850, in stock, Wi-Fi / LTE / MicroSD content loading, AC adapter plus internal battery plus external power bank support, power only on refresh; no resolution, dimensions, OS or SDK published",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "Philips Tableaux 5150I (32\")",
+      "vendor": "PPDS (Philips professional displays)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "ppi": 93,
+      "panel": "E Ink Spectra 6 (first announced implementation of E Ink's 31.5\" module)",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "Not published; static image holds with no energy draw, low power only during update",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Announced 2023 for ISE 2024 debut; now an established product in PPDS's Tableaux range, following the 25 in Tableaux introduced at ISE 2023. Sold through AV channel/integrators, not consumer retail. Pricing was never published in the announcement.",
+      "power": "Power over Ethernet (PoE) for fixed installs where content changes regularly; static display draws no energy",
+      "dimensions": "Slim-bezel; portrait or landscape mountable. Exact dimensions not in the announcement.",
+      "released": "2024-01",
+      "integration": {
+        "openness": "partly-open",
+        "api": "No public API documented in the announcement. Managed 'manually, or remotely using third party or PPDS' in house software', with PPDS Wave as the vendor's cloud option - so third-party CMS integration is explicitly supported.",
+        "local_network_no_cloud": true,
+        "push_supported": false,
+        "custom_software": "Yes in principle - this is a member of PPDS's Android SoC family with 16 GB internal memory and 2 GB RAM, described as 'Wave- and partner software-ready'. An Android SoC signage display of this class normally accepts a sideloaded APK, which would let the client's own app run on the display and pull from his server. Not affirmatively documented for this model, so treat APK sideloading as likely-but-unconfirmed.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "None found specific to Tableaux.",
+        "evidence_urls": [
+          "https://www.ppds.com/insights/announcing-new-sized-up-32-philips-tableaux-epaper-display-including-latest-e-ink-spectra-6-technology"
+        ],
+        "notes": "The most corporately durable >15 in colour e-paper option that is also plausibly programmable: PPDS is the Philips professional-display business, the AV channel supports it, and it is an Android SoC device with USB, micro USB, Micro SD, LAN and Wi-Fi 5 content paths plus explicit support for third-party management software rather than a locked vendor cloud. Content 'can just as easily be updated via the USB, micro USB, Micro SD, LAN and WiFi 5' - five independent local load paths, no cloud account required. Against it: 93 PPI, 16:9 landscape geometry, signage aesthetics, channel-only purchase, and no published API or SDK. E Ink's CEO Johnson Lee is quoted confirming PPDS as the first implementer of the 31.5 in module, which is useful provenance for the whole 31.5 in ecosystem."
+      },
+      "art_suitability": {
+        "gamut_notes": "93 PPI, 16:9. PPDS describes the Spectra 6 31.5 in platform as delivering 'previously unachievable colour performance, using enhanced colour algorithms to provide a true print quality replacement for any paper sign', and its product manager claims it is 'almost impossible to comprehend that you're looking at a digital display and not a poster'. That is vendor marketing about poster replacement, not a colour-accuracy claim for art reproduction. No gamut figures, no profile.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.ppds.com/insights/announcing-new-sized-up-32-philips-tableaux-epaper-display-including-latest-e-ink-spectra-6-technology",
+          "what_it_supports": "32 in (16:9) Philips Tableaux 5150I on the E Ink Spectra 6 31.5 in module at 2560x1440; world's first signage display confirmed on Spectra 6; predecessor 25 in Tableaux launched at ISE 2023; ISE 2024 Barcelona debut; PPDS Android SoC family membership; 16 GB memory and 2 GB RAM; content update via USB, micro USB, Micro SD, LAN and Wi-Fi 5; PoE; portrait or landscape; managed manually or via third-party or PPDS software including PPDS Wave cloud; pricing and availability deferred to early 2024; E Ink CEO Johnson Lee quote confirming first implementation of the 31.5 in module",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "Place & Play 32\" (31.2\" monochrome)",
+      "vendor": "Visionect d.o.o.",
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": "2560x1440",
+      "ppi": 94,
+      "panel": "E Ink, 16-level greyscale",
+      "colour": "monochrome",
+      "refresh": "750 ms full screen, 100 ms partial - dramatically faster than any large colour Spectra 6 option (which run to ~15 s)",
+      "front_light": false,
+      "price": {
+        "amount": 2300,
+        "currency": "EUR",
+        "as_of": "2026-08",
+        "source_url": "https://www.visionect.com/shop/place-play-32/"
+      },
+      "availability": "In stock for immediate purchase at EUR 2,300 excluding tax as of 2026-08, with free worldwide shipping, a 1-year limited warranty and a 30-day money-back guarantee. Slovenia-based vendor. Requires a Visionect Software Suite licence (one month included).",
+      "power": "Rechargeable battery, 'up to several months to a year' autonomy, Micro USB charging; claims 99% less energy than LCD",
+      "dimensions": "707.2 x 413.8 x 13.5 mm (27.84 x 16.29 x 0.53 in), 5.1 kg, VESA 200 x 200 mm",
+      "released": null,
+      "integration": {
+        "openness": "open",
+        "api": "Genuinely documented and substantial: a RESTful JSON API with HMAC-SHA256 authentication on a self-hosted server (port 8081). Endpoints include /api/device, /api/session, /api/user, /api/config, /api/live/device/{Uuid}/image, /api/devicestatus/{Uuid} and /backend/{Uuid} for HTTP image backend uploads. Capabilities include pushing HTML content to displays, controlling dithering method and bit-depth encoding, device/battery/temperature monitoring, batch reboot and firmware flashing.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "The display is a thin client; all rendering happens server-side in a WebKit session on your own server, so 'custom software' is simply whatever web application you host. The client's existing self-built app could drive this essentially unchanged.",
+        "sd_or_usb": false,
+        "open_firmware": false,
+        "community": "No homebrew community found, but a proper documentation site (docs.visionect.com) with Installation, Production deployment, Requirements, Networking & Security, Firmware upgrades, Components and Display tiling sections.",
+        "evidence_urls": [
+          "https://api.visionect.com/",
+          "https://docs.visionect.com/VisionectSoftwareSuite/index.html",
+          "https://docs.visionect.com/",
+          "https://www.visionect.com/shop/place-play-32/",
+          "https://www.visionect.com/products/"
+        ],
+        "notes": "Highest integration openness of any commercially supported >15 in product in this survey, and the only one where a self-hosted server pushing images is the DESIGNED architecture rather than a workaround: you install the Software Suite on your own machine, the display polls it, and the documented API includes explicit control over dithering method and bit depth - precisely the levers that matter for rendering gigapixel art to e-paper. THE DISQUALIFIER for this client is that it is monochrome. 16-level greyscale at 94 PPI is excellent for text and line work and useless for colour reproductions. Worth flagging anyway for two reasons: it is the reference example of what good openness looks like, so it is the right yardstick to hold colour vendors against; and if Visionect ever ships a Spectra 6 model it would instantly become the leading candidate. One caution: the docs recommend their cloud-managed hosting 'for the best security and the latest features', so self-hosting is supported but is the secondary path, and a licence is required either way."
+      },
+      "art_suitability": {
+        "gamut_notes": "Monochrome only - 16 grey levels. Not suitable for colour art reproduction. 94 PPI. VESA 200x200, 13.5 mm thick, 5.1 kg.",
+        "ghosting": "750 ms full-screen refresh with 100 ms partial update - by far the best transition behaviour above 15 in, and it makes ghosting management tractable in a way multi-second Spectra 6 refreshes do not.",
+        "bit_depth": "16-level greyscale (4-bit); API exposes bit-depth encoding control",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.visionect.com/shop/place-play-32/",
+          "what_it_supports": "31.2 in 16:9, 2560x1440, 94 ppi, monochrome E Ink with 16-level greyscale, 750 ms full / 100 ms partial refresh, 707.2x413.8x13.5 mm, 5.1 kg, VESA 200x200, battery autonomy of several months to a year, Micro USB charging, Wi-Fi 2.4 GHz with WPA2-PSK/WPA2-EAP, EUR 2,300 ex tax, in stock, requires Visionect Software Suite with one-month licence included, 1-year warranty, 30-day money back, free worldwide shipping",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://api.visionect.com/",
+          "what_it_supports": "RESTful JSON API with HMAC-SHA256 auth on a self-hosted server at port 8081; endpoints /api/device, /api/session, /api/user, /api/config, /api/live/device/{Uuid}/image, /api/devicestatus/{Uuid}, /backend/{Uuid}; capabilities including pushing HTML content, controlling dithering method and bit-depth encoding, device status/battery/temperature monitoring, batch reboot, firmware flashing",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://docs.visionect.com/VisionectSoftwareSuite/index.html",
+          "what_it_supports": "Self-hosted deployment is documented (Installation, Running in production, Requirements, Networking & Security, Firmware upgrades, Components, Display tiling), an API section exists, and the docs recommend cloud-managed hosting as the preferred path",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://docs.visionect.com/",
+          "what_it_supports": "Knowledge-base structure: Getting started, Place & Play Devices, Place & Play CMS, Visionect Software Suite, Technical Documentation",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.visionect.com/products/",
+          "what_it_supports": "Product range is Place & Play 32 in, 13 in, 6 in and 6 in RE plus a Software Licence and accessories - the 32 in is the only model above 15 in",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.visionect.com/",
+          "what_it_supports": "Place & Play CMS described as cloud-hosted with scheduling and real-time updates; Slovenian company Visionect d.o.o.; Joan subsidiary for workplace booking",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "Color E-Paper EMDX 75\"",
+      "vendor": "Samsung Electronics",
+      "status": "announced",
+      "diagonal_in": 75,
+      "resolution": "5120x2880",
+      "ppi": 78,
+      "panel": "E Ink colour ePaper (supplier not stated by Samsung)",
+      "colour": "full colour; Samsung markets 'over 2.5 million colours' for the Color E-Paper line",
+      "refresh": "Not published; 0.00 W while displaying a static image",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Showcased at ISE 2025 as the world's largest colour e-paper display; no availability date or price published. The shipping members of the line are smaller - 13 in, 25 in and 32 in, with the 32 in EM32DX globally released and Color E-Paper subsequently available in the USA. Treat the 75 in as announced-only.",
+      "power": "Line-wide: rechargeable 5,000 mAh battery, two USB-C ports for charging and data; 0.00 W on static image. Built with over 50% recycled plastics, paper packaging.",
+      "dimensions": "Not published for the 75 in. The 32 in EM32DX is 8.6 mm at its thinnest and 2.5 kg with battery.",
+      "released": null,
+      "integration": {
+        "openness": "unknown",
+        "api": "Not established for this line. Samsung developed 'a dedicated mobile app that allows remote control of the display, content scheduling, and sleep/wake cycle management'. Samsung's professional signage estate normally implies MagicINFO or the VXT cloud platform, but no Color E-Paper API documentation was retrieved in this session, so that is inference, not fact.",
+        "local_network_no_cloud": null,
+        "push_supported": null,
+        "custom_software": "Unknown. Samsung signage is typically Tizen-based, which would make third-party application delivery a formal partner process rather than a sideload. Not confirmed for Color E-Paper.",
+        "sd_or_usb": true,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://www.techspot.com/news/106720-samsung-showcases-world-largest-color-e-paper-display.html"
+        ],
+        "notes": "Included because Samsung entering this category at 75 in is the loudest signal of the expansion the client observed, and because its presence anchors the whole large-format colour e-paper supply chain. For this client's purposes, though, it is the wrong shape of product in every respect: enormous, 78 PPI, sold as commercial signage, controlled by a Samsung app, with no documented API and no local-push story. Samsung is the highest-staying-power vendor in the survey and among the least open. Two USB-C ports and 8 GB internal storage do at least imply a local file path. Recommend tracking rather than targeting."
+      },
+      "art_suitability": {
+        "gamut_notes": "78 PPI at 75 in - far too coarse for art reproduction; it is a billboard. 16:9. Samsung's 2.5-million-colour claim is a dithered-output figure. Value to this client is as a technology bellwether only.",
+        "ghosting": "Not documented. Unverified.",
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.techspot.com/news/106720-samsung-showcases-world-largest-color-e-paper-display.html",
+          "what_it_supports": "75 in EMDX at 5K resolution showcased at ISE 2025, 0.00 W on static images, 16:9; line also available in 13 in, 25 in and 32 in; rechargeable 5,000 mAh battery, two USB-C ports, 8 GB internal storage, Wi-Fi and Bluetooth; over 50% recycled plastics; dedicated mobile app for remote control, content scheduling and sleep/wake management; no panel supplier stated",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "E Ink Spectra 6 75\" module (single) and 75\" tiled Spectra 6 demonstrator",
+      "vendor": "E Ink Corporation / E Ink Holdings",
+      "status": "announced",
+      "diagonal_in": 75,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink Spectra 6 with Ripple waveform architecture",
+      "colour": "full-colour 6-primary (E Ink Spectra 6)",
+      "refresh": "E Ink Ripple, described as a next-generation waveform and algorithm architecture to expand colour options and enable smooth updates; E Ink Sparkle provides a partial image-flashing motion effect",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Announced 2025-04-10 as E Ink's largest Spectra 6 form factor, with initial sample modules in Q4 2025 to partners who presented at Touch Taiwan 2025 (April 16-18). Sample-stage, partner-only; no mass-production date, resolution, PPI or colour count published. Separately, a 75 in TILED Spectra 6 display was shown at InfoComm 2026 (2026-06-16, Las Vegas Convention Center booth C9815), alongside a 75 in Kaleido 3 display developed with ecosystem partner Agile.",
+      "power": "Reflective, ambient-light; minimal power during content update, none to hold an image",
+      "dimensions": null,
+      "released": "2025-Q4 (samples)",
+      "integration": {
+        "openness": "open",
+        "api": "N/A - this is a panel module supplied to OEMs, not an end product. E Ink also sells modules and driving boards directly through shopkits.eink.com, and publishes an evaluation-kit ecosystem (Vision, HULK, THOR, ICE, Salt, Luvia, CONCERTO, Venus, Scarlet, RedHulk driving boards).",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Entirely determined by whichever integrator or self-build stack drives it.",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "The relevant ecosystem is the OEM/licensee list, which is where the client should look for actual products.",
+        "evidence_urls": [
+          "https://www.eink.com/brand/detail/Spectra6",
+          "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+          "https://www.barchart.com/story/news/31825448/e-ink-unveils-75-spectra-6-display-setting-a-new-standard-for-vivid-and-sustainable-digital-signage",
+          "https://shopkits.eink.com/en/product/list/DrivingBoard"
+        ],
+        "notes": "The important content of this entry for the client is not the 75 in panel, which is too coarse for art, but the LICENSEE LIST, because it is the answer to 'which OEMs have licensed the large Spectra 6 panels'. Named by E Ink on its own Spectra 6 brand page as customers: PPDS/Philips, Sharp, Samsung and ASUS. Named at InfoComm 2026 as ecosystem partners: Agile (built the 75 in Kaleido 3 display, and supplies an 'Agile Conversion Engine' middleware), Navori Labs (CMS integration), BOE, NewFace, Sharp, Mercury; plus Meris, Seekink and Cream Guitars in the Prism 3 context. Separately confirmed licensees building the 31.5 in module: AUO Display Plus (manufacturing StellarLink's aecoPost for Japan), Geniatech, Good Display, SEEKINK, MEiNK. That is at minimum a dozen distinct organisations building large Spectra 6 products - the expansion the client noticed is real and is documented on E Ink's own pages."
+      },
+      "art_suitability": {
+        "gamut_notes": "Platform-level figures E Ink publishes for Spectra 6: up to 200 PPI depending on panel size, typical contrast ratio 30:1 depending on panel size, operating temperature 0-50 C. The '200 PPI' ceiling is a platform capability and is NOT achieved at large sizes - the shipping large modules are 93 PPI at 31.5 in, ~131 PPI at 28.5 in and ~163 PPI at 25.3 in. A separate outdoor platform, E Ink Marquee, was introduced at InfoComm 2026 for full outdoor colour DOOH with a -20 to 65 C operating range and won a Best in Show award; sizes and resolution are unpublished. E Ink's own SID Display Week material describes a full-colour electrophoretic platform combining ACeP pigment mechanisms with microcapsule structure to enable areas up to 75 in over -20 to 65 C.",
+        "ghosting": "Ripple is described as enabling 'smooth updates'; no quantified ghosting or transition data published.",
+        "bit_depth": "Vendor ecosystem quotes 4,096 addressable colours for Spectra 6 panels",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.barchart.com/story/news/31825448/e-ink-unveils-75-spectra-6-display-setting-a-new-standard-for-vivid-and-sustainable-digital-signage",
+          "what_it_supports": "Press release dated 2025-04-10; largest Spectra 6 form factor to date as a single 75 in module; sample availability Q4 2025 to Touch Taiwan 2025 partners; E Ink Ripple waveform architecture; 0-50 C; no resolution, PPI, colour count, mass-production date or named partner companies disclosed",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://newatlas.com/technology/e-ink-75-inch-spectra-6-epaper/",
+          "what_it_supports": "Independent coverage of the 75 in Spectra 6: up to 200 PPI depending on panel size, 30:1 contrast, 0-50 C, Ripple next-generation waveform and algorithm architecture, E Ink Sparkle partial flashing, Q4 2025 samples to Touch Taiwan 2025 partners (April 16-18), no named OEMs",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/brand/detail/Spectra6",
+          "what_it_supports": "Platform specs: up to 200 PPI, typical 30:1 contrast depending on panel size, 0-50 C, Sparkle partial flashing effect; module sizes listed on the page are 4 in, 7.3 in and 8.14 in; customers referenced as PPDS/Philips, Sharp, Samsung and ASUS",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+          "what_it_supports": "InfoComm 2026 on 2026-06-16 at Las Vegas Convention Center booth C9815: 75 in tiled Spectra 6 display, 75 in Kaleido 3 display developed with Agile, flexible Spectra 6 demos, digital picture frame applications, E Ink Marquee outdoor platform, Prism 3; partners named Agile with its Conversion Engine middleware, Navori Labs, BOE, NewFace, Sharp, Mercury, Meris, Seekink, Cream Guitars",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/InfoComm-2026-E-Ink-Introduces-E-Ink-Marquee-Signage-Platform-for-Full-Outdoor-Color",
+          "what_it_supports": "E Ink Marquee introduced at InfoComm 2026 for full outdoor colour signage and won a Best in Show Award for Digital Signage; no sizes, resolution or availability published",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/brand/detail/Marquee",
+          "what_it_supports": "Marquee operating temperature range -20 to 65 C, targeted at rich colour for DOOH and outdoor signage",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news",
+          "what_it_supports": "News timeline evidence of activity through July 2026, including the 2026-07-21 press release on breaking ground on expansion of E Ink's US R&D headquarters, InfoComm 2026 award coverage on 2026-07-24, and the 2026-06-19 Marquee introduction",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.barchart.com/story/news/35793870/e-ink-and-stellarlink-announce-partnership-to-deliver-sustainable-epaper-signage-in-japan",
+          "what_it_supports": "Press release 2025-10-30: E Ink and StellarLink partnership for Japan; aecoPost is a 31.5 in Spectra 6 signage product manufactured by AUO Display Plus; J-Poster is A2-sized Spectra 6 produced domestically in Japan; both feature remote content management; StellarLink founded 2012-07-10",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "e-Chroma 28\" / 31.5\" (indoor) and e-Polar 28\" / 31.5\" / 55\" (outdoor)",
+      "vendor": "ePaint (Anhui Yutu Technology Co., Ltd.)",
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "ppi": null,
+      "panel": "Cholesteric liquid crystal (ChLCD) reflective bistable display - NOT E Ink electrophoretic",
+      "colour": "full colour; vendor claims up to 16 million colours",
+      "refresh": "Vendor claims under 1 second for indoor models - roughly 15x faster than large Spectra 6 panels",
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Listed as active products with no public pricing. Anhui Yutu Technology Co., Ltd., University Tech Park, Lu'an City, Anhui Province, China. Vendor explicitly names art gallery applications among its target markets alongside retail, transportation and healthcare.",
+      "power": "Bistable - holds an image without power. Outdoor e-Polar models support solar panel integration.",
+      "dimensions": null,
+      "released": null,
+      "integration": {
+        "openness": "unknown",
+        "api": "Not documented. No content-delivery method published at all.",
+        "local_network_no_cloud": null,
+        "push_supported": null,
+        "custom_software": null,
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "None found.",
+        "evidence_urls": [
+          "https://www.epaint.global/"
+        ],
+        "notes": "The genuinely novel entrant in this survey - a reflective bistable colour e-paper family at 28 in, 31.5 in and 55 in that is NOT built on E Ink panels, and therefore the only option here that breaks the E Ink Holdings single-supplier dependency the brief asked about. On paper the specs are attractive: sub-second refresh, up to 16 million colours, -20 to +60 C indoors and -30 to +80 C outdoors, and the vendor itself lists art galleries as a use case. In practice, apply heavy scepticism. ChLCD colour reproduction characteristically has low reflectance and desaturated, pastel rendering compared with print, and the 16-million-colour claim is not comparable to a measured gamut; no resolution or PPI is published anywhere on the site, which for an art application is the one number that matters most. Nothing is documented about content delivery, so integration openness is genuinely unknown, not merely closed. Treat as a research lead requiring a physical sample before any consideration."
+      },
+      "art_suitability": {
+        "gamut_notes": "ChLCD rather than electrophoretic. Vendor claims up to 16 million colours and fast sub-second refresh, but publishes no resolution, no PPI, no reflectance and no contrast figures. Independent measurements were not found. For art reproduction the unpublished resolution and the known reflectance/saturation weaknesses of ChLCD are the central risks. INFERENCE, flagged as such.",
+        "ghosting": "Sub-second refresh implies a fundamentally different transition behaviour from multi-second electrophoretic updates; no ghosting data published.",
+        "bit_depth": "Vendor claims up to 16 million colours; unverified and not equivalent to a measured gamut",
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.epaint.global/",
+          "what_it_supports": "Anhui Yutu Technology Co., Ltd. operating as ePaint, University Tech Park, Lu'an City, Anhui Province, China; cholesteric e-paper technology; e-Chroma indoor at 28 in and 31.5 in and e-Polar outdoor at 28 in, 31.5 in and 55 in; art gallery among target applications; indoor -20 to +60 C with sub-1-second refresh and up to 16 million colours; outdoor -30 to +80 C with solar integration; no pricing, resolution or content-delivery detail published",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "NEGATIVE FINDING - Waveshare e-paper range tops out at 13.3\"",
+      "vendor": "Waveshare",
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "ppi": 150,
+      "panel": "E Ink Spectra 6 (E6) on the largest colour model",
+      "colour": "full-colour 6-primary on the 13.3\" E6 models; four-colour and monochrome elsewhere",
+      "refresh": "Waveshare SPI e-paper HATs run below 2 Hz per Modos's comparison table",
+      "front_light": false,
+      "price": {
+        "amount": 259.99,
+        "currency": "USD",
+        "as_of": "2026-08",
+        "source_url": "https://www.waveshare.com/product/displays/e-paper.htm"
+      },
+      "availability": "Recorded deliberately as a negative result, because the brief asked specifically about the Waveshare bare-panel-plus-controller route above 15 inches. Waveshare's own e-Paper category browse filter offers only three size bands - '5.65\" - 13.3\"', '2.66\" - 5\"' and '1.02\" - 2.36\"' - plus a Driver Boards group. The largest items in the catalogue are the 13.3 in Spectra 6 display (1600x1200, USD 249.99-259.99) and the ESP32-S3-ePaper-13.3E6 integrated board at USD 259.99. There is nothing above 15 in.",
+      "power": "N/A",
+      "dimensions": "N/A",
+      "released": null,
+      "integration": {
+        "openness": "open",
+        "api": "Open-source example code libraries for STM32, ESP32, Arduino and Raspberry Pi, plus wiki documentation per product. Fully hobbyist-drivable - just not at the sizes this client needs.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Yes, entirely.",
+        "sd_or_usb": true,
+        "open_firmware": true,
+        "community": "Large and well established, but no >15 in target exists for it.",
+        "evidence_urls": [
+          "https://www.waveshare.com/product/displays/e-paper.htm"
+        ],
+        "notes": "CONCLUSION FOR THE CLIENT: Waveshare is not a route to a >15 in frame. It is the default answer people give for DIY e-paper and it is wrong at this size class. If a >15 in bare-panel build is wanted, the supplier is Good Display / buy-lcd (25.3 in, 28.5 in, 31.5 in panels plus TCON and Android motherboard kits) or E Ink's own shopkits store, not Waveshare."
+      },
+      "art_suitability": {
+        "gamut_notes": "Not applicable at the required size. Noted only to close out the question.",
+        "ghosting": null,
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.waveshare.com/product/displays/e-paper.htm",
+          "what_it_supports": "Full e-Paper catalogue listing with the category size bands capped at '5.65\" - 13.3\"'; largest products are the 13.3 in Spectra 6 E6 display at 1600x1200 (USD 249.99-259.99) and ESP32-S3-ePaper-13.3E6 at USD 259.99; 10.85 in and 10.2 in are the next largest; no product above 15 in anywhere in the range",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor",
+          "what_it_supports": "Third-party comparison placing Waveshare e-paper HAT refresh below 2 Hz and its 13.3 in EINK DISP 133 monitor at 1600x1200 / 150 PPI / ~15 Hz",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "model": "NEGATIVE FINDING - Pervasive Displays has no product above 15\"",
+      "vendor": "Pervasive Displays (VusionGroup)",
+      "status": "shipping",
+      "diagonal_in": 3.4,
+      "resolution": null,
+      "ppi": null,
+      "panel": "E Ink",
+      "colour": "monochrome and multi-colour small formats",
+      "refresh": null,
+      "front_light": false,
+      "price": {
+        "amount": null,
+        "currency": null,
+        "as_of": "2026-08",
+        "source_url": null
+      },
+      "availability": "Recorded deliberately as a negative result, because the brief named Pervasive Displays as a bare-panel route to investigate. Their site foregrounds 1.52 in, 2.90 in and 3.40 in modules; no size above 15 in appears, and no largest-size claim is made. Their development-kit emphasis is the EPDK-Matter kit aimed at smart home, building automation and industrial IoT.",
+      "power": "N/A",
+      "dimensions": "N/A",
+      "released": null,
+      "integration": {
+        "openness": "open",
+        "api": "Development kits and reference code exist, but the product line is oriented to electronic shelf labels and small IoT displays.",
+        "local_network_no_cloud": true,
+        "push_supported": true,
+        "custom_software": "Yes, at small sizes only.",
+        "sd_or_usb": null,
+        "open_firmware": false,
+        "community": "Embedded developer community, not art-display relevant.",
+        "evidence_urls": [
+          "https://www.pervasivedisplays.com/"
+        ],
+        "notes": "CONCLUSION FOR THE CLIENT: not a candidate. Pervasive Displays is an ESL/IoT module supplier whose sizes are an order of magnitude too small. The one useful fact from this line of enquiry is corporate: Pervasive Displays is 100% based in Taiwan and is part of VusionGroup, which materially raises its staying power relative to independent module vendors - relevant if the client ever needs small companion displays, irrelevant for the primary frame."
+      },
+      "art_suitability": {
+        "gamut_notes": "Not applicable at the required size.",
+        "ghosting": null,
+        "bit_depth": null,
+        "colour_profile_documented": false
+      },
+      "sources": [
+        {
+          "url": "https://www.pervasivedisplays.com/",
+          "what_it_supports": "Product emphasis on 1.52 in, 2.90 in and 3.40 in e-ink displays with no size above 15 in presented; EPDK-Matter development kit for smart home, building automation and industrial IoT; company is part of VusionGroup and 100% based in Taiwan",
+          "confidence": "verified"
+        }
+      ]
+    }
+  ],
+  "vendors": [
+    {
+      "name": "E Ink Holdings / E Ink Corporation",
+      "country": "Taiwan (E Ink Holdings, Hsinchu); E Ink Corporation is the US arm, originally an MIT Media Lab spin-out",
+      "corporate_form": "Publicly listed company",
+      "ownership": "Public shareholders; E Ink Holdings owns E Ink Corporation",
+      "funding": "N/A - public company",
+      "public_ticker": "8069 on the Taiwan Stock Exchange (share price observed at 195.5 TWD, down 2.00, on E Ink's own investor page in August 2026)",
+      "revenue_scale": "Not captured in this session beyond the existence of quarterly and annual reports, monthly revenue disclosures and a 1Q-2026 results conference held 2026-05-08",
+      "headcount": null,
+      "hardware_track_record": "The originator and effectively sole commercial supplier of electrophoretic display film and panels worldwide. Actively investing: broke ground on an expansion of its US Research & Development headquarters, announced 2026-07-21. Continuous platform releases through the survey window - Spectra 6 (paper-sign replacement), the 75 in Spectra 6 module (April 2025), Ripple waveform architecture, Sparkle, Kaleido 3, Prism 3, and the new Marquee outdoor platform introduced at InfoComm 2026 which won a Best in Show award. Debuted at a ProAV trade show for the first time in June 2026, indicating a deliberate push into large-format signage.",
+      "abandonment_history": "Not investigated in this session. Note that its distributor Good Display marks products EOL (the 25.3 in monochrome DMPH253EG1), so panel generations do retire.",
+      "staying_power": "high",
+      "rationale": "This is the load-bearing dependency for almost every device in this survey and it is the strongest link in the chain, not the weakest. Publicly listed with a verifiable ticker and ongoing results conferences, expanding R&D capacity in 2026, and shipping new platforms on a steady cadence. The genuine risk is not E Ink failing - it is E Ink being a single point of supply for an entire category, which means any panel discontinuation or allocation decision propagates to every downstream vendor simultaneously. The only vendor in this survey outside that dependency is ePaint, which uses cholesteric LCD instead. For the client's purposes the practical implication is that panel supply is safe but a specific PANEL SIZE is not guaranteed to remain available - so prefer the 31.5 in module, which has by far the most integrators depending on it, over rarer sizes if longevity of spares matters.",
+      "sources": [
+        {
+          "url": "https://www.eink.com/investors.html",
+          "what_it_supports": "Ticker 8069 on the Taiwan Stock Exchange, share price 195.5 TWD as observed, availability of quarterly reports, annual reports, monthly revenue data and the 1Q-2026 results conference of 2026-05-08",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news",
+          "what_it_supports": "Active news cadence through July 2026 including the 2026-07-21 press release on breaking ground on US R&D headquarters expansion and the 2026-07-24 InfoComm Best in Show coverage",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/brand/detail/Spectra6",
+          "what_it_supports": "Spectra 6 platform positioning and named customers PPDS/Philips, Sharp, Samsung and ASUS",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+          "what_it_supports": "Breadth of the ecosystem partner list and the first ProAV trade show debut",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Modos Tech, Inc.",
+      "country": "United States - 867 Boylston St., Boston, MA 02116",
+      "corporate_form": "Incorporated company (Inc.)",
+      "ownership": "Founder-owned. Two named founders: Alexander Soto and Wenting Zhang.",
+      "funding": "Deliberately not venture-funded - IEEE Spectrum reports the team 'emphasizes community-driven development rather than venture capital'. Funding is crowdfunding plus a public grant: partial funding for the Caster controller came from the NGI0 Entrust Fund, established by NLnet with financial support from the European Commission's Next Generation Internet programme. Crowd Supply campaign 1 (Paper Monitor / Dev Kit) raised USD 197,588 against a USD 110,000 goal from 422 backers, funded 2025-09-18. Campaign 2 (Flow) raised USD 713,276 against a USD 175,000 goal - 407% - from 609 backers, funded 2026-07-09. Cumulative crowdfunding raised is roughly USD 0.9M.",
+      "public_ticker": null,
+      "revenue_scale": "Inferable only from campaign totals - under USD 1M lifetime. No commercial revenue disclosed.",
+      "headcount": "Two (the two founders). IEEE Spectrum describes it explicitly as a 'two-person startup'.",
+      "hardware_track_record": "One product designed, manufactured and shipped: the Paper Dev Kit, funded September 2025, first shipment starting February 2026, with shipping/case/firmware progress updates through April 2026 and the 13 in kit now marked In stock. Certifications completed. A second product (Flow) has passed pre-production revisions with validation and testing done, contract manufacturers in China contracted, full BoM, supplier quotes and tooling in place, panels sourced directly from E Ink, and fulfilment via Crowd Supply's partner Mouser Electronics. Documented the whole journey publicly through conference talks at FOSDEM 2024, Supercon 2024, Latch-up 2024 and FOSDEM 2026.",
+      "abandonment_history": "None found. The opposite pattern is evidenced: 11 public updates on campaign 1 including post-delivery firmware progress, 7 on campaign 2, a public issue tracker, published changelogs and versioned firmware releases. Their own risk statement concedes that development timelines typically need doubling, and delivery did run from a September 2025 funding to a February 2026 first shipment.",
+      "staying_power": "low",
+      "rationale": "BLUNT ASSESSMENT: this is a two-person company with under USD 1M of lifetime crowdfunding revenue, no institutional investment, a grant from a public-interest fund, and exactly one product delivered to date. On a three-year horizon the probability that Modos Tech still exists as a going concern is materially below that of any incorporated competitor here, and the client should not plan a hardware dependency on the company continuing. HOWEVER - and this is the case the brief asked to be made explicitly - the staying-power question is much less damaging for Modos than for any other low-durability vendor in this survey, because everything that matters is already published under open licences: Caster gateware under CERN-OHL-P, Glider hardware under CERN-OHL-S, firmware under MIT, a host API with Python/Rust/C bindings, full schematics and design files, and 2.5k GitHub stars on Glider with 301 on Caster. If Modos folds tomorrow, the design survives and remains buildable and maintainable by third parties. That is the precise inverse of the InkPoster or Samsung risk profile, where the company will very likely persist but the device is unmaintainable by anyone outside it. Modos wins criterion 2 outright and loses criterion 1 outright, and the openness genuinely mitigates the corporate fragility in a way it does not for anyone else here.",
+      "sources": [
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-flow",
+          "what_it_supports": "USD 713,276 raised of USD 175,000 (407%) from 609 backers, funded 2026-07-09; ship dates December 2026; produced by Modos Tech in Boston MA; founders Alexander Soto and Wenting Zhang; manufacturing plan with Chinese contract manufacturers, full BoM and tooling; panels direct from E Ink; Mouser fulfilment; published source files, schematics, firmware source, changelogs, versioned releases and public issue tracker; conference talk history; prior campaign referenced",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor",
+          "what_it_supports": "USD 197,588 raised of USD 110,000 (179%) from 422 backers, funded 2025-09-18; 11 updates including 'First Shipment Starting Soon' 2026-02-04 and 'Progress on Shipping, Cases, and Firmware' 2026-04-01; 13 in kit In stock; NLnet NGI0 Entrust Fund partial funding for Caster with European Commission NGI support",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://spectrum.ieee.org/modos-e-paper-monitor",
+          "what_it_supports": "Two-person startup, founders named, community-driven rather than venture capital, prior Dev Kit raised nearly USD 220,000 at double its goal, and the team's own observation that development timelines typically require doubling initial estimates",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.modos.tech/",
+          "what_it_supports": "Legal entity Modos Tech, Inc. with Boston street address and contact details",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/orgs/Modos-Labs/repositories",
+          "what_it_supports": "Public repository set with star counts (Glider 2.5k, Caster 301, glider-api 28) and CERN-OHL-P licensing on Caster - the assets that survive company failure",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Fraimic",
+      "country": "United States - Chicago, Illinois",
+      "corporate_form": "Startup; precise legal form not disclosed",
+      "ownership": "Founder-led. Founder named as Anthony Mattana.",
+      "funding": "Crowdfunding only, as far as can be established. Kickstarter raised USD 1,120,290 from 1,825 backers against a USD 10,000 goal, campaign 2025-09-23 to 2025-10-23. No investors disclosed. The campaign was professionally promoted by Jellop, an ad-tech agency associated with 3,500+ successful Kickstarter projects, and showcased on BackerClub - so the raise reflects paid marketing amplification as much as organic demand.",
+      "public_ticker": null,
+      "revenue_scale": "Approximately USD 1.1M crowdfunding plus subsequent direct sales; both SKUs are currently sold out, so DTC revenue is not estimable.",
+      "headcount": "Not disclosed. Described only as a team with 'a combined 30+ years of product design and development experience' across automotive, manufacturing, consumer electronics, cloud computing and wireless communication - phrasing that typically indicates a very small team.",
+      "hardware_track_record": "First hardware product. No prior shipped hardware found. Execution to date is, however, better than the crowdfunding average: mechanical design completed and CNC prototyped, PCB samples tested, engineering validation units built and photographed, pledge manager closed May 2026, Standard 13.3 in units began shipping 2026-06-17, firmware v2.26 released 2026-06-29, and Large 31.5 in units reached port 2026-07-21 with shipping imminent. That is roughly a two-to-three-month slip against the stated 'Fulfilment begins Spring 2026' - unremarkable for hardware crowdfunding.",
+      "abandonment_history": "No abandonment. 17 public updates with the most recent 2026-07-21, an active Discord, a running customer contest, and shipped firmware updates. Note that most substantive updates are backers-only, which limits outside verification of delivery quality.",
+      "staying_power": "low",
+      "rationale": "One-product startup, first hardware, single crowdfunding round, no disclosed institutional investment, founder-led, small team. Say it plainly: there is no financial buffer visible here and no second product line to fall back on. The mitigating evidence is real but limited - they have actually shipped the smaller SKU and physically landed the larger one, which puts them ahead of most Kickstarter hardware, and the raise was 112x the goal so there was cash to execute with. Against them, the product's core differentiator (Voice-to-Vision AI generation) depends on vendor-side AI infrastructure and purchasable AI credits, which is an ongoing operating cost that must be funded indefinitely; if the company stops paying for it, the marquee feature dies even if the frame keeps working. For this client that dependency is largely irrelevant since he would not use AI generation - but it is the thing most likely to consume the company's cash. Critically, unlike Modos, nothing is open: no schematics, no SDK, no published local protocol, so company failure would leave the client with an undocumented device and a browser-upload path that may or may not keep functioning. The advertised local-only mode is the one thing that would survive a vendor shutdown, and it is undocumented enough that this cannot be relied on.",
+      "sources": [
+        {
+          "url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai",
+          "what_it_supports": "USD 1,120,290 from 1,825 backers against a USD 10,000 goal; campaign dates; Chicago IL; Hardware category; team described as 30+ years combined experience; development milestone photographs; Jellop promotion and BackerClub showcase; fulfilment begins Spring 2026; risks statement",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.kickstarter.com/projects/445470967/fraimic-smart-e-ink-canvas-digital-picture-frame-with-ai/posts",
+          "what_it_supports": "Delivery execution record: pledge manager close and shipping start May 2026, Standard units shipping 2026-06-17, firmware v2.26 on 2026-06-29, Large units at port 2026-07-21; 17 updates; most updates backers-only",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.prnewswire.com/news-releases/fraimic-to-debut-market-first-voice-to-art-smart-canvas-prototypes-at-ces-2026-302651756.html",
+          "what_it_supports": "Chicago-based, founder Anthony Mattana, Kickstarter raised more than USD 1 million, no investors disclosed, CES 2026 prototype debut, targeted Kickstarter shipments May 2026 and DTC June 2026",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://fraimic.com/collections/shop",
+          "what_it_supports": "Both SKUs sold out as of 2026-08 at USD 399 and USD 1,299",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://fraimic.com/",
+          "what_it_supports": "Requirement to create an account at app.fraimic.com, indicating vendor-side infrastructure the company must keep funding",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "BLOOMIN8 / arpobot",
+      "country": "Australia - Sydney",
+      "corporate_form": "Startup trading as BLOOMIN8; creator account 'arpobot'. US support phone number (+1 833) and hello@bloomin8.com contact.",
+      "ownership": "Founder-led; individuals not named in the material retrieved",
+      "funding": "Crowdfunding. The BLOOMIN8 EinkCanvas Kickstarter raised AU$2,397,443 from 2,272 backers against an AU$30,000 goal, campaign 2025-03-18 to 2025-04-27 (a secondary source reports the total as 'over $1.65M', which is consistent as the USD equivalent). Launch marketing by The Crowdfunding Formula (TCF). No institutional investors disclosed.",
+      "public_ticker": null,
+      "revenue_scale": "Roughly AU$2.4M crowdfunding plus ongoing direct sales across 13.3 in and 28.5 in SKUs; a 10 in sub-USD-200 model was announced for CES 2026.",
+      "headcount": "Not disclosed. Self-described as 'smart home experts'.",
+      "hardware_track_record": "Second crowdfunded product. Prior product was the Arpobot Smart Shade, a Matter-over-Thread smart home device, with '600+ backers fulfilled from previous Kickstarter campaign' claimed on the current campaign page. For the EinkCanvas itself, the 13.3 in model has shipped and is in retail, an extensive app version history is shown, development on the 4 in Spectra 6 display is dated to June 2024, and the 28.5 in large model is listed with 'Expected shipping starts August 2026' - i.e. the large SKU is the tail end of an 18-month fulfilment. 20 campaign updates, last activity 2026-07-31.",
+      "abandonment_history": "None found, and the counter-evidence is unusually strong for a vendor this small: the Home Assistant component in the ARPOBOT-BLOOMIN8 GitHub org was updated within a week of this survey, iOS and Android apps are live in both stores, and 1-year warranty and phone support are offered. Note that the bare github.com/bloomin8 account has zero repositories, which could mislead a casual check into thinking nothing is maintained.",
+      "staying_power": "low",
+      "rationale": "Blunt: a Sydney crowdfunding startup on its second product, with about AU$2.4M raised, no disclosed institutional funding, an undisclosed and probably tiny headcount, and a large-format SKU that is only just reaching customers roughly 16 months after the campaign closed. Three-year survival is genuinely uncertain and the client should assume a real chance of no warranty support and no app maintenance by 2029. BUT this is the second and more important case where openness offsets fragility, and it does so more usefully than Modos because the size is actually right. The device exposes a local HTTP REST API discoverable over mDNS, the vendor publishes the Home Assistant integration that documents that API, there is an SD card slot that works with no network at all, and a genuinely diverse third-party ecosystem has already formed - 19 GitHub repositories from at least nine different authors, including a macOS desktop manager, a Node CLI with Spectra 6 dithering, a Python library, a Swift local server, LAN control tooling and a self-hosted pull endpoint. If BLOOMIN8 disappears, the frame keeps working on the LAN, the SD card path keeps working offline, and third parties have already demonstrated they can drive it without the vendor. That is a materially different and better failure mode than any closed frame at this size. The residual risk is that the API contract is documented only by vendor-published code rather than a specification, so a firmware update could break third-party tooling.",
+      "sources": [
+        {
+          "url": "https://www.kickstarter.com/projects/arpobot/bloomin8-canvas-the-ai-powered-full-color-e-ink-art-frame",
+          "what_it_supports": "AU$2,397,443 from 2,272 backers against AU$30,000; campaign 2025-03-18 to 2025-04-27; Sydney AU; prior Arpobot Smart Shade Matter-over-Thread product with 600+ backers fulfilled; TCF launch partner; 20 updates with last update 2026-07-31; fully local solution with SD card and Home Assistant; RESTful APIs; app version history; 4 in Spectra 6 development dated June 2024; risks statement citing e-ink screen supply",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://bloomin8.com/products/bloomin8-eink-canvas-large-28-5",
+          "what_it_supports": "28.5 in SKU at USD 2,399 with 'Expected shipping starts August 2026', full specifications, Home Assistant integration listed as a product feature",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component/main/README.md",
+          "what_it_supports": "Vendor-published, actively maintained (updated within the week) Home Assistant component documenting the local HTTP REST API, mDNS discovery and service calls",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/search?q=bloomin8&type=repositories",
+          "what_it_supports": "19 repositories from multiple independent authors, evidencing a real third-party ecosystem that reduces vendor-failure exposure",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://github.com/bloomin8",
+          "what_it_supports": "The bare vendor-name GitHub account has zero public repositories - a trap for casual due diligence",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://bloomin8.com/pages/faq",
+          "what_it_supports": "1-year warranty, phone and email support, premium AI generation plans",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://epaperia.substack.com/p/discover-bloomin8-ai-epaper-art-frames",
+          "what_it_supports": "Kickstarter total reported as over USD 1.65M; CES 2026 presence; 13.3 in and 28.5 in models with price ranges",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "InkPoster (operated by Pocketbook International SA)",
+      "country": "Switzerland (Pocketbook International SA); PocketBook is a long-established European e-reader brand with Ukrainian engineering roots",
+      "corporate_form": "Société anonyme (SA)",
+      "ownership": "Private. InkPoster is a brand operated by Pocketbook International SA, per InkPoster's own site.",
+      "funding": "Not disclosed. Not crowdfunded - this is a brand extension by an existing e-paper hardware company, which is a structurally stronger position than any of the startups in this slice.",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed. PocketBook is a mainstream European e-reader vendor with retail distribution across most of Europe, so revenue is materially larger than any crowdfunding entrant here, though not quantified in this session.",
+      "headcount": null,
+      "hardware_track_record": "Strong and the best in this slice among consumer-frame vendors. InkPoster claims 'nearly 20 years of ePaper expertise' via PocketBook. PocketBook's own storefront shows a current, broad e-paper product line - e-readers (Verse Pro), colour e-readers (Era Color) and e-notes (InkPad Eo, InkPad 4, InkPad Color 3) - and distribution across Austria, Germany, France, Italy, Spain, Poland, Czech Republic, Hungary, Romania, Bulgaria and many other European markets plus Mexico, Kazakhstan, Uzbekistan, Vietnam and Azerbaijan. That is a real retail and warranty footprint, not a direct-to-consumer web shop.",
+      "abandonment_history": "Not investigated. No abandonment evidence found. Worth noting that PocketBook's own site makes no mention of InkPoster, so the frame line is presented at arm's length from the parent brand - which slightly weakens the inference that parent resources are committed to it.",
+      "staying_power": "medium",
+      "rationale": "The highest-durability consumer art-frame vendor found in this slice, and the reason is simply that it is not a startup: an established Swiss-registered e-paper company with roughly two decades of shipping e-readers and pan-European retail distribution is far more likely to exist in 2029 than a Sydney or Chicago one-product crowdfunding team. Rated medium rather than high only because no financials, headcount or ownership detail could be verified; because the InkPoster line itself is new and its entire lineup was out of stock across all five SKUs when surveyed, which is either strong demand or supply trouble and cannot be distinguished from outside; and because PocketBook's own website does not acknowledge InkPoster, so parental commitment is asserted by the subsidiary rather than demonstrated by the parent. THE SHARP TRADE-OFF FOR THIS CLIENT: InkPoster is the best bet on the company still existing and the worst bet on being able to drive the device. It is an app-plus-licensed-art-catalogue-plus-subscription business with no API, no documented local path, no SD/USB path and no homebrew community. Durability and openness are almost perfectly inverted between InkPoster and BLOOMIN8, and for this client's decisive criterion that inversion favours BLOOMIN8.",
+      "sources": [
+        {
+          "url": "https://inkposter.com/",
+          "what_it_supports": "Operating entity 'Pocketbook International SA'; claim of nearly 20 years of ePaper expertise; Pininfarina design collaboration; full five-SKU lineup all unavailable as of 2026-08; app on Google Play and Apple App Store; subscription collections; no API or local-control statements",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://inkposter.com/blogs/news/the-world-s-largest-color-epaper-art-frame-inkposter-tela-40-5-debuts-at-ces",
+          "what_it_supports": "CES 2026 launch of Tela 40.5 and Pininfarina-designed Duna; product specifications and prices; app-based content delivery with personal image upload and remote updates",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://pocketbook.ch/",
+          "what_it_supports": "PocketBook's current e-paper product range (e-readers, colour e-readers, e-notes with named models) and its extensive European plus selected international market footprint; notably contains no mention of InkPoster",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Geniatech",
+      "country": "China - Shenzhen (10F, 8A, Shenzhen International Innovation Valley)",
+      "corporate_form": "Private company",
+      "ownership": "Not disclosed; no public listing found",
+      "funding": "Not disclosed. Self-funded operating business rather than a funded startup.",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed. Scale indicators: 'More than 2000 Trusted Partners & Clients' and a factory facility of 30,000+ square metres.",
+      "headcount": "'A team of over 100 R&D Engineers' plus its own production factory, implying several hundred staff in total",
+      "hardware_track_record": "The longest hardware track record of any non-panel-maker in this slice: 'over 27 Years of Experience in ARM Embedded Design and Manufacturing', with its own production factory. Six product lines spanning Edge AI hardware, ARM System-on-Modules (NXP, Rockchip, Renesas, MediaTek, Qualcomm), single-board computers, industrial embedded systems and mini PCs, e-paper displays and signage, and IoT gateways. Semiconductor partnerships shown with NXP, Hailo, Rockchip and Renesas. In e-paper specifically it offers a complete Spectra 6 line at 13.3 in, 25.3 in, 28.5 in and 31.5 in with its own in-house TCON designs.",
+      "abandonment_history": "Not investigated; nothing found.",
+      "staying_power": "medium",
+      "rationale": "Rated medium and arguably the most interesting durability profile in this slice. The positives are substantial and unusual here: 27 years of continuous ARM embedded design and manufacturing, an owned 30,000+ sq m factory, 100+ R&D engineers, 2,000+ claimed clients, tier-one silicon partnerships, and six diversified product lines - so e-paper signage failing would not take the company with it, unlike every startup in this survey where the frame IS the company. Not rated high because nothing is independently verifiable: no public financials, no ticker, no disclosed ownership, headcount and factory figures are self-reported marketing claims, and their about-us page was not retrievable (404) so the corporate detail rests on the homepage alone. For a private buyer there is also a practical durability caveat distinct from corporate survival - this is a B2B ODM/OEM supplier, so consumer-style warranty, spares and support over a decade should not be assumed, and MOQ friction is likely. WHY IT MATTERS ANYWAY: Geniatech is the only vendor in this survey that combines credible corporate durability with an Android 11 applications processor, an in-house TCON, an explicitly 'Open API & SDK', and all three of the interesting panel sizes including the 163 PPI 25.3 in. On the two criteria jointly it may be the best available compromise, and it is the single vendor most worth a direct commercial enquiry.",
+      "sources": [
+        {
+          "url": "https://www.geniatech.com/",
+          "what_it_supports": "27+ years in ARM embedded design and manufacturing; Shenzhen HQ address; 100+ R&D engineers; own production factory of 30,000+ sq m; 2,000+ trusted partners and clients; six product lines; semiconductor partnerships with NXP, Hailo, Rockchip and Renesas",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/solution/e-ink-spectra6/",
+          "what_it_supports": "Complete Spectra 6 product family at 31.5 in, 28.5 in, 25.3 in and 13.3 in; support for TCON boards, CMS platforms and wireless connectivity",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/product/epc2530/",
+          "what_it_supports": "Android 11 on quad-core Cortex-A55, in-house TCON with multi-region partial update, 'Open API & SDK for 3rd party CMS' with bundled lite CMS",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/product/epc2850/",
+          "what_it_supports": "'Home made TCON board' claim and open API/SDK plus free CMS on the 28.5 in model",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.geniatech.com/product/epc3200/",
+          "what_it_supports": "31.5 in model with CE and FCC certification, full metal construction",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Dalian Good Display Co., Ltd. (storefront: buy-lcd.com)",
+      "country": "China - Dalian (contact info@good-display.com, +86-411-8461 9565)",
+      "corporate_form": "Private limited company (Co., Ltd.)",
+      "ownership": "Private; not disclosed. Widely understood to be associated with the DKE brand, though that link was not verified in this session.",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Deep and specifically relevant: the most complete catalogue of large-format e-paper panels, driver boards, TCON boards, development kits and finished signage found anywhere in this survey. Sizes from 1.69 in round through 4 in, 5.9 in, 7.3 in, 13.3 in, 25.3 in, 28.5 in and 31.5 in, plus finished poster products (DMPH253E61, DMPH315E61), development kits (DEAM-315E1, ESP32-133C02, ESP32E6-E01, DEJA-TC103), a 31.2 in Android motherboard plus TCON plus power-supply set, and Windows tooling (XTacepSetup v25.02.25). Publishes downloadable specification sheets with download counters, and example code libraries for STM32, ESP32, Arduino and Raspberry Pi with documentation for controllers from Solomon, UltraChip, JADARD, IST, Himax, ITE, Sitronix and Fudan Micro. Operates its own e-commerce storefront at buy-lcd.com with real listed prices.",
+      "abandonment_history": "Product lines are actively retired - the 25.3 in monochrome signage DMPH253EG1 is explicitly marked [EOL] on their site. That is a normal supplier practice, but it is direct evidence that a specific panel or product the client standardises on may become unavailable, which matters for spares over a multi-year build.",
+      "staying_power": "medium",
+      "rationale": "Rated medium on track record and catalogue depth rather than on any verifiable financial evidence, of which there is none - no financials, no headcount, no ownership, no ticker. What justifies medium is that this is plainly an established, operating distributor and module house with an enormous documented catalogue, published datasheets, its own priced storefront, multi-platform code libraries and long-standing relationships across the E Ink controller ecosystem. It is not a startup and not a one-product vendor. Two specific cautions for the client. FIRST, most interesting items were out of stock when surveyed (GDEP253C02 at USD 898.20, DMPH315E61 at USD 1,636.20, both 0 in stock) and several large-panel pages carry no price at all or are unpopulated stubs (GDES285E01), so procurement is a made-to-order conversation with lead-time risk, not a click-to-buy. SECOND, the documented EOL of a 25.3 in product line is a real warning about long-term spares. WHY THIS VENDOR MATTERS MOST FOR A SELF-BUILD: it is the only supplier from which a determined builder can buy the >15 in panel, the TCON, the Android motherboard, the power-supply board and the Windows image-packaging tool as a coherent set, with an SDK, and with published prices for some items. If the client goes the bare-panel route, this is the counterparty.",
+      "sources": [
+        {
+          "url": "https://www.good-display.com/product/476.html",
+          "what_it_supports": "25.3 in Spectra 6 panel full datasheet and the existence of a companion TCON plus Android motherboard development solution with SDK",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/560.html",
+          "what_it_supports": "31.5 in Spectra 6 panel datasheet, recommended DEAM-315E1 development kit, downloadable spec sheet with download counter",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/686.html",
+          "what_it_supports": "DEAM-315E1 development kit for the 31.5 in panel: ESP32-S3, QSPI, Wi-Fi web upload, hot-swappable SD card for offline environments, Arduino IDE support with code examples",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/870.html",
+          "what_it_supports": "31.2 in large-format Android motherboard plus TCON plus power-supply board solution with Type-C upload, USB-stick playback and the XTacepSetup Windows tool",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/582.html",
+          "what_it_supports": "DMPH253E61 finished 25.3 in unit with Cortex-A7 SoC, Ethernet, dual USB, HDMI-out, USB plug-and-play plus cloud plus Smart EPD Android app",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/578.html",
+          "what_it_supports": "DMPH315E61 finished 31.5 in unit specifications with ESP32-S3-WROOM-1U mainboard",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/product/676.html",
+          "what_it_supports": "Existence of the 28.5 in A2 panel GDES285E01 and the fact that its page is an unpopulated stub - evidence of uneven catalogue documentation",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.buy-lcd.com/products/gdep253c02",
+          "what_it_supports": "Own storefront operated as Dalian Good Display Co., Ltd. with real pricing (USD 898.20 from USD 998.00), 0 in stock, bulk discount tiers",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.buy-lcd.com/products/dmph315e62",
+          "what_it_supports": "Storefront pricing of USD 1,636.20 from USD 1,818.00 with 0 in stock for the 31.5 in finished unit",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.good-display.com/companyfile/1620.html",
+          "what_it_supports": "Documentation portal structure: product specifications for monochrome, multi-colour and full-colour ePaper, example code libraries for STM32/ESP32/Arduino/Raspberry Pi, and controller documentation for Solomon, UltraChip, JADARD, IST, Himax, ITE, Sitronix and Fudan Micro; an ePaper Display Usage Guidelines document issued 2024-10-16 with 1,912 downloads",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Samsung Electronics",
+      "country": "South Korea",
+      "corporate_form": "Publicly listed multinational",
+      "ownership": "Public shareholders",
+      "funding": "N/A",
+      "public_ticker": "005930.KS (Korea Exchange) - not verified in this session",
+      "revenue_scale": "Not captured in this session",
+      "headcount": null,
+      "hardware_track_record": "Overwhelming, and now committed to this category specifically: the Color E-Paper line spans 13 in, 25 in and 32 in shipping models plus the 75 in EMDX showcased at ISE 2025. The 32 in EM32DX had a global release, is 8.6 mm at its thinnest and 2.5 kg with battery, and the line won three Best of Show awards at ISE 2025. Color E-Paper subsequently became available in the USA. Line-wide hardware includes a 5,000 mAh battery, two USB-C ports, 8 GB internal storage, Wi-Fi and Bluetooth, and over 50% recycled plastics.",
+      "abandonment_history": "Not investigated for this line. Samsung has a general industry reputation for discontinuing product categories that underperform, and this is a young line - a genuine if unquantified risk.",
+      "staying_power": "high",
+      "rationale": "By far the strongest balance sheet in this survey and the clearest evidence that large-format colour e-paper has crossed from niche to mainstream - a global display manufacturer shipping a three-size line and demonstrating a 75 in flagship is the single loudest confirmation of the expansion the client noticed. High staying power at the corporate level is not in question. TWO REASONS IT IS STILL THE WRONG TARGET. First, corporate durability does not transfer to product durability for a young signage line, and Samsung is more willing than most to retire categories. Second and decisively, openness is unknown-trending-closed: the documented control path is a dedicated Samsung mobile app for remote control, content scheduling and sleep/wake management, with no published API, no documented local-network push, and a signage platform that in Samsung's estate normally means Tizen plus MagicINFO or the VXT cloud - an environment where third-party applications are a formal partner programme, not a sideload. This is the cleanest illustration of the inverse relationship the brief anticipated: the most durable vendor here is also among the least personalisable.",
+      "sources": [
+        {
+          "url": "https://www.techspot.com/news/106720-samsung-showcases-world-largest-color-e-paper-display.html",
+          "what_it_supports": "75 in EMDX 5K showcased at ISE 2025 as world's largest colour e-paper; 13 in, 25 in and 32 in line members; 0.00 W static; 5,000 mAh battery, two USB-C ports, 8 GB storage, Wi-Fi and Bluetooth; 50%+ recycled plastics; dedicated mobile app as the control path; no panel supplier disclosed",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "PPDS (Philips professional displays)",
+      "country": "Netherlands-headquartered global operation; Philips professional display brand licensee",
+      "corporate_form": "Corporate business unit operating the Philips professional display brand",
+      "ownership": "Operates the Philips brand for professional displays under licence. The parent relationship (TP Vision / TPV Technology) was not verified in this session and is recorded as INFERENCE.",
+      "funding": "N/A - corporate business unit",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed in the material retrieved",
+      "headcount": null,
+      "hardware_track_record": "Established category leader in e-paper signage and the first mover at both sizes. Introduced the 25 in Philips Tableaux at ISE 2023 as, by its own account, the world's first full-size full-colour digital signage display of its type, then the 32 in Tableaux 5150I as the world's first signage display confirmed on E Ink Spectra 6 - a claim corroborated by E Ink CEO Johnson Lee, who is quoted confirming PPDS as the first implementer of the 31.5 in module. Named on E Ink's own Spectra 6 brand page as a customer. Maintains a 24x7 pre- and post-sales technical support team, an AV distribution channel, an Android SoC platform family shared across products, and its own PPDS Wave cloud management platform while explicitly supporting third-party management software. Documented product lifecycle from announcement through ISE and InfoComm demonstrations to shipping product.",
+      "abandonment_history": "None found. The Tableaux range has been extended rather than dropped - the 25 in was followed by the 32 in, and the range is documented as multi-award-winning with installations across education, retail, corporate, transportation, hospitality, food and beverage and public venues.",
+      "staying_power": "medium",
+      "rationale": "Rated medium, and would be higher with verified corporate financials. The evidence for durability is behavioural rather than financial and is quite strong: this is a professional AV manufacturer with a named product series it has extended over multiple generations, a 24x7 support organisation, channel distribution, a shared Android SoC platform across its portfolio, deployed installations across many verticals, and a confirmed first-implementer relationship with E Ink at both 25 in and 31.5 in. That is an organisation with continuity obligations to integrators, which is a materially different risk posture from a crowdfunding startup. Rated medium rather than high only because ownership, revenue and headcount could not be verified, and because it depends on a brand licence rather than owning the Philips brand outright. FOR THIS CLIENT: PPDS is the best combination of durability and plausible programmability among established vendors - Android SoC, 16 GB storage, five independent local content paths (USB, micro USB, Micro SD, LAN, Wi-Fi 5), PoE, and explicit support for third-party rather than vendor-only management software. The blockers are 93 PPI, 16:9 landscape geometry, signage aesthetics, channel-only purchase and no published API or SDK.",
+      "sources": [
+        {
+          "url": "https://www.ppds.com/insights/announcing-new-sized-up-32-philips-tableaux-epaper-display-including-latest-e-ink-spectra-6-technology",
+          "what_it_supports": "25 in Tableaux introduced at ISE 2023 and 32 in Tableaux 5150I as world's first Spectra 6 signage display; E Ink CEO Johnson Lee quote confirming first implementation of the 31.5 in module; Android SoC family membership and 'partner software-ready' positioning; PPDS Wave cloud plus third-party software support; five local content paths plus PoE; 24x7 technical support team; deployments across many verticals; long-term Philips R&D partnership with E Ink",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/brand/detail/Spectra6",
+          "what_it_supports": "PPDS/Philips named by E Ink as a Spectra 6 customer",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "SEEKINK (Jiangxi Xingtai Technology Inc.)",
+      "country": "China - Jiangxi",
+      "corporate_form": "Incorporated company",
+      "ownership": "Not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Ships large-format Spectra 6 e-paper signage including the 31.5 in S315E6. Named by E Ink among ecosystem partners showcasing at InfoComm 2026 (in the Prism 3 context), which is meaningful third-party validation of an ongoing relationship with the panel supplier.",
+      "abandonment_history": "Not investigated; nothing found.",
+      "staying_power": "unknown",
+      "rationale": "Insufficient evidence to rate. What is known: a real legal entity name, a documented product with a full specification sheet, and named presence in E Ink's own partner ecosystem at InfoComm 2026. What is unknown: ownership, funding, revenue, headcount, years shipping, distribution footprint and support arrangements - none of it published or retrievable. One structural observation worth recording: the S315E6's dimensions (747 x 442 x 34.5 mm), 3500 mAh battery and <=6 W refresh figure match Good Display's DMPH315E61 exactly, which strongly suggests a shared ODM chassis sold under multiple brands. That is INFERENCE, but if correct it means SEEKINK may be a brand and integrator on top of a common platform rather than an independent designer - which cuts both ways for durability: the platform outlives any one brand, but the brand itself carries little independent weight. Not a candidate for this client regardless, since the device runs an RTOS with no SDK and no local API - only USB flash disk, cloud or app.",
+      "sources": [
+        {
+          "url": "https://www.seekink.com/product/s315e6-spectra-6-e-ink-wall-mounted-billboard/",
+          "what_it_supports": "Legal entity Jiangxi Xingtai Technology Inc.; S315E6 full specification including RT OS, USB flash disk / cloud / app refresh paths, and the dimensions, battery and power figures that match Good Display's DMPH315E61",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+          "what_it_supports": "Seekink named among E Ink ecosystem partners at InfoComm 2026",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "MEiNK (retailed by media mea)",
+      "country": "Not disclosed",
+      "corporate_form": "Not disclosed",
+      "ownership": "Not disclosed. MEiNK appears as a brand; media mea is the retailer.",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Unknown. A 31.5 in Spectra 6 signage product is listed and in stock at USD 1,850, which at least demonstrates current availability, but no manufacturer is identified behind the brand and no other product history is discoverable.",
+      "abandonment_history": "Cannot be assessed.",
+      "staying_power": "unknown",
+      "rationale": "Genuinely unknown and the weakest evidence base of any vendor recorded here. No country, no legal entity, no disclosed manufacturer, no resolution or dimensions published for the product, no OS or SDK information, and only a retailer's storefront as a source. Rated unknown rather than low because there is nothing to support either judgement - but for a client planning a multi-year build, an unidentifiable brand behind an undocumented product is functionally a low-durability bet, and should be treated as one. The single reason it is in this survey at all is that it is one of very few >15 in colour e-paper products actually in stock with a published price, and it has a MicroSD slot as an offline load path. Useful as a price reference point and as evidence of the category's commoditisation; not a serious candidate.",
+      "sources": [
+        {
+          "url": "https://mediamea.store/products/meink-32-e-ink-spectra-6-epaper-signage",
+          "what_it_supports": "MEiNK 32 in Spectra 6 product at USD 1,850, in stock, Wi-Fi/LTE/MicroSD content loading; no manufacturer, country, resolution, dimensions, OS or SDK disclosed",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "StellarLink (with AUO Display Plus as manufacturer)",
+      "country": "Japan (StellarLink); Taiwan (AUO Display Plus)",
+      "corporate_form": "StellarLink is an IT solutions provider; AUO Display Plus is part of the AUO group, a major Taiwanese display manufacturer",
+      "ownership": "Not disclosed for StellarLink. AUO Display Plus sits within the AUO corporate group.",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "StellarLink was founded 2012-07-10 and describes itself as a solutions provider using innovative IT-based technologies, with research partnerships at Tohoku University, Waseda University and Iwate Prefectural University. Its e-paper products are the aecoPost, a 31.5 in Spectra 6 signage unit manufactured by AUO Display Plus, and the J-Poster, an A2-sized Spectra 6 signage product produced domestically in Japan. Both offer remote content management. Announced via an E Ink partnership press release dated 2025-10-30, targeting the Japanese market.",
+      "abandonment_history": "Not investigated; nothing found.",
+      "staying_power": "medium",
+      "rationale": "Rated medium chiefly because of the manufacturing partner rather than the brand owner. The genuinely significant discovery in this entry is AUO Display Plus manufacturing a 31.5 in Spectra 6 product - AUO is a major Taiwanese panel and display manufacturer, and its presence as a large-format e-paper integrator is a meaningful durability signal for the 31.5 in module ecosystem as a whole, independent of whether StellarLink itself persists. StellarLink is a 14-year-old Japanese IT solutions company with university research relationships, which is a reasonable but unquantified base. FOR THIS CLIENT this is not a purchasable target - it is Japan-market signage sold through a systems-integration relationship, with only 'remote content management capabilities' documented and no technical protocol, API, SDK or local-path detail published. Recorded because the brief asked which OEMs have licensed the large Spectra 6 panels, and this is one of the clearest documented answers, plus it surfaces a second-source manufacturer (AUO Display Plus) that reduces single-integrator risk for the 31.5 in panel.",
+      "sources": [
+        {
+          "url": "https://www.barchart.com/story/news/35793870/e-ink-and-stellarlink-announce-partnership-to-deliver-sustainable-epaper-signage-in-japan",
+          "what_it_supports": "Press release 2025-10-30; StellarLink founded 2012-07-10; solutions-provider description and university partnerships with Tohoku, Waseda and Iwate Prefectural; aecoPost 31.5 in Spectra 6 manufactured by AUO Display Plus; J-Poster A2 Spectra 6 produced domestically in Japan; remote content management on both; Japan target market; no launch date or technical protocol disclosed",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Visionect d.o.o.",
+      "country": "Slovenia",
+      "corporate_form": "Private limited company (d.o.o.)",
+      "ownership": "Private; not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "A mature, coherent product and software business rather than a single device: four hardware models (Place & Play 32 in, 13 in, 6 in and 6 in RE), a separately licensed Visionect Software Suite, a Place & Play CMS, an accessories line, and a proper documentation site covering installation, production deployment, requirements, networking and security, firmware upgrades, components and display tiling. Commercial maturity indicators on the 32 in: EUR 2,300 ex-tax list price, in stock, free worldwide shipping, 1-year limited warranty and a 30-day money-back guarantee. Also operates a workplace-focused subsidiary brand, Joan, for meeting-room booking and visitor management - meaningful diversification, since the hardware business is not the company's only revenue line.",
+      "abandonment_history": "Not investigated; nothing found. Documented firmware-upgrade processes and a maintained knowledge base are positive signals.",
+      "staying_power": "medium",
+      "rationale": "Rated medium on operational maturity, with no financial verification available. The positives are the most software-professional in this survey: a real self-hostable server product with a documented RESTful JSON API, HMAC-SHA256 authentication, versioned documentation, firmware upgrade procedures, warranty and returns terms, and a second brand (Joan) providing revenue diversification away from the display hardware. That is a company with recurring software licence revenue rather than one-off hardware sales, which is structurally more durable than a frame startup. Not rated high because ownership, revenue and headcount are unverified and it is a small Slovenian private company. THE POINT FOR THIS CLIENT: Visionect is the yardstick, not the answer. It is the only vendor in the entire survey where 'a self-hosted server pushes images to the display over the local network, with programmatic control of dithering and bit depth' is the designed architecture rather than a workaround - and it is monochrome, so it cannot serve a colour fine-art archive. Use its API documentation as the standard against which to interrogate Geniatech, PPDS and BLOOMIN8, and monitor it in case a Spectra 6 model appears.",
+      "sources": [
+        {
+          "url": "https://www.visionect.com/",
+          "what_it_supports": "Slovenian company Visionect d.o.o.; Place & Play product family; cloud-hosted Place & Play CMS; Joan subsidiary for workplace booking and visitor management",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.visionect.com/products/",
+          "what_it_supports": "Four hardware models plus a separately sold Software Licence and accessories; the 32 in is the only model above 15 in",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.visionect.com/shop/place-play-32/",
+          "what_it_supports": "Commercial maturity: EUR 2,300 ex tax, in stock, free worldwide shipping, 1-year limited warranty, 30-day money-back guarantee, Software Suite licence requirement with one month included",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://api.visionect.com/",
+          "what_it_supports": "Documented RESTful JSON API with HMAC-SHA256 auth on a self-hosted server, named endpoints, and control over dithering method and bit-depth encoding",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://docs.visionect.com/VisionectSoftwareSuite/index.html",
+          "what_it_supports": "Self-hosted installation and production deployment documentation, networking and security, firmware upgrades, display tiling; cloud-managed hosting recommended as the preferred path",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://docs.visionect.com/",
+          "what_it_supports": "Knowledge base structure and scope",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "ePaint (Anhui Yutu Technology Co., Ltd.)",
+      "country": "China - University Tech Park, Lu'an City, Anhui Province",
+      "corporate_form": "Private limited company (Co., Ltd.)",
+      "ownership": "Not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Not established. Presents a cholesteric LCD (ChLCD) reflective e-paper product family in two lines - e-Chroma for indoor at 28 in and 31.5 in, and e-Polar for outdoor at 28 in, 31.5 in and 55 in - targeting retail, transportation, healthcare and art gallery applications. Claims sub-1-second refresh, up to 16 million colours, -20 to +60 C indoors and -30 to +80 C outdoors with solar integration. No customer references, deployments, resolution figures, pricing or content-delivery documentation published.",
+      "abandonment_history": "Cannot be assessed.",
+      "staying_power": "unknown",
+      "rationale": "Unknown, and to be approached with real scepticism. No ownership, funding, revenue, headcount or track record is discoverable, and the product pages omit the specifications that matter most - there is no resolution or PPI figure anywhere on the site for a display being marketed partly at art galleries, which is a significant credibility gap for this application. The '16 million colours' claim is not a measured gamut and ChLCD is characteristically low in reflectance and desaturated relative to print, so the headline colour figure should not be read as a quality advantage over Spectra 6's nominally smaller palette. WHY IT IS WORTH RECORDING ANYWAY: this is the only vendor found in the entire survey whose >15 in colour reflective displays are NOT built on E Ink panels, which makes it the sole answer to the brief's question about E Ink Holdings panel-supply dependence. It also claims sub-second refresh, roughly fifteen times faster than large Spectra 6 modules, which if true is a genuinely different capability. Treat as a research lead requiring a physical sample and measured data before any consideration - not as a candidate.",
+      "sources": [
+        {
+          "url": "https://www.epaint.global/",
+          "what_it_supports": "Legal entity Anhui Yutu Technology Co., Ltd. operating as ePaint with Lu'an City, Anhui Province address; ChLCD technology; e-Chroma indoor 28 in and 31.5 in and e-Polar outdoor 28 in, 31.5 in and 55 in; art gallery among target applications; temperature ranges, sub-1-second refresh and up to 16 million colours claimed; no resolution, pricing or content-delivery detail published",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Waveshare",
+      "country": "China - Shenzhen",
+      "corporate_form": "Private company",
+      "ownership": "Not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Long-established and broad hobbyist/embedded module supplier with a large e-paper catalogue, worldwide shipping, distributor network, 15-day returns and 12-month warranty, published wikis and open example code for STM32, ESP32, Arduino and Raspberry Pi. Copyright notice current to 2026. Actively tracking new panel generations - the catalogue includes 13.3 in, 7.3 in, 4 in and 3.6 in E Ink Spectra 6 (E6) models and NFC-powered panels.",
+      "abandonment_history": "Not investigated; nothing found.",
+      "staying_power": "medium",
+      "rationale": "Rated medium as an operating business - long-standing catalogue breadth, worldwide distribution, warranty and returns terms, and current-generation panel coverage - though with no verifiable financials. IRRELEVANT FOR THIS CLIENT'S PRIMARY DECISION, and that is the finding: the brief asked specifically about the Waveshare bare-panel-plus-controller route above 15 inches, and it does not exist. Waveshare's own category size bands cap at '5.65\" - 13.3\"' and the largest products in the entire e-paper range are the 13.3 in Spectra 6 display and the ESP32-S3-ePaper-13.3E6 board, both under USD 260. Waveshare is the reflexive answer for DIY e-paper and it is simply the wrong supplier at this size class - the >15 in bare-panel counterparties are Good Display / buy-lcd and E Ink's own shopkits store.",
+      "sources": [
+        {
+          "url": "https://www.waveshare.com/product/displays/e-paper.htm",
+          "what_it_supports": "Full catalogue with size bands capped at 5.65-13.3 in; largest products are 13.3 in Spectra 6 at USD 249.99-259.99 and ESP32-S3-ePaper-13.3E6 at USD 259.99; worldwide shipping, distributors, 15-day returns, 12-month warranty; wiki and multi-platform code libraries; copyright 2026",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Pervasive Displays (VusionGroup)",
+      "country": "Taiwan - described as 100% based in Taiwan",
+      "corporate_form": "Subsidiary of a listed group",
+      "ownership": "Part of VusionGroup",
+      "funding": "N/A - group subsidiary",
+      "public_ticker": "VusionGroup is publicly listed (Euronext Paris) - not verified in this session, recorded as INFERENCE",
+      "revenue_scale": "Not disclosed for the subsidiary",
+      "headcount": null,
+      "hardware_track_record": "Established e-paper module supplier focused on electronic shelf labels and small IoT displays, with development kits including the EPDK-Matter kit for smart home, building automation and industrial IoT. Product emphasis on 1.52 in, 2.90 in and 3.40 in modules.",
+      "abandonment_history": "Not investigated; nothing found.",
+      "staying_power": "medium",
+      "rationale": "Group ownership by VusionGroup materially raises durability relative to independent module vendors - a subsidiary of a listed retail-technology group with an ESL business has a stable industrial customer base. But this is irrelevant to the client's requirement, and that is the finding the brief asked for: Pervasive Displays has nothing remotely close to 15 inches. Its product emphasis is 1.52 in to 3.40 in, and its development-kit story is Matter/IoT rather than large-format imaging. Rule it out and do not revisit.",
+      "sources": [
+        {
+          "url": "https://www.pervasivedisplays.com/",
+          "what_it_supports": "Part of VusionGroup and 100% based in Taiwan; product emphasis on 1.52 in, 2.90 in and 3.40 in e-ink displays with nothing above 15 in; EPDK-Matter development kit for smart home, building automation and industrial IoT",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Melford Technologies",
+      "country": "United Kingdom",
+      "corporate_form": "Reseller/distributor; legal form not disclosed",
+      "ownership": "Not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "A UK reseller of colour e-ink display units at 13.3 in, 25.3 in, 28 in, 32 in and a 75 in poster display, presented as finished signage solutions for public signage, message boards, noticeboards and sign boards, wall-mountable or integrated into freestanding totems. Downloadable datasheets are offered for the 13.3 in, 25.3 in, 28 in and 32 in variants. No manufacturer identified, no resolutions, no prices and no SDK or development-kit information published.",
+      "abandonment_history": "Cannot be assessed.",
+      "staying_power": "unknown",
+      "rationale": "A reseller, not a manufacturer, with no disclosed corporate detail and no published specifications or pricing. Its only real value to this client is as a potential UK/EU procurement and support channel for the same underlying 25.3 in, 28 in, 31.5 in and 75 in panels sold elsewhere - which could matter for warranty, import and lead time if a European supply route is preferred to ordering direct from Dalian or Shenzhen. It also independently corroborates the size ladder (25.3 / 28 / 32 / 75 in) that recurs across every other vendor in this survey. Do not treat as a vendor in its own right; treat as a channel to investigate if EU-side purchasing is wanted.",
+      "sources": [
+        {
+          "url": "https://www.melfordtechnologies.com/products/e-ink/colour-e-ink-displays",
+          "what_it_supports": "UK reseller offering colour e-ink displays at 25.3 in, 28 in, 32 in and a 75 in poster display plus 13.3 in, presented as finished signage for wall mount or totem integration, with downloadable datasheets for 13.3/25.3/28/32 in; no manufacturer, resolution, pricing or SDK information published",
+          "confidence": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Crowd Supply (fulfilment intermediary, not a display vendor)",
+      "country": "United States - Portland, Oregon",
+      "corporate_form": "Crowdfunding and fulfilment platform",
+      "ownership": "Private; not disclosed",
+      "funding": "Not disclosed",
+      "public_ticker": null,
+      "revenue_scale": "Not disclosed",
+      "headcount": null,
+      "hardware_track_record": "Long-running open-hardware crowdfunding platform accepting projects worldwide, with published terms, shipping, returns and privacy policies, a distributor network, and fulfilment through Mouser Electronics. Track record visible in the survey material includes multiple delivered e-paper projects - Inkplate 6 (1,311% funded, USD 131,131, 968 backers, In Stock), Inkplate 6MOTION (455% funded, USD 45,532, 136 backers, In Stock) and Modos's own Paper Dev Kit (In Stock).",
+      "abandonment_history": "Not applicable as a display vendor.",
+      "staying_power": "medium",
+      "rationale": "Recorded because it materially changes how the Modos risk should be read, which is directly relevant to the brief's instruction to be blunt about crowdfunding. Unlike a bare Kickstarter campaign, Crowd Supply keeps projects listed and purchasable after the campaign ends (several e-paper projects show 'In Stock' with add-to-cart), and fulfilment runs through Mouser Electronics, an established global electronics distributor. That means a Modos purchase is closer to buying from a distributor with a stock position than to funding a promise - a real, if partial, mitigation of two-person-company risk, and a better structural position than the Kickstarter-based frames (Fraimic, BLOOMIN8) where post-campaign supply depends entirely on the startup's own webstore. Not a display vendor and not to be evaluated as one.",
+      "sources": [
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-flow",
+          "what_it_supports": "Portland, Oregon base accepting projects worldwide; fulfilment via Crowd Supply's partner Mouser Electronics; published terms, shipping, returns and privacy policies and distributor network; post-campaign purchasability",
+          "confidence": "verified"
+        },
+        {
+          "url": "https://www.crowdsupply.com/modos-tech/modos-paper-monitor",
+          "what_it_supports": "Post-campaign 'In stock' add-to-cart availability for the 13 in Modos Paper Dev Kit, and delivered-project evidence for Inkplate 6 and Inkplate 6MOTION with funding totals and backer counts",
+          "confidence": "verified"
+        }
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {
+      "what": "Geniatech direct sales enquiry - request the EPC2530 (25.3\", 163 PPI, Android 11) SDK documentation, confirm whether the bundled CMS can be bypassed or self-hosted, whether APK sideloading is permitted, and what MOQ and unit price apply to a single unit",
+      "why_promising": "This is the highest-value unresolved question in the whole slice. Geniatech is the only vendor combining credible corporate durability (27 years, own factory, diversified product lines) with an Android 11 applications processor, an in-house TCON, an explicitly advertised 'Open API & SDK', and the best-resolution large panel available (25.3\" at 3200x1800). If the SDK is real and APKs can be sideloaded, this likely beats every consumer frame on both of the client's criteria simultaneously. None of it is published, so it can only be resolved by contacting them.",
+      "url": "https://www.geniatech.com/product/epc2530/"
+    },
+    {
+      "what": "BLOOMIN8 local REST API - obtain or reverse-document the full API specification beyond what the Home Assistant component reveals, and confirm image resolution, colour space and dithering requirements for the 28.5\" (2160x3060) model",
+      "why_promising": "The BLOOMIN8 28.5\" is the best size-plus-openness combination found. Its local HTTP API is real and mDNS-discoverable, but the contract is documented only by vendor-published Home Assistant code plus third-party libraries, not by a specification. For a client pushing gigapixel-derived renders, the exact expected input format and whether upload_dithered_image_data lets him supply his own dithering (rather than accepting the device's) is decisive for colour fidelity. The community CLI mrud/bloomin8-cli explicitly implements Spectra 6 dithering, so the answer is probably recoverable from that code.",
+      "url": "https://github.com/search?q=bloomin8&type=repositories"
+    },
+    {
+      "what": "Modos Flow 'Hacking Guide' campaign update (Jul 01, 2026) and the remaining Crowd Supply update series",
+      "why_promising": "Modos published an update titled 'Hacking Guide' on 2026-07-01 plus 'Comparing the Paper Dev Kit with Flow' on 2026-06-18. These are the most likely place to find an authoritative statement on whether the Caster/Glider stack can be brought up on a large Spectra 6 panel and what waveform work that requires - the single biggest open technical question in the open-hardware route. Not read in this session.",
+      "url": "https://www.crowdsupply.com/modos-tech/modos-flow"
+    },
+    {
+      "what": "Whether Caster/Glider can render correct COLOUR on a Spectra 6 panel, as opposed to merely driving its LVDS timing",
+      "why_promising": "Glider's documentation states support for panels up to 25.3\" and handles the LVDS signalling those panels use, but Caster's stated panel scope is monochrome and colour-filter-array screens. Spectra 6 is a four-pigment microcup system, not a CFA, and needs its own multi-pass waveform set. The open-hardware route to a >15in COLOUR frame hinges entirely on this question and it is currently unresolved - worth raising directly on the Modos Discord/Matrix or in the Caster issue tracker before committing to that path.",
+      "url": "https://raw.githubusercontent.com/Modos-Labs/Glider/master/README.md"
+    },
+    {
+      "what": "E Ink 'Vision' evaluation kit and Vision Driving Board specifications, plus the rest of E Ink's own driving-board family (HULK, THOR, ICE, Salt, Luvia, CONCERTO, Venus, Scarlet, RedHulk)",
+      "why_promising": "E Ink sells the 31.5\" Spectra 6 module directly through its own kit store and names the Vision Driving Board as the companion controller, but publishes neither per-board panel compatibility nor prices on the category listing. This is the manufacturer-sanctioned bare-panel-plus-controller route and is likely the lowest-risk self-build path for correct Spectra 6 colour, since the waveforms come from the panel maker. Individual board product pages were not reached in this session.",
+      "url": "https://shopkits.eink.com/en/product/list/DrivingBoard"
+    },
+    {
+      "what": "Good Display GDES285E01 (28.5\" A2, 2160x3060) full datasheet and its interface type, plus whether a development kit exists for it",
+      "why_promising": "This panel has arguably the best geometry-and-density combination above 15 inches for framed single works (A2 portrait, ~131 PPI), and it is the substrate under both the BLOOMIN8 28.5\" and InkPoster Tela 28.5\". But Good Display's product page is an unpopulated stub with no interface, dimensions, refresh or price, so a self-build at this size is currently undocumented. The downloadable spec sheet and a direct enquiry to info@good-display.com would settle it.",
+      "url": "https://www.good-display.com/product/676.html"
+    },
+    {
+      "what": "Whether the Philips Tableaux 5150I accepts a sideloaded Android APK, and whether PPDS publishes any API or SDK for its Android SoC platform",
+      "why_promising": "Tableaux is the best durability-plus-plausible-programmability combination among established vendors: Android SoC, 16 GB storage, five local content paths, PoE, and explicit support for third-party management software rather than vendor-cloud-only. If APK sideloading is permitted, the client's own app could run on the display itself. The announcement does not state it either way, and no PPDS developer documentation was located.",
+      "url": "https://www.ppds.com/insights/announcing-new-sized-up-32-philips-tableaux-epaper-display-including-latest-e-ink-spectra-6-technology"
+    },
+    {
+      "what": "Aura Ink - Aura Frames' entry into Spectra 6 colour ePaper frames, announced around 2025-10-21",
+      "why_promising": "Aura Frames is an established, well-funded consumer digital-frame company with real retail distribution - a materially different staying-power profile from the crowdfunding entrants. Their move into Spectra 6 is exactly the kind of new entrant the client asked to have discovered. Not confirmed whether any Aura Ink model exceeds 15 inches, which is the gating question. Press-release URL was seen in search results but not fetched, so no URL is asserted here.",
+      "url": null
+    },
+    {
+      "what": "Reflection Frame and Inkjoy Frame - two further Spectra 6 crowdfunding photo/art frames",
+      "why_promising": "Both surfaced as additional crowdfunded Spectra 6 frames, evidencing how crowded this space has become. Sizes were not established and both are likely at or below 13.3 inches, which would place them out of scope - but they should be size-checked before being dismissed, and their pricing is relevant context for the category. URLs seen in search results only, not fetched.",
+      "url": null
+    },
+    {
+      "what": "E Ink Marquee panel sizes, resolution and availability timing",
+      "why_promising": "Marquee is E Ink's newest large-area colour platform, introduced at InfoComm 2026 and a Best in Show winner, with a -20 to 65 C range aimed at outdoor DOOH. E Ink has published essentially no specifications. If Marquee brings higher PPI or better colour at large sizes than Spectra 6, it changes the medium-term picture for this client - worth monitoring, though outdoor DOOH positioning suggests coarse pitch.",
+      "url": "https://www.eink.com/brand/detail/Marquee"
+    },
+    {
+      "what": "Samsung Color E-Paper 75\" EMDX availability, price, and whether the Color E-Paper line exposes any API or accepts third-party applications (Tizen/MagicINFO/VXT)",
+      "why_promising": "Samsung is the highest-durability entrant in the category and the loudest signal that large-format colour e-paper has gone mainstream. The 75\" was showcased at ISE 2025 with no availability date. More useful for this client would be establishing whether the shipping 32\" EM32DX can be driven by anything other than Samsung's own mobile app - if MagicINFO or a local HTTP path exists, a durable vendor becomes viable. Samsung newsroom pages timed out repeatedly in this session.",
+      "url": null
+    },
+    {
+      "what": "The claim that mass production of the world's first 30-inch-plus colour e-paper display has begun",
+      "why_promising": "This article title indicates a mass-production milestone for a 30\"+ colour e-paper panel, which would firm up the supply picture for the 31.5\" module and identify the manufacturer doing volume production. The page was reachable but returned only navigation and membership chrome rather than article body in this session, so the company, date and panel details could not be extracted.",
+      "url": "https://www.tomshardware.com/monitors/mass-production-of-worlds-first-color-e-paper-display-over-30-inches-begins"
+    },
+    {
+      "what": "Melford Technologies datasheets for the 25.3\", 28\", 32\" and 75\" units, and identification of the underlying manufacturer",
+      "why_promising": "A UK/EU procurement and warranty channel for the same panel ladder sold from China would materially reduce import, lead-time and support friction for a European buyer. The datasheets are offered for download and would also reveal which ODM sits behind these units - useful for cross-checking the chassis-sharing pattern already observed between Good Display and SEEKINK.",
+      "url": "https://www.melfordtechnologies.com/products/e-ink/colour-e-ink-displays"
+    },
+    {
+      "what": "ePaint / Anhui Yutu ChLCD - obtain resolution, PPI, reflectance and measured colour data, and a physical sample",
+      "why_promising": "The only >15in colour reflective displays found that are NOT built on E Ink panels, at 28\", 31.5\" and 55\", with claimed sub-1-second refresh and up to 16 million colours - and the vendor itself names art galleries as a target market. If the resolution and reflectance are respectable this would break the E Ink single-supply dependency entirely. But no resolution figure is published anywhere on the site, and ChLCD is characteristically desaturated, so this needs measured data before it can be taken seriously.",
+      "url": "https://www.epaint.global/"
+    },
+    {
+      "what": "Agile (E Ink ecosystem partner) - the 75\" Kaleido 3 display and the 'Agile Conversion Engine' middleware",
+      "why_promising": "Agile built a 75\" Kaleido 3 display with E Ink and supplies conversion middleware. Kaleido 3 at large size is a different colour technology from Spectra 6 (colour-filter-array over monochrome, faster refresh, lower saturation, higher effective mono resolution), and a middleware layer implies a documented content pipeline. Worth investigating as an alternative colour approach and as a possible source of image-conversion tooling. Named on E Ink's InfoComm page but Agile's own site was not reached.",
+      "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026"
+    },
+    {
+      "what": "Fraimic's local-only mode protocol, and the backers-only campaign updates",
+      "why_promising": "Fraimic advertises the strongest local-only claim of any consumer frame ('no third-party servers', 'No apps | No subscriptions') yet also requires an account at app.fraimic.com, and publishes no protocol. Most substantive updates (#10-#13, #15) are backers-only, so delivery quality and the local-mode mechanics are unverifiable from outside. If the local mode turns out to be a documented HTTP endpoint rather than a manual browser upload, the 31.5\" Large Canvas at USD 1,299 becomes a much stronger candidate than currently rated.",
+      "url": "https://fraimic.com/"
+    },
+    {
+      "what": "Whether Visionect has any colour (Spectra 6 or Kaleido) product on its roadmap",
+      "why_promising": "Visionect's self-hosted RESTful JSON API with programmatic control of dithering method and bit-depth encoding is precisely the architecture this client needs, and its Place & Play 32\" is in stock at EUR 2,300 - but it is monochrome, which disqualifies it for colour art. A colour Visionect model would immediately become the leading candidate in this entire survey. Worth a direct enquiry.",
+      "url": "https://www.visionect.com/products/"
+    },
+    {
+      "what": "Independent measurement of Spectra 6 colour accuracy, gamut and ghosting at large sizes for art reproduction",
+      "why_promising": "The single biggest evidence gap across every device in this slice. Not one vendor documents a colour profile, none publishes measured gamut, and no vendor or reviewer publishes ghosting characterisation for the large panels. All that exists are platform-level marketing figures (4,096 colours, ~85% NTSC, ~30:1 contrast, <=15s full refresh). For an archive of gigapixel scans where reproduction fidelity is the whole point, this needs resolving empirically - most likely by buying one panel or frame and measuring it, since the published record will not answer it.",
+      "url": null
+    },
+    {
+      "what": "Seeed Studio XIAO ePaper DIY Kit EE02 and Soldered Inkplate 13Spectra - 13.3\" Spectra 6 open dev boards",
+      "why_promising": "Both are below the 15in floor so they are out of scope as targets, but both are ESP32-S3 open development boards for Spectra 6 colour panels with published toolchains. They are the cheapest way to prototype and validate the client's rendering, dithering and colour-conversion pipeline against real Spectra 6 hardware before committing to an expensive large panel - a genuinely useful de-risking step. URLs seen in search results only, not fetched.",
+      "url": null
+    }
+  ]
+}
