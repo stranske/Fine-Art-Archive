@@ -1,0 +1,2760 @@
+{
+ "search_log": [
+  {
+   "query": "电子纸海报 32寸 彩色电子纸 广告机 厂家 (CN)",
+   "new_names_found": [
+    "LG Electronics",
+    "Sigmaintell (analyst)"
+   ],
+   "notes": "Mostly LCD ad-player factories. Surfaced LG's 32in QHD colour e-paper poster (2560x1440, 8.6mm, 3.1kg, 72Wh battery, webOS + SuperSign CMS). Chinese 广告机 vocabulary is dominated by LCD; had to add 电子纸/墨水屏 qualifiers."
+  },
+  {
+   "query": "\"e-paper poster\" display manufacturer 32 inch Spectra 6 supplier (EN)",
+   "new_names_found": [
+    "PPDS / Philips Tableaux",
+    "Sharp",
+    "Praevar / eLuminex",
+    "LG"
+   ],
+   "notes": "Confirmed the Spectra-6 32in class. Good Display DMPH315E61/GDEP315C01 already known-vendor products."
+  },
+  {
+   "query": "电子墨水屏 广告机 电子纸看板 生产厂家 深圳 (CN)",
+   "new_names_found": [
+    "联积电子 MVE (Lianji, Shenzhen)",
+    "深圳市领翔智能",
+    "深圳鑫海视"
+   ],
+   "notes": "Pointed to the CNPP top-10 e-paper brand ranking, which became the first real enumeration source."
+  },
+  {
+   "query": "\"eink signage\" OEM manufacturer alibaba \"e-paper display\" 25 inch 42 inch (EN)",
+   "new_names_found": [
+    "DKE",
+    "Topwin",
+    "Startek",
+    "Minew"
+   ],
+   "notes": "Alibaba product pages themselves are unfetchable (empty body). Aggregator sites became the workaround."
+  },
+  {
+   "query": "FETCH cnpp.cn top-10 墨水屏 brand list",
+   "new_names_found": [
+    "BOE 京东方",
+    "合力泰 Holitech / 兴泰科技",
+    "清越 Qingyue",
+    "东方科脉 DKE",
+    "亚世光电 / 奇新光电",
+    "联积电子 MVE",
+    "惠科 HKC"
+   ],
+   "notes": "Highest-yield single page of the sweep. Holitech listed as '1-42英寸全色系电子纸显示模组' (1-42 inch full-colour e-paper modules)."
+  },
+  {
+   "query": "合力泰 电子纸 42英寸 全彩 电子纸显示模组 Holitech (CN)",
+   "new_names_found": [
+    "Jiangxi Xingtai Technology"
+   ],
+   "notes": "Holitech = SZSE 002217 subsidiary; e-paper business ring-fenced in Jiangxi Xingtai. E Ink strategic partner (buys film, does not make it)."
+  },
+  {
+   "query": "電子ペーパー サイネージ 大型 日本 メーカー 32インチ カラー (JP)",
+   "new_names_found": [
+    "CREA 株式会社クレア",
+    "TEIDEC 株式会社テイデック",
+    "Sharp",
+    "Samsung",
+    "ACCESS (JP distributor)"
+   ],
+   "notes": "Best non-Chinese vein. CREA claims 世界最大42インチ (world's largest 42in) e-paper signage. Japanese vocabulary found vendors no English search surfaced."
+  },
+  {
+   "query": "FETCH crea2007.co.jp/epaper/",
+   "new_names_found": [
+    "CREA"
+   ],
+   "notes": "Mono 42/32/13.3in + colour 31.5/13.3in. RJ-45 wired LAN on all, HDMI on the mono models. PowerPoint->PNG/JPEG workflow. 2-week loaner trial, single units by quotation. Panel maker not disclosed."
+  },
+  {
+   "query": "FETCH taiwanexcellence.org 32in colour e-paper award entry",
+   "new_names_found": [],
+   "notes": "Award holder is E Ink Holdings itself - i.e. E Ink sells a 32in colour reference display under its own name, not only film."
+  },
+  {
+   "query": "Made-in-China \"e-paper display\" large format 13.3 / 31.5 supplier (EN)",
+   "new_names_found": [
+    "Huaxin Technology",
+    "Fortune Achieve (Beijing)",
+    "Youritech",
+    "Chance Tech",
+    "Askdisplay",
+    "DKE"
+   ],
+   "notes": "Made-in-China's own search pages are thin; the useful listings came via Global Sources and aggregator caches."
+  },
+  {
+   "query": "전자종이 사이니지 32인치 컬러 이페이퍼 디스플레이 제조사 (KR)",
+   "new_names_found": [
+    "Samsung Electronics (EM32D/EM32DX)",
+    "LG Electronics"
+   ],
+   "notes": "Korean sources give the hard numbers: Samsung EM32DX 32in QHD 2560x1440, launched 8 Jun 2025, from USD ~1200 list. LG 32in QHD, 17.8mm/8.6mm, 3.1kg with battery."
+  },
+  {
+   "query": "FETCH dke.top",
+   "new_names_found": [
+    "DKE"
+   ],
+   "notes": "Shanghai HQ (Qingpu), founded 2005, ~2300 staff, four plants: Jiaxing, Dalian x2, Vietnam. Colour 4-31.5in, mono to 42in. No MOQ/price published; quote-only. Film source not disclosed on site."
+  },
+  {
+   "query": "FETCH globalsources Huaxin 13.3in 6-colour listing",
+   "new_names_found": [
+    "Huaxin Technology Co. Ltd"
+   ],
+   "notes": "USD 239/pc @5000, USD 259 @1000-4999. Spectra 6, 1200x1600. 'Small orders accepted' but pricing is volume-shaped. Global Sources itself warns it cannot vouch for the supplier."
+  },
+  {
+   "query": "电子纸产业联盟 成员单位 名单 发起单位 (CN)",
+   "new_names_found": [
+    "电子纸产业联盟 EPIA",
+    "Lenovo",
+    "TCL CSOT",
+    "Hanshow 汉朔",
+    "VusionGroup",
+    "苏州桐力光电"
+   ],
+   "notes": "Alliance founded 28 Apr 2021 by E Ink + BOE + Xingtai; 260+ members. This is the structural map of the Chinese long tail."
+  },
+  {
+   "query": "Touch Taiwan 2026 e-paper exhibitors / E Ink ecosystem (EN)",
+   "new_names_found": [
+    "TPV Technology",
+    "Soldered Electronics",
+    "Askey Computer",
+    "Green Ideas Technology",
+    "GiantPlus"
+   ],
+   "notes": "E Ink built a 101-partner ePaper Pavilion. IRIS Optronics (known) anchors the ChLCD alternative with Askey/Green Ideas/GiantPlus as integrators."
+  },
+  {
+   "query": "FETCH epaperia.com + /NewsTag-691 (council members)",
+   "new_names_found": [
+    "Novatek",
+    "Shandong Huayi Micro",
+    "Changzhou Yufeng Battery",
+    "Yantai Zhenghai",
+    "深圳歌德新创 Gode Xinc",
+    "Epiink 易博洛克",
+    "浙江捷仕泰",
+    "深圳博诚信"
+   ],
+   "notes": "Council tier is mostly components (ICs, connectors, batteries), not display makers. Gode Xinc's '超稳态液晶显示技术' (ultra-stable LCD) is a non-EPD reflective route worth noting."
+  },
+  {
+   "query": "FETCH einkcn.com + /post/107.html product directory",
+   "new_names_found": [
+    "Hanvon 汉王",
+    "Hisense 海信",
+    "Moaan 墨案",
+    "Obook 国文",
+    "Guoyue 国悦",
+    "InkLeaf",
+    "Enilinx",
+    "Compal"
+   ],
+   "notes": "Directory is e-reader/monitor heavy. Its 13in+ table is almost entirely tablets and monitors, not signage - useful negative result."
+  },
+  {
+   "query": "FETCH made-in-china E_Paper_Poster search page",
+   "new_names_found": [
+    "Guangdong Mingjinkang Technology",
+    "Shenzhen Avlink",
+    "Shanghai ZEMSO Urban Furniture"
+   ],
+   "notes": "Term collision: '''e-paper poster''' mostly returns PRINTED paper posters. One real hit: Mingjinkang 25.3in E Ink digital poster, USD 390-430, MOQ 1."
+  },
+  {
+   "query": "电子纸 广告机 水牌 墨水屏 海报机 厂家 深圳/东莞/广州 (CN)",
+   "new_names_found": [
+    "大连点墨 Dalian Diamo",
+    "广州卓越优显",
+    "广州铭视"
+   ],
+   "notes": "'水牌' (A-frame/menu board) is the right Chinese trade word for this product class - better than 海报机."
+  },
+  {
+   "query": "FETCH eink-display.cn (Dalian Diamo)",
+   "new_names_found": [
+    "Dalian Diamo Electronic Technology"
+   ],
+   "notes": "Six solution lines incl. e-paper advertising boards, transit, dev kits (Arduino/STM32/Raspberry Pi). Features a 25.3in four-colour Spectra 3100. No specs/prices published; mobile number + sales@ only. Very small outfit."
+  },
+  {
+   "query": "FETCH zhihu.com/question/28128372",
+   "new_names_found": [],
+   "notes": "HTTP 403. Zhihu blocks fetching; content reached only through search summaries. URL recorded as null downstream."
+  },
+  {
+   "query": "FETCH accio.com large-format / e-ink-poster / largest-e-ink / 32-inch / e-ink-frame pages",
+   "new_names_found": [
+    "Shenzhen Eurotech",
+    "ICTS (Myanmar)",
+    "Fortune Achieve",
+    "Zhuhai Suny (Zhsunyco)",
+    "Shenzhen Huayi",
+    "Guangzhou Zemso Electron",
+    "Suzhou Highbright",
+    "LD Display",
+    "SOLAR ENERGY TECHNOLOGY",
+    "EZAD",
+    "Clientop",
+    "Dongguan VETO",
+    "Dongguan Shineworld",
+    "Guangdong SID (Hipoink)",
+    "IDROID MEDIA",
+    "ATZ LLC",
+    "Shenzhen Pinsheng"
+   ],
+   "notes": "Single richest source of MOQ-1 marketplace ODMs. CAVEAT: accio is an AI-generated aggregator over Alibaba listings - names and price bands are secondhand and should be treated as leads, not verified facts. The underlying Alibaba pages would not fetch."
+  },
+  {
+   "query": "Taiwantrade / Taiwan e-paper signage supplier (EN)",
+   "new_names_found": [
+    "Apex Material Technology (AMT)"
+   ],
+   "notes": "AMT (Keelung, since 1998) does optical bonding up to 42in and driving boards - a bonding/integration house, not a panel maker."
+  },
+  {
+   "query": "FETCH swicn.com e-paper collection (Shineworld)",
+   "new_names_found": [
+    "Shineworld Innovations"
+   ],
+   "notes": "31.2in 2560x1440 mono 4-grey listed at USD 1500 but 'Sold out / Send inquiry' - no add-to-cart. Interface is AVT6203A T-CON parallel, i.e. a bare module needing your own driver, not a finished poster."
+  },
+  {
+   "query": "FETCH touchtaiwan.com 電子紙應用 exhibitor list",
+   "new_names_found": [],
+   "notes": "HTTP 403. The one truly enumerable exhibitor list I could not open. Logged as a lead."
+  },
+  {
+   "query": "FETCH good-display.cn/product/99 (signage line)",
+   "new_names_found": [],
+   "notes": "Known vendor, but establishes the size ladder actually in production: 13.3 / 25.3 / 28 / 31.2 / 31.5 / 42in. The 31.5in DMPX315E61 updates via a WeChat mini-program."
+  },
+  {
+   "query": "电泳电子纸 薄膜 国产 自主 微胶囊 除了元太 奥翼 (CN)",
+   "new_names_found": [
+    "秋田微 Qiutianwei (300939)",
+    "无锡威峰 Wuxi Vpaper",
+    "天马 Tianma",
+    "莱宝高科 Laibao"
+   ],
+   "notes": "Directly answers the 'who makes their own film' question. Consensus in Chinese trade press: only E Ink, Guangzhou OED and Wuxi Vpaper make domestic film; BOE/Good Display etc. buy it."
+  },
+  {
+   "query": "FETCH news.qq.com 莱宝高科 电浆电子纸 investigation",
+   "new_names_found": [
+    "Laibao Hi-Tech",
+    "Refond 瑞丰光电",
+    "国创稀品",
+    "深圳皓擎科技"
+   ],
+   "notes": "CNY 9bn fab for DES/MED (微电腔显示), licensed 20 years from Wuxi Vpaper. Critical piece: DES 'failed to achieve industrialisation and customer verification' for ~2yr; zero sales revenue as of late 2024; Wuxi Vpaper headcount fell 120 (2020) to 67 (2023). Treat MED as pre-commercial."
+  },
+  {
+   "query": "IndiaMART e-paper 13 inch signage supplier India (EN)",
+   "new_names_found": [
+    "Densitron",
+    "Panasonic India",
+    "Digitos Technologies"
+   ],
+   "notes": "Near-zero yield for >=13in. India is a distribution market (Mouser/Robu), not a large-EPD manufacturing base."
+  },
+  {
+   "query": "e-paper digital signage China API/SDK/MQTT 31.5 inch open protocol (EN)",
+   "new_names_found": [
+    "MyGica",
+    "SyncSign",
+    "TintTech"
+   ],
+   "notes": "The integration-first query. MyGica = Geniatech's brand (same company). TintTech is the only vendor found advertising a plain REST API with no recurring fee."
+  },
+  {
+   "query": "FETCH tinttech.io wired epaper signage",
+   "new_names_found": [
+    "TintTech"
+   ],
+   "notes": "9.7in EUR495 / 13.3in EUR555 / 32in POA. PoE single cable, REST API, URL-fetch content, NFC/RFID trigger. Self-hosted CMS EUR1495-3295 one-time, 'No Recurring Fees. Ever.' EU-based (EUR pricing, DE/EE installs)."
+  },
+  {
+   "query": "FETCH smj.jp.sharp EP-C131",
+   "new_names_found": [
+    "Sharp ePoster line"
+   ],
+   "notes": "Lineup: EP-C071 7.3in, EP-C131 13.3in colour (1600x1200, 4-colour W/K/R/Y), EP-C251 25.3in, EP-421 42in, plus an A2 model. Loading is USB stick, USB-C from a Windows PC, or Android Bluetooth. No WiFi/LAN/API on EP-C131. Sold retail in Japan (Rakuten/Offinet listings seen in search)."
+  },
+  {
+   "query": "FETCH zhsunyco + jiclcd + armordigitalscreen manufacturer round-ups",
+   "new_names_found": [
+    "Zkong",
+    "Orient Display",
+    "Plastic Logic",
+    "CLEARink",
+    "Tianma",
+    "Armor Digital Screen",
+    "Jictech"
+   ],
+   "notes": "Three independent SEO round-ups converged on the same core set - the first clear saturation signal. Armor claims 31.5in capability, 10 lines, 20k units/day, Walmart/IKEA ODM."
+  },
+  {
+   "query": "FETCH eink.com InfoComm 2026 + blog.eink.com Computex 2026",
+   "new_names_found": [
+    "Agile",
+    "Navori Labs",
+    "NewFace",
+    "Mercury",
+    "Meris",
+    "AUO Display Plus",
+    "HCK Corp",
+    "iPolish",
+    "Aura",
+    "Reflection Frame",
+    "Aluratek",
+    "InkPoster",
+    "Pricer"
+   ],
+   "notes": "Primary source. New platforms: E Ink Marquee for outdoor DOOH; 75in tiled Spectra 6; 75in Kaleido 3 with Agile; 102in tiled Marquee wall; 28.5in Flex-E Spectra 6. Agile's ACE middleware now bridges to Navori CMS."
+  },
+  {
+   "query": "Samsung Color E-Paper EM32DX integration + FETCH newegg listing",
+   "new_names_found": [
+    "Samsung"
+   ],
+   "notes": "Single-unit retail confirmed (Newegg SKU). USB + HDMI + WiFi + BLE, Samsung E-Paper app (iOS/Android), cloud VXT optional. Search summaries cite USD 779.99 street vs USD 1200 launch list; the Newegg page I fetched showed no price for the AU region."
+  },
+  {
+   "query": "AUO Display Plus e-paper JV (EN)",
+   "new_names_found": [
+    "AUO Display Plus",
+    "StellarLink",
+    "AUO"
+   ],
+   "notes": "Most strategically important find: ADP+E Ink JV, TWD 390m, Taoyuan, ADP 51%/E Ink 49%, large-format EPD module mass production from Q4 2025. This is the second large-format module source besides E Ink itself."
+  },
+  {
+   "query": "StellarLink e-paper Japan (EN)",
+   "new_names_found": [
+    "StellarLink"
+   ],
+   "notes": "Japanese IT integrator. J-Poster (A2, made in Japan) and aecoPost (31.5in, built by AUO Display Plus), both Spectra 6. Announced 30 Oct 2025."
+  },
+  {
+   "query": "FETCH shopkits.eink.com",
+   "new_names_found": [],
+   "notes": "Important negative: E Ink's own kit shop explicitly refuses consumer orders - 'orders placed by consumers will not be accepted.' Prices visible anyway: 13.3in USD 449 (Spectra 6 / Kaleido 3 / mono), 25.3in Spectra 6 and Spectra 3100 USD 1400, 31.5in out of stock."
+  },
+  {
+   "query": "FETCH buy-lcd.com DMPH315E62 (Good Display shop)",
+   "new_names_found": [],
+   "notes": "Known vendor, but the clearest integration evidence in the sweep: 31.5in Spectra 6, USD 1636.20 (from 1818), ESP32-S3-WROOM-1U mainboard, updates by USB drive or Android app over 2.4GHz WiFi, downloadable XTacepSetup + Smart EPD APP. 0 in stock at time of fetch."
+  },
+  {
+   "query": "FETCH praevar.com eLuminex EP32",
+   "new_names_found": [
+    "Praevar Corporation"
+   ],
+   "notes": "Richmond Hill, Ontario, Canada - not Asian, but a new integrator name. 32in 2560x1440 Spectra 6, 60k colours, 4kg, WiFi+BLE, cloud CMS. No price/MOQ published."
+  },
+  {
+   "query": "電子紙看板 廣告機 台灣 廠商 32吋 (ZH-TW)",
+   "new_names_found": [
+    "宇豐光電 Advanced Display Lab",
+    "Intesys 捷赫國際",
+    "Aim Great 安展國際"
+   ],
+   "notes": "Traditional-Chinese vocabulary surfaced a Taiwanese signage maker invisible to both simplified-Chinese and English searches."
+  },
+  {
+   "query": "FETCH adlab.com.tw e-paper signage",
+   "new_names_found": [
+    "Advanced Display Lab Inc"
+   ],
+   "notes": "WYED312L 31.2in 2560x1440 16-grey; WYED280L 28in 3840x1080 bar; ADEP28NF01.0 28in bar >60k colours; WYED133C 13.3in 1600x1200 4096 colours. No connectivity, price or MOQ disclosed - inquiry only."
+  },
+  {
+   "query": "FETCH shopkits DigitalView 32in outdoor",
+   "new_names_found": [
+    "Digital View"
+   ],
+   "notes": "31.2in AA, 2560x1440, 16 grey, front light, IP65 + IK8, optically bonded, 24/7 full sun. Loading via USB image interface, with Google Drive / network / PC options noted. Sold through E Ink's own B2B shop."
+  },
+  {
+   "query": "FETCH invidis Touch Taiwan 2026 report",
+   "new_names_found": [
+    "Innolux",
+    "Merck"
+   ],
+   "notes": "Notable: E Ink did not take its own stand at Touch Taiwan 2026 for the first time; AUO showed curved e-paper. Article's verdict on rivals: 'not there yet regarding picture quality.'"
+  },
+  {
+   "query": "SATURATION CHECK 1 - 彩色电子纸 整机 厂家 Spectra 6 供应商 一台起订 (CN)",
+   "new_names_found": [
+    "Advantech",
+    "M5Stack"
+   ],
+   "notes": "Returned E Ink, Good Display, Geniatech - all already recorded. Only stragglers were Advantech (healthcare Spectra 6) and an M5Stack 4in dev kit (below threshold)."
+  },
+  {
+   "query": "SATURATION CHECK 2 - e-paper poster 31.5in buy one unit local push no cloud (EN)",
+   "new_names_found": [],
+   "notes": "Zero new names. All hits were Good Display storefronts, Geniatech, E Ink shopkits, eBay/BestBuy."
+  },
+  {
+   "query": "SATURATION CHECK 3 - 电子纸 广告机 厂家 开放API/HTTP接口/MQTT 局域网 (CN)",
+   "new_names_found": [],
+   "notes": "Zero new names. Returned Good Display, epaperia, Zhihu, plus unrelated MQTT tutorials. Confirms Chinese ODMs do not market open local APIs."
+  },
+  {
+   "query": "SATURATION CHECK 4 - 电子纸 智慧门牌 电子纸标牌 整机 厂商 苏州/杭州/宁波/青岛 (CN)",
+   "new_names_found": [],
+   "notes": "Zero yield - returned label-printing and generic electronics directories. Geographic slicing beyond Shenzhen/Dongguan/Guangzhou/Dalian is exhausted."
+  },
+  {
+   "query": "SATURATION CHECK 5 - large e-paper 13in+ manufacturer 2026 ODM China/Taiwan/Japan/Korea (EN)",
+   "new_names_found": [
+    "Qingdao Ansenke"
+   ],
+   "notes": "One straggler. Also surfaced Samsung 13in + 20in colour e-paper slated for ISE 2026 (bio-resin 13in world-first)."
+  },
+  {
+   "query": "SATURATION CHECK 6 - 墨水屏 大尺寸 生产企业 名录 排名 2026 (CN)",
+   "new_names_found": [
+    "深圳美德葳 Meidewei"
+   ],
+   "notes": "One straggler. Everything else - 亚世/奇新, 联积, 虹彩, 东方科脉, 元太, 文石, 讯飞, 汉王, 墨案 - already recorded. Saturation confirmed."
+  }
+ ],
+ "saturation_reached": true,
+ "saturation_note": "Reached. The turn came after roughly 40 queries. Searches 45-50 were run explicitly as saturation checks across six deliberately different vocabularies, and four of the six returned zero new names: (1) 彩色电子纸 整机 厂家 Spectra 6 供应商 一台起订 - only Advantech and a sub-threshold M5Stack kit; (2) e-paper poster 31.5in buy one unit local push no cloud - zero new, all Good Display/Geniatech/E Ink storefronts; (3) 电子纸 广告机 厂家 开放API/HTTP接口/MQTT 局域网 - zero new; (4) 电子纸 智慧门牌 整机 厂商 苏州/杭州/宁波/青岛 - zero new, geographic slicing beyond the Shenzhen/Dongguan/Guangzhou/Dalian cluster is exhausted; (5) large e-paper 13in+ ODM China/Taiwan/Japan/Korea - one straggler (Qingdao Ansenke); (6) 墨水屏 大尺寸 生产企业 名录 排名 2026 - one straggler (Shenzhen Meidewei), everything else already recorded. Three independent English SEO round-ups (zhsunyco, jiclcd, armordigitalscreen) had already converged on the same core set, which was the first saturation signal. IMPORTANT CAVEAT: saturation was reached on the reachable web, not on the field. Three of the richest enumerable sources were blocked - the Touch Taiwan 101-partner exhibitor list (403), the epaperia 260-member database behind a search form, and every Alibaba/1688 product page (empty bodies). The true long tail is certainly larger than what is recorded here; I hit the limit of what could be fetched, not the limit of what exists.",
+ "new_vendor_count": 34,
+ "known_vendor_count": 2,
+ "devices": [
+  {
+   "model": "Color E-Paper EM32DX (EMDX series)",
+   "vendor": "Samsung Electronics",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "2560x1440",
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour (~60k)",
+   "price": {
+    "amount": 779.99,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Global retail; Newegg lists it as a stock SKU",
+   "sells_single_units": true,
+   "moq": "1",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "USB / USB-C data transfer from a PC, plus the Samsung E-Paper mobile app over WiFi/BLE on the local network. Newegg's interface list also shows HDMI.",
+    "sd_card": null,
+    "api": "No documented public REST API. Fleet control is via Samsung VXT (cloud) or the E-Paper app; MagicINFO-style API coverage for this model could not be confirmed.",
+    "cloud_required": false,
+    "subscription": "VXT cloud is optional, not required for app/USB updates",
+    "third_party_projects": [],
+    "evidence": "Fetched the Newegg AU product page: 'Wi-Fi, Bluetooth' network, 'USB, HDMI' interfaces, USB Type-C compatibility, embedded battery, Samsung E-Paper App for device management, cloud-based Samsung VXT for remote control. Price 779.99 USD comes from search-result summaries (SamMobile/Newegg US), not a page I fetched - the AU page showed 'UNAVAILABLE FOR AUSTRALIA' with no price."
+   },
+   "art_suitability": "Strong. QHD at 32in is ~92 PPI, Spectra 6 gamut, embedded battery, portrait or landscape. Cheapest big colour panel from a tier-1 brand. The app-based push is the practical route; expect colour-managed dithering to matter a lot.",
+   "sources": [
+    {
+     "url": "https://www.newegg.com/global/au-en/samsung-em32dx/p/15Z-001C-00D50",
+     "what_it_supports": "32in QHD colour e-paper, single-unit SKU, WiFi/BT/USB/HDMI, E-Paper app + VXT"
+    }
+   ]
+  },
+  {
+   "model": "LG e-Paper Display (32in QHD commercial signage)",
+   "vendor": "LG Electronics",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "2560x1440",
+   "panel": "E Ink (Spectra 6 class)",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Launched into Korea, Europe and US commercial channels",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not established. webOS-based with WiFi remote update.",
+    "sd_card": null,
+    "api": "Managed through LG SuperSign CMS. No open local API evidenced.",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Only Chinese and Korean search-result summaries (Sigmaintell, etnews): 16:9, 17.8mm body / 8.6mm at thinnest, 3.1kg with battery, 178 deg viewing, 72Wh battery with magnetic wireless charging, webOS + SuperSign CMS, WiFi bulk scheduling. I could not fetch an LG primary page."
+   },
+   "art_suitability": "Same panel class as Samsung's. The battery + wireless-charging design is unusually art-friendly (no visible cable), but webOS/SuperSign is a closed commercial stack.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Spec claims from Sigmaintell and etnews search summaries; primary LG page not fetched"
+    }
+   ]
+  },
+  {
+   "model": "ePoster EP-C131",
+   "vendor": "Sharp",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "1600x1200",
+   "panel": "E Ink 4-colour (ACeP/Gallery class, W/K/R/Y)",
+   "colour": "4-colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan; sold through Rakuten and office-supply resellers, i.e. reachable by an individual",
+   "sells_single_units": true,
+   "moq": "1",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "USB memory stick inserted into the unit; USB Type-C from a Windows PC using Sharp's software; Bluetooth from an Android phone.",
+    "sd_card": false,
+    "api": "None published. Optional e-Signage S system for multi-unit remote management.",
+    "cloud_required": false,
+    "subscription": "Only if e-Signage S is used",
+    "third_party_projects": [],
+    "evidence": "Fetched Sharp Marketing Japan's EP-C131 page: 13.3in 4:3, 1600x1200, ~0.7kg, white/black/red/yellow, zero power on hold, ~15W max while updating, three update paths (USB stick, USB-C + Windows app, Android Bluetooth), explicitly no built-in SD/WiFi/LAN/cloud API on this model."
+   },
+   "art_suitability": "Only 4 colours - poor for photographic art, fine for graphic/poster work. But a genuinely offline, no-account, USB-stick workflow, which is rare.",
+   "sources": [
+    {
+     "url": "https://smj.jp.sharp/bs/eposter/lineup/epc131.html",
+     "what_it_supports": "Size, resolution, 4-colour, all three loading paths, absence of WiFi/LAN/API, and the full lineup"
+    }
+   ]
+  },
+  {
+   "model": "ePoster EP-C251",
+   "vendor": "Sharp",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 25.3,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan",
+   "sells_single_units": true,
+   "moq": "1",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Assumed same USB/USB-C/Bluetooth family as EP-C131 but not separately verified",
+    "sd_card": null,
+    "api": "e-Signage S optional",
+    "cloud_required": false,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Listed in the EP-C131 page's lineup section as EP-C251 25.3in. Its own spec page was not fetched."
+   },
+   "art_suitability": "25.3in colour at a Japanese-retail price point is one of the better art candidates, but colour depth unconfirmed.",
+   "sources": [
+    {
+     "url": "https://smj.jp.sharp/bs/eposter/lineup/epc131.html",
+     "what_it_supports": "Existence and 25.3in size within the ePoster lineup"
+    }
+   ]
+  },
+  {
+   "model": "ePoster EP-421",
+   "vendor": "Sharp",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": null,
+   "panel": "E Ink monochrome (42in class)",
+   "colour": "monochrome",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not verified for this model",
+    "sd_card": null,
+    "api": "e-Signage S optional",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Named in the ePoster lineup on the fetched EP-C131 page as EP-421 42in. No spec page fetched."
+   },
+   "art_suitability": "42in is the largest single non-tiled EPD in production, but monochrome.",
+   "sources": [
+    {
+     "url": "https://smj.jp.sharp/bs/eposter/lineup/epc131.html",
+     "what_it_supports": "42in model exists in the Sharp ePoster lineup"
+    }
+   ]
+  },
+  {
+   "model": "ePoster A2 (self-manufactured, June 2025)",
+   "vendor": "Sharp",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 28.6,
+   "resolution": null,
+   "panel": "E Ink Spectra 6 on Sharp IGZO backplane",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not verified",
+    "sd_card": null,
+    "api": "Not verified",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Japanese search summaries say Sharp began self-producing an A2 ePoster on 18 Jun 2025; the EP-C131 lineup lists an A2 model at 72.5cm diagonal (~28.6in). E Ink's own press separately credits Sharp's IGZO backplane + Spectra 6 for its next-gen colour ePoster."
+   },
+   "art_suitability": "Notable because Sharp builds the backplane itself (IGZO), so this is not a rebadged reference design.",
+   "sources": [
+    {
+     "url": "https://smj.jp.sharp/bs/eposter/lineup/epc131.html",
+     "what_it_supports": "An A2 / 72.5cm model exists in the lineup"
+    }
+   ]
+  },
+  {
+   "model": "EPS (電子ペーパーサイネージ) - monochrome 42in",
+   "vendor": "CREA Co., Ltd. (株式会社クレア)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": null,
+   "panel": "E Ink monochrome",
+   "colour": "monochrome",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan, direct from CREA; 2-week loaner trial offered (buyer pays freight)",
+   "sells_single_units": true,
+   "moq": "no MOQ stated; quantity affects price",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Wired LAN RJ-45 on the units, and HDMI on the monochrome models. Content workflow is PowerPoint exported to PNG/JPEG.",
+    "sd_card": null,
+    "api": "Cloud distribution option 'EPS SLIDE EDIT' exists; no open API documented.",
+    "cloud_required": false,
+    "subscription": "EPS SLIDE EDIT cloud is optional",
+    "third_party_projects": [],
+    "evidence": "Fetched crea2007.co.jp/epaper/: mono 42/32/13.3in and colour 31.5/13.3in; FAQ states '有線LANポート(RJ-45)を設けております' (wired LAN port fitted) plus HDMI for mono models; PowerPoint template to PNG/JPEG; pricing by inquiry because quantity matters; 2-week trial."
+   },
+   "art_suitability": "HDMI on a 42in monochrome EPD is the single most open local path found anywhere in this sweep - it means an ordinary computer can drive it. Monochrome only, and CREA is a small Japanese firm selling domestically.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/",
+     "what_it_supports": "Full size lineup, RJ-45 LAN, HDMI on mono models, PowerPoint->PNG/JPEG, trial programme, inquiry pricing"
+    }
+   ]
+  },
+  {
+   "model": "EPS s-color - colour 31.5in",
+   "vendor": "CREA Co., Ltd. (株式会社クレア)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "E Ink colour (Spectra 6 class)",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan, direct",
+   "sells_single_units": true,
+   "moq": "no MOQ stated",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "RJ-45 wired LAN. HDMI is documented for the monochrome models only, so do not assume it here.",
+    "sd_card": null,
+    "api": "EPS SLIDE EDIT cloud distribution optional",
+    "cloud_required": false,
+    "subscription": "optional",
+    "third_party_projects": [],
+    "evidence": "Same fetched CREA page lists colour models at 31.5in and 13.3in; the HDMI note is scoped to mono models."
+   },
+   "art_suitability": "Good size/colour combination with a wired-LAN path and no mandatory cloud, but Japan-only distribution and no published API.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/",
+     "what_it_supports": "Colour 31.5in and 13.3in models, LAN, optional cloud"
+    }
+   ]
+  },
+  {
+   "model": "e-paper digital signage 13.3in / 31.5in",
+   "vendor": "TEIDEC Corporation (株式会社テイデック)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "E Ink full colour",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "closed",
+    "local_push": "Not evidenced. Marketed as wireless to a CMS.",
+    "sd_card": null,
+    "api": "CMS-managed",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Japanese search summaries of teidec.co.jp: 13.3in and 31.5in full-colour e-paper signage, battery-driven ultra-low-power, wireless, CMS-compatible, no mains work needed. I did not fetch the TEIDEC page itself."
+   },
+   "art_suitability": "Battery + wireless is attractive, but a CMS-only content path with no evidenced local push is the wrong shape for a personal art display.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Sizes and CMS/battery claims from search summaries; primary page not fetched"
+    }
+   ]
+  },
+  {
+   "model": "aecoPost (31.5in) and J-Poster (A2, made in Japan)",
+   "vendor": "StellarLink",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Japan, announced 30 Oct 2025",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not evidenced",
+    "sd_card": null,
+    "api": "Not evidenced",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Search summaries of the E Ink/StellarLink joint release (globenewswire, digitimes, sixteen-nine): StellarLink is a Japanese IT solutions provider; J-Poster is A2 and domestically produced; aecoPost is 31.5in and manufactured by AUO Display Plus; both use Spectra 6. The release quotes ~0.0139 kg CO2e for a 32in colour unit at 18h/day with 6-hourly updates, ~46x less than comparable LCD."
+   },
+   "art_suitability": "Mainly interesting as proof that AUO Display Plus is now building finished 31.5in units for third-party brands - i.e. a second supply source behind many badges.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Product names, sizes, ADP as manufacturer; primary release not fetched"
+    }
+   ]
+  },
+  {
+   "model": "Wired ePaper Digital Signage 32in",
+   "vendor": "TintTech",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "1440x2560",
+   "panel": "E Ink monochrome, 16 grey levels",
+   "colour": "monochrome",
+   "price": {
+    "amount": null,
+    "currency": "EUR",
+    "as_of": "2026-08-06",
+    "source_url": "https://tinttech.io/products/wired-epaper-digital-signage/"
+   },
+   "availability": "Europe; 9.7in and 13.3in are openly priced, the 32in is quote-only",
+   "sells_single_units": true,
+   "moq": "1 (9.7in EUR495, 13.3in EUR555 / Lite EUR495)",
+   "integration": {
+    "openness": "open",
+    "local_push": "Power-over-Ethernet: one cable carries power and data. Content can also be pulled from a URL the display fetches itself.",
+    "sd_card": null,
+    "api": "Explicitly advertises a REST API for automated real-time integrations, plus URL-based content fetching and NFC/RFID triggers.",
+    "cloud_required": false,
+    "subscription": "None - 'No Recurring Fees. Ever.' The CMS is a one-time EUR1495-3295 licence.",
+    "third_party_projects": [],
+    "evidence": "Fetched tinttech.io: three wired models (9.7in 1200x825 EUR495, 13.3in 1600x1200 EUR555/495 Lite, 32in 1440x2560 custom price), 16 grey levels, 750ms refresh, PoE, web-UI CMS EUR1495-3295, 'REST API for automated real-time integrations', 'Content fetching with URL integrations', NFC/RFID, and the no-recurring-fees statement. HQ not stated on the page; EUR pricing and German/Estonian installations imply Europe."
+   },
+   "art_suitability": "Best integration story found: REST API, URL pull, PoE, no subscription. But monochrome only, and 750ms refresh at 16 grey means it is a text/graphic signage device, not a colour art panel.",
+   "sources": [
+    {
+     "url": "https://tinttech.io/products/wired-epaper-digital-signage/",
+     "what_it_supports": "All three sizes and prices, PoE, REST API, URL fetch, NFC/RFID, one-time CMS pricing, no recurring fees"
+    }
+   ]
+  },
+  {
+   "model": "eLuminex Placard EP32 ePoster",
+   "vendor": "Praevar Corporation",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "2560x1440",
+   "panel": "E Ink Spectra 6",
+   "colour": "60,000 colours",
+   "price": {
+    "amount": null,
+    "currency": "CAD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Canada/North America, UK, EMEA, APAC; sales inquiry only",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "closed",
+    "local_push": "WiFi and Bluetooth Low Energy for updates, but the described management path is a cloud CMS.",
+    "sd_card": null,
+    "api": "Not documented on the page",
+    "cloud_required": true,
+    "subscription": "Not stated; cloud CMS implies one",
+    "third_party_projects": [],
+    "evidence": "Fetched praevar.com: Praevar Corporation, Richmond Hill, Ontario, Canada; EP32 is 32in 2560x1440 Spectra 6, 60,000 colours, 9 lb / 4 kg, portrait and landscape, built-in WiFi + BLE, cloud-based CMS for remote updates. USB/SD and API not addressed; no price or MOQ published."
+   },
+   "art_suitability": "Same panel as Samsung/LG in a smaller integrator's shell. Cloud-CMS dependence and no published price make it a worse deal than the Samsung unless you need the specific mounting.",
+   "sources": [
+    {
+     "url": "https://www.praevar.com/products/all/digital-display/eluminex-ep32-eposter/",
+     "what_it_supports": "Company location, 32in Spectra 6 2560x1440, 60k colours, WiFi/BLE, cloud CMS, no price/MOQ"
+    }
+   ]
+  },
+  {
+   "model": "32in Outdoor E-Paper Display",
+   "vendor": "Digital View",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.2,
+   "resolution": "2560x1440",
+   "panel": "E Ink Carta-class monochrome, 16 grey levels, with front light",
+   "colour": "monochrome",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Sold through E Ink's own kit shop, which refuses consumer orders",
+   "sells_single_units": false,
+   "moq": "B2B only - E Ink shopkits will not accept consumer orders",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "USB image interface is the primary documented method; the app notes also reference Google Drive, network and PC connections.",
+    "sd_card": null,
+    "api": "Not documented",
+    "cloud_required": false,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched the shopkits.eink.com Digital View product page: 31.2in active area, 2560x1440, up to 16 grey levels, built-in front light, IP65 + IK8, aluminium enclosure, optically bonded cover glass, rated for 24/7/365 outdoors in full sun, USB image interface with 'other options available'. Country of the company not stated on the page."
+   },
+   "art_suitability": "The only genuinely weatherproof large EPD found (IP65/IK8, front light). Monochrome, and gated behind a B2B-only storefront.",
+   "sources": [
+    {
+     "url": "https://shopkits.eink.com/en/product/detail/DigitalView-32''OutdoorEPaperDisplay",
+     "what_it_supports": "Size, resolution, grey levels, front light, IP65/IK8, USB image interface, outdoor rating"
+    }
+   ]
+  },
+  {
+   "model": "25.3in Customized E Ink Digital Poster",
+   "vendor": "Guangdong Mingjinkang Technology Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 25.3,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "colour",
+   "price": {
+    "amount": 390,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.made-in-china.com/products-search/hot-china-products/E_Paper_Poster.html"
+   },
+   "availability": "Made-in-China listing",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated in the listing. A separate search summary describes an RK3566-based model at ~USD 490/unit with 'full CMS functionality' and SDK-based remote content update.",
+    "sd_card": null,
+    "api": "SDK mentioned in secondary sources only",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched the Made-in-China E_Paper_Poster search page, which lists Guangdong Mingjinkang Technology Co., Ltd., '25.3 Inch Customized Ereader E Ink Digital Poster', US$390.00-430.00, MOQ 1 piece. Everything about RK3566/CMS/SDK came from search summaries, not a fetched page."
+   },
+   "art_suitability": "Cheapest 25.3in colour finished unit found by a wide margin (USD 390-430 vs USD 1400 for E Ink's own 25.3in module alone). An RK3566 Android SoC would in principle allow ADB and local pushing, but that is unverified.",
+   "sources": [
+    {
+     "url": "https://www.made-in-china.com/products-search/hot-china-products/E_Paper_Poster.html",
+     "what_it_supports": "Vendor name, 25.3in E Ink digital poster, USD 390-430, MOQ 1"
+    }
+   ]
+  },
+  {
+   "model": "VETO ePaper Advertising Display 32in",
+   "vendor": "Dongguan VETO Technology Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "full colour",
+   "price": {
+    "amount": 1159,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/e-paper-display-32-inch"
+   },
+   "availability": "Alibaba / Made-in-China storefronts",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Aggregator lists 'SPI/API/SDK' but gives no protocol detail",
+    "sd_card": null,
+    "api": "Claimed API/SDK, undocumented",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio's 32in page: VETO 32in, USD 1159-1339, MOQ 1, connectivity 'SPI/API/SDK', fast refresh <=1 second, 4.6/5.0 with 809 interested buyers. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote. VETO also runs vetolcd.en.alibaba.com and a Made-in-China showroom; its main line is LCD advertising players."
+   },
+   "art_suitability": "A 32in colour unit at ~USD 1200 with MOQ 1 undercuts the branded units, but VETO is fundamentally an LCD signage house and the API claim is unverified.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-paper-display-32-inch",
+     "what_it_supports": "32in, USD 1159-1339, MOQ 1, claimed SPI/API/SDK"
+    }
+   ]
+  },
+  {
+   "model": "31.5in E Ink E6 full-colour display (battery version, 1s refresh)",
+   "vendor": "Fortune Achieve (Beijing) Technology Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "E Ink Spectra 6 (E6)",
+   "colour": "full colour",
+   "price": {
+    "amount": 995,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/e-ink-poster"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1 unit",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated; aggregator lists only 'Battery/SPI'",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched three accio pages that independently list Fortune Achieve at 31.5in, USD 995-1155, MOQ 1, with a 1-second fast-refresh claim and a battery version. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote."
+   },
+   "art_suitability": "Lowest price found for a 31.5in Spectra 6 finished unit. The 1-second refresh claim is unusual for E6 and deserves scepticism.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-ink-poster",
+     "what_it_supports": "31.5in, USD 995-1155, MOQ 1, battery version"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-paper-display-32-inch",
+     "what_it_supports": "Same vendor and price band, 'lowest entry price'"
+    }
+   ]
+  },
+  {
+   "model": "32in E-ink Outdoor Monitor / 31.5in outdoor ultra-thin colour",
+   "vendor": "Clientop Technology Co., Ltd. (Shenzhen)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "colour (31.5in variant) / unspecified",
+   "price": {
+    "amount": 1400,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/largest-e-ink-display"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio's largest-e-ink page: Clientop 32in outdoor e-ink monitor, USD 1400, MOQ 1. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote. Clientop's own site (clientop.com) is visibly an LCD/backpack-signage OEM."
+   },
+   "art_suitability": "Outdoor framing is unusual at this price, but Clientop reads as an LCD OEM adding an e-paper SKU rather than an EPD specialist.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/largest-e-ink-display",
+     "what_it_supports": "32in outdoor e-ink, USD 1400, MOQ 1"
+    }
+   ]
+  },
+  {
+   "model": "Large-size colour E Ink displays 13.3in / 25.3in / 31.5in / 42in (incl. Spectra 6 with SPI, WiFi, 4G)",
+   "vendor": "I C T S (Myanmar) Limited",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": "2560x1440",
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour",
+   "price": {
+    "amount": 1263.5,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/largest-e-ink-display"
+   },
+   "availability": "Alibaba, MOQ 1 across the range",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "This is the only marketplace ODM in the sweep whose listing explicitly names SPI, WiFi and 4G together.",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio pages list ICTS (Myanmar) at 13.3in USD 280-390, 13.3-25.3in USD 750-1395, 31.5in USD 1263.50-1652 with 'SPI, WiFi, 4G' and Spectra 6, plus a colour touch 13.3/25.3/42in line - all MOQ 1. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote. A Myanmar-registered entity selling the full Chinese size ladder is more likely a trading front than a factory."
+   },
+   "art_suitability": "Widest size range at MOQ 1 of anything found, and the only one advertising 4G. But the Myanmar registration plus identical price bands to other 'suppliers' on the same aggregator strongly suggest a reseller.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/largest-e-ink-display",
+     "what_it_supports": "31.5in 2560x1440 Spectra 6, SPI/WiFi/4G, USD 1263.50-1652, MOQ 1"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "13.3in USD 280-390 and 31.5in USD 1263.50-1652, MOQ 1"
+    }
+   ]
+  },
+  {
+   "model": "31.2in EPD module SOPM312A1 / SED312TT2",
+   "vendor": "Shineworld Innovations (Dongguan / SWICN)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.2,
+   "resolution": "2560x1440",
+   "panel": "E Ink monochrome, 4 grey levels",
+   "colour": "monochrome",
+   "price": {
+    "amount": 1500,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://swicn.com/collections/e-paper-displays"
+   },
+   "availability": "Own web shop shows 'Sold out / Send inquiry'; Alibaba storefront quotes MOQ 1000 boxes",
+   "sells_single_units": false,
+   "moq": "1000 boxes on the Alibaba storefront",
+   "integration": {
+    "openness": "open",
+    "local_push": "Not applicable - this is a bare module, not a finished display. You supply the driver.",
+    "sd_card": false,
+    "api": "AVT6203A T-CON, parallel interface (the 13.3in is SPI)",
+    "cloud_required": false,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched swicn.com/collections/e-paper-displays: 13.3in 960x680 mono SPI at USD 129, and 31.2in 2560x1440 mono 4-grey at USD 1500 with AVT6203A (T-Con) parallel COF. All items show 'Sold out' with a 'Send inquiry' button - no add-to-cart. Company runs a 2200 sq m cleanroom, 20+ years, 1000+ customers in 100+ countries."
+   },
+   "art_suitability": "Wrong layer of the stack for an art display - a raw panel with a T-CON, needing custom electronics. Included because it maps the module supply chain.",
+   "sources": [
+    {
+     "url": "https://swicn.com/collections/e-paper-displays",
+     "what_it_supports": "31.2in 2560x1440 mono at USD 1500, 13.3in SPI at USD 129, AVT6203A T-CON, no add-to-cart"
+    }
+   ]
+  },
+  {
+   "model": "13.3in monochrome EPD module (960x680)",
+   "vendor": "Shenzhen Eurotech Technology Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "960x680",
+   "panel": "E Ink monochrome",
+   "colour": "monochrome",
+   "price": {
+    "amount": 50,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/large-format-e-ink-display"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Bare module",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio large-format page: Shenzhen Eurotech, 13.3in B&W 960x680, USD 50-80, MOQ 1. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote."
+   },
+   "art_suitability": "Cheapest 13.3in panel found. Low resolution and monochrome; a hacking substrate, not a product.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "13.3in 960x680, USD 50-80, MOQ 1"
+    }
+   ]
+  },
+  {
+   "model": "13.3in colour e-paper display",
+   "vendor": "Zhuhai Suny Technology Co., Ltd. (Zhsunyco)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "colour",
+   "price": {
+    "amount": 145.64,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/large-format-e-ink-display"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1 piece",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated; company's core business is ESL with its own CMS",
+    "sd_card": null,
+    "api": "CMS for shelf labels",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio large-format page (13.3in colour, USD 145.64-156.51, MOQ 1) and zhsunyco.com's own manufacturer round-up, which describes the firm as founded 2016, based in Jinwan, Zhuhai, building smart shelf displays and CMS systems, with 'E-ink Display with Various Size' but no stated maximum. Sourced from accio.com, an AI-generated aggregator over Alibaba listings. The underlying Alibaba pages returned empty bodies when I fetched them, so price/MOQ here is secondhand - treat as a lead to verify, not a confirmed quote."
+   },
+   "art_suitability": "ESL house stretching upward. 13.3in colour at ~USD 150 is cheap but unlikely to be a finished, mountable art unit.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "13.3in colour, USD 145.64-156.51, MOQ 1"
+    },
+    {
+     "url": "https://www.zhsunyco.com/list-of-e-ink-display-manufacturers/",
+     "what_it_supports": "Company founding, location, ESL+CMS focus"
+    }
+   ]
+  },
+  {
+   "model": "13.3in 6-colour Spectra 6 module (EL133UF1 class)",
+   "vendor": "Huaxin Technology Co. Ltd",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "1200x1600",
+   "panel": "E Ink Spectra 6",
+   "colour": "6-colour (black/white/red/yellow/blue/green)",
+   "price": {
+    "amount": 239,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.globalsources.com/E-paper/Epaper-displays-Electronic-paper-1220307685p.htm"
+   },
+   "availability": "Global Sources listing",
+   "sells_single_units": null,
+   "moq": "5000 pc for USD 239; 1000-4999 pc for USD 259; 'Small Orders Accepted' at higher unit cost",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not specified in the listing",
+    "sd_card": null,
+    "api": "Not specified",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched the Global Sources page: Huaxin Technology, 13.3in, 1200x1600, six named colours, USD 239 at 5000pc / USD 259 at 1000-4999pc, 'Small Orders Accepted'. Global Sources itself displays a warning that it cannot guarantee the accuracy of this supplier's information because they do not currently advertise on the platform."
+   },
+   "art_suitability": "Volume module pricing, not a retail path. Useful as a price floor: the Spectra 6 13.3in panel is roughly USD 240-260 in quantity versus USD 449 retail from E Ink's own shop.",
+   "sources": [
+    {
+     "url": "https://www.globalsources.com/E-paper/Epaper-displays-Electronic-paper-1220307685p.htm",
+     "what_it_supports": "Vendor, size, resolution, 6 colours, tiered pricing, small-orders note, platform accuracy warning"
+    }
+   ]
+  },
+  {
+   "model": "E-paper signage: WYED312L / WYED280L / ADEP28NF01.0 / WYED133C",
+   "vendor": "Advanced Display Lab Inc. (宇豐光電)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.2,
+   "resolution": "2560x1440",
+   "panel": "E Ink, 16 grey levels",
+   "colour": "monochrome (31.2in); 28in bar-type variant does >60k colours; 13.3in does 4096 colours",
+   "price": {
+    "amount": null,
+    "currency": "TWD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Taiwan, inquiry only",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not disclosed",
+    "sd_card": null,
+    "api": "Not disclosed",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched adlab.com.tw e-paper signage page: WYED312L 31.2in 2560x1440 16-grey; WYED280L 28in 3840x1080 16-grey; ADEP28NF01.0 28in bar-type 3840x1080 >60,000 colours; WYED133C 13.3in 1600x1200 4096 colours. No connectivity, price or MOQ published anywhere on the page."
+   },
+   "art_suitability": "The 28in 3840x1080 bar-type at >60k colours is an unusual format nobody else in this sweep offers. Zero integration information published, which is a bad sign for a hobbyist buyer.",
+   "sources": [
+    {
+     "url": "https://www.adlab.com.tw/products/E-Paper/E-Paper-Signage/",
+     "what_it_supports": "Company identity (Advanced Display Lab Inc / 宇豐光電, Taiwan), four models with sizes, resolutions and colour depth, absence of connectivity/price/MOQ"
+    }
+   ]
+  },
+  {
+   "model": "31.5in Spectra 6 poster DMPH315E61 / DMPH315E62",
+   "vendor": "Dalian Good Display",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": "2560x1440",
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour",
+   "price": {
+    "amount": 1636.2,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://buy-lcd.com/products/dmph315e62"
+   },
+   "availability": "Good Display's own buy-lcd.com / buyepaper.com storefront; showed 0 in stock at fetch time",
+   "sells_single_units": true,
+   "moq": "1",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "USB drive plugged into the unit, or an Android app over 2.4GHz WiFi. The mainboard is an ESP32-S3-WROOM-1U, which is a documented, hackable part.",
+    "sd_card": null,
+    "api": "No published REST API, but downloadable 'XTacepSetup' and 'Smart EPD APP' files plus a spec PDF are offered. The separate DMPX315E61 variant updates via a WeChat mini-program.",
+    "cloud_required": false,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched buy-lcd.com/products/dmph315e62 (buyepaper.com 302-redirects there): USD 1636.20 marked down from USD 1818.00, 31.5in, 2560x1440, Spectra 6, updates 'via USB drive or Android APP (DEMO)' and WiFi, ESP32-S3-WROOM-1U at 2.4GHz, 0 in stock with a Notify Me button. Seller is Dalian Good Display Co., Ltd. Separately fetched good-display.cn/product/99/, which lists the full signage ladder: DMPH133EC1 13.3in mono+frontlight WiFi, DMPH133E61 13.3in colour, DMPH253E61 25.3in colour wood frame, DMPH280EG1 28in ACeP, DMPH312EC1 31.2in mono, DMPX315E61 31.5in E6 with WeChat mini-program updates, DMPH315E61 31.5in colour, DMPH420EC1 42in mono."
+   },
+   "art_suitability": "Known vendor, but re-surveyed because the ESP32-S3 mainboard is the most promising hackable local-push target found at 31.5in colour. USB-stick updating alone makes it usable offline.",
+   "sources": [
+    {
+     "url": "https://buy-lcd.com/products/dmph315e62",
+     "what_it_supports": "Price, size, resolution, Spectra 6, USB/Android-app/WiFi updating, ESP32-S3-WROOM-1U, stock status"
+    },
+    {
+     "url": "https://www.good-display.cn/product/99/",
+     "what_it_supports": "Full 13.3-42in signage model ladder incl. the WeChat mini-program update path"
+    }
+   ]
+  },
+  {
+   "model": "Kit-shop panels: 13.3in Spectra 6 / Kaleido 3 / mono; 25.3in Spectra 6 and Spectra 3100; 31.5in Spectra 6",
+   "vendor": "E Ink Holdings",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 25.3,
+   "resolution": null,
+   "panel": "E Ink Spectra 6 / Spectra 3100 / Kaleido 3",
+   "colour": "full colour and monochrome variants",
+   "price": {
+    "amount": 1400,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://shopkits.eink.com/"
+   },
+   "availability": "E Ink's own kit shop. Explicitly B2B: consumer orders are refused.",
+   "sells_single_units": false,
+   "moq": "1 unit technically, but the shop rejects consumer purchasers",
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Driving boards sold separately; these are development kits",
+    "sd_card": null,
+    "api": "Developer driving boards",
+    "cloud_required": false,
+    "subscription": null,
+    "third_party_projects": [
+     "Waveshare and Good Display ecosystems build on the same panels"
+    ],
+    "evidence": "Fetched shopkits.eink.com. Verbatim terms: '(II) The products are not consumer products intended for personal, family or household purposes. (III) Purchaser is purchasing the products for commercial use and/or in a business capacity. orders placed by consumers will not be accepted.' Stock and prices seen: 13.3in Spectra 6 USD 449 in stock, 13.3in Kaleido 3 USD 449 in stock, 13.3in B&W USD 449 in stock, 25.3in Spectra 6 USD 1400 in stock, 25.3in Spectra 3100 USD 1400 in stock, 31.5in Spectra 6 out of stock."
+   },
+   "art_suitability": "Establishes the true panel price floor and, importantly, that E Ink itself will not sell to an individual. Anyone buying one unit must go through a module house or an integrator.",
+   "sources": [
+    {
+     "url": "https://shopkits.eink.com/",
+     "what_it_supports": "Consumer-order refusal clause, panel prices at 13.3in and 25.3in, 31.5in out of stock"
+    }
+   ]
+  },
+  {
+   "model": "EPC3200 31.5in / EPC2850 28.5in / EPC2530 25.3in Spectra 6 signage",
+   "vendor": "Geniatech (brand: MyGica)",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": "2560x1440",
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Volume-pricing inquiry",
+   "sells_single_units": null,
+   "moq": null,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Not evidenced beyond CMS",
+    "sd_card": null,
+    "api": "Marketed API and SDK for third-party CMS and enterprise system integration; proprietary TCON with multiple refresh modes",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Search summaries of geniatech.com/mygica.com product pages (EPC3200, EPC2850, EPC2530). Recorded here mainly to note that MyGica and Geniatech are the same company with two brand faces - a duplicate-counting trap for any survey. I did not fetch these pages."
+   },
+   "art_suitability": "Known vendor. The 28.5in EPC2850 is a size almost nobody else lists.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Model numbers and API/SDK claims from search summaries; pages not fetched"
+    }
+   ]
+  },
+  {
+   "model": "75in tiled Spectra 6; 75in Kaleido 3 (with Agile); 102in tiled Marquee wall; 28.5in Flex-E Spectra 6; E Ink Marquee outdoor platform",
+   "vendor": "E Ink Holdings",
+   "is_new_to_survey": false,
+   "status": "announced / demo",
+   "diagonal_in": 75,
+   "resolution": null,
+   "panel": "E Ink Spectra 6 tiled, Kaleido 3, and the new Marquee platform",
+   "colour": "full colour",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": null
+   },
+   "availability": "Trade-show demonstrations at InfoComm 2026 and Computex 2026; a 75in colour install is live at Taoyuan International Airport",
+   "sells_single_units": false,
+   "moq": null,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Not applicable at this tier",
+    "sd_card": false,
+    "api": "Agile Conversion Engine (ACE) middleware securely syncs, converts assets for E Ink and orchestrates delivery; ACE now interoperates with Navori Labs' CMS so e-paper can be driven from the same enterprise workflows as LCD/LED.",
+    "cloud_required": true,
+    "subscription": null,
+    "third_party_projects": [
+     "Agile ACE",
+     "Navori Labs CMS"
+    ],
+    "evidence": "Fetched the E Ink InfoComm 2026 release and the Computex 2026 blog post. Partners named across the two: Agile, BOE, NewFace, Sharp, Mercury, Navori Labs, Meris, Seekink, Cream Guitars, BMW, ZKONG, Pricer, Vusion, AUO Display Plus, HCK Corp, iPolish, Aura, Reflection Frame, Aluratek, InkPoster. Sizes: 75in tiled Spectra 6, 75in Kaleido 3, 102in tiled Marquee wall, 28.5in Flex-E Spectra 6."
+   },
+   "art_suitability": "Not purchasable, but sets the ceiling: 42in is the largest single panel, and everything above that is tiled. Kaleido 3 at 75in is the only large-format route to faster refresh and partial updates.",
+   "sources": [
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "Marquee platform, 75in tiled Spectra 6, 75in Kaleido 3 with Agile, ACE-Navori CMS bridge, partner list"
+    },
+    {
+     "url": "https://blog.eink.com/e-ink-at-computex-2026-expanding-the-possibilities-of-epaper",
+     "what_it_supports": "102in tiled Marquee wall, 28.5in Flex-E Spectra 6, AUO Display Plus and consumer-frame partner list"
+    }
+   ]
+  },
+  {
+   "model": "Colour e-paper displays 4-31.5in and monochrome to 42in; 13.3in full-colour module 1200x1600",
+   "vendor": "DKE (Zhejiang Oriental Kemai / 东方科脉)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": "1200x1600 (13.3in variant)",
+   "panel": "E Ink-based; DKE markets black-white, low-temperature, four-colour and full-colour lines",
+   "colour": "full colour and monochrome",
+   "price": {
+    "amount": 120,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/large-format-e-ink-display"
+   },
+   "availability": "Quote-only from dke.top; a DKE (Hong Kong) Co. Limited storefront lists a 13.3in module at MOQ 1",
+   "sells_single_units": true,
+   "moq": "1 piece for the 13.3in module via the Hong Kong storefront; larger sizes are quote-only",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not published for the large modules",
+    "sd_card": null,
+    "api": "Not published",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched dke.top: founded 2005, ~2300 employees, HQ Room E2-601, No. 1688 Yinggang East Road, Qingpu District, Shanghai; four manufacturing bases across Jiaxing, Dalian and Vietnam; colour range stated as 4 to 31.5in and black-white to 42in; 13.3in full-colour module 1200x1600 with an 18-22 second refresh; no MOQ or pricing published, quote button only; film sourcing not disclosed. Separately, fetched accio lists 'DKE (Hong Kong) Co., Limited' 13.3in module at USD 120-135, MOQ 1. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote."
+   },
+   "art_suitability": "One of the few Chinese houses with genuine 42in capability and industrial scale. But they publish nothing about how content reaches the panel, which makes them an OEM partner rather than a buyable option.",
+   "sources": [
+    {
+     "url": "https://dke.top/",
+     "what_it_supports": "Founding year, headcount, plant locations incl. Vietnam, 4-31.5in colour and 42in mono range, 13.3in module spec, quote-only commercial model"
+    },
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "DKE Hong Kong 13.3in module USD 120-135 at MOQ 1"
+    }
+   ]
+  },
+  {
+   "model": "Outdoor large-format e-paper display",
+   "vendor": "Guangzhou Zemso Electron Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "unspecified",
+   "price": {
+    "amount": 1800,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/large-format-e-ink-display"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1 set",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio large-format page: Guangzhou Zemso Electron, outdoor e-paper display, USD 1800-2800, MOQ 1 set. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote. A related name, Shanghai ZEMSO Urban Furniture Technology, appeared on the fetched Made-in-China poster search page selling bus-stop signage - the two may be linked."
+   },
+   "art_suitability": "Street-furniture supplier. Priced well above the indoor units with no stated integration path.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "Outdoor large-format e-paper, USD 1800-2800, MOQ 1 set"
+    },
+    {
+     "url": "https://www.made-in-china.com/products-search/hot-china-products/E_Paper_Poster.html",
+     "what_it_supports": "Shanghai ZEMSO Urban Furniture bus-stop digital poster, MOQ 1 set"
+    }
+   ]
+  },
+  {
+   "model": "42in E Ink display (largest listed)",
+   "vendor": "ATZ LLC",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "unspecified",
+   "price": {
+    "amount": 3420,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/e-ink-frame"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": false,
+   "moq": "10 pieces",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio e-ink-frame page: ATZ LLC, '42\" The Largest E Ink Display', USD 3420-3569, MOQ 10. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote."
+   },
+   "art_suitability": "Confirms the 42in street price at roughly USD 3.5k, but MOQ 10 rules it out for a single buyer.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "42in, USD 3420-3569, MOQ 10"
+    }
+   ]
+  },
+  {
+   "model": "31.5in colour e-paper frame",
+   "vendor": "IDROID MEDIA CO.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "E Ink Spectra 6",
+   "colour": "full colour",
+   "price": {
+    "amount": 1665,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/e-ink-frame"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": false,
+   "moq": "10 pieces",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio e-ink-frame page: IDROID MEDIA CO., custom frame colour 31.5in E-paper, USD 1665-1845, MOQ 10. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote."
+   },
+   "art_suitability": "Framed 31.5in colour aimed at art use, but MOQ 10 makes it an OEM-only option.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "31.5in framed colour EPD, USD 1665-1845, MOQ 10"
+    }
+   ]
+  },
+  {
+   "model": "Round and rectangular 13.3-25.3in e-paper displays / 25.3in picture frame",
+   "vendor": "Shenzhen Huayi Technology Co., Ltd.",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 25.3,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "colour",
+   "price": {
+    "amount": 750,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/large-format-e-ink-display"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": false,
+   "moq": "100 pieces",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Fetched accio large-format page: Shenzhen Huayi, round 13.3-25.3in e-paper, USD 750-1395, MOQ 100. A separate search summary describes them as a 25.3in picture-frame specialist at MOQ 100. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote."
+   },
+   "art_suitability": "Round EPD formats are genuinely unusual and would be striking for art, but MOQ 100 puts this out of reach.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "Round 13.3-25.3in EPD, USD 750-1395, MOQ 100"
+    }
+   ]
+  },
+  {
+   "model": "31.5in colour E Ink display / 21.5in wall-mount poster / misc large modules",
+   "vendor": "Assorted marketplace listings (LD Display Company Limited; SOLAR ENERGY TECHNOLOGY CO., LIMITED; EZAD; Guangdong SID Technology / Hipoink; Shenzhen Pinsheng)",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": null,
+   "panel": "mixed - some listings conflate LCD with e-paper",
+   "colour": "mixed",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08-06",
+    "source_url": "https://www.accio.com/plp/e-ink-poster"
+   },
+   "availability": "Alibaba",
+   "sells_single_units": true,
+   "moq": "1-2 pieces for most",
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not stated for any of them",
+    "sd_card": null,
+    "api": "Not stated",
+    "cloud_required": null,
+    "subscription": null,
+    "third_party_projects": [],
+    "evidence": "Grouped because each is a thin marketplace listing rather than a documented product. From fetched accio pages: LD Display 21.5in wall-mount digital poster USD 126-336 MOQ 1; SOLAR ENERGY TECHNOLOGY CO LIMITED 13.3-25.3in USD 750-1395 MOQ 2; EZAD 31.5in e-paper modules USD 120-2000 MOQ 1 with an eDP 30-pin socket; Guangdong SID (Hipoink brand) digital photo frame USD 99 MOQ 1; Shenzhen Pinsheng 32in 4K touch USD 218.66-413 MOQ 1 - the last is almost certainly LCD, not e-paper, mis-shelved by the aggregator. From accio.com, an AI-generated aggregator over Alibaba listings; underlying Alibaba pages would not fetch, so this is a lead rather than a verified quote."
+   },
+   "art_suitability": "Low confidence across the board. The Pinsheng entry in particular shows the aggregator mixing LCD into e-paper result sets, which is a caution for the whole marketplace tier.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-ink-poster",
+     "what_it_supports": "LD Display, SOLAR ENERGY TECHNOLOGY, EZAD entries with prices and MOQs"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "Guangdong SID / Hipoink USD 99 MOQ 1"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-paper-display-32-inch",
+     "what_it_supports": "Shenzhen Pinsheng 32in listing that appears to be LCD rather than EPD"
+    }
+   ]
+  }
+ ],
+ "vendors": [
+  {
+   "name": "AUO Display Plus (ADP) - 友達數位看板",
+   "country": "Taiwan",
+   "corporate_form": "Subsidiary of AUO Corporation; 51% owner of a large-format EPD joint venture with E Ink",
+   "ownership": "AUO Corporation (TWSE 2409)",
+   "public_ticker": null,
+   "funding": "JV capitalised at TWD 390 million (~EUR 10.7m) with E Ink",
+   "revenue_scale": "Part of AUO, a multi-billion-USD panel maker",
+   "headcount": "unknown (parent AUO is tens of thousands)",
+   "hardware_track_record": "AUO has made display panels since 1996; ADP was created to package group signage components into ready-to-buy solutions for integrators",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "The single most consequential structural find of this sweep. Until now, essentially all large-format EPD modules traced back to E Ink itself. ADP + E Ink built a dedicated large-format EPD module line in Taoyuan (ADP 51% / E Ink 49%), mass production from Q4 2025. ADP already builds finished 31.5in units for third-party brands - StellarLink's aecoPost is one. So a second module source now sits behind an unknown number of badges. ADP buys E Ink film; it does not make film.",
+   "sources": [
+    {
+     "url": "https://blog.eink.com/e-ink-at-computex-2026-expanding-the-possibilities-of-epaper",
+     "what_it_supports": "AUO Display Plus named as an E Ink ecosystem partner showing ePaper for information display and advertising"
+    },
+    {
+     "url": "https://invidis.com/news/2026/04/touch-taiwan-a-glimpse-into-the-future-of-displays/",
+     "what_it_supports": "AUO showed curved e-paper; AUO established AUO Display Plus for ready-to-buy signage solutions"
+    },
+    {
+     "url": null,
+     "what_it_supports": "JV terms (TWD 390m, 51/49, Taoyuan, Q4 2025 mass production) come from invidis and E Ink press summaries surfaced in search; the JV release itself was not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Holitech / Jiangxi Xingtai Technology (合力泰 / 江西兴泰科技)",
+   "country": "China",
+   "corporate_form": "Listed company; e-paper business ring-fenced in the Jiangxi Xingtai subsidiary",
+   "ownership": "Shenzhen Stock Exchange 002217",
+   "public_ticker": "SZSE:002217",
+   "funding": "Public markets",
+   "revenue_scale": "E-paper was reportedly >80% of 2025 revenue for the e-paper arm; ~22% domestic share of Chinese e-paper module market",
+   "headcount": "unknown; Vietnam phase-1 plant rated 25 million units/year",
+   "hardware_track_record": "Long-standing TN/STN-LCD, LCM, TFT and capacitive-touch maker that pivoted hard into e-paper; strategic partnership with E Ink",
+   "abandonment_history": "None found for e-paper; the parent has had financial turbulence",
+   "makes_own_epd_film": false,
+   "staying_power": "medium-high",
+   "rationale": "Advertises '1-42 inch full-colour e-paper display modules and complete-machine solutions' - the widest published size range of any Chinese module house, and the only one besides DKE claiming 42in. Two-colour, three-colour, four-colour and full-colour lines. Buys E Ink film under a formal partnership where E Ink assists development and Holitech supplies the customer base. Ranked #4 on the CNPP Chinese e-paper brand list.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "Listed as 合力泰HOLITECH, '1-42英寸全色系电子纸显示模组'"
+    },
+    {
+     "url": null,
+     "what_it_supports": "E Ink partnership terms, 002217 listing, ~22% module share and Vietnam capacity from Chinese financial-press search summaries (holitech.net, cninfo, stcn); primary filings not fetched"
+    }
+   ]
+  },
+  {
+   "name": "DKE / Zhejiang Oriental Kemai Electronics (浙江东方科脉电子)",
+   "country": "China",
+   "corporate_form": "Joint-stock company, founded 2005",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Described in third-party round-ups as part of a top-tier group holding ~70% of global e-paper module share; high-volume ESL supplier",
+   "headcount": "~2,300",
+   "hardware_track_record": "20+ years; four manufacturing bases across Jiaxing (Zhejiang), Dalian (Liaoning) and Vietnam; Shanghai HQ handling international marketing and high-end R&D",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": null,
+   "staying_power": "high",
+   "rationale": "Real industrial scale and one of only two Chinese houses with published 42in capability (mono; colour to 31.5in). Founding member tier of the China E-Paper Industry Alliance. Film sourcing is not disclosed on their own site; Chinese trade press consistently places domestic film production with E Ink, Guangzhou OED and Wuxi Vpaper only, which implies DKE buys - but I could not confirm this directly, hence null. Commercially quote-only, so not an option for a single buyer except via the Hong Kong entity's 13.3in module.",
+   "sources": [
+    {
+     "url": "https://dke.top/",
+     "what_it_supports": "Founded 2005, ~2300 staff, Shanghai HQ address, four bases incl. Vietnam, 4-31.5in colour and 42in mono, quote-only"
+    },
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "Ranked among top-10 Chinese e-paper brands; product lines listed as 黑白/低温/四色/彩色电子纸"
+    },
+    {
+     "url": "https://armordigitalscreen.com/top-10-e-ink-display-manufacturers/",
+     "what_it_supports": "Described as an important E Ink strategic partner"
+    }
+   ]
+  },
+  {
+   "name": "BOE Technology Group (京东方)",
+   "country": "China",
+   "corporate_form": "Listed conglomerate",
+   "ownership": "Public",
+   "public_ticker": "SZSE:000725",
+   "funding": "Public markets and state-linked investment",
+   "revenue_scale": "One of the world's largest display makers",
+   "headcount": "tens of thousands",
+   "hardware_track_record": "Dominant LCD/OLED panel maker; co-founder of the China E-Paper Industry Alliance alongside E Ink and Xingtai; estimated ~14-15% of EPD shipments",
+   "abandonment_history": "None found in e-paper",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "Co-founded the alliance in April 2021 and is named as an E Ink partner at InfoComm 2026, so BOE is inside the E Ink ecosystem rather than competing with its film. Chinese trade commentary is explicit that BOE buys film from E Ink/OED/Weifeng and assembles modules. Also controls BOE Varitronix (HK-listed, BOE became a major shareholder in 2016). Enormous staying power, but no evidence of a directly buyable large-format art-suitable product.",
+   "sources": [
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "重庆京东方智慧电子系统有限公司 listed as an alliance member; alliance founded by E Ink + BOE + Xingtai"
+    },
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "BOE named among E Ink's InfoComm 2026 partners"
+    },
+    {
+     "url": "https://jiclcd.com/top-10-global-e-paper-display-module-manufacturers/",
+     "what_it_supports": "~14-15% of EPD shipments, capacity expansion"
+    }
+   ]
+  },
+  {
+   "name": "Wuxi Vpaper / Wuxi Weifeng Technology (无锡威峰科技)",
+   "country": "China",
+   "corporate_form": "Joint-stock company; failed an A-share IPO in 2017",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Licensing revenue from Laibao Hi-Tech; IPO attempt failed 2017",
+   "revenue_scale": "Very small",
+   "headcount": "Declined from ~120 (2020) to ~67 (2023)",
+   "hardware_track_record": "Developed its own DES (电浆型电子纸显示, plasma-type e-paper) technology in 2017 and licensed it to Laibao Hi-Tech for 20 years",
+   "abandonment_history": "DES 'failed to achieve industrialisation and customer verification' for roughly two years per Chinese investigative coverage; no market application evidence found",
+   "makes_own_epd_film": true,
+   "staying_power": "low",
+   "rationale": "One of only three companies Chinese trade press credits with making domestic e-paper film, and the only one in this sweep with a technology that is NOT electrophoretic microcapsule - DES is a distinct plasma/micro-cavity route. But the same sources say all its shipped products actually use E Ink film, headcount is falling, and the licensed technology has no commercial deployment. Answers the brief's film question with an important negative: the non-E-Ink alternatives are pre-commercial.",
+   "sources": [
+    {
+     "url": "https://news.qq.com/rain/a/20241122A048CP00",
+     "what_it_supports": "DES developed 2017, 20-year licence to Laibao, headcount 120->67, no market application evidence, industrialisation failure"
+    },
+    {
+     "url": null,
+     "what_it_supports": "The counter-claim that all Wuxi Weifeng products use E Ink film, and that domestic film makers are E Ink/OED/Weifeng only, comes from Chinese search summaries (jiemian, sohu); primary articles not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Laibao Hi-Tech (莱宝高科)",
+   "country": "China",
+   "corporate_form": "Listed company",
+   "ownership": "Public",
+   "public_ticker": "SZSE:002106",
+   "funding": "CNY ~9 billion project (CNY 8.3bn construction + CNY 0.7bn working capital; ~CNY 7.3bn of that equipment)",
+   "revenue_scale": "Zero e-paper revenue as of late 2024 despite the project launching in 2022",
+   "headcount": "unknown",
+   "hardware_track_record": "Established touch-sensor and display-component maker; entered e-paper via a licensed technology it did not invent",
+   "abandonment_history": "Rebranded DES to MED (微电腔显示, micro-cavity display) which Chinese investigative press read as repositioning for the capital market after industrialisation stalled",
+   "makes_own_epd_film": true,
+   "staying_power": "medium",
+   "rationale": "The largest single capital bet on a non-E-Ink reflective technology anywhere in this sweep - roughly USD 1.2bn. Black-and-white and colour MED samples exist in multiple sizes but remain in customer testing with zero revenue. If MED ever ships, it would be the first credible break in E Ink's film monopoly at scale. Today it is vapour for buying purposes, but it is the thing to watch.",
+   "sources": [
+    {
+     "url": "https://news.qq.com/rain/a/20241122A048CP00",
+     "what_it_supports": "CNY 9bn investment breakdown, DES->MED rename, samples in multiple sizes, zero sales revenue, 2022 project start"
+    }
+   ]
+  },
+  {
+   "name": "Shenzhen Qiutianwei Electronics (深圳秋田微电子)",
+   "country": "China",
+   "corporate_form": "Listed company",
+   "ownership": "Public",
+   "public_ticker": "SZSE:300939",
+   "funding": "Public markets",
+   "revenue_scale": "E-paper is a small emerging line; small-batch shipments only",
+   "headcount": "unknown",
+   "hardware_track_record": "LCD/display module maker; claims full-chain in-house e-paper R&D - pigment particle modification, electrophoretic fluid formulation, capsule synthesis, film coating, and module assembly",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": true,
+   "staying_power": "medium",
+   "rationale": "The most credible domestic challenger on film after OED. Key materials work done with Shenzhen Tsinghua Research Institute, SUSTech and HKUST. 32 e-paper patents filed as of 31 Dec 2024, with 6 invention grants and 8 utility-model grants. But the company states its focus is small and medium sizes for price tags, name badges and smart home - explicitly NOT large format. Relevant to the film-ownership question, irrelevant as a source of a 13in+ display.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Full-chain claim, university partners, patent counts, small/medium-size focus and small-batch shipping status all come from Chinese search summaries of cninfo/zqrb investor-relations PDFs and a 163.com董秘 interview; the PDFs were not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Yeebo / Yashi Optoelectronics (亚世光电) and subsidiary Qixin Optoelectronics (奇新光电)",
+   "country": "China",
+   "corporate_form": "Listed group with a wholly-owned e-paper subsidiary",
+   "ownership": "Public",
+   "public_ticker": "SZSE:002952",
+   "funding": "Public markets",
+   "revenue_scale": "Q1 2026 net profit reported at CNY 8.931 million, roughly doubled year on year",
+   "headcount": "unknown",
+   "hardware_track_record": "Dual LCD + e-paper business; Qixin handles e-paper R&D, production and sales - segment e-paper displays, monochrome and colour dot-matrix e-paper, and modules integrating touch, front light and TCON; Vietnam e-paper line ramping",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium-high",
+   "rationale": "A one-stop e-paper module house with a live Vietnam capacity ramp, which matters for tariff-exposed buyers. Alliance member. No published large-format signage product, so it sits upstream of anything an individual could buy.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "亚世光电(集团)股份有限公司 (奇新光电), monochrome and colour dot-matrix e-paper displays and touch modules"
+    },
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "奇新光电股份有限公司 listed as an alliance member"
+    },
+    {
+     "url": null,
+     "what_it_supports": "Q1 2026 profit figure and Vietnam ramp from Chinese financial search summaries; filings not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Samsung Electronics",
+   "country": "South Korea",
+   "corporate_form": "Listed multinational",
+   "ownership": "Public",
+   "public_ticker": "KRX:005930",
+   "funding": "n/a",
+   "revenue_scale": "Hundreds of billions USD",
+   "headcount": "~270,000",
+   "hardware_track_record": "Launched the Color E-Paper line (EM32DX 32in) globally on 8 June 2025; four colour e-paper models shown at ISE 2025; a 13in and a 20in announced for ISE 2026, the 13in claimed as a world-first using phytoplankton-derived bio-resin",
+   "abandonment_history": "Samsung has discontinued display product lines before, but this line is expanding not contracting",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "Best combination in the whole survey of buyability, price and brand durability: a single unit is a normal retail SKU, USB and app-based local updating work without a cloud account, and the panel is the same Spectra 6 class everyone else uses. The risk is not the company folding, it is the app being the only sanctioned path and never getting a documented API.",
+   "sources": [
+    {
+     "url": "https://www.newegg.com/global/au-en/samsung-em32dx/p/15Z-001C-00D50",
+     "what_it_supports": "32in QHD Color E-Paper as a single-unit retail SKU with WiFi/BT/USB/HDMI, E-Paper app, VXT cloud"
+    },
+    {
+     "url": null,
+     "what_it_supports": "Launch date, USD 1200 launch pricing, ISE 2025/2026 model announcements from Samsung Newsroom and SamMobile search summaries; primary pages not fetched"
+    }
+   ]
+  },
+  {
+   "name": "LG Electronics",
+   "country": "South Korea",
+   "corporate_form": "Listed multinational",
+   "ownership": "Public",
+   "public_ticker": "KRX:066570",
+   "funding": "n/a",
+   "revenue_scale": "Tens of billions USD",
+   "headcount": "~70,000",
+   "hardware_track_record": "Entered 32in e-paper signage; separately LG Display is credited with ~5.8% of the EPD segment and 24in-class large-format work",
+   "abandonment_history": "None found in this line (new entrant)",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "Second tier-1 Korean entrant, which is the clearest signal that large colour e-paper signage has crossed from novelty to product category. Chinese analyst commentary framed LG's entry as 'another strong general joins the E Ink camp'. The webOS + SuperSign stack is closed, so this is a worse choice than Samsung for anyone wanting local control.",
+   "sources": [
+    {
+     "url": "https://jiclcd.com/top-10-global-e-paper-display-module-manufacturers/",
+     "what_it_supports": "LG Display ~5.8% of EPD segment, 24in large-format"
+    },
+    {
+     "url": null,
+     "what_it_supports": "32in QHD product specifics (17.8mm/8.6mm, 3.1kg, 72Wh battery, webOS/SuperSign) from Sigmaintell and etnews search summaries; primary pages not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Sharp Corporation / Sharp Marketing Japan",
+   "country": "Japan",
+   "corporate_form": "Listed company, majority-owned by Foxconn/Hon Hai",
+   "ownership": "Hon Hai Precision Industry",
+   "public_ticker": "TSE:6753",
+   "funding": "n/a",
+   "revenue_scale": "Tens of billions USD",
+   "headcount": "~40,000",
+   "hardware_track_record": "ePoster line spanning 7.3in, 13.3in, 25.3in, A2 and 42in; began self-producing an A2 ePoster in June 2025; supplies its own IGZO backplane paired with E Ink Spectra 6",
+   "abandonment_history": "Sharp has exited display businesses before (LCD fabs), which is a real risk factor for a niche line",
+   "makes_own_epd_film": false,
+   "staying_power": "medium-high",
+   "rationale": "The most interesting Japanese answer to the make-vs-assemble question: Sharp contributes the IGZO TFT backplane rather than just buying a finished module, so it is a genuine co-manufacturer. Products are retail-reachable in Japan. The 13.3in EP-C131 is only 4-colour, which limits art use, but its USB-stick workflow is the cleanest offline path found on a branded unit.",
+   "sources": [
+    {
+     "url": "https://smj.jp.sharp/bs/eposter/lineup/epc131.html",
+     "what_it_supports": "Full ePoster lineup, EP-C131 specs, three offline loading paths, absence of WiFi/LAN/API on that model"
+    },
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "Sharp named as an E Ink partner at InfoComm 2026"
+    },
+    {
+     "url": null,
+     "what_it_supports": "IGZO + Spectra 6 next-gen ePoster claim and the June 2025 A2 self-production date from E Ink press and Japanese search summaries; those pages not fetched"
+    }
+   ]
+  },
+  {
+   "name": "CREA Co., Ltd. (株式会社クレア)",
+   "country": "Japan",
+   "corporate_form": "Private company (est. 2007 per company name/domain)",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "Markets itself as offering the world's largest 42-inch e-paper signage; monochrome 42/32/13.3in plus colour 31.5/13.3in; runs a two-week loaner trial programme",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "Most useful small vendor in the sweep. They publish an RJ-45 wired LAN port on the units and HDMI on the monochrome models - HDMI on a 42in EPD means a plain computer can drive it, which no Chinese ODM and no tier-1 brand offers. Content workflow is deliberately unglamorous: PowerPoint exported to PNG/JPEG. Single units are available by quotation and they will lend you one for two weeks. Small Japanese firm, so staying power is the risk, not openness.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/",
+     "what_it_supports": "42/32/13.3in mono and 31.5/13.3in colour, RJ-45 LAN, HDMI on mono models, PowerPoint->PNG/JPEG, quantity-dependent pricing, two-week trial"
+    }
+   ]
+  },
+  {
+   "name": "TEIDEC Corporation (株式会社テイデック)",
+   "country": "Japan",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "13.3in and 31.5in full-colour e-paper digital signage, battery-driven, wireless, CMS-managed",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "A second independent Japanese integrator at the same sizes as CREA, which suggests Japan has a real domestic e-paper signage market that English-language surveys miss entirely. Marketed as CMS-first with no evidenced local path, so less attractive than CREA. I could not fetch their site, so this entry rests on search summaries.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "13.3in and 31.5in full-colour, battery, wireless, CMS - from Japanese search summaries of teidec.co.jp; page not fetched"
+    }
+   ]
+  },
+  {
+   "name": "StellarLink",
+   "country": "Japan",
+   "corporate_form": "IT solutions provider",
+   "ownership": "unknown",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "Announced October 2025 with two Spectra 6 products: J-Poster (A2, domestically produced in Japan) and aecoPost (31.5in, manufactured by AUO Display Plus)",
+   "abandonment_history": "Too new to assess",
+   "makes_own_epd_film": false,
+   "staying_power": "unknown",
+   "rationale": "Included because of what it reveals rather than what it sells: it is the first confirmed case of AUO Display Plus building finished 31.5in e-paper signage for someone else's brand. Expect more badges on ADP hardware. Japan-only distribution.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "J-Poster A2 made in Japan, aecoPost 31.5in made by ADP, both Spectra 6, announced 30 Oct 2025 - from the E Ink/StellarLink joint release as surfaced in search summaries (globenewswire, digitimes, sixteen-nine); release not fetched"
+    }
+   ]
+  },
+  {
+   "name": "PPDS (Philips Professional Display Solutions) / TPV Technology (冠捷科技)",
+   "country": "Netherlands brand / Taiwan-China manufacturer",
+   "corporate_form": "PPDS is the exclusive global Philips signage licensee, operated by TPV Technology",
+   "ownership": "TPV Technology",
+   "public_ticker": null,
+   "funding": "n/a",
+   "revenue_scale": "TPV is a multi-billion-USD monitor/TV ODM",
+   "headcount": "tens of thousands (TPV)",
+   "hardware_track_record": "First to market on the E Ink Spectra 6 platform with the 31.5in Philips Tableaux 5150I in November 2023, later 'sized up' to 32in; TPV demonstrated large-format e-paper with E Ink at Touch Taiwan 2026",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "Corrects a common misreading: 'Philips Tableaux' is not Philips manufacturing - it is TPV, a Taiwanese-Chinese ODM, under a brand licence. TPV is one of the largest display ODMs in the world, so staying power is high, but the product is sold through AV integrators rather than to individuals, and content is managed through Philips' signage stack.",
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Tableaux 5150I 31.5in first-to-market on Spectra 6 (Nov 2023) and the later 32in - from PPDS and BusinessWire search summaries; those pages not fetched"
+    },
+    {
+     "url": null,
+     "what_it_supports": "TPV demonstrating large-format e-paper with E Ink at Touch Taiwan 2026 - from search summary of a TVBS/invidis report; not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Advanced Display Lab Inc. (宇豐光電)",
+   "country": "Taiwan",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "E-paper signage, electronic shelf labels, transparent screens and LED displays; four e-paper signage models published",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "Found only by searching in traditional Chinese - invisible to both English and simplified-Chinese queries, which is exactly the sampling artefact this sweep was meant to expose. Offers a 28in 3840x1080 bar-type at >60,000 colours that nobody else lists. Publishes zero connectivity, price or MOQ information, so it is an OEM contact rather than a purchase option.",
+   "sources": [
+    {
+     "url": "https://www.adlab.com.tw/products/E-Paper/E-Paper-Signage/",
+     "what_it_supports": "Company identity and country, WYED312L/WYED280L/ADEP28NF01.0/WYED133C with sizes, resolutions and colour depth, no commercial terms published"
+    }
+   ]
+  },
+  {
+   "name": "Apex Material Technology (AMT)",
+   "country": "Taiwan",
+   "corporate_form": "Private company, est. 1998, Keelung",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "ePaper display solutions integrator - cover glass and touch-panel integration, front light guides, IR films and driving boards; optical bonding up to 42 inches; deployed in smart bus-stop signs and factory signage; ISO 9001/13485/14001/45001, UL, REACH, RoHS",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium-high",
+   "rationale": "A layer of the supply chain that Western surveys never name: the bonding and integration house that turns a bare EPD into a rugged assembly. Their 42in optical-bonding capability is the practical constraint on how large a finished, cover-glassed e-paper display can be. Not a product vendor.",
+   "sources": [
+    {
+     "url": "https://www.amtouch.com.tw/en/category/ePaper-Display-Solutions.html",
+     "what_it_supports": "Est. 1998 Keelung Taiwan, integration services, optical bonding to 42in, certifications, no product SKUs or MOQ published"
+    }
+   ]
+  },
+  {
+   "name": "TintTech",
+   "country": "Europe (EUR pricing, German and Estonian installations; HQ not stated on site)",
+   "corporate_form": "Private company",
+   "ownership": "unknown",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "Wired PoE ePaper signage at 9.7in, 13.3in and 32in, plus a self-hosted CMS",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "The best integration story found anywhere: a documented REST API, URL-based content pull, PoE single-cable install, NFC/RFID triggers, and an explicit 'No Recurring Fees. Ever.' with a one-time CMS licence. That combination does not exist among the Asian ODMs. The catch is that everything is monochrome 16-grey at 750ms, so it solves the control problem and fails the art problem. Small company, so durability is unproven.",
+   "sources": [
+    {
+     "url": "https://tinttech.io/products/wired-epaper-digital-signage/",
+     "what_it_supports": "Three sizes with EUR pricing, PoE, REST API, URL fetch, NFC/RFID, one-time CMS licence, no recurring fees, EU footprint"
+    }
+   ]
+  },
+  {
+   "name": "Praevar Corporation (eLuminex brand)",
+   "country": "Canada",
+   "corporate_form": "Private corporation, Richmond Hill, Ontario",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "eLuminex Placard EP32 32in Spectra 6 ePoster; operates across North America, UK, EMEA and APAC",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "A Western integrator badging the same 32in Spectra 6 panel as Samsung and LG, but with a cloud CMS and no published price. Strictly worse value than the Samsung unless a specific mounting or service contract is needed. Included because it surfaced as a genuinely new name.",
+   "sources": [
+    {
+     "url": "https://www.praevar.com/products/all/digital-display/eluminex-ep32-eposter/",
+     "what_it_supports": "Company location and corporate form, EP32 32in 2560x1440 Spectra 6 60k colours 4kg, WiFi+BLE, cloud CMS, no price or MOQ"
+    }
+   ]
+  },
+  {
+   "name": "Digital View",
+   "country": "unknown (not stated on the product page)",
+   "corporate_form": "unknown",
+   "ownership": "unknown",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "32in (31.2in active) outdoor e-paper display with front light, IP65 and IK8, optically bonded, rated for 24/7 full-sun operation; distributed through E Ink's own kit shop",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "unknown",
+   "rationale": "The only genuinely weatherproof large e-paper display found in the whole sweep. Loading is by USB image interface with Google Drive, network and PC options noted. Being carried in E Ink's own shop is a meaningful endorsement, but that shop refuses consumer orders, so an individual cannot buy it there. I deliberately did not guess the company's country.",
+   "sources": [
+    {
+     "url": "https://shopkits.eink.com/en/product/detail/DigitalView-32''OutdoorEPaperDisplay",
+     "what_it_supports": "31.2in AA 2560x1440 16-grey, front light, IP65/IK8, optical bonding, 24/7 outdoor, USB image interface plus Google Drive/network/PC options"
+    },
+    {
+     "url": "https://shopkits.eink.com/",
+     "what_it_supports": "The storefront's refusal to accept consumer orders"
+    }
+   ]
+  },
+  {
+   "name": "Guangdong Mingjinkang Technology Co., Ltd.",
+   "country": "China (Guangdong)",
+   "corporate_form": "Private manufacturer",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "25.3in E Ink digital poster at MOQ 1; e-ink meeting nameplates and other formats; a reported RK3566-based CMS variant",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "The standout price outlier: USD 390-430 for a 25.3in colour finished poster at MOQ 1, against USD 1400 for the bare 25.3in panel from E Ink's own shop. That gap is large enough to be suspicious - either the panel is a lower grade, the listing is stale, or the price is a lead-generation figure. Worth a direct quote, treated sceptically. If the RK3566 Android SoC report is right, ADB-based local pushing would likely be possible.",
+   "sources": [
+    {
+     "url": "https://www.made-in-china.com/products-search/hot-china-products/E_Paper_Poster.html",
+     "what_it_supports": "Company name, 25.3in E Ink digital poster, USD 390-430, MOQ 1 piece"
+    },
+    {
+     "url": null,
+     "what_it_supports": "RK3566 chip and USD 490 CMS-capable variant from an accio search summary; page not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Dongguan VETO Technology Co., Ltd.",
+   "country": "China (Dongguan)",
+   "corporate_form": "Private manufacturer",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small to mid",
+   "headcount": "unknown",
+   "hardware_track_record": "Primarily an LCD advertising-player, signage and totem manufacturer with Alibaba and Made-in-China storefronts; has added 31.5in/32in colour e-paper advertising displays",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "Representative of the largest category found in the long tail: LCD signage houses bolting an e-paper SKU onto an existing catalogue. MOQ 1 at USD 1159-1339 for 32in colour is attractive, and the listing claims SPI/API/SDK, but there is no documentation behind the claim and no e-paper engineering history.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-paper-display-32-inch",
+     "what_it_supports": "32in, USD 1159-1339, MOQ 1, claimed SPI/API/SDK, sub-1-second refresh claim. Known only from accio.com, an AI-generated aggregator over Alibaba listings; the underlying Alibaba pages would not fetch. Treat the company as a lead to verify."
+    }
+   ]
+  },
+  {
+   "name": "Fortune Achieve (Beijing) Technology Co., Ltd.",
+   "country": "China (Beijing)",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "31.5in E Ink E6 full-colour displays including a battery version, with a 1-second fast-refresh claim",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "Lowest 31.5in Spectra 6 price found at MOQ 1 (USD 995-1155). Appeared independently across three separate aggregator pages, which is mild corroboration that the listing is real. The 1-second refresh claim for E6 is implausible on its face and should be the first thing tested.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/e-ink-poster",
+     "what_it_supports": "31.5in battery version, USD 995-1155, MOQ 1"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-paper-display-32-inch",
+     "what_it_supports": "Same vendor, 'lowest entry price' framing, battery/SPI connectivity. Known only from accio.com, an AI-generated aggregator over Alibaba listings; the underlying Alibaba pages would not fetch. Treat the company as a lead to verify."
+    },
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "31.5in with 1-second refresh, MOQ 1 unit"
+    }
+   ]
+  },
+  {
+   "name": "Shineworld Innovations (Dongguan Shineworld / SWICN)",
+   "country": "China (Dongguan)",
+   "corporate_form": "Private manufacturer with its own web shop and Alibaba/Made-in-China storefronts",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Mid",
+   "headcount": "unknown; operates a 2,200 sq m cleanroom",
+   "hardware_track_record": "20+ years in display design and manufacturing, 1,000+ active customers in 100+ countries; OLED, TFT LCD, e-paper, waterproof TV and mirror TV; e-paper from 1.5in to 31.2in",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "A real module maker rather than a trading front - own cleanroom, own catalogue, customisation of FPC, cover lenses, touch and driver boards. But their 31.2in is a bare AVT6203A T-CON module, everything shows sold-out with inquiry-only, and the Alibaba storefront wants 1,000 boxes. Useful supply-chain node, useless as a single purchase.",
+   "sources": [
+    {
+     "url": "https://swicn.com/collections/e-paper-displays",
+     "what_it_supports": "13.3in SPI USD 129 and 31.2in 2560x1440 mono USD 1500, AVT6203A T-CON parallel COF, sold-out/inquiry-only"
+    },
+    {
+     "url": "https://www.accio.com/plp/largest-e-ink-display",
+     "what_it_supports": "31.2in 2560x1440 USD 988-1025 at MOQ 1000 boxes via the Alibaba storefront"
+    }
+   ]
+  },
+  {
+   "name": "Dalian Diamo Electronic Technology (大连点墨电子科技)",
+   "country": "China (Dalian)",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Very small",
+   "headcount": "unknown",
+   "hardware_track_record": "Six e-paper solution lines: advertising boards, smart transit, smart conference, development kits (Arduino/STM32/Raspberry Pi), labels and custom solutions; features a 25.3in four-colour Spectra 3100",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "A small Dalian solutions shop in E Ink's and Good Display's home city, invisible in English. Contact is a mobile number and a sales@ address; no specs, prices or MOQ published anywhere on the site. Notable mainly because it markets dev kits for Arduino/STM32/Raspberry Pi alongside signage, which hints at willingness to sell odd quantities.",
+   "sources": [
+    {
+     "url": "https://www.eink-display.cn/",
+     "what_it_supports": "Company name in Chinese and English, Dalian location, six solution categories including dev kits, 25.3in four-colour Spectra 3100 feature, absence of published specs/prices/MOQ, contact details"
+    }
+   ]
+  },
+  {
+   "name": "I C T S (Myanmar) Limited",
+   "country": "Myanmar (registration); goods are Chinese",
+   "corporate_form": "Limited company on Alibaba",
+   "ownership": "unknown",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "Listings covering 13.3in, 25.3in, 31.5in and 42in colour and touch e-paper, all at MOQ 1, including a 31.5in Spectra 6 advertising SPI/WiFi/4G",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "Widest MOQ-1 size range found and the only listing advertising 4G, but a Myanmar-registered entity offering the entire Chinese size ladder at price bands identical to other 'suppliers' on the same aggregator is almost certainly a reseller or a listing farm, not a factory. Flagged as a lead, not a recommendation.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/largest-e-ink-display",
+     "what_it_supports": "31.5in 2560x1440 Spectra 6 with SPI/WiFi/4G, USD 1263.50-1652, MOQ 1"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-poster",
+     "what_it_supports": "13.3-25.3in USD 750-1395 MOQ 1; identical band to another listed supplier"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "13.3in USD 280-390 and 31.5in USD 1263.50-1652, MOQ 1. Known only from accio.com, an AI-generated aggregator over Alibaba listings; the underlying Alibaba pages would not fetch. Treat the company as a lead to verify."
+    }
+   ]
+  },
+  {
+   "name": "Assorted marketplace ODMs (Clientop; Shenzhen Eurotech; Zhuhai Suny/Zhsunyco; Shenzhen Huayi; Guangzhou Zemso Electron; LD Display; SOLAR ENERGY TECHNOLOGY; EZAD; Guangdong SID/Hipoink; IDROID MEDIA; ATZ LLC; Huaxin Technology; Suzhou Highbright; Shenzhen Minew; Shenzhen Pinsheng)",
+   "country": "Mostly China (Shenzhen, Dongguan, Guangzhou, Zhuhai, Suzhou); some registrations elsewhere",
+   "corporate_form": "Marketplace suppliers of varying substance",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Small",
+   "headcount": "unknown",
+   "hardware_track_record": "Individually thin. Several are demonstrably ESL or LCD houses adding an e-paper SKU; at least one listing (Shenzhen Pinsheng 32in 4K touch Android 14) is LCD mis-shelved as e-paper by the aggregator.",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "low",
+   "rationale": "Grouped rather than given individual entries because the evidence for each is a single aggregator row. Collectively they are the answer to the brief's core question - the long tail is real and large, most of it will sell one unit, and essentially none of it documents how an image gets onto the screen. That last point is the finding, not an omission: across every Chinese marketplace listing examined, connectivity was either unstated or an undocumented 'SDK/API' claim.",
+   "sources": [
+    {
+     "url": "https://www.accio.com/plp/large-format-e-ink-display",
+     "what_it_supports": "DKE HK, Shenzhen Eurotech, ICTS, Fortune Achieve, Suzhou Highbright, Zhuhai Suny, Shenzhen Huayi, Shenzhen Minew, Guangzhou Zemso with prices and MOQs"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-poster",
+     "what_it_supports": "Dalian Good Display 31.5in USD 1318 MOQ 1, LD Display, SOLAR ENERGY TECHNOLOGY, ICTS, Fortune Achieve, EZAD"
+    },
+    {
+     "url": "https://www.accio.com/plp/largest-e-ink-display",
+     "what_it_supports": "Clientop, Geniatech, VETO, Shineworld, ICTS at 31-32in"
+    },
+    {
+     "url": "https://www.accio.com/plp/e-ink-frame",
+     "what_it_supports": "SOLAR ENERGY TECHNOLOGY, ICTS, Guangdong SID/Hipoink, IDROID MEDIA, ATZ LLC"
+    },
+    {
+     "url": "https://www.globalsources.com/E-paper/Epaper-displays-Electronic-paper-1220307685p.htm",
+     "what_it_supports": "Huaxin Technology 13.3in Spectra 6 tiered pricing and the platform's own accuracy warning"
+    }
+   ]
+  },
+  {
+   "name": "China E-Paper Industry Alliance (电子纸产业联盟, EPIA)",
+   "country": "China",
+   "corporate_form": "Industry body, founded 28 April 2021",
+   "ownership": "Jointly founded by E Ink, BOE and Jiangxi Xingtai (Holitech's e-paper arm)",
+   "public_ticker": null,
+   "funding": "Member-funded",
+   "revenue_scale": "n/a",
+   "headcount": "260+ member organisations",
+   "hardware_track_record": "n/a - runs an industry database at epaperia.com",
+   "abandonment_history": "n/a",
+   "makes_own_epd_film": null,
+   "staying_power": "high",
+   "rationale": "Not a vendor, but the most valuable structural artefact found. It is the enumerable map of the Chinese long tail, and its membership shows the shape of the ecosystem: a handful of module makers, a very long tail of component suppliers (driver ICs, connectors, batteries, touch), and downstream brands. Council-tier members are mostly components, which is itself informative - the display-making layer is narrow, the supply layer is wide.",
+   "sources": [
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "Alliance identity, founding trio, member companies incl. E Ink, BOE Chongqing, Jiangxi Xingtai, Lenovo, TCL CSOT, Hanshow, Chengdu Duxie, Hangzhou Zhikong, Zhejiang Oriental Kemai, Yiwu Qingyue, Lianji, VusionGroup, Qixin, Huike; link to the /Search.html industry database"
+    },
+    {
+     "url": "https://www.epaperia.com/NewsTag-691.html",
+     "what_it_supports": "Council-tier members: Zhejiang Jessie Tai (connectors), Shenzhen Pochengxin, Novatek, Shandong Huayi Micro, Changzhou Yufeng Battery, Yantai Zhenghai (touch), Beijing Yujie Yuanliu, Shenzhen Gode Xinc (ultra-stable LCD), Epiink"
+    },
+    {
+     "url": null,
+     "what_it_supports": "Founding date, 250+/260+ membership counts and the full named member list including Lenovo/TCL CSOT/Hanshow/iFlytek from a cls.cn search summary; that page not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Qingyue Optoelectronics (清越光电, Suzhou/Yiwu)",
+   "country": "China",
+   "corporate_form": "Listed company",
+   "ownership": "Public",
+   "public_ticker": null,
+   "funding": "Public markets",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "E-paper modules alongside AMOLED and silicon-based OLED",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium-high",
+   "rationale": "Top-5 on the CNPP Chinese e-paper brand ranking and an alliance member, but its published focus is modules rather than large-format finished signage. Recorded for completeness of the Chinese module layer.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "苏州清越光电科技股份有限公司, e-paper modules + AMOLED + silicon OLED"
+    },
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "义乌清越光电科技有限公司 as an alliance member"
+    }
+   ]
+  },
+  {
+   "name": "MVE / Lianji Electronics (联积电子, Shenzhen)",
+   "country": "China",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "Professional e-paper display module manufacturer - e-paper, EPD, electronic labels, e-paper display modules and LCD modules; multiple patents; deployed in smart retail, transport, medical, education and logistics",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "Named repeatedly across independent Chinese sources (CNPP ranking, alliance membership, the Laibao investigation) as a genuine domestic module maker. No published large-format signage product, so upstream only.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "联积电子MVE, Shenzhen, e-paper/EPD/labels/modules"
+    },
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "联积电子(深圳)有限公司 as an alliance member"
+    },
+    {
+     "url": "https://news.qq.com/rain/a/20241122A048CP00",
+     "what_it_supports": "Named among the companies in the Chinese e-paper landscape"
+    }
+   ]
+  },
+  {
+   "name": "HKC / Huike (惠科股份)",
+   "country": "China",
+   "corporate_form": "Large private display group",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Private and state-linked investment",
+   "revenue_scale": "Multi-billion USD panel maker",
+   "headcount": "tens of thousands",
+   "hardware_track_record": "Diversified display products; listed among the top-10 Chinese e-paper brands and an alliance member",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": false,
+   "staying_power": "high",
+   "rationale": "Included because a panel maker of HKC's size entering e-paper is a durability signal for the category. No evidence of a large-format e-paper product available to buy.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "惠科HKC listed among top-10 Chinese e-paper display brands"
+    },
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "惠科股份有限公司 as an alliance member"
+    }
+   ]
+  },
+  {
+   "name": "Armor Digital Screen",
+   "country": "China",
+   "corporate_form": "Private manufacturer",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "Claims 10 automated lines and 20,000+ units/day",
+   "headcount": "unknown",
+   "hardware_track_record": "15+ years claimed, 8+ years of OEM/ODM service; names Walmart and IKEA as customers; states 31.5in capability",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "medium",
+   "rationale": "Self-reported scale is large enough to matter if true, and 31.5in capability puts them in the large-format tier. All the claims come from their own marketing page, so confidence is limited. Their manufacturer round-up is also notable for stating plainly that Guangzhou OED 'broke E Ink's monopoly' on materials.",
+   "sources": [
+    {
+     "url": "https://armordigitalscreen.com/top-10-e-ink-display-manufacturers/",
+     "what_it_supports": "Self-description, 15+ years, 8+ years OEM/ODM, Walmart/IKEA, 10 lines, 20k units/day, 31.5in; and the OED materials-independence claim"
+    }
+   ]
+  },
+  {
+   "name": "Agile (E Ink ecosystem partner; Agile Conversion Engine)",
+   "country": "unknown",
+   "corporate_form": "unknown",
+   "ownership": "unknown",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "Co-developed the 75in Kaleido 3 display shown at InfoComm 2026; supplies ACE middleware that syncs content, converts assets for E Ink and orchestrates delivery, now interoperating with Navori Labs' CMS",
+   "abandonment_history": "unknown",
+   "makes_own_epd_film": false,
+   "staying_power": "unknown",
+   "rationale": "The most important software-layer name found. ACE is the first middleware that makes e-paper drivable from a mainstream enterprise CMS, which is how large e-paper will actually get deployed. Country and corporate details were not stated in the E Ink release and I refuse to guess them.",
+   "sources": [
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "Agile as ecosystem partner, 75in Kaleido 3, ACE middleware function, ACE-Navori CMS interoperation"
+    }
+   ]
+  },
+  {
+   "name": "E Ink Holdings (元太科技)",
+   "country": "Taiwan",
+   "corporate_form": "Listed company",
+   "ownership": "Public",
+   "public_ticker": "TPEx:8069 (also listed in Luxembourg)",
+   "funding": "Public markets",
+   "revenue_scale": "Dominant; cited variously at 65-90%+ of the ePaper market",
+   "headcount": "thousands",
+   "hardware_track_record": "Sole owner of microcapsule and microcup ePaper technologies; supplies essentially the entire large-format ecosystem; sells reference displays under its own name (won a Taiwan Excellence Gold Award for a 32in colour e-paper display)",
+   "abandonment_history": "None",
+   "makes_own_epd_film": true,
+   "staying_power": "high",
+   "rationale": "Re-surveyed only to answer the make-vs-assemble question definitively. Every large-format product in this report except the pre-commercial MED/DES work traces back to E Ink film. Two new facts worth recording: E Ink's own kit shop explicitly refuses consumer orders, and E Ink did not take its own stand at Touch Taiwan 2026 for the first time - a sign it is now operating through partners rather than showcasing directly.",
+   "sources": [
+    {
+     "url": "https://shopkits.eink.com/",
+     "what_it_supports": "Consumer-order refusal clause and current panel pricing/stock"
+    },
+    {
+     "url": "https://www.taiwanexcellence.org/jp/product/39483",
+     "what_it_supports": "E Ink Holdings itself as the award-holder for a 32in colour e-paper display, 'world's first 32-inch colour e-paper display'"
+    },
+    {
+     "url": "https://invidis.com/news/2026/04/touch-taiwan-a-glimpse-into-the-future-of-displays/",
+     "what_it_supports": "E Ink 'for the first time, did not exhibit with its own stand' at Touch Taiwan 2026"
+    },
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "Marquee platform, 75in tiled Spectra 6, partner ecosystem"
+    }
+   ]
+  },
+  {
+   "name": "Guangzhou OED Technologies (广州奥翼电子科技)",
+   "country": "China",
+   "corporate_form": "Joint-stock company, founded 2008",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "unknown",
+   "revenue_scale": "unknown",
+   "headcount": "unknown",
+   "hardware_track_record": "Flexible e-paper backplanes, display modules and flexible display products; released a 31.2in video-capable e-paper display that reportedly reached mass production; in IP litigation with E Ink",
+   "abandonment_history": "None found",
+   "makes_own_epd_film": true,
+   "staying_power": "medium-high",
+   "rationale": "Already known to the survey, but re-confirmed here as the answer to the film question: multiple independent Chinese and English sources describe OED as one of only two or three firms worldwide with independent e-paper materials R&D, and as having challenged E Ink's dominance through patent litigation in Europe. Its 31.2in video e-paper is the only large-format panel in this sweep not traceable to E Ink film.",
+   "sources": [
+    {
+     "url": "https://www.cnpp.cn/china/list_10541.html",
+     "what_it_supports": "奥翼OED, Guangzhou, founded as a flexible e-paper backplane and module maker"
+    },
+    {
+     "url": "https://armordigitalscreen.com/top-10-e-ink-display-manufacturers/",
+     "what_it_supports": "'Broke E Ink's monopoly'; one of very few firms with independent e-paper material R&D; European patent litigation"
+    },
+    {
+     "url": "https://jiclcd.com/top-10-global-e-paper-display-module-manufacturers/",
+     "what_it_supports": "OED Technologies, regional Asian strength, IP litigation with E Ink"
+    },
+    {
+     "url": null,
+     "what_it_supports": "31.2in video e-paper reaching mass production - from a Tencent Cloud news search summary; page not fetched"
+    }
+   ]
+  },
+  {
+   "name": "Other named-but-upstream or adjacent entities (TCL CSOT; Tianma; BOE Varitronix; Innolux; GiantPlus; Plastic Logic; CLEARink; Ynvisible; E-Paper Innovation; Soldered Electronics; Visionect; SyncSign; Navori Labs; Advantech; Askey Computer; Green Ideas Technology; Hanshow; VusionGroup; Pricer; Zkong; Orient Display; Jictech; Suzhou Tongli; Refond; Shenzhen Gode Xinc; Shenzhen Haoqing; Qingdao Ansenke; Shenzhen Meidewei; Intesys; Aim Great; Panasonic; Sony; Densitron; Huessen; Aluratek; InkPoster; Aura; Reflection Frame; HCK Corp; iPolish; Meris; NewFace; Mercury)",
+   "country": "Mixed - China, Taiwan, Japan, Korea, Europe, North America",
+   "corporate_form": "Mixed",
+   "ownership": "Mixed",
+   "public_ticker": null,
+   "funding": "Mixed",
+   "revenue_scale": "Mixed",
+   "headcount": "Mixed",
+   "hardware_track_record": "Each is a genuine new name surfaced during the sweep, but each either operates below the 13in threshold, supplies components or software rather than displays, or was surfaced only in a partner list without a verifiable large-format product.",
+   "abandonment_history": "Not assessed individually",
+   "makes_own_epd_film": false,
+   "staying_power": "unknown",
+   "rationale": "Recorded as a group so the enumeration is honest about its breadth without inflating the vendor count with entries I could not substantiate. Several deserve individual follow-up - notably Innolux and GiantPlus (Taiwanese panel makers now adjacent to reflective displays), Shenzhen Gode Xinc (an ultra-stable LCD route that is not electrophoretic), and Huessen/Aluratek/InkPoster (13.3in consumer art frames sold single-unit through B&H, Petra and Amazon).",
+   "sources": [
+    {
+     "url": "https://blog.eink.com/e-ink-at-computex-2026-expanding-the-possibilities-of-epaper",
+     "what_it_supports": "ZKONG, Pricer, Vusion, AUO Display Plus, SEEKINK, HCK Corp, iPolish, Aura, Reflection Frame, Aluratek, InkPoster as E Ink partners"
+    },
+    {
+     "url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026",
+     "what_it_supports": "NewFace, Mercury, Meris, Navori Labs, Agile, BOE, Sharp, Seekink"
+    },
+    {
+     "url": "https://jiclcd.com/top-10-global-e-paper-display-module-manufacturers/",
+     "what_it_supports": "Plastic Logic, CLEARink, Tianma, Visionect, LG Display with countries and shares"
+    },
+    {
+     "url": "https://www.epaperia.com/",
+     "what_it_supports": "TCL CSOT, Hanshow, VusionGroup, Lenovo as alliance members"
+    },
+    {
+     "url": "https://invidis.com/news/2026/04/touch-taiwan-a-glimpse-into-the-future-of-displays/",
+     "what_it_supports": "Innolux and AUO as Taiwanese component makers at Touch Taiwan 2026; Merck materials"
+    },
+    {
+     "url": "https://www.epaperia.com/NewsTag-691.html",
+     "what_it_supports": "Shenzhen Gode Xinc ultra-stable LCD, Novatek, and other component-tier members"
+    },
+    {
+     "url": "https://www.zhsunyco.com/list-of-e-ink-display-manufacturers/",
+     "what_it_supports": "Zkong, Orient Display, Crystalfontz, Buy Display as named manufacturers"
+    },
+    {
+     "url": "https://www.adlab.com.tw/products/E-Paper/E-Paper-Signage/",
+     "what_it_supports": "Taiwanese e-paper signage supplier tier found only via traditional-Chinese search"
+    }
+   ]
+  }
+ ],
+ "leads_not_followed": [
+  {
+   "lead": "Touch Taiwan 電子紙應用 exhibitor list at touchtaiwan.com/Display/en/visitorExhibitor.asp?Area=1920 returned HTTP 403.",
+   "why_it_matters": "E Ink assembled 101 supply-chain partners into an ePaper Pavilion. This is the single largest directly enumerable list of e-paper companies in existence and I could not open it. It would likely double the vendor count on its own."
+  },
+  {
+   "lead": "epaperia.com industry database at /Search.html - the alliance's 260+ member directory.",
+   "why_it_matters": "I fetched the landing page and the council-member page, which together named about 25 companies. The searchable database behind /Search.html holds the other ~235. It is the definitive map of the Chinese long tail."
+  },
+  {
+   "lead": "Alibaba and 1688 product pages are unfetchable (empty bodies) and Zhihu returns 403.",
+   "why_it_matters": "Roughly 15 marketplace ODMs in this report rest on an AI aggregator's secondhand reading of Alibaba listings rather than the listings themselves. Price and MOQ figures for that tier should be re-verified by a human with a browser before anyone acts on them."
+  },
+  {
+   "lead": "Metoree's Japanese ranking of 26+ 電子ペーパー manufacturers returned 403.",
+   "why_it_matters": "Japan produced three genuinely new integrators (CREA, TEIDEC, StellarLink) from a single search. A full Japanese vendor list would likely yield several more, and Japanese vendors are unusually forthcoming about local connectivity (RJ-45, HDMI, USB)."
+  },
+  {
+   "lead": "Guangdong Mingjinkang's 25.3in colour poster at USD 390-430 MOQ 1, reportedly RK3566-based.",
+   "why_it_matters": "If real, it is a third of the price of any comparable unit and an Android SoC would likely permit ADB-based local pushing. This is the single highest-value item to verify with a direct quote."
+  },
+  {
+   "lead": "CREA's HDMI input on its 42in and 32in monochrome e-paper signage.",
+   "why_it_matters": "HDMI on an EPD is nearly unheard of and would let an ordinary computer drive a 42in e-paper panel with no vendor software at all. Worth confirming directly with CREA, including whether the colour models have it."
+  },
+  {
+   "lead": "Good Display's ESP32-S3-WROOM-1U mainboard in the 31.5in DMPH315E6x, plus downloadable XTacepSetup and Smart EPD APP.",
+   "why_it_matters": "An ESP32-S3 is fully documented and reflashable. This is the most plausible route to a genuinely open local-push 31.5in colour display. Someone should dump the firmware and see whether the WiFi update path is a plain HTTP endpoint."
+  },
+  {
+   "lead": "Agile Conversion Engine (ACE) middleware and its new Navori Labs CMS bridge.",
+   "why_it_matters": "First middleware to make e-paper drivable from a mainstream CMS. Agile's country and corporate identity were not stated in E Ink's release and could not be established without guessing."
+  },
+  {
+   "lead": "AUO Display Plus / E Ink joint venture output and which brands it is building for.",
+   "why_it_matters": "StellarLink's aecoPost is one confirmed badge. Identifying the rest would reveal how much of the 31.5in market is a single Taoyuan production line under different logos - important for judging whether vendor diversity is real or cosmetic."
+  },
+  {
+   "lead": "Laibao Hi-Tech's MED (micro-cavity display) programme.",
+   "why_it_matters": "A ~USD 1.2bn bet on a non-E-Ink reflective technology. Currently zero revenue and stalled, but it is the only credible path to breaking the film monopoly at scale. Worth a status check annually."
+  },
+  {
+   "lead": "13.3in consumer art frames sold single-unit in the West: Huessen EPF1301 (B&H, Petra), Aluratek, InkPoster, eco4lifehome.",
+   "why_it_matters": "These are the only large colour e-paper products confirmed purchasable by an individual through normal retail with app/cloud sync. Their integration openness was never examined in this sweep because the brief pointed at Asian ODMs."
+  },
+  {
+   "lead": "Sharp EP-C251 (25.3in) and EP-421 (42in) individual spec pages.",
+   "why_it_matters": "Only the 13.3in EP-C131 page was fetched. The 25.3in colour model in particular may have better connectivity than the 13.3in, which lacks WiFi and LAN entirely."
+  },
+  {
+   "lead": "Shenzhen Gode Xinc's 超稳态液晶显示技术 (ultra-stable LCD).",
+   "why_it_matters": "A reflective display route that is neither electrophoretic nor ChLCD, surfaced only in the alliance council list. Unexamined."
+  },
+  {
+   "lead": "Chinese government procurement records (中标公告) for e-paper bus-stop and signage deployments.",
+   "why_it_matters": "Tender awards name the actual winning integrators with prices, which is far harder evidence than marketplace listings. A Yangzhou e-paper bus-stop pilot surfaced in search but was not pursued."
+  },
+  {
+   "lead": "Whether the 42in class is E Ink's ED420TT1 panel in every case.",
+   "why_it_matters": "Sharp, CREA, DKE, Holitech, Good Display and ATZ all offer a 42in monochrome. If they are all the same panel, the apparent vendor diversity at 42in is one panel with six badges."
+  }
+ ],
+ "unverified_facts": [
+  {
+   "claim": "Samsung EM32DX street price of USD 779.99 and launch price of USD 1200.",
+   "why_unverified": "Both figures come from search-result summaries (SamMobile, Newegg US, Korean press). The Newegg page I actually fetched was the AU region listing and showed no price, only 'UNAVAILABLE FOR AUSTRALIA'.",
+   "url": null
+  },
+  {
+   "claim": "LG's 32in e-paper specifications (2560x1440, 17.8mm/8.6mm, 3.1kg, 72Wh battery, magnetic wireless charging, webOS + SuperSign).",
+   "why_unverified": "Only Chinese (Sigmaintell) and Korean (etnews) search summaries. No LG primary page was fetched.",
+   "url": null
+  },
+  {
+   "claim": "Holitech's ~22% share of the Chinese e-paper module market, >80% e-paper revenue share, and 25 million units/year Vietnam phase-1 capacity.",
+   "why_unverified": "From Chinese financial-press search summaries. The cninfo annual-report PDF was not fetched.",
+   "url": null
+  },
+  {
+   "claim": "Shenzhen Qiutianwei's full-chain in-house film capability and 32 e-paper patents.",
+   "why_unverified": "From search summaries of investor-relations PDFs on cninfo/zqrb and a 163.com interview with the board secretary. None of those PDFs were fetched.",
+   "url": null
+  },
+  {
+   "claim": "AUO Display Plus / E Ink JV terms: TWD 390 million, 51/49 split, Taoyuan, Q4 2025 mass production.",
+   "why_unverified": "From invidis and E Ink press summaries surfaced in search results. The JV announcement itself was not fetched. The partnership's existence IS confirmed by fetched E Ink pages naming ADP as a partner.",
+   "url": null
+  },
+  {
+   "claim": "Price and MOQ figures for roughly fifteen Chinese marketplace ODMs (Fortune Achieve, VETO, Clientop, ICTS Myanmar, Eurotech, Zhuhai Suny, Huayi, Zemso, LD Display, SOLAR ENERGY, EZAD, SID/Hipoink, IDROID, ATZ, Highbright).",
+   "why_unverified": "All read off accio.com, an AI-generated aggregator over Alibaba. The underlying Alibaba product pages returned empty bodies when fetched. One entry in the same result set (Shenzhen Pinsheng, 32in 4K touch Android 14) is plainly an LCD mis-shelved as e-paper, which demonstrates the aggregator makes classification errors.",
+   "url": null
+  },
+  {
+   "claim": "Dongguan VETO's '31.5 inches colour e-paper display' and sub-1-second refresh.",
+   "why_unverified": "Aggregator listing only; VETO's own storefronts were not fetched and their primary business is LCD signage.",
+   "url": null
+  },
+  {
+   "claim": "Guangdong Mingjinkang's RK3566-based CMS variant at ~USD 490.",
+   "why_unverified": "From an accio search summary. Only the Made-in-China listing (25.3in, USD 390-430, MOQ 1) was verified on a fetched page.",
+   "url": null
+  },
+  {
+   "claim": "TEIDEC's product specifications and CMS behaviour.",
+   "why_unverified": "Japanese search summaries of teidec.co.jp only; the site was not fetched.",
+   "url": null
+  },
+  {
+   "claim": "StellarLink's J-Poster and aecoPost details.",
+   "why_unverified": "From search summaries of the E Ink/StellarLink release on globenewswire, digitimes and sixteen-nine. The release was not fetched.",
+   "url": null
+  },
+  {
+   "claim": "PPDS/Philips Tableaux 5150I being first to market on Spectra 6 in November 2023.",
+   "why_unverified": "BusinessWire and PPDS search summaries; neither page was fetched.",
+   "url": null
+  },
+  {
+   "claim": "Guangzhou OED's 31.2in video e-paper reaching mass production.",
+   "why_unverified": "Tencent Cloud news search summary; page not fetched. OED's materials independence IS supported by two fetched round-up pages.",
+   "url": null
+  },
+  {
+   "claim": "Sharp's A2 ePoster self-production start date of 18 June 2025 and its IGZO + Spectra 6 construction.",
+   "why_unverified": "Japanese search summaries and an E Ink press headline. The fetched Sharp page confirms an A2/72.5cm model exists in the lineup but not the date or the backplane.",
+   "url": null
+  },
+  {
+   "claim": "That DKE buys E Ink film rather than making its own.",
+   "why_unverified": "DKE's own site is silent on film sourcing. Chinese trade press consistently lists only E Ink, OED and Wuxi Weifeng as domestic film makers, which implies DKE buys, but I found no direct statement. Recorded as null in the vendor record rather than guessed.",
+   "url": null
+  },
+  {
+   "claim": "Wuxi Weifeng using E Ink film in all shipped products despite owning DES technology.",
+   "why_unverified": "Two search summaries assert this; it sits in tension with the fetched Tencent investigation describing DES as its own technology. Both readings are recorded.",
+   "url": null
+  },
+  {
+   "claim": "Samsung 13in and 20in colour e-paper at ISE 2026, including a bio-resin 13in world-first.",
+   "why_unverified": "Samsung Newsroom search summary; page not fetched.",
+   "url": null
+  },
+  {
+   "claim": "E Ink's 75in colour install at Taoyuan International Airport.",
+   "why_unverified": "Search summary of a barchart/E Ink item. The fetched InfoComm release confirms a 75in tiled Spectra 6 demo but not the airport installation.",
+   "url": null
+  }
+ ]
+}

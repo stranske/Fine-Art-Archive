@@ -158,13 +158,23 @@ the transport.
 
 ### The three serious alternatives, and what each costs
 
-**Fraimic Large Canvas 31.5" — $1,299, and it has actually shipped.** Backers
-posted receipts on the public campaign wall on 4–5 August 2026; New Atlas and
-Notebookcheck both independently confirm a working `fraimic.local` Home
-Assistant integration, one noting the frame "won't turn into a paperweight if
-Fraimic ever disappears." Against that: Fraimic's own user manual documents only
-the cloud path and never mentions the API or local mode, so the local route
-works but is unspecified; the list price rose ~50% from the announced $999;
+**Fraimic Large Canvas 31.5" — $1,299, shipped, and genuinely documented.**
+Backers posted receipts on the public campaign wall on 4–5 August 2026.
+
+An earlier draft here called its local API "a marketing claim, not a documented
+one". That was wrong, and the correction matters: **Fraimic's own GitHub
+organisation publishes a REST API guide** — "No internet required for local
+communication. No account needed." — covering `GET /api/info`, refresh, sleep,
+restart and direct artwork upload, with no authentication. The same org
+publishes **`fraimic_bin_converter`** under MIT, which packs an image into the
+exact 4-bit indexed format the panel expects (960,000 bytes at 1200×1600 for the
+EL133UF1). So Fraimic, not only BLOOMIN8, accepts pre-dithered data. Its README
+independently confirms this survey's colour finding, quantising with "a metric
+tuned for the muted, real-world colours of Spectra 6" rather than naive RGB.
+Eight public repos exist including two Home Assistant integrations and a
+third-party ESP32-S3 reimplementation. Caveat: the converter targets the 13.3"
+panel; whether the 31.5" uses the same path is unconfirmed. Against it: the list
+price rose ~50% from the announced $999;
 both SKUs currently show sold out; and delivery ran ~3 months late.
 
 **BLOOMIN8 EinkCanvas 28.5" — the best-documented local control surface in the
@@ -247,8 +257,15 @@ supply chain. E Ink's own filings name BOE, DKE, Seekink, Innolux, Qingyue and
 Yes Optoelectronics as **module** partners supplied with E Ink colour film. BOE,
 the most-cited challenger, co-founded E Ink's trade alliance and holds ~40% of
 the ESL *module* market while buying E Ink film. LG's 32" unit is an E Ink
-Spectra 6 panel. The AUO arrangement is **still only a term sheet**, covering
-module assembly. Tianma is at 6.7" prototypes; CLEARink never shipped.
+Spectra 6 panel. Tianma is at 6.7" prototypes; CLEARink never shipped.
+
+**Correction from round 3:** an earlier version of this document said the AUO
+arrangement was "still only a term sheet". It is not. **AUO Display Plus and
+E Ink formed a joint venture** (ADP 51% / E Ink 49%, Taoyuan) with large-format
+EPD modules **in mass production since Q4 2025** — the first genuine second
+source for large-format modules. It comes with a warning attached: StellarLink's
+31.5" aecoPost is ADP-built, so an unknown number of apparently independent
+31.5" brands are one production line under different logos.
 
 **What breaks it — two genuine second sources above 15":**
 
@@ -285,6 +302,75 @@ large-format e-paper device on the market, then closed the division and deleted
 the page within about three years. reMarkable — the only vendor here with
 audited financials and real profit — has cut ~40% of staff in eight months and
 carries a bond maturing inside the three-year window.
+
+---
+
+## Round 3 — what a discovery-first sweep added
+
+Rounds 1 and 2 briefed researchers with vendor NAMES, so they largely re-found
+what was already known. Round 3 started from search vocabulary instead — English
+"poster"/signage terms, Chinese and Japanese manufacturer searches, the retail
+ESL industry, community/DIY surfaces, Korean, and application verticals. The
+new-to-known ratio ran from 3:2 to 17:1, which says the earlier ~33-vendor
+picture was a sampling artifact rather than a small field.
+
+**The strongest architectural finds, all new:**
+
+- **CREA** (Japan) is the standout. Its **EPS 42"** monochrome (2160×2880, 16
+  grey) has **HDMI in, RJ-45, USB host and an SD slot**, with documented
+  standalone-slideshow and FTP auto-update modes — a self-hosted app can drive it
+  with no vendor account at all. HDMI on a 42" e-paper panel means an ordinary
+  computer drives it. Its **EPS s-color 31.5"** (Spectra 6, 1440×2560) is the
+  colour sibling and takes a scheduled slideshow from a **microSD card**, cloud
+  optional. CREA sells single units and lends evaluation units for two weeks.
+- **Advantech** — 28.6" Spectra 6 at 3060×2160, USB carousel plus Ethernet and
+  Wi-Fi, and `DeviceOn/ePaper` **installs on your own Ubuntu server**. Industrial
+  vendor, single units, real datasheets.
+- **Sharp ePoster** (EP-C251, 25.3" colour) loads purely from a **USB-C
+  thumbdrive** — the cleanest offline path from a tier-1 manufacturer.
+- **ADLAB** (Korea, found only via its Korean-language site) — 31.2" mono and
+  13.3" colour running **stock Linux** with USB-A host, RJ45, IP65 and removable
+  micro-SD system storage. Update path undocumented; one email would settle it.
+- **AUO Display Plus AecoPost 31.5" *Mobile*** — Spectra 6, pushed from a phone
+  over WiFi or Bluetooth. AUO sells a separate "Cloud Model", which is itself
+  evidence the Mobile SKU needs none.
+- **Frame Labs** — the frame **pulls from an image-server URL you set**, with an
+  open-source server library, so there is no vendor server to switch off.
+
+**Artwork actually on e-paper — one real precedent.** Cloud8 Blanc installed a
+31.5" **CREA EPS s-color** in 2025 at a facility devoted to the late
+illustrator Minoru Nagao, showing illustration posters. That is a colour e-paper
+panel doing this exact job. (The other cases found — DAZZLE's 2,100-tile facade
+at San Diego airport, the BMW i5 Flow NOSTOKANA carrying Esther Mahlangu's
+Ndebele patterns — use E Ink Prism, which is segmented film, not an image
+display.) Artec Design's 650-display PoE installation at the Estonian National
+Museum remains the closest institutional analogue.
+
+**A ceiling worth planning around.** 42" is the largest SINGLE panel; everything
+above (75", 102") is tiled. And above 32" the colour is **Kaleido 3**, a
+colour-filter array with weak saturation. **Artwork-capable colour (Spectra 6)
+tops out at about 31.5–32" in shipping product.**
+
+**Price floor, with a caveat.** Roughly fifteen Chinese suppliers accept MOQ 1,
+including a 25.3" colour poster at USD 390–430 against $1,400 for E Ink's own
+module. But essentially none of them document how an image gets onto the screen
+— that silence is the finding. Several marketplace figures came via an AI
+aggregator that demonstrably misclassifies (it listed a 4K Android LCD as
+e-paper), so that tier is leads to verify, not quotes.
+
+**Two hypotheses disconfirmed, recorded so nobody re-runs them.** The ESL majors
+do NOT have large poster lines: VusionGroup stops at 12.2" e-paper and goes LCD
+above; Hanshow tops out ~7.5". Only SOLUM fit the hypothesis. And there is **no
+hidden Korean manufacturer tier** at ≥13" — thirteen Korean queries converged on
+Samsung, LG and SOLUM. The Korean sweep still paid for itself by finding ADLAB
+and a real street price for the Samsung 32" (₩1,710,000 against ₩2,390,000 list).
+
+**Where the remaining tail is.** Saturation was reached in every stream, but on
+the *reachable* web. Blocked or gated: Touch Taiwan's 101-partner exhibitor list,
+every Alibaba/1688 product page, and Reddit (refused on every fetch — genuinely
+unsampled, not saturated). The ePaper Industry Alliance directory turned out to
+publish **52 members, not the 260+ assumed**; the remaining ~208 sit behind
+registration, which is an account decision rather than a research one.
 
 ---
 
