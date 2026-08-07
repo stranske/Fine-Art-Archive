@@ -1897,15 +1897,32 @@
             <label class="sub">Artist<br>
               <select id="ek-artist" style="width:100%"><option value="">any</option>
                 ${f.artists.map(a => opt(a.value, a.value, a.count)).join("")}</select></label>
-            <label class="sub">Genre<br>
-              <select id="ek-genre" style="width:100%"><option value="">any</option>
-                ${f.genres.map(g => opt(g.value, g.value, g.count)).join("")}</select></label>
             <label class="sub">Period<br>
               <select id="ek-period" style="width:100%"><option value="">any</option>
                 ${f.periods.map(p => opt(p.key, p.label)).join("")}</select></label>
             <label class="sub">Mood<br>
               <select id="ek-mood" style="width:100%"><option value="">any</option>
                 ${f.moods.map(m => opt(m.key, m.label, f.mood_counts[m.key] || 0)).join("")}</select></label>
+          </div>
+
+          <!-- Tag-family controls are GENERATED from what the archive contains.
+               Nothing here is hardcoded, so a family the tagger adds tomorrow
+               (theme:, era-depicted: and palette: all appeared after the first
+               build) shows up on the next page load with no code change. -->
+          <div class="sub" style="margin-top:12px;margin-bottom:4px">
+            Filter by tag — ${Object.keys(f.families).length} families found in the archive,
+            generated from the data so new tags appear automatically
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px">
+            ${Object.entries(f.families).map(([fam, d]) => `
+              <label class="sub">${fam} <span style="opacity:.6">(${d.values.length})</span><br>
+                <select class="ek-fam" data-family="${fam}" style="width:100%">
+                  <option value="">any</option>
+                  ${d.values.map(v => opt(v.tag, v.value, v.count)).join("")}
+                </select></label>`).join("")}
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
             <label class="sub">Min rating (fit)<br>
               <select id="ek-fit" style="width:100%"><option value="">any</option>
                 ${[6,7,8,9,10].map(n => opt(n, n + "+")).join("")}</select></label>
@@ -1914,12 +1931,18 @@
                 ${["fit","year","artist","title","quality","random"].map(x => opt(x, x)).join("")}</select></label>
             <label class="sub">Limit<br>
               <input id="ek-limit" type="number" min="1" max="500" value="30" style="width:100%"></label>
+            <label class="sub">Rotate every<br>
+              <select id="ek-interval" style="width:100%">
+                ${(T.intervals || ["hourly","6h","12h","daily","weekly"]).map(x => opt(x, x)).join("")}</select></label>
             <label class="sub">Panel<br>
               <select id="ek-target" style="width:100%">
                 ${T.targets.map(t => opt(t.key, `${t.label} ${t.width}x${t.height}`)).join("")}</select></label>
             <label class="sub">Dither<br>
               <select id="ek-dither" style="width:100%">
                 ${["floyd-steinberg","atkinson","none"].map(x => opt(x, x)).join("")}</select></label>
+            <label class="sub">Fit<br>
+              <select id="ek-fitmode" style="width:100%">
+                ${["","contain","cover","stretch"].map(x => opt(x, x || "panel default")).join("")}</select></label>
           </div>
 
           <label class="sub" style="display:block;margin-top:10px">
@@ -1933,14 +1956,33 @@
 
           <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
             <button onclick="einkPreview()" style="padding:6px 14px">Preview selection</button>
-            <input id="ek-path" placeholder="card path, e.g. /Volumes/EINK" style="flex:1;padding:6px 8px">
-            <button onclick="einkExport(false)" style="padding:6px 12px">Dry run</button>
-            <button onclick="einkExport(true)" style="padding:6px 12px;border-color:var(--accent);color:var(--accent)">Write card</button>
           </div>
-          <div class="sub" style="margin-top:4px">Export must be under: ${T.export_roots.join(", ")}</div>
+
+          <!-- Two delivery paths, one selection. -->
+          <fieldset style="margin-top:16px;border:1px solid #e7e2d8;border-radius:6px;padding:10px 12px">
+            <legend class="sub" style="padding:0 6px">Deliver over the network</legend>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="ek-plname" placeholder="playlist name, e.g. Nocturnes" style="flex:1;padding:6px 8px">
+              <button onclick="einkSavePlaylist()" style="padding:6px 12px;border-color:var(--accent);color:var(--accent)">Save as feed</button>
+            </div>
+            <div class="sub" style="margin-top:6px">Point the frame at the feed URL. It
+              re-runs the query on every request, so works that gain tags later join by themselves.</div>
+            <div id="ek-playlists" style="margin-top:8px"></div>
+          </fieldset>
+
+          <fieldset style="margin-top:12px;border:1px solid #e7e2d8;border-radius:6px;padding:10px 12px">
+            <legend class="sub" style="padding:0 6px">Prepare an SD card</legend>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="ek-path" placeholder="card path, e.g. /Volumes/EINK" style="flex:1;padding:6px 8px">
+              <button onclick="einkExport(false)" style="padding:6px 12px">Dry run</button>
+              <button onclick="einkExport(true)" style="padding:6px 12px;border-color:var(--accent);color:var(--accent)">Write card</button>
+            </div>
+            <div class="sub" style="margin-top:4px">Must be under: ${T.export_roots.join(", ")}</div>
+          </fieldset>
           <div id="ek-out" style="margin-top:16px"></div>
         </div>`;
       window.scrollTo({ top: host.offsetTop - 20, behavior: "smooth" });
+      einkLoadPlaylists();
     }
 
     function einkSpec() {
@@ -1948,14 +1990,85 @@
       const on = id => !!(document.getElementById(id) || {}).checked;
       const spec = { sort: v("ek-sort") || "fit" };
       if (v("ek-artist")) spec.artists = [v("ek-artist")];
-      if (v("ek-genre")) spec.genres = [v("ek-genre")];
       if (v("ek-period")) spec.periods = [v("ek-period")];
+      // Every generated family select contributes an all_tags clause, so
+      // picking "setting:night" + "genre:painting/landscape" means BOTH.
+      const tags = [...document.querySelectorAll(".ek-fam")]
+        .map(el => el.value).filter(Boolean);
+      if (tags.length) spec.all_tags = tags;
       if (v("ek-mood")) spec.moods = [v("ek-mood")];
       if (v("ek-fit")) spec.min_fit = parseInt(v("ek-fit"), 10);
       if (v("ek-limit")) spec.limit = parseInt(v("ek-limit"), 10);
       if (on("ek-excl")) spec.exclude_filters = ["nudity-full", "violence", "disturbing"];
       if (on("ek-dossier")) spec.require_dossier = true;
       return spec;
+    }
+
+    async function einkSavePlaylist() {
+      const name = (document.getElementById("ek-plname") || {}).value || "";
+      if (!name.trim()) { toast("give the feed a name first"); return; }
+      const body = {
+        name: name.trim(), spec: einkSpec(),
+        target: document.getElementById("ek-target").value,
+        dither: document.getElementById("ek-dither").value,
+        fit: document.getElementById("ek-fitmode").value || null,
+        interval: document.getElementById("ek-interval").value,
+      };
+      try {
+        const r = await fetch("/eink/playlists", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!r.ok) { toast(d.detail || `save failed (${r.status})`); return; }
+        toast(`saved "${d.name}" — ${d.resolved_count} works`);
+        await einkLoadPlaylists();
+      } catch (e) { toast(String(e)); }
+    }
+
+    async function einkLoadPlaylists() {
+      const host = document.getElementById("ek-playlists");
+      if (!host) return;
+      let d;
+      try { d = await (await fetch("/eink/playlists")).json(); }
+      catch (e) { host.textContent = String(e); return; }
+      if (!d.playlists.length) {
+        host.innerHTML = `<div class="sub">No saved feeds yet.</div>`; return;
+      }
+      const origin = location.origin;
+      host.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">
+        <tr class="sub" style="text-align:left">
+          <th>Feed</th><th>Works</th><th>Panel</th><th>Rotates</th><th>URL for the device</th><th></th></tr>
+        ${d.playlists.map(p => `
+          <tr style="border-top:1px solid #eee">
+            <td style="padding:3px 0"><strong>${p.name}</strong></td>
+            <td>${p.resolved_count == null ? '<span style="color:#a00">error</span>' : p.resolved_count}</td>
+            <td>${p.target}</td>
+            <td>${p.interval}</td>
+            <td><code style="font-size:11px">${origin}${p.feed_url}</code></td>
+            <td style="text-align:right;white-space:nowrap">
+              <a href="${p.manifest_url}" target="_blank">manifest</a> ·
+              <a href="${p.feed_url}" target="_blank">view</a> ·
+              <a href="#" onclick="einkUseForCard('${p.id}');return false;">to card</a> ·
+              <a href="#" onclick="einkDeletePlaylist('${p.id}','${p.name.replace(/'/g, "")}');return false;">delete</a>
+            </td>
+          </tr>`).join("")}
+      </table>`;
+    }
+
+    let einkCardPlaylistId = null;
+    function einkUseForCard(id) {
+      einkCardPlaylistId = id;
+      toast("card will use that saved feed's selection — set a path and write");
+      const el = document.getElementById("ek-path");
+      if (el) el.focus();
+    }
+
+    async function einkDeletePlaylist(id, name) {
+      if (!confirm(`Delete the feed "${name}"?\n\nAny device pointed at its URL will stop updating.`)) return;
+      const r = await fetch(`/eink/playlists/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!r.ok) { toast(`delete failed (${r.status})`); return; }
+      if (einkCardPlaylistId === id) einkCardPlaylistId = null;
+      await einkLoadPlaylists();
     }
 
     async function einkPreview() {
@@ -2009,6 +2122,9 @@
         dither: document.getElementById("ek-dither").value,
         path, write, overwrite: true,
       };
+      // If a saved feed was chosen, the card uses ITS selection — same code
+      // path as the feed, so the card and the frame cannot drift apart.
+      if (einkCardPlaylistId) body.playlist_id = einkCardPlaylistId;
       out.insertAdjacentHTML("afterbegin", `<div class="sub" id="ek-status">${write ? "writing card…" : "checking…"}</div>`);
       let d;
       try {

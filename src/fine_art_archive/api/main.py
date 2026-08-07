@@ -294,6 +294,9 @@ class PlaylistIn(BaseModel):
 
 
 class ExportIn(BaseModel):
+    # Either give a spec inline, or name a saved playlist — same selection code
+    # either way, so a card and that playlist's feed cannot diverge.
+    playlist_id: str | None = None
     spec: dict = Field(default_factory=dict)
     target: str = "gooddisplay-315-diy"
     path: str
@@ -318,17 +321,21 @@ def eink_targets() -> dict:
 
 @app.get("/eink/facets")
 def eink_facets() -> dict:
-    """Everything the playlist builder needs to populate its controls."""
-    res = _eink.build(_all_sidecars(), _eink.PlaylistSpec(sort="as-filtered"))
-    return {
-        "moods": [{"key": k, "label": v["label"]} for k, v in _eink.MOODS.items()],
-        "periods": [{"key": k, "label": v[0], "from": v[1], "to": v[2]}
-                    for k, v in _eink.PERIODS.items()],
-        "genres": [{"value": g, "count": n} for g, n in res.facets["genre"]],
-        "artists": [{"value": a, "count": n} for a, n in res.facets["artist"]],
-        "mood_counts": dict(res.facets["mood"]),
-        "total_works": res.total_candidates,
-    }
+    """Every filterable value that exists in the archive RIGHT NOW.
+
+    Derived, not declared. A hardcoded control list stops matching the archive
+    the moment tagging improves — genre coverage went 3% to 65% in one pass and
+    brought `theme:` and `era-depicted:` with it, so any fixed set of dropdowns
+    would have been wrong within a day. The UI renders its controls from this,
+    which is what makes the filter surface expand with the data.
+    """
+    sidecars = _all_sidecars()
+    facets = _eink.discover_facets(sidecars)
+    # Mood counts still need a pass through the matcher, since a mood is a query
+    # rather than a value that can be counted off a tag index.
+    res = _eink.build(sidecars, _eink.PlaylistSpec(sort="as-filtered"))
+    facets["mood_counts"] = dict(res.facets["mood"])
+    return facets
 
 
 @app.post("/eink/playlist/preview")
@@ -420,9 +427,14 @@ def eink_preview(
 @app.post("/eink/playlist/export")
 def eink_playlist_export(body: ExportIn) -> dict:
     dest = _checked_export_dir(body.path)
+    body_spec, target, dither, fit = body.spec, body.target, body.dither, body.fit
+    if body.playlist_id:
+        pl = _get_playlist_or_404(body.playlist_id)
+        body_spec, target, dither = pl.spec, pl.target, pl.dither
+        fit = pl.fit
     try:
-        spec = _eink.PlaylistSpec.from_dict(body.spec)
-        tgt = _eink.get_target(body.target)
+        spec = _eink.PlaylistSpec.from_dict(body_spec)
+        tgt = _eink.get_target(target)
     except (ValueError, TypeError, KeyError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -448,7 +460,7 @@ def eink_playlist_export(body: ExportIn) -> dict:
     try:
         rep = _eink.export(
             items, dest, tgt, master_for=_eink_master, fmt=body.fmt,
-            method=body.dither, fit=body.fit, overwrite=body.overwrite,
+            method=dither, fit=fit, overwrite=body.overwrite,
             dry_run=not body.write, spec=spec.__dict__,
         )
     except FileExistsError as exc:
@@ -931,6 +943,203 @@ def propose_tags(work_id: str) -> dict:
         # is deliberately suppressed by the calibration quality gate.
         "tags_enabled": (payload.get("gate") or {}).get("tags_enabled") or [],
         "elapsed_ms": w.get("elapsed_ms"),
+    }
+
+
+# --------------------------------------------------------------------------
+# Saved playlists + device feed
+#
+# One saved selection drives BOTH delivery paths, so an SD card and a network
+# feed can never disagree about what a playlist means. Feeds resolve their query
+# live on every request rather than freezing a list of work_ids: a work that
+# gains a matching tag tomorrow joins the feed with no action from anyone, which
+# is the whole reason the spec is what gets saved.
+# --------------------------------------------------------------------------
+EINK_PLAYLISTS = env_path(
+    "FAA_EINK_PLAYLISTS", REPO_ROOT / "data" / "eink_playlists.json"
+)
+_playlists = _eink.PlaylistStore(EINK_PLAYLISTS)
+
+
+class SavePlaylistIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    spec: dict = Field(default_factory=dict)
+    target: str = "gooddisplay-315-diy"
+    dither: str = "floyd-steinberg"
+    fit: str | None = None
+    interval: str = "daily"
+    id: str | None = None      # present = update in place
+
+
+def _resolve_playlist(pl) -> list[dict]:
+    """Run a saved playlist's query against the archive as it is right now."""
+    try:
+        spec = _eink.PlaylistSpec.from_dict(pl.spec)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
+    sidecars = _all_sidecars()
+    try:
+        res = _eink.build(sidecars, spec,
+                          ratings=_eink.load_ratings(store.RATINGS_LOG),
+                          dossier_ids=set(store.work_ids_with_dossier()))
+    except KeyError as exc:
+        raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
+    by_id = dict(sidecars)
+    from fine_art_archive.eink.playlist import _artist_of, parse_year
+    out = []
+    for wid in res.work_ids:
+        sc = by_id.get(wid) or {}
+        # A feed must only advertise works it can actually serve, or a device
+        # polling `next` walks into a 404 and shows nothing.
+        if _eink_master(wid) is None:
+            continue
+        out.append({"work_id": wid, "title": sc.get("title") or "",
+                    "artist": _artist_of(sc), "year": parse_year(sc.get("year"))})
+    return out
+
+
+def _get_playlist_or_404(playlist_id: str):
+    pl = _playlists.get(playlist_id)
+    if pl is None:
+        raise HTTPException(404, f"no playlist {playlist_id!r}")
+    return pl
+
+
+def _render_feed_image(pl, work_id: str) -> Response:
+    from PIL import Image
+
+    master = _eink_master(work_id)
+    if master is None:
+        raise HTTPException(404, f"no local master for {work_id}")
+    tgt = _eink.get_target(pl.target)
+    etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime)
+    try:
+        with Image.open(master) as im:
+            im.draft("RGB", (tgt.width * 2, tgt.height * 2))
+            out = _eink.render_for_target(
+                im, tgt, fit=_eink.coerce_fit(pl.fit), method=pl.dither)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, f"render failed: {exc}") from exc
+    buf = io.BytesIO()
+    out.save(buf, format="PNG")
+    return Response(
+        buf.getvalue(), media_type="image/png",
+        headers={
+            "ETag": etag,
+            # Short cache: a panel refreshing hourly should not re-download an
+            # unchanged image, but the feed must still pick up a re-master.
+            "Cache-Control": "public, max-age=300",
+            "X-Work-Id": work_id,
+            "X-Palette-Measured": str(tgt.palette.measured),
+        },
+    )
+
+
+@app.get("/eink/playlists")
+def eink_playlists() -> dict:
+    out = []
+    for pl in _playlists.list():
+        d = pl.as_dict()
+        try:
+            d["resolved_count"] = len(_resolve_playlist(pl))
+        except HTTPException as exc:
+            d["resolved_count"] = None
+            d["error"] = exc.detail
+        d["feed_url"] = f"/feed/{pl.id}/current"
+        d["manifest_url"] = f"/feed/{pl.id}/manifest.json"
+        out.append(d)
+    return {"playlists": out, "intervals": sorted(_eink.INTERVALS)}
+
+
+@app.post("/eink/playlists")
+def eink_save_playlist(body: SavePlaylistIn) -> dict:
+    try:
+        _eink.PlaylistSpec.from_dict(body.spec)      # validate before storing
+        _eink.get_target(body.target)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if body.interval not in _eink.INTERVALS:
+        raise HTTPException(400, f"interval must be one of {sorted(_eink.INTERVALS)}")
+
+    if body.id:
+        pl = _get_playlist_or_404(body.id)
+        pl.name, pl.spec, pl.target = body.name, body.spec, body.target
+        pl.dither, pl.fit, pl.interval = body.dither, body.fit, body.interval
+    else:
+        pl = _eink.SavedPlaylist.new(
+            body.name, body.spec, target=body.target, dither=body.dither,
+            fit=body.fit, interval=body.interval)
+    _playlists.save(pl)
+    d = pl.as_dict()
+    d["resolved_count"] = len(_resolve_playlist(pl))
+    d["feed_url"] = f"/feed/{pl.id}/current"
+    return d
+
+
+@app.delete("/eink/playlists/{playlist_id}")
+def eink_delete_playlist(playlist_id: str) -> dict:
+    if not _playlists.delete(playlist_id):
+        raise HTTPException(404, f"no playlist {playlist_id!r}")
+    return {"deleted": playlist_id}
+
+
+@app.get("/feed/{playlist_id}/manifest.json")
+def feed_manifest(playlist_id: str, request: Request) -> dict:
+    pl = _get_playlist_or_404(playlist_id)
+    base = str(request.base_url).rstrip("/")
+    return _eink.build_manifest(pl, _resolve_playlist(pl), base_url=base)
+
+
+@app.get("/feed/{playlist_id}/current")
+def feed_current(playlist_id: str, offset: int = Query(0, ge=0, le=64)) -> Response:
+    """The one URL a dumb panel can poll forever and still see a gallery.
+
+    Which work this returns is computed from the clock, not from server state,
+    so it is idempotent, survives a reboot at either end, and two frames on the
+    same feed stay in step. `offset` shifts a second frame to a different work.
+    """
+    pl = _get_playlist_or_404(playlist_id)
+    items = _resolve_playlist(pl)
+    if not items:
+        raise HTTPException(404, "playlist resolves to no works with local images")
+    idx = _eink.rotation_index(len(items), pl.interval, offset=offset)
+    return _render_feed_image(pl, items[idx]["work_id"])
+
+
+@app.get("/feed/{playlist_id}/image/{index}")
+def feed_image(playlist_id: str, index: int) -> Response:
+    pl = _get_playlist_or_404(playlist_id)
+    items = _resolve_playlist(pl)
+    if not items:
+        raise HTTPException(404, "playlist resolves to no works with local images")
+    if not 0 <= index < len(items):
+        raise HTTPException(404, f"index {index} out of range (0..{len(items) - 1})")
+    return _render_feed_image(pl, items[index]["work_id"])
+
+
+@app.get("/feed/{playlist_id}/next")
+def feed_next(playlist_id: str, after: str | None = None,
+              request: Request = None) -> dict:  # type: ignore[assignment]
+    """Cursor-style pull, for devices that DO track position.
+
+    Shaped after BLOOMIN8's documented schedule-pull: the device wakes, asks
+    what to show next, gets a URL, displays it, sleeps. Returns JSON rather than
+    the image so the device can decide whether it already has that work.
+    """
+    pl = _get_playlist_or_404(playlist_id)
+    items = _resolve_playlist(pl)
+    if not items:
+        raise HTTPException(404, "playlist resolves to no works with local images")
+    ids = [i["work_id"] for i in items]
+    nxt = (ids.index(after) + 1) % len(ids) if after in ids else 0
+    base = str(request.base_url).rstrip("/") if request else ""
+    it = items[nxt]
+    return {
+        "playlist_id": pl.id, "index": nxt, "count": len(items),
+        "work_id": it["work_id"], "title": it["title"], "artist": it["artist"],
+        "year": it["year"],
+        "image_url": f"{base}/feed/{pl.id}/image/{nxt}",
+        "next_after": it["work_id"],
     }
 
 

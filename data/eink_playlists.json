@@ -1,0 +1,25 @@
+{
+  "_schema": "faa-eink-playlists/1",
+  "playlists": {
+    "nocturnes-for-the-wall-a50b1c": {
+      "id": "nocturnes-for-the-wall-a50b1c",
+      "name": "Nocturnes for the wall",
+      "spec": {
+        "any_tags": [
+          "setting:night"
+        ],
+        "exclude_filters": [
+          "violence"
+        ],
+        "sort": "year",
+        "limit": 12
+      },
+      "target": "gooddisplay-315-diy",
+      "dither": "floyd-steinberg",
+      "fit": null,
+      "interval": "daily",
+      "created_at": "2026-08-07T12:31:07+00:00",
+      "updated_at": "2026-08-07T12:31:07+00:00"
+    }
+  }
+}

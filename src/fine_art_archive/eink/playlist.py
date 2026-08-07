@@ -364,3 +364,66 @@ def build(
         },
         spec=spec.__dict__.copy(),
     )
+
+def discover_facets(sidecars: Iterable[tuple[str, dict]]) -> dict:
+    """Enumerate every filterable value that actually exists in the corpus.
+
+    The filter surface must be DERIVED, not declared. A hardcoded control list
+    silently stops matching the archive the moment tagging improves: the tagger
+    took genre coverage from 3% to 65% in one session and added `theme:` and
+    `era-depicted:` families that no UI knew about, so any fixed list of
+    dropdowns would have been wrong within a day.
+
+    So this returns the families and values present right now, with counts, and
+    the UI renders controls from it. A family that gains its first value appears
+    on the next page load; a family that is still empty (palette has one value
+    today) shows its real count rather than pretending to be a rich filter.
+    """
+    families: dict[str, Counter] = {}
+    artists: Counter = Counter()
+    years: list[int] = []
+    total = 0
+    for _wid, sc in sidecars:
+        total += 1
+        subj = sc.get("subject") or {}
+        g = subj.get("genre")
+        if g and g != "unknown":
+            families.setdefault("genre", Counter())[g] += 1
+        for t in subj.get("content_tags") or []:
+            tid = str((t or {}).get("id") or "")
+            if ":" in tid:
+                fam, val = tid.split(":", 1)
+                families.setdefault(fam, Counter())[val] += 1
+        a = _artist_of(sc)
+        if a:
+            artists[a] += 1
+        y = parse_year(sc.get("year"))
+        if y is not None:
+            years.append(y)
+
+    return {
+        "total_works": total,
+        "families": {
+            fam: {
+                "count": sum(c.values()),
+                "values": [{"value": v, "tag": f"{fam}:{v}", "count": n}
+                           for v, n in c.most_common()],
+            }
+            for fam, c in sorted(families.items(),
+                                 key=lambda kv: -sum(kv[1].values()))
+        },
+        "artists": [{"value": a, "count": n} for a, n in artists.most_common(400)],
+        "year_range": [min(years), max(years)] if years else None,
+        "years_known": len(years),
+        # Moods and periods stay curated because they are EDITORIAL groupings,
+        # not data: "nocturne" is a judgement that night scenes and dark palettes
+        # belong together. Each still reports which underlying tags it uses, so a
+        # mood whose tags have no coverage reads as empty rather than broken.
+        "moods": [
+            {"key": k, "label": v["label"],
+             "uses": sorted(set(v.get("any_tags", []) + v.get("genres", [])))}
+            for k, v in MOODS.items()
+        ],
+        "periods": [{"key": k, "label": lbl, "from": lo, "to": hi}
+                    for k, (lbl, lo, hi) in PERIODS.items()],
+    }

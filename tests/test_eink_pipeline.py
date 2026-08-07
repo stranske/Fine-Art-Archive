@@ -318,3 +318,145 @@ def test_export_reports_missing_master_instead_of_failing(tmp_path):
                  master_for=_master_factory(tmp_path), dry_run=False)
     assert rep.written == ["001_w1.png"]
     assert rep.skipped and rep.skipped[0][0] == "ghost"
+
+
+# ------------------------------------------------------- feed + facets -------
+from datetime import UTC, datetime, timedelta  # noqa: E402
+
+from fine_art_archive.eink import (  # noqa: E402
+    INTERVALS, PlaylistStore, SavedPlaylist, build_manifest, discover_facets,
+    item_etag, rotation_index, slugify,
+)
+
+
+def test_facets_are_discovered_from_data_not_declared():
+    """The point of the whole facet layer: new tag families appear by themselves."""
+    rows = [
+        sidecar("a", genre="painting/landscape", tags=["setting:night", "mood-new:brooding"]),
+        sidecar("b", genre="painting/landscape", tags=["setting:night"]),
+        sidecar("c", tags=["brand-new-family:some-value"]),
+    ]
+    f = discover_facets(rows)
+    fams = f["families"]
+    assert fams["setting"]["values"][0] == {"value": "night", "tag": "setting:night", "count": 2}
+    # A family invented after this test was written must still surface.
+    assert "brand-new-family" in fams, "a new tag family must appear without a code change"
+    assert "mood-new" in fams
+    assert fams["genre"]["count"] == 2
+
+
+def test_facets_report_real_counts_so_an_empty_filter_reads_as_empty():
+    rows = [sidecar("a", tags=["palette:cool-toned"])]
+    f = discover_facets(rows)
+    assert f["families"]["palette"]["count"] == 1
+    # Curated moods still declare which tags they rest on, so a mood with no
+    # coverage is legible rather than mysteriously returning nothing.
+    nocturne = next(m for m in f["moods"] if m["key"] == "nocturne")
+    assert "setting:night" in nocturne["uses"]
+
+
+def test_facets_year_range_ignores_unparseable_years():
+    rows = [sidecar("a", year=1648), sidecar("b", year="oil on canvas"),
+            sidecar("c", year="c. 1700")]
+    f = discover_facets(rows)
+    assert f["year_range"] == [1648, 1700]
+    assert f["years_known"] == 2
+
+
+# ---- rotation: the property a dumb one-URL panel depends on -----------------
+def test_rotation_is_stable_within_an_interval_and_advances_after():
+    t0 = datetime(2026, 8, 6, 3, 0, tzinfo=UTC)
+    a = rotation_index(5, "daily", now=t0)
+    b = rotation_index(5, "daily", now=t0 + timedelta(hours=6))
+    c = rotation_index(5, "daily", now=t0 + timedelta(days=1))
+    assert a == b, "a panel polling twice in one day must see the same work"
+    assert c != a, "the next day must advance"
+
+
+def test_rotation_is_deterministic_across_processes():
+    """Two frames that never talk must agree — so no server-side cursor."""
+    t = datetime(2026, 1, 1, tzinfo=UTC)
+    assert rotation_index(7, "daily", now=t) == rotation_index(7, "daily", now=t)
+
+
+def test_rotation_offset_separates_two_frames_in_one_room():
+    t = datetime(2026, 1, 1, tzinfo=UTC)
+    assert rotation_index(9, "daily", now=t) != rotation_index(9, "daily", now=t, offset=1)
+
+
+def test_rotation_survives_empty_and_single_item_playlists():
+    assert rotation_index(0, "daily") == 0
+    assert rotation_index(1, "daily") == 0
+
+
+def test_rotation_cycles_through_every_item():
+    t = datetime(2026, 3, 1, tzinfo=UTC)
+    seen = {rotation_index(4, "daily", now=t + timedelta(days=d)) for d in range(8)}
+    assert seen == {0, 1, 2, 3}, "every work must eventually be shown"
+
+
+@pytest.mark.parametrize("interval", sorted(INTERVALS))
+def test_every_declared_interval_actually_rotates(interval):
+    t = datetime(2026, 5, 5, tzinfo=UTC)
+    later = t + timedelta(seconds=INTERVALS[interval])
+    assert rotation_index(3, interval, now=t) != rotation_index(3, interval, now=later)
+
+
+# ---- etag ------------------------------------------------------------------
+def test_etag_changes_when_the_master_or_render_settings_change():
+    base = item_etag("w1", "t1", "floyd-steinberg", 1000)
+    assert base == item_etag("w1", "t1", "floyd-steinberg", 1000)
+    assert base != item_etag("w1", "t1", "floyd-steinberg", 1001), "re-master must bust cache"
+    assert base != item_etag("w1", "t2", "floyd-steinberg", 1000), "panel change must bust cache"
+    assert base != item_etag("w1", "t1", "atkinson", 1000), "dither change must bust cache"
+
+
+# ---- store -----------------------------------------------------------------
+def test_playlist_store_roundtrip_and_delete(tmp_path):
+    st = PlaylistStore(tmp_path / "pl.json")
+    pl = SavedPlaylist.new("Dutch Landscapes", {"genres": ["painting/landscape"]})
+    st.save(pl)
+    assert [p.name for p in st.list()] == ["Dutch Landscapes"]
+    assert st.get(pl.id).spec == {"genres": ["painting/landscape"]}
+    assert st.delete(pl.id) is True
+    assert st.get(pl.id) is None and st.delete(pl.id) is False
+
+
+def test_playlist_ids_are_readable_and_unique(tmp_path):
+    a = SavedPlaylist.new("Winter", {})
+    b = SavedPlaylist.new("Winter", {})
+    assert a.id.startswith("winter-") and b.id.startswith("winter-")
+    assert a.id != b.id, "two playlists with one name must not collide"
+
+
+def test_corrupt_playlist_store_returns_empty_rather_than_raising(tmp_path):
+    """A broken store must not make every page load fail."""
+    p = tmp_path / "pl.json"
+    p.write_text("{ not json")
+    assert PlaylistStore(p).list() == []
+
+
+def test_slugify_never_returns_empty():
+    assert slugify("") == "playlist"
+    assert slugify("!!!") == "playlist"
+    assert slugify("Sea & Ships") == "sea-ships"
+
+
+# ---- manifest --------------------------------------------------------------
+def test_manifest_urls_are_absolute_and_indices_line_up():
+    pl = SavedPlaylist.new("X", {}, interval="daily")
+    items = [{"work_id": f"w{i}", "title": f"T{i}", "artist": "A", "year": 1600 + i}
+             for i in range(3)]
+    m = build_manifest(pl, items, base_url="http://host:8932/",
+                       now=datetime(2026, 8, 6, tzinfo=UTC))
+    assert m["count"] == 3
+    assert m["items"][2]["url"] == f"http://host:8932/feed/{pl.id}/image/2"
+    assert m["current_url"] == f"http://host:8932/feed/{pl.id}/current"
+    assert m["items"][m["current_index"]]["work_id"] == items[m["current_index"]]["work_id"]
+    assert m["resolved_live"] is True
+
+
+def test_empty_manifest_has_no_current_url_to_poll():
+    pl = SavedPlaylist.new("Empty", {})
+    m = build_manifest(pl, [], base_url="http://h")
+    assert m["count"] == 0 and m["current_url"] is None
