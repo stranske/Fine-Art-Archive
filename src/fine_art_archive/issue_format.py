@@ -45,7 +45,7 @@ GATE = re.compile(
     r"(tests?/[\w./-]+\.py(::[\w:\[\]-]+)?"  # a test path, optionally ::id
     r"|\btest_[\w]+"  # a test function name
     r"|\bpytest\b|\bnpm test\b|\bmake test\b"  # runners
-    r"|gh workflow run\b|gh run \b"  # CI invocation
+    r"|gh workflow run\b|gh run\b"  # CI invocation
     r"|\bcurl\b.*\bHTTP\b|\bHTTP [1-5]\d\d\b"  # observable HTTP result
     r"|\bsmoke\b|\bverif)",  # smoke / verify tokens
     re.I,
