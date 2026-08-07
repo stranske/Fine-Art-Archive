@@ -12,7 +12,6 @@ def _config() -> dict:
     return {
         "thresholds": {
             "filter:religious": {"threshold": 0.8, "f1": 0.9, "basis": "curated"},
-            "filter:nudity-full": {"threshold": 0.8, "f1": 0.9, "basis": "curated"},
         },
         "contrastive_pairs": {
             "filter:nudity-full": {"positive": "nude", "negatives": ["clothed"], "margin": 0.1}
@@ -130,3 +129,26 @@ def test_merge_does_not_mark_review_when_all_proposals_are_blocked() -> None:
         },
     )
     assert "needs_review" not in sidecar["subject"]
+
+
+def test_merge_writes_model_genre_without_overriding_curated_genre() -> None:
+    sidecar = {"subject": {"content_tags": []}}
+    vision.merge_into_sidecar(
+        sidecar,
+        {"all_scores": [{"tag": "genre:painting/portrait", "score": 0.9, "passed": True}]},
+    )
+    assert sidecar["subject"]["genre"] == "painting/portrait"
+    assert sidecar["subject"]["genre_source"] == vision.MODEL_VERSION_TAG
+
+    curated = {
+        "subject": {
+            "content_tags": [],
+            "genre": "painting/history",
+            "genre_source": "wikidata:P136",
+        }
+    }
+    vision.merge_into_sidecar(
+        curated,
+        {"all_scores": [{"tag": "genre:painting/portrait", "score": 0.9, "passed": True}]},
+    )
+    assert curated["subject"]["genre"] == "painting/history"

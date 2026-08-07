@@ -30,11 +30,7 @@ ROOT = Path(
     )
 )
 STAGING = ROOT / "staging_sidecars"
-ART_WORKS = Path(
-    os.environ.get(
-        "FAA_ART_WORKS", "/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Art/works"
-    )
-)
+ART_WORKS = Path(os.environ.get("FAA_ART_WORKS", ROOT.parent / "Art" / "works"))
 CONFIG_PATH = Path(
     os.environ.get("FAA_TAGGER_CONFIG", REPO_ROOT / "config" / "clip_thresholds.yaml")
 )
@@ -114,6 +110,7 @@ TAG_PROMPTS: dict[str, str] = {
 _model: Any = None
 _processor: Any = None
 _device = "cpu"
+_text_feature_cache: dict[tuple[str, ...], Any] = {}
 
 
 def _now() -> str:
@@ -285,6 +282,27 @@ def _image_features(work_id: str):
     return features
 
 
+def _text_features(prompts: list[str]):
+    """Return cached CLIP text embeddings for the stable prompt set of a run."""
+    import torch
+
+    key = tuple(prompts)
+    cached = _text_feature_cache.get(key)
+    if cached is not None:
+        return cached
+    _load_model()
+    with torch.no_grad():
+        inputs = {
+            name: value.to(_device)
+            for name, value in _processor(text=prompts, return_tensors="pt", padding=True).items()
+        }
+        output = _model.text_model(**inputs).pooler_output
+        features = _model.text_projection(output)
+        features = features / features.norm(dim=-1, keepdim=True)
+    _text_feature_cache[key] = features
+    return features
+
+
 def score_work(work_id: str, config: Mapping[str, Any]) -> dict[str, float] | None:
     """Score all threshold and contrastive prompts for one operational work."""
     image_features = _image_features(work_id)
@@ -304,16 +322,9 @@ def score_work(work_id: str, config: Mapping[str, Any]) -> dict[str, float] | No
                     ]
                 )
     prompts = list(dict.fromkeys(prompt for prompt in prompts if prompt))
-    _load_model()
+    text_features = _text_features(prompts)
     with torch.no_grad():
-        inputs = {
-            key: value.to(_device)
-            for key, value in _processor(text=prompts, return_tensors="pt", padding=True).items()
-        }
-        output = _model.text_model(**inputs).pooler_output
-        features = _model.text_projection(output)
-        features = features / features.norm(dim=-1, keepdim=True)
-        values = (image_features @ features.T).squeeze(0).tolist()
+        values = (image_features @ text_features.T).squeeze(0).tolist()
     return dict(zip(prompts, (float(value) for value in values), strict=True))
 
 
@@ -332,6 +343,19 @@ def merge_into_sidecar(sidecar: dict[str, Any], vision_result: Mapping[str, Any]
         entry.get("id"): entry for entry in tags if isinstance(entry, dict) and entry.get("id")
     }
     changed = False
+    passed_genres = [
+        proposal
+        for proposal in vision_result.get("all_scores", [])
+        if proposal.get("passed") and str(proposal.get("tag", "")).startswith("genre:")
+    ]
+    current_genre_source = subject.get("genre_source")
+    if passed_genres and _SOURCE_RANK.get(current_genre_source, 3) > 2:
+        best_genre = max(passed_genres, key=lambda proposal: float(proposal.get("score", 0)))
+        subject["genre"] = str(best_genre["tag"]).split(":", 1)[1]
+        subject["genre_source"] = (
+            "vision:contrastive" if best_genre.get("basis") == "contrastive" else MODEL_VERSION_TAG
+        )
+        changed = True
     for proposal in vision_result.get("all_scores", []):
         if not proposal.get("passed") or str(proposal.get("tag", "")).startswith("genre:"):
             continue
@@ -499,7 +523,11 @@ def main() -> int:
     output: dict[str, Any] = {
         "model": MODEL_VERSION_TAG,
         "applied": args.apply,
-        "gate": {"threshold_tags": enabled, "contrastive_tags": contrastive},
+        "gate": {
+            "tags_enabled": sorted(set(enabled) | set(contrastive)),
+            "threshold_tags": enabled,
+            "contrastive_tags": contrastive,
+        },
         "works": [],
     }
     counts = dict.fromkeys(contrastive, 0)
@@ -532,9 +560,27 @@ def main() -> int:
         if args.apply:
             sidecar_path = STAGING / work_id / "meta.json"
             if sidecar_path.exists():
-                sidecar = merge_into_sidecar(
-                    json.loads(sidecar_path.read_text(encoding="utf-8")), result
+                sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+                prior_subject = (
+                    sidecar.get("subject") if isinstance(sidecar.get("subject"), dict) else {}
                 )
+                prior_tags = {
+                    item.get("id")
+                    for item in prior_subject.get("content_tags", [])
+                    if isinstance(item, dict) and item.get("id")
+                }
+                sidecar = merge_into_sidecar(sidecar, result)
+                subject = sidecar["subject"]
+                entry["clip_tags_added"] = len(
+                    {
+                        item.get("id")
+                        for item in subject.get("content_tags", [])
+                        if isinstance(item, dict) and item.get("id")
+                    }
+                    - prior_tags
+                )
+                entry["genre"] = subject.get("genre")
+                entry["genre_source"] = subject.get("genre_source")
                 sidecar_path.write_text(
                     json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
                 )
