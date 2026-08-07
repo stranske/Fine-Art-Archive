@@ -390,7 +390,10 @@ def discover_facets(sidecars: Iterable[tuple[str, dict]]) -> dict:
         if g and g != "unknown":
             families.setdefault("genre", Counter())[g] += 1
         for t in subj.get("content_tags") or []:
-            tid = str((t or {}).get("id") or "")
+            # Mirror _tags_of: non-dict entries must not break /eink/facets.
+            if not isinstance(t, dict):
+                continue
+            tid = str(t.get("id") or "")
             if ":" in tid:
                 fam, val = tid.split(":", 1)
                 families.setdefault(fam, Counter())[val] += 1

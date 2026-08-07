@@ -1323,6 +1323,7 @@
       const r = await fetch("/variant_upgrades");
       const d = await r.json();
       const det = showDetailPanel();
+      if (!det) return;
       if (!d.candidates || d.candidates.length === 0) {
         det.innerHTML = `<h2>Variant upgrade candidates</h2>
           <p class="sub">No candidates right now. The detector found no
@@ -1395,6 +1396,7 @@
       const r = await fetch("/ratings/summary");
       const d = await r.json();
       const det = showDetailPanel();
+      if (!det) return;
       det.innerHTML =
         `<h2>Ratings summary</h2>
          <div class="sub">${d.n_events} events · ${d.n_works_rated} works rated</div>
@@ -1919,8 +1921,8 @@
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px">
             ${Object.entries(f.families).map(([fam, d]) => `
-              <label class="sub">${fam} <span style="opacity:.6">(${d.values.length})</span><br>
-                <select class="ek-fam" data-family="${fam}" style="width:100%">
+              <label class="sub">${einkEsc(fam)} <span style="opacity:.6">(${d.values.length})</span><br>
+                <select class="ek-fam" data-family="${einkEsc(fam)}" style="width:100%">
                   <option value="">any</option>
                   ${d.values.map(v => opt(v.tag, v.value, v.count)).join("")}
                 </select></label>`).join("")}
@@ -2109,6 +2111,8 @@
         ? `<div class="sub" style="margin-top:2px">Dropped for missing metadata: `
           + Object.entries(cov).map(([k, n]) => `${k} ${n}`).join(", ") + `</div>` : "";
       const noMaster = d.items.filter(i => !i.has_master).length;
+      const fitMode = (document.getElementById("ek-fitmode") || {}).value || "";
+      const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";
 
       out.innerHTML = `
         <div><strong>${d.selected}</strong> selected of ${d.matched} matching
@@ -2119,7 +2123,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:8px">
           ${d.items.map((i, n) => `
             <figure style="margin:0">
-              <img loading="lazy" src="/works/${encodeURIComponent(i.work_id)}/eink_preview?target=${encodeURIComponent(target)}&dither=${encodeURIComponent(dither)}&max_px=380"
+              <img loading="lazy" src="/works/${encodeURIComponent(i.work_id)}/eink_preview?target=${encodeURIComponent(target)}&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380"
                    style="width:100%;border:1px solid #ddd;background:#eee" alt="">
               <figcaption class="sub" style="font-size:11px;line-height:1.25;margin-top:3px">
                 ${String(n + 1).padStart(3, "0")} · ${einkEsc(i.year || "????")}<br>
@@ -2137,6 +2141,7 @@
       const body = {
         spec: einkSpec(), target: document.getElementById("ek-target").value,
         dither: document.getElementById("ek-dither").value,
+        fit: document.getElementById("ek-fitmode").value || null,
         path, write, overwrite: true,
       };
       // If a saved feed was chosen, the card uses ITS selection — same code

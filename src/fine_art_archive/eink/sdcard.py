@@ -131,7 +131,9 @@ def export(
         if master is None or not Path(master).exists():
             rep.skipped.append((it.work_id, "no local master image"))
             continue
-        name = f"{i:0{width}d}_{it.work_id}.{fmt}"
+        # Number by written count so skips do not leave filename/order gaps.
+        written_idx = len(rep.written) + 1
+        name = f"{written_idx:0{width}d}_{it.work_id}.{fmt}"
         dest = root / name
         if progress:
             progress(i, len(items), it.work_id)
@@ -161,7 +163,7 @@ def export(
             rep.bytes_written += dest.stat().st_size
         rep.written.append(name)
         manifest_items.append({
-            "order": i, "file": name, "work_id": it.work_id,
+            "order": written_idx, "file": name, "work_id": it.work_id,
             "title": it.title, "artist": it.artist, "year": it.year,
         })
 

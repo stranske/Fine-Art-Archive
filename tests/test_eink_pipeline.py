@@ -320,6 +320,31 @@ def test_export_reports_missing_master_instead_of_failing(tmp_path):
     assert rep.skipped and rep.skipped[0][0] == "ghost"
 
 
+def test_export_numbers_by_written_count_when_earlier_items_skip(tmp_path):
+    """Skipped works must not leave gaps in filenames or manifest order."""
+    card = tmp_path / "card"
+    items = [ExportItem("ghost"), ExportItem("w1"), ExportItem("w2")]
+    rep = export(items, card, get_target("generic-mono-1bit"),
+                 master_for=_master_factory(tmp_path), dry_run=False)
+    assert rep.written == ["001_w1.png", "002_w2.png"]
+    assert rep.skipped and rep.skipped[0][0] == "ghost"
+    manifest = json.loads((card / "playlist.json").read_text())
+    assert [i["order"] for i in manifest["items"]] == [1, 2]
+    assert [i["file"] for i in manifest["items"]] == ["001_w1.png", "002_w2.png"]
+
+
+def test_coerce_fit_treats_empty_string_as_unset():
+    from fine_art_archive.eink.targets import coerce_fit
+    assert coerce_fit(None) is None
+    assert coerce_fit("") is None
+    assert coerce_fit("contain") == "contain"
+    try:
+        coerce_fit("nope")
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
+
+
 # ------------------------------------------------------- feed + facets -------
 from datetime import UTC, datetime, timedelta  # noqa: E402
 
@@ -349,6 +374,18 @@ def test_facets_are_discovered_from_data_not_declared():
     assert "brand-new-family" in fams, "a new tag family must appear without a code change"
     assert "mood-new" in fams
     assert fams["genre"]["count"] == 2
+
+
+def test_facets_skip_non_dict_content_tags():
+    rows = [
+        ("messy", {
+            "subject": {
+                "content_tags": ["legacy-string-tag", {"id": "setting:night"}, None],
+            }
+        }),
+    ]
+    f = discover_facets(rows)
+    assert f["families"]["setting"]["count"] == 1
 
 
 def test_facets_report_real_counts_so_an_empty_filter_reads_as_empty():

@@ -135,7 +135,8 @@ def coerce_fit(value: str | None) -> FitMode | None:
     through to the letterbox branch and quietly produce the wrong framing.
     Rejecting loudly is better than framing 200 paintings incorrectly.
     """
-    if value is None:
+    if value is None or value == "":
+        # Empty query/form values (e.g. ?fit=) mean "unset", not invalid.
         return None
     if value in _FIT_MODES:
         return value  # type: ignore[return-value]
