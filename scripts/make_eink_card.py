@@ -30,8 +30,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from fine_art_archive.eink import (  # noqa: E402
-    MOODS, PERIODS, TARGETS, ExportItem, PlaylistSpec, build, export,
-    get_target, load_ratings,
+    MOODS,
+    PERIODS,
+    TARGETS,
+    ExportItem,
+    PlaylistSpec,
+    build,
+    export,
+    get_target,
+    load_ratings,
 )
 from fine_art_archive.eink.sdcard import card_free_space  # noqa: E402
 

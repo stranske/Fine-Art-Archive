@@ -35,17 +35,18 @@ their photos, so:
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import shutil
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable, Iterable
 
 from PIL import Image
 
-from .targets import RenderTarget, render_for_target
+from .targets import RenderTarget, coerce_fit, render_for_target
 
 OURS_RE = re.compile(r"^\d{3,5}_[A-Za-z0-9._-]+\.(png|bmp|jpg|jpeg)$")
 MANIFESTS = ("playlist.json", "playlist.m3u", "README.txt")
@@ -123,7 +124,7 @@ def export(
             p.unlink()
             rep.removed.append(p.name)
 
-    manifest_items = []
+    manifest_items: list[dict[str, object]] = []
     width = max(3, len(str(len(items))))
     for i, it in enumerate(items, 1):
         master = master_for(it.work_id)
@@ -140,16 +141,20 @@ def export(
                     # Decode gigapixel masters at reduced scale: draft() lets the
                     # JPEG decoder skip DCT levels, which is the difference
                     # between seconds and minutes on a 600 MB master.
-                    try:
+                    # draft() is a JPEG-only optimisation; a PNG or TIFF
+                    # master simply has no DCT levels to skip.
+                    with contextlib.suppress(Exception):
                         im.draft("RGB", (target.width * 2, target.height * 2))
-                    except Exception:
-                        pass
                     out = render_for_target(
-                        im, target, fit=fit, method=method,
+                        im, target, fit=coerce_fit(fit), method=method,
                         compress_range=compress_range, fast=fast,
                     )
-                    save_kw = {"quality": 95} if fmt in ("jpg", "jpeg") else {}
-                    out.save(dest, **save_kw)
+                    # JPEG is the only format here that takes a quality
+                    # setting; PNG/BMP reject the kwarg outright.
+                    if fmt in ("jpg", "jpeg"):
+                        out.save(dest, quality=95)
+                    else:
+                        out.save(dest)
             except Exception as exc:                      # noqa: BLE001
                 rep.skipped.append((it.work_id, f"render failed: {exc}"))
                 continue
@@ -183,7 +188,7 @@ def export(
     if not dry_run and manifest_items:
         (root / "playlist.json").write_text(json.dumps(manifest, indent=2))
         (root / "playlist.m3u").write_text(
-            "\n".join(m["file"] for m in manifest_items) + "\n"
+            "\n".join(str(m["file"]) for m in manifest_items) + "\n"
         )
         (root / "README.txt").write_text(
             "Fine Art Archive — e-paper playlist card\n"

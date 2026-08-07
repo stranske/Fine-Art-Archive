@@ -18,7 +18,7 @@ published figures. Palettes are estimates — see palette.py.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -121,6 +121,25 @@ def get_target(key: str) -> RenderTarget:
         raise KeyError(
             f"unknown render target {key!r}; have {sorted(TARGETS)}"
         ) from None
+
+
+_FIT_MODES: tuple[FitMode, ...] = ("contain", "cover", "stretch")
+
+
+def coerce_fit(value: str | None) -> FitMode | None:
+    """Narrow an untrusted string to a FitMode, rejecting anything else.
+
+    `fit` arrives from an HTTP query parameter or a CLI flag, i.e. as a plain
+    `str`. Casting it to the Literal would silence the type checker while
+    letting a typo like "conatin" reach `fit_to_target`, where it would fall
+    through to the letterbox branch and quietly produce the wrong framing.
+    Rejecting loudly is better than framing 200 paintings incorrectly.
+    """
+    if value is None:
+        return None
+    if value in _FIT_MODES:
+        return value  # type: ignore[return-value]
+    raise ValueError(f"unknown fit mode {value!r}; expected one of {_FIT_MODES}")
 
 
 def fit_to_target(img: Image.Image, target: RenderTarget,

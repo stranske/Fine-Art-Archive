@@ -27,9 +27,10 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 
 SortKey = Literal["fit", "quality", "year", "artist", "title", "random", "as-filtered"]
 
@@ -132,8 +133,8 @@ class PlaylistSpec:
     seed: int = 42
 
     @classmethod
-    def from_dict(cls, d: dict) -> "PlaylistSpec":
-        known = {f for f in cls.__dataclass_fields__}
+    def from_dict(cls, d: dict) -> PlaylistSpec:
+        known = set(cls.__dataclass_fields__)
         unknown = set(d) - known
         if unknown:
             # Fail loudly: a typo'd facet that is silently ignored produces a
@@ -248,7 +249,7 @@ def build(
 
     total = 0
     rows: list[dict] = []
-    skipped = Counter()
+    skipped: Counter[str] = Counter()
     facet_artist: Counter = Counter()
     facet_genre: Counter = Counter()
     facet_mood: Counter = Counter()

@@ -38,7 +38,7 @@ produce throws away headroom at the top of the range.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
@@ -90,7 +90,9 @@ class Palette:
     def contains_only(self, img: Image.Image) -> tuple[bool, set[tuple[int, int, int]]]:
         """Assert the palette invariant. Returns (ok, offending colours)."""
         arr = np.asarray(img.convert("RGB")).reshape(-1, 3)
-        present = {tuple(int(v) for v in row) for row in np.unique(arr, axis=0)}
+        present: set[tuple[int, int, int]] = {
+            (int(r), int(g), int(b)) for r, g, b in np.unique(arr, axis=0)
+        }
         illegal = present - {tuple(c) for c in self.colours}
         return (not illegal, illegal)
 

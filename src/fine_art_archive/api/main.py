@@ -326,7 +326,7 @@ def eink_facets() -> dict:
                     for k, v in _eink.PERIODS.items()],
         "genres": [{"value": g, "count": n} for g, n in res.facets["genre"]],
         "artists": [{"value": a, "count": n} for a, n in res.facets["artist"]],
-        "mood_counts": {m: n for m, n in res.facets["mood"]},
+        "mood_counts": dict(res.facets["mood"]),
         "total_works": res.total_candidates,
     }
 
@@ -403,7 +403,8 @@ def eink_preview(
     try:
         with Image.open(master) as im:
             im.draft("RGB", (small.width * 2, small.height * 2))
-            out = _eink.render_for_target(im, small, fit=fit, method=dither)
+            out = _eink.render_for_target(
+                im, small, fit=_eink.coerce_fit(fit), method=dither)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
 
