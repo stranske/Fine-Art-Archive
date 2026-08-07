@@ -29,6 +29,7 @@ from fine_art_archive.eink import (
     get_target,
     quantize,
 )
+from fine_art_archive.eink.palette import Palette
 from fine_art_archive.eink.playlist import _artist_of, parse_year
 from fine_art_archive.eink.targets import fit_to_target, render_for_target
 
@@ -66,6 +67,11 @@ def test_pil_palette_image_never_pads_with_black():
         assert tuple(entries[i * 3 : i * 3 + 3]) in legal, f"entry {i} is not a palette colour"
 
 
+def test_empty_palette_is_rejected_early():
+    with pytest.raises(ValueError, match="at least one"):
+        Palette("empty", ())
+
+
 def test_white_is_not_pure_white_for_reflective_colour_palettes():
     """A panel that cannot render #FFFFFF must not be told that it can."""
     assert SPECTRA6.white != (255, 255, 255)
@@ -98,6 +104,12 @@ def test_dithering_beats_nearest_colour_perceptually():
 def test_dither_error_rejects_mismatched_sizes():
     with pytest.raises(ValueError):
         dither_error(gradient(32, 32), gradient(64, 64))
+
+
+@pytest.mark.parametrize("radius", [None, -1, float("nan"), float("inf")])
+def test_dither_error_rejects_invalid_blur_radius(radius):
+    with pytest.raises(ValueError, match="finite non-negative"):
+        dither_error(gradient(32, 32), gradient(32, 32), radius)
 
 
 # ---------------------------------------------------------------- targets ----
@@ -187,6 +199,10 @@ def test_artist_filter_unifies_source_spelling_variants():
         (None, None),
         ("", None),
         ("12", None),
+        ("300", 300),
+        ("2100", 2100),
+        ("299", None),
+        ("2101", None),
     ],
 )
 def test_parse_year_handles_real_record_messiness(raw, expected):
@@ -271,6 +287,15 @@ def test_nan_rating_is_not_treated_as_a_value(tmp_path):
 
     p = tmp_path / "r.jsonl"
     p.write_text('{"work_id":"a","fit":NaN,"quality":7}\n')
+    r = load_ratings(p)
+    assert "fit" not in r["a"] and r["a"]["quality"] == 7
+
+
+def test_infinite_rating_is_not_treated_as_a_value(tmp_path):
+    from fine_art_archive.eink import load_ratings
+
+    p = tmp_path / "r.jsonl"
+    p.write_text('{"work_id":"a","fit":Infinity,"quality":7}\n')
     r = load_ratings(p)
     assert "fit" not in r["a"] and r["a"]["quality"] == 7
 
@@ -549,6 +574,12 @@ def test_corrupt_playlist_store_returns_empty_rather_than_raising(tmp_path):
     assert PlaylistStore(p).list() == []
 
 
+def test_playlist_store_skips_non_string_name(tmp_path):
+    p = tmp_path / "pl.json"
+    p.write_text(json.dumps({"playlists": {"bad": {"id": "bad", "name": None, "spec": {}}}}))
+    assert PlaylistStore(p).list() == []
+
+
 def test_slugify_never_returns_empty():
     assert slugify("") == "playlist"
     assert slugify("!!!") == "playlist"
@@ -603,6 +634,8 @@ def test_feed_current_404_when_playlist_resolves_empty(tmp_path, monkeypatch):
     pl_store.save(empty)
     monkeypatch.setattr(api_main, "_playlists", pl_store)
     monkeypatch.setattr(api_main, "_all_sidecars", lambda: [])
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", tmp_path / "absent.jsonl")
     scope = {
         "type": "http",
         "method": "GET",
@@ -614,7 +647,7 @@ def test_feed_current_404_when_playlist_resolves_empty(tmp_path, monkeypatch):
     }
     request = Request(scope)
     with pytest.raises(HTTPException) as ei:
-        api_main.feed_current(empty.id, request)
+        api_main.feed_current(empty.id, request, offset=0)
     assert ei.value.status_code == 404
     assert "no works" in ei.value.detail
 

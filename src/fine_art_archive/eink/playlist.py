@@ -26,14 +26,16 @@ than as a thin archive.
 from __future__ import annotations
 
 import json
+import math
 import re
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 SortKey = Literal["fit", "quality", "year", "artist", "title", "random", "as-filtered"]
+_SORT_KEYS = get_args(SortKey)
 
 # A mood is a named query over tags that actually exist. `any_tags` means at
 # least one must be present; `all_tags` means every one must be.
@@ -142,7 +144,7 @@ class PlaylistSpec:
             # playlist that looks filtered and is not.
             raise ValueError(f"unknown playlist field(s): {sorted(unknown)}")
         sort = d.get("sort", "fit")
-        if sort not in {"fit", "quality", "year", "artist", "title", "random", "as-filtered"}:
+        if sort not in _SORT_KEYS:
             raise ValueError(f"unknown playlist sort {sort!r}")
         return cls(**d)
 
@@ -214,7 +216,7 @@ def load_ratings(path: Path) -> dict[str, dict[str, int]]:
         rec = out.setdefault(wid, {})
         for axis in ("quality", "fit"):
             v = ev.get(axis)
-            if isinstance(v, (int, float)) and v == v:  # v == v rejects NaN
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
                 rec[axis] = int(v)
     return out
 

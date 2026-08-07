@@ -274,9 +274,14 @@ def _eink_master(work_id: str) -> Path | None:
 
 
 def _all_sidecars() -> list[tuple[str, dict]]:
+    global _sidecars_cache
+    signature = store._dossier_signature()
+    if _sidecars_cache is not None and _sidecars_cache[0] == signature:
+        return _sidecars_cache[1]
     out: list[tuple[str, dict]] = []
     root = store.STAGING
     if not root.is_dir():
+        _sidecars_cache = (signature, out)
         return out
     for d in sorted(root.iterdir()):
         p = d / "meta.json"
@@ -286,7 +291,24 @@ def _all_sidecars() -> list[tuple[str, dict]]:
             out.append((d.name, json.loads(p.read_text())))
         except (OSError, ValueError):
             continue
+    _sidecars_cache = (signature, out)
     return out
+
+
+_sidecars_cache: tuple[object, list[tuple[str, dict]]] | None = None
+_ratings_cache: tuple[tuple[int, int] | None, dict[str, dict[str, int]]] | None = None
+
+
+def _cached_ratings() -> dict[str, dict[str, int]]:
+    global _ratings_cache
+    try:
+        st = store.RATINGS_LOG.stat()
+        signature: tuple[int, int] | None = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        signature = None
+    if _ratings_cache is None or _ratings_cache[0] != signature:
+        _ratings_cache = (signature, _eink.load_ratings(store.RATINGS_LOG))
+    return _ratings_cache[1]
 
 
 class PlaylistIn(BaseModel):
@@ -459,7 +481,7 @@ def eink_playlist_export(body: ExportIn) -> dict:
         res = _eink.build(
             sidecars,
             spec,
-            ratings=_eink.load_ratings(store.RATINGS_LOG),
+            ratings=_cached_ratings(),
             dossier_ids=set(store.work_ids_with_dossier()),
         )
     except KeyError as exc:
@@ -1010,7 +1032,7 @@ def _resolve_playlist(
         res = _eink.build(
             sidecars,
             spec,
-            ratings=_eink.load_ratings(store.RATINGS_LOG),
+            ratings=_cached_ratings(),
             dossier_ids=set(store.work_ids_with_dossier()),
         )
     except KeyError as exc:
@@ -1049,10 +1071,16 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
     master = _eink_master(work_id)
     if master is None:
         raise HTTPException(404, f"no local master for {work_id}")
-    tgt = _eink.get_target(pl.target)
+    try:
+        tgt = _eink.get_target(pl.target)
+    except KeyError as exc:
+        raise HTTPException(404, f"playlist {pl.id}: {exc}") from exc
     etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime)
     if request.headers.get("if-none-match") == etag:
-        return Response(status_code=304, headers={"ETag": etag})
+        return Response(
+            status_code=304,
+            headers={"ETag": etag, "Cache-Control": "public, max-age=300"},
+        )
     try:
         with Image.open(master) as im:
             im.draft("RGB", (tgt.width * 2, tgt.height * 2))

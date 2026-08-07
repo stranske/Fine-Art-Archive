@@ -63,6 +63,13 @@ RATINGS = Path(
 ).expanduser()
 
 
+def positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be greater than zero")
+    return parsed
+
+
 def iter_sidecars():
     for p in sorted(glob.glob(str(STAGING / "*" / "meta.json"))):
         try:
@@ -115,7 +122,7 @@ def main() -> int:
     ap.add_argument("--min-fit", type=int)
     ap.add_argument("--min-quality", type=int)
     ap.add_argument("--dossier-only", action="store_true")
-    ap.add_argument("--limit", type=int)
+    ap.add_argument("--limit", type=positive_int)
     ap.add_argument(
         "--sort",
         default="fit",

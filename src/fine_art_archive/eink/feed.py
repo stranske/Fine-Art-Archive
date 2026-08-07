@@ -112,9 +112,12 @@ class PlaylistStore:
         playlists = []
         for value in self._load_raw().values():
             try:
-                playlists.append(SavedPlaylist(**value))
+                pl = SavedPlaylist(**value)
             except TypeError:
                 continue
+            if not isinstance(pl.id, str) or not isinstance(pl.name, str):
+                continue
+            playlists.append(pl)
         return sorted(playlists, key=lambda p: p.name.lower())
 
     def get(self, pid: str) -> SavedPlaylist | None:

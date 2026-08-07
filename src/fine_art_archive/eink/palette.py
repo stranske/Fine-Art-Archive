@@ -39,6 +39,7 @@ produce throws away headroom at the top of the range.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Literal
 
@@ -56,6 +57,10 @@ class Palette:
     colours: tuple[tuple[int, int, int], ...]
     measured: bool = False
     note: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.colours:
+            raise ValueError("palette must define at least one colour")
 
     @property
     def white(self) -> tuple[int, int, int]:
@@ -289,6 +294,13 @@ def dither_error(
     move together when the palette itself is wrong), but they must never be
     read as a dither-quality score.
     """
+    if (
+        not isinstance(blur_radius, (int, float))
+        or isinstance(blur_radius, bool)
+        or not math.isfinite(blur_radius)
+        or blur_radius < 0
+    ):
+        raise ValueError("blur_radius must be a finite non-negative number")
     a_img = original.convert("RGB")
     b_img = dithered.convert("RGB")
     a = np.asarray(a_img, dtype=np.float64)

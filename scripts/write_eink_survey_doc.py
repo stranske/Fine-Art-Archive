@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,7 +37,11 @@ def dia(x: dict) -> float:
 def price(x: dict) -> str:
     p = x.get("price") or {}
     amount = p.get("amount")
-    if amount is None:
+    if (
+        not isinstance(amount, (int, float))
+        or isinstance(amount, bool)
+        or not math.isfinite(amount)
+    ):
         return "—"
     currency = (p.get("currency") or "USD").upper()
     if currency == "USD":
