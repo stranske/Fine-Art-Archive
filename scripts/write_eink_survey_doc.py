@@ -11,6 +11,7 @@ Analysis prose stays hand-written here; only the tables are derived.
 
     python3 scripts/merge_eink_survey.py && python3 scripts/write_eink_survey_doc.py
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -79,20 +80,21 @@ def main() -> int:
         return v.get("staying_power") or "unknown"
 
     rows = []
-    for x in sorted(big, key=lambda y: (OPEN_RANK.get(openness(y), 9),
-                                        STAY_RANK.get(staying(y), 9), -dia(y))):
+    for x in sorted(
+        big, key=lambda y: (OPEN_RANK.get(openness(y), 9), STAY_RANK.get(staying(y), 9), -dia(y))
+    ):
         rows.append(
             f"| {dia(x):.1f}\" | {clip(x.get('vendor') or '?', 26)} | "
             f"{clip(x.get('model') or '?', 40)} | {x.get('status', '?')} | "
-            f"{price(x)} | **{openness(x)}** | {staying(x)} |")
+            f"{price(x)} | **{openness(x)}** | {staying(x)} |"
+        )
     table = "\n".join(rows)
 
     dl = d.get("delivery_record") or {}
     # Only >15in campaigns belong in a >15in survey. Modos (13.3in) and
     # MelonFrame (7.3in) were researched to establish the base rate and are
     # discussed in prose, not listed as if they were candidates.
-    in_scope = [c for c in (dl.get("campaigns") or [])
-                if (c.get("diagonal_in") or 99) > 15]
+    in_scope = [c for c in (dl.get("campaigns") or []) if (c.get("diagonal_in") or 99) > 15]
     shipped = [c for c in in_scope if c.get("backers_have_units") == "yes"]
     stuck = [c for c in in_scope if c.get("backers_have_units") == "no"]
 
@@ -100,22 +102,28 @@ def main() -> int:
         out = []
         for c in sorted(cs, key=lambda x: -(x.get("diagonal_in") or 0)):
             promised = clip(c.get("promised_ship") or "—", 26)
-            out.append(f"| {clip(c.get('name', '?'), 30)} | "
-                       f"{(c.get('diagonal_in') or '—')}\" | "
-                       f"{promised} | "
-                       f"{clip(c.get('current_status', '?'), 84)} |")
+            out.append(
+                f"| {clip(c.get('name', '?'), 30)} | "
+                f"{(c.get('diagonal_in') or '—')}\" | "
+                f"{promised} | "
+                f"{clip(c.get('current_status', '?'), 84)} |"
+            )
         return "\n".join(out)
 
     ps = d.get("panel_supply") or {}
-    alts = [p for p in (ps.get("panel_makers") or [])
-            if p.get("credible_alternative_to_eink") in ("yes", "partial")
-            and (p.get("largest_reflective_panel_in") or 0) > 15]
+    alts = [
+        p
+        for p in (ps.get("panel_makers") or [])
+        if p.get("credible_alternative_to_eink") in ("yes", "partial")
+        and (p.get("largest_reflective_panel_in") or 0) > 15
+    ]
     alt_rows = "\n".join(
         f"| {p.get('name', '?')[:26]} | {p.get('largest_reflective_panel_in')}\" | "
         f"{(p.get('technology') or '?')[:30]} | "
         f"{'own film' if p.get('makes_own_electrophoretic_film') else 'not EPD film'} | "
         f"{p.get('credible_alternative_to_eink')} |"
-        for p in sorted(alts, key=lambda x: -(x.get("largest_reflective_panel_in") or 0)))
+        for p in sorted(alts, key=lambda x: -(x.get("largest_reflective_panel_in") or 0))
+    )
 
     doc = f"""# Large-format e-paper survey — development target
 
@@ -356,9 +364,9 @@ by link-checking.
 """
     OUT.write_text(doc)
     print(f"wrote {OUT.relative_to(ROOT)} ({len(doc):,} chars)")
-    print(f"  {len(big)} devices >15\" in table")
+    print(f'  {len(big)} devices >15" in table')
     print(f"  delivered: {len(shipped)}   stuck: {len(stuck)}")
-    print(f"  alternative panel makers >15\": {len(alts)}")
+    print(f'  alternative panel makers >15": {len(alts)}')
     return 0
 
 
