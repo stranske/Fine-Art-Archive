@@ -676,3 +676,67 @@ def test_export_maps_file_exists_to_409(tmp_path, monkeypatch):
         api_main.eink_playlist_export(body)
     assert ei.value.status_code == 409
     assert "overwrite" in ei.value.detail
+
+
+# ---- survey merge stream-key handling --------------------------------------
+def test_merge_survey_stream_keys_known_vs_unknown(tmp_path, monkeypatch, capsys):
+    """Loader-level coverage for research_reference_only vs unknown top-level keys."""
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[1] / "scripts" / "merge_eink_survey.py"
+    spec = importlib.util.spec_from_file_location("merge_eink_survey", script)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    research = tmp_path / "research"
+    research.mkdir()
+    known = research / "known.json"
+    unknown = research / "unknown.json"
+    known.write_text(
+        json.dumps(
+            {
+                "devices": [
+                    {
+                        "vendor": "TestVendor",
+                        "model": "Panel A",
+                        "diagonal_in": 25,
+                    }
+                ],
+                "vendors": [],
+                "research_reference_only": [
+                    {
+                        "vendor": "RefOnly",
+                        "model": "ShouldNotMerge",
+                        "diagonal_in": 99,
+                    }
+                ],
+            }
+        )
+    )
+    unknown.write_text(
+        json.dumps(
+            {
+                "devices": [],
+                "vendors": [],
+                "totally_unknown_bucket": [{"x": 1}],
+            }
+        )
+    )
+    out = tmp_path / "config" / "eink_targets.json"
+    monkeypatch.setattr(mod, "ROOT", tmp_path)
+    monkeypatch.setattr(mod, "STREAMS", [("known", known), ("unknown", unknown)])
+    monkeypatch.setattr(mod, "SIDECAR_STREAMS", [])
+    monkeypatch.setattr(mod, "OUT", out)
+    monkeypatch.setattr(mod, "CORRECTIONS", [])
+
+    assert mod.main() == 0
+    captured = capsys.readouterr().out
+    assert "UNREAD KEYS in known" not in captured
+    assert "UNREAD KEYS in unknown: totally_unknown_bucket" in captured
+
+    payload = json.loads(out.read_text())
+    models = {d.get("model") for d in payload["devices"]}
+    assert "Panel A" in models
+    assert "ShouldNotMerge" not in models

@@ -1984,7 +1984,8 @@
               <button onclick="einkExport(true)" style="padding:6px 12px;border-color:var(--accent);color:var(--accent)">Write card</button>
             </div>
             <div class="sub" style="margin-top:4px">Must be under: ${T.export_roots.join(", ")}</div>
-            <div id="ek-using" class="sub" style="margin-top:4px"></div>
+            <div id="ek-using" class="sub" style="margin-top:4px"
+                 role="status" aria-live="polite"></div>
           </fieldset>
           <div id="ek-out" style="margin-top:16px"></div>
         </div>`;

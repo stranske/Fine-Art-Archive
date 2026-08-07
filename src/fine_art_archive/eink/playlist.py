@@ -145,7 +145,7 @@ class PlaylistSpec:
             raise ValueError(f"unknown playlist field(s): {sorted(unknown)}")
         sort = d.get("sort", "fit")
         if sort not in _SORT_KEYS:
-            raise ValueError(f"unknown playlist sort {sort!r}")
+            raise ValueError(f"unknown playlist sort {sort!r}; expected one of {_SORT_KEYS}")
         return cls(**d)
 
 
