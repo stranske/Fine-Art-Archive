@@ -324,8 +324,14 @@ def test_export_reports_missing_master_instead_of_failing(tmp_path):
 from datetime import UTC, datetime, timedelta  # noqa: E402
 
 from fine_art_archive.eink import (  # noqa: E402
-    INTERVALS, PlaylistStore, SavedPlaylist, build_manifest, discover_facets,
-    item_etag, rotation_index, slugify,
+    INTERVALS,
+    PlaylistStore,
+    SavedPlaylist,
+    build_manifest,
+    discover_facets,
+    item_etag,
+    rotation_index,
+    slugify,
 )
 
 
