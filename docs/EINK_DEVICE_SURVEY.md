@@ -108,43 +108,43 @@ Sorted by openness, then vendor durability, then size.
 
 | Size | Vendor | Model | Status | Price | Openness | Durability |
 |---|---|---|---|---|---|---|
-| 31.5" | Samsung Electronics | Samsung Color E-Paper EMDX / EM32DX-A (3 | shipping | $1,350 | **open** | high |
+| 31.5" | Samsung Electronics | Samsung Color E-Paper EMDX / EM32DX-A… | shipping | $1,350 | **open** | high |
+| 31.5" | E Ink Holdings | E Ink 31.5" Spectra 6 ePaper Display… | shipping | — | **open** | high |
+| 25.3" | Onyx International Inc… | BOOX Mira Pro (monochrome) 25.3" | shipping | — | **open** | high |
+| 31.5" | Dalian Good Display Co… | Good Display GDEP315C01(E6) 31.5"… | shipping | — | **open** | medium |
+| 31.5" | Dalian Good Display / E… | GDEP315C01(E6) - 31.5" bare panel (E… | dev-kit | — | **open** | medium |
 | 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | $2,300 | **open** | medium |
-| 31.2" | Visionect d.o.o. | Visionect Place & Play 32" Development K | dev-kit | $6,000 | **open** | medium |
-| 31.5" | E Ink Holdings | E Ink 31.5" Spectra 6 ePaper Display mod | shipping | — | **open** | unknown |
-| 31.5" | Dalian Good Display Co., L | Good Display GDEP315C01(E6) 31.5" Spectr | shipping | — | **open** | unknown |
-| 31.5" | Dalian Good Display / E In | GDEP315C01(E6) - 31.5" bare panel (E Ink | dev-kit | — | **open** | unknown |
-| 25.3" | Onyx International Inc. (B | BOOX Mira Pro (monochrome) 25.3" | shipping | — | **open** | unknown |
-| 25.3" | Dalian Good Display | GDEP253C02(E6) - 25.3" bare panel | dev-kit | $898 | **open** | unknown |
-| 25.3" | DASUNG Tech Co., Ltd. | Dasung Paperlike 253 / 253U and Paperlik | shipping | $1,698 | **partly-open** | medium |
-| 25.3" | DASUNG Tech Co., Ltd. | DASUNG Paperlike 253 (Revolutionary) 25. | shipping | $1,549 | **partly-open** | medium |
-| 25.3" | Bigme (brand of Xinruizhi  | Bigme B251 Pro 25.3 colour e-ink monitor | shipping | $1,349 | **partly-open** | medium |
-| 32.0" | PPDS (TP Vision Europe B.V | Philips Tableaux 5150I 32in (and 25in Ta | shipping | — | **partly-open** | unknown |
-| 31.5" | PPDS / TP Vision / MMD (TP | Philips Tableaux 5150I — 32BDL5150I/00 ( | shipping | — | **partly-open** | unknown |
-| 31.5" | Dalian Good Display Co., L | DMPH315E62 — 31.5" Spectra 6 finished e- | shipping | $1,636 | **partly-open** | unknown |
-| 31.5" | SEEKINK (Jiangxi Xingtai T | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | unknown |
+| 31.2" | Visionect d.o.o. | Visionect Place & Play 32" Development… | dev-kit | $6,000 | **open** | medium |
+| 25.3" | Dalian Good Display | GDEP253C02(E6) - 25.3" bare panel | dev-kit | $898 | **open** | medium |
+| 25.3" | Onyx International Inc… | Boox Mira Pro Color 25.3 (and Mira Pro… | shipping | $1,899 | **partly-open** | high |
+| 32.0" | PPDS (TP Vision Europe… | Philips Tableaux 5150I 32in (and 25in… | shipping | — | **partly-open** | medium |
+| 31.5" | PPDS / TP Vision / MMD… | Philips Tableaux 5150I — 32BDL5150I/00… | shipping | — | **partly-open** | medium |
+| 31.5" | Dalian Good Display Co… | DMPH315E62 — 31.5" Spectra 6 finished… | shipping | $1,636 | **partly-open** | medium |
+| 31.2" | Digital View | Digital View 32in Outdoor E Paper… | shipping | — | **partly-open** | medium |
+| 25.3" | DASUNG Tech Co., Ltd. | Dasung Paperlike 253 / 253U and… | shipping | $1,698 | **partly-open** | medium |
+| 25.3" | DASUNG Tech Co., Ltd. | DASUNG Paperlike 253 (Revolutionary)… | shipping | $1,549 | **partly-open** | medium |
+| 25.3" | Bigme (brand of Xinruizhi… | Bigme B251 Pro 25.3 colour e-ink monitor | shipping | $1,349 | **partly-open** | medium |
+| 25.3" | PPDS / TP Vision / MMD… | Philips Tableaux 25BDL4050I/00 (25.3") | shipping | — | **partly-open** | medium |
+| 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") /… | shipping | — | **partly-open** | medium |
+| 25.3" | Dalian Good Display | DMPH253E61 (25.3") and DMPH315E61… | shipping | $1,636 | **partly-open** | medium |
+| 31.5" | SEEKINK (Jiangxi Xingtai… | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | unknown |
 | 31.5" | MEiNK (sold by media mea) | MEiNK 32" E Ink Spectra 6 ePaper Signage | shipping | $1,850 | **partly-open** | unknown |
-| 31.2" | Digital View | Digital View 32in Outdoor E Paper Displa | shipping | — | **partly-open** | unknown |
-| 28.5" | BLOOMIN8 (arpobot) | BLOOMIN8 E-Ink Canvas Large 28.5 | preorder | $2,399 | **partly-open** | unknown |
-| 25.3" | Onyx International Inc. (B | Boox Mira Pro Color 25.3 (and Mira Pro 2 | shipping | $1,899 | **partly-open** | unknown |
-| 25.3" | PPDS / TP Vision / MMD (TP | Philips Tableaux 25BDL4050I/00 (25.3") | shipping | — | **partly-open** | unknown |
-| 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") / EPC3 | shipping | — | **partly-open** | unknown |
-| 25.3" | Dalian Good Display | DMPH253E61 (25.3") and DMPH315E61 (31.5" | shipping | $1,636 | **partly-open** | unknown |
 | 31.5" | Fraimic | Large Canvas 31.5" (Smart Canvas line) | preorder | $1,299 | **partly-open** | low |
+| 28.5" | BLOOMIN8 (arpobot) | BLOOMIN8 E-Ink Canvas Large 28.5 | preorder | $2,399 | **partly-open** | low |
 | 75.0" | Samsung Electronics | Color E-Paper EMDX 75" | announced | — | **unknown** | high |
-| 31.5" | ePaint (Anhui Yutu Technol | e-Chroma 28" / 31.5" (indoor) and e-Pola | shipping | — | **unknown** | unknown |
-| 28.5" | Dalian Good Display | GDES285E01(E6) - 28.5" A2 bare panel | dev-kit | — | **unknown** | unknown |
-| 25.3" | E Ink Holdings | E Ink 25.3" Spectra 6 ePaper Display mod | shipping | $1,400 | **unknown** | unknown |
+| 25.3" | E Ink Holdings | E Ink 25.3" Spectra 6 ePaper Display… | shipping | $1,400 | **unknown** | high |
+| 28.5" | Dalian Good Display | GDES285E01(E6) - 28.5" A2 bare panel | dev-kit | — | **unknown** | medium |
+| 31.5" | ePaint (Anhui Yutu… | e-Chroma 28" / 31.5" (indoor) and… | shipping | — | **unknown** | unknown |
 | 31.5" | Fraimic | Fraimic Smart Canvas Large 31.5 | preorder | $999 | **unknown** | low |
-| 40.2" | IONNYK (brand of Pocketboo | IONNYK Jane (~25in), Linn (~50in), Maxin | shipping | — | **closed** | medium |
-| 75.0" | E Ink Corporation / E Ink  | E Ink Spectra 6 75" module (single) and  | announced | — | **closed** | unknown |
-| 40.5" | InkPoster (brand of Pocket | PocketBook InkPoster Tela 40.5" | announced | $4,200 | **closed** | unknown |
-| 40.5" | InkPoster (brand of Pocket | PocketBook InkPoster Duna 40.5" (designe | announced | $6,500 | **closed** | unknown |
-| 32.0" | Papercast | Papercast 32" Indoor E-Paper Display — D | shipping | — | **closed** | unknown |
-| 31.5" | InkPoster (brand of Pocket | PocketBook InkPoster Affresco 31.5" | shipping | $1,699 | **closed** | unknown |
-| 31.5" | SwitchBot (Woan Technology | SwitchBot AI Art Frame 31.5 | shipping | $1,300 | **closed** | unknown |
-| 31.2" | IONNYK (owned by PocketBoo | Linn (Large Format) | shipping | $3,890 | **closed** | unknown |
-| 28.5" | PocketBook International S | PocketBook InkPoster Tela 28.5" | shipping | $2,399 | **closed** | unknown |
+| 75.0" | E Ink Corporation / E Ink… | E Ink Spectra 6 75" module (single) and… | announced | — | **closed** | high |
+| 40.5" | InkPoster (brand of… | PocketBook InkPoster Tela 40.5" | announced | $4,200 | **closed** | medium-high |
+| 40.5" | InkPoster (brand of… | PocketBook InkPoster Duna 40.5"… | announced | $6,500 | **closed** | medium-high |
+| 31.5" | InkPoster (brand of… | PocketBook InkPoster Affresco 31.5" | shipping | $1,699 | **closed** | medium-high |
+| 28.5" | PocketBook International… | PocketBook InkPoster Tela 28.5" | shipping | $2,399 | **closed** | medium-high |
+| 40.2" | IONNYK (brand of… | IONNYK Jane (~25in), Linn (~50in)… | shipping | — | **closed** | medium |
+| 31.5" | SwitchBot (Woan… | SwitchBot AI Art Frame 31.5 | shipping | $1,300 | **closed** | medium |
+| 31.2" | IONNYK (owned by… | Linn (Large Format) | shipping | $3,890 | **closed** | medium |
+| 32.0" | Papercast | Papercast 32" Indoor E-Paper Display —… | shipping | — | **closed** | unknown |
 
 ---
 

@@ -13,6 +13,7 @@ Analysis prose stays hand-written here; only the tables are derived.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
@@ -36,23 +37,53 @@ def price(x: dict) -> str:
     return f"${p['amount']:,.0f}" if p.get("amount") else "—"
 
 
+def clip(text: str, n: int) -> str:
+    """Truncate human-facing table cells on a word boundary."""
+    normalized = " ".join((text or "").split())
+    if len(normalized) <= n:
+        return normalized
+    return normalized[:n].rsplit(" ", 1)[0].rstrip(" ,.;:-") + "…"
+
+
+def _merge_mod():
+    """Reuse the merge script's brand canonicalisation for the vendor join."""
+    path = Path(__file__).resolve().parent / "merge_eink_survey.py"
+    spec = importlib.util.spec_from_file_location("mg_doc", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load survey merge helpers from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def main() -> int:
     d = json.loads(CFG.read_text())
-    vendors = {v.get("name"): v for v in d.get("vendors") or []}
+    # Join devices to vendors on the canonical BRAND, not the raw name string.
+    # Deduping normalised the device vendor strings, which broke an exact-name
+    # join: 26 of 37 devices stopped resolving and 27 table rows fell back to
+    # "unknown" durability -- including Samsung's, which is the whole point of
+    # the recommendation. Durability is the column this survey exists for, so a
+    # silent "unknown" there is worse than no column.
+    mg = _merge_mod()
+    vendors = {}
+    for v in d.get("vendors") or []:
+        vendors[v.get("name")] = v
+        vendors.setdefault(mg.vendor_key(v), v)
     big = [x for x in d.get("devices") or [] if dia(x) > 15]
 
     def openness(x: dict) -> str:
         return (x.get("integration") or {}).get("openness") or "unknown"
 
     def staying(x: dict) -> str:
-        return (vendors.get(x.get("vendor")) or {}).get("staying_power") or "unknown"
+        v = vendors.get(x.get("vendor")) or vendors.get(mg.brand_of(x)) or {}
+        return v.get("staying_power") or "unknown"
 
     rows = []
     for x in sorted(big, key=lambda y: (OPEN_RANK.get(openness(y), 9),
                                         STAY_RANK.get(staying(y), 9), -dia(y))):
         rows.append(
-            f"| {dia(x):.1f}\" | {(x.get('vendor') or '?')[:26]} | "
-            f"{(x.get('model') or '?')[:40]} | {x.get('status', '?')} | "
+            f"| {dia(x):.1f}\" | {clip(x.get('vendor') or '?', 26)} | "
+            f"{clip(x.get('model') or '?', 40)} | {x.get('status', '?')} | "
             f"{price(x)} | **{openness(x)}** | {staying(x)} |")
     table = "\n".join(rows)
 
@@ -64,14 +95,6 @@ def main() -> int:
                 if (c.get("diagonal_in") or 99) > 15]
     shipped = [c for c in in_scope if c.get("backers_have_units") == "yes"]
     stuck = [c for c in in_scope if c.get("backers_have_units") == "no"]
-
-    def clip(text: str, n: int) -> str:
-        """Truncate on a word boundary; a table cell cut mid-word reads as a
-        rendering bug rather than as an abbreviation."""
-        t = " ".join((text or "").split())
-        if len(t) <= n:
-            return t
-        return t[:n].rsplit(" ", 1)[0].rstrip(" ,.;:-") + "…"
 
     def camp_rows(cs: list) -> str:
         out = []

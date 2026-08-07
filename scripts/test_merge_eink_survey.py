@@ -48,6 +48,16 @@ def same(a: dict, b: dict) -> bool:
     return mg.dev_key(a) == mg.dev_key(b) or mg.same_product(a, b)
 
 
+def writer_mod():
+    """Load the survey writer exactly as its standalone entry point does."""
+    spec = importlib.util.spec_from_file_location(
+        "writer_test", Path(__file__).resolve().parent / "write_eink_survey_doc.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def main() -> int:
     # ---- brand attribution ------------------------------------------------
     check("MEiNK is not filed under E Ink",
@@ -72,6 +82,43 @@ def main() -> int:
     check("unrecognized long vendor names do not collide after normalization",
           mg.vendor_key({"name": "Independent Display Manufacturer Alpha"})
           != mg.vendor_key({"name": "Independent Display Manufacturer Beta"}))
+
+    # ---- writer helper loading and generated-table formatting -------------
+    writer = writer_mod()
+    helpers = writer._merge_mod()
+    check("writer loads the merge helpers",
+          hasattr(helpers, "vendor_key") and hasattr(helpers, "brand_of"))
+    check("writer helper import does not register mg_doc globally",
+          "mg_doc" not in sys.modules)
+    check("writer truncates table cells at word boundaries",
+          writer.clip("Dasung Paperlike 253 / 253U and Paperlike Color", 40)
+          == "Dasung Paperlike 253 / 253U and…")
+    original_spec = writer.importlib.util.spec_from_file_location
+    try:
+        writer.importlib.util.spec_from_file_location = lambda *_args, **_kwargs: None
+        try:
+            writer._merge_mod()
+        except ImportError:
+            no_spec_raises = True
+        else:
+            no_spec_raises = False
+        check("writer rejects a missing import specification", no_spec_raises)
+
+        class NoLoaderSpec:
+            loader = None
+
+        writer.importlib.util.spec_from_file_location = (
+            lambda *_args, **_kwargs: NoLoaderSpec())
+        try:
+            writer._merge_mod()
+        except ImportError:
+            no_loader_raises = True
+        else:
+            no_loader_raises = False
+        check("writer rejects an import specification without a loader",
+              no_loader_raises)
+    finally:
+        writer.importlib.util.spec_from_file_location = original_spec
 
     # ---- must collapse: same product, three spellings ---------------------
     check("PocketBook/InkPoster Tela 40.5 spellings collapse",
