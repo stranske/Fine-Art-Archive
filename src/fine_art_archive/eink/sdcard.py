@@ -97,7 +97,7 @@ def export(
     method: str = "floyd-steinberg",
     fit: str | None = None,
     compress_range: bool = True,
-    fast: bool = False,
+    fast: bool = True,
     overwrite: bool = False,
     dry_run: bool = True,
     spec: dict | None = None,

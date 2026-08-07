@@ -236,8 +236,10 @@ EINK_EXPORT_ROOTS = [
     Path(p).expanduser().resolve(strict=False)
     for p in os.environ.get(
         "FAA_EINK_EXPORT_ROOTS",
-        f"/Volumes:{Path.home() / 'Desktop'}:{Path.home() / 'eink-cards'}",
-    ).split(":")
+        os.pathsep.join(
+            ["/Volumes", str(Path.home() / "Desktop"), str(Path.home() / "eink-cards")]
+        ),
+    ).split(os.pathsep)
     if p.strip()
 ]
 
@@ -1056,19 +1058,25 @@ def eink_save_playlist(body: SavePlaylistIn) -> dict:
     try:
         _eink.PlaylistSpec.from_dict(body.spec)      # validate before storing
         _eink.get_target(body.target)
+        fit = _eink.coerce_fit(body.fit)
     except (ValueError, TypeError, KeyError) as exc:
         raise HTTPException(400, str(exc)) from exc
     if body.interval not in _eink.INTERVALS:
         raise HTTPException(400, f"interval must be one of {sorted(_eink.INTERVALS)}")
+    if body.dither not in ("none", "floyd-steinberg", "atkinson"):
+        raise HTTPException(
+            400,
+            f"dither must be one of none|floyd-steinberg|atkinson; got {body.dither!r}",
+        )
 
     if body.id:
         pl = _get_playlist_or_404(body.id)
         pl.name, pl.spec, pl.target = body.name, body.spec, body.target
-        pl.dither, pl.fit, pl.interval = body.dither, body.fit, body.interval
+        pl.dither, pl.fit, pl.interval = body.dither, fit, body.interval
     else:
         pl = _eink.SavedPlaylist.new(
             body.name, body.spec, target=body.target, dither=body.dither,
-            fit=body.fit, interval=body.interval)
+            fit=fit, interval=body.interval)
     _playlists.save(pl)
     d = pl.as_dict()
     d["resolved_count"] = len(_resolve_playlist(pl))
@@ -1118,8 +1126,7 @@ def feed_image(playlist_id: str, index: int) -> Response:
 
 
 @app.get("/feed/{playlist_id}/next")
-def feed_next(playlist_id: str, after: str | None = None,
-              request: Request = None) -> dict:  # type: ignore[assignment]
+def feed_next(playlist_id: str, request: Request, after: str | None = None) -> dict:
     """Cursor-style pull, for devices that DO track position.
 
     Shaped after BLOOMIN8's documented schedule-pull: the device wakes, asks
@@ -1132,7 +1139,7 @@ def feed_next(playlist_id: str, after: str | None = None,
         raise HTTPException(404, "playlist resolves to no works with local images")
     ids = [i["work_id"] for i in items]
     nxt = (ids.index(after) + 1) % len(ids) if after in ids else 0
-    base = str(request.base_url).rstrip("/") if request else ""
+    base = str(request.base_url).rstrip("/")
     it = items[nxt]
     return {
         "playlist_id": pl.id, "index": nxt, "count": len(items),

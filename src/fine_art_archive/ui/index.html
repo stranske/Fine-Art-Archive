@@ -1867,6 +1867,10 @@
     let einkTargets = null;
     let einkLastPreview = null;
 
+    const einkEsc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[c]);
+
     async function openEink() {
       // Follow the same reveal convention as loadSummary/loadUpgrades: the
       // detail pane needs the `open` class and a scroll, or the panel renders
@@ -1881,7 +1885,7 @@
         }
       }
       const f = einkFacets, T = einkTargets;
-      const opt = (v, l, n) => `<option value="${v}">${l}${n != null ? ` (${n})` : ""}</option>`;
+      const opt = (v, l, n) => `<option value="${einkEsc(v)}">${einkEsc(l)}${n != null ? ` (${n})` : ""}</option>`;
       host.innerHTML = `
         <div style="max-width:1080px">
           <h2 style="margin-bottom:2px">E-paper card builder</h2>
@@ -2025,6 +2029,8 @@
       } catch (e) { toast(String(e)); }
     }
 
+    let einkCardPlaylistId = null;
+
     async function einkLoadPlaylists() {
       const host = document.getElementById("ek-playlists");
       if (!host) return;
@@ -2040,22 +2046,33 @@
           <th>Feed</th><th>Works</th><th>Panel</th><th>Rotates</th><th>URL for the device</th><th></th></tr>
         ${d.playlists.map(p => `
           <tr style="border-top:1px solid #eee">
-            <td style="padding:3px 0"><strong>${p.name}</strong></td>
+            <td style="padding:3px 0"><strong>${einkEsc(p.name)}</strong></td>
             <td>${p.resolved_count == null ? '<span style="color:#a00">error</span>' : p.resolved_count}</td>
-            <td>${p.target}</td>
-            <td>${p.interval}</td>
-            <td><code style="font-size:11px">${origin}${p.feed_url}</code></td>
+            <td>${einkEsc(p.target)}</td>
+            <td>${einkEsc(p.interval)}</td>
+            <td><code style="font-size:11px">${einkEsc(origin)}${einkEsc(p.feed_url)}</code></td>
             <td style="text-align:right;white-space:nowrap">
-              <a href="${p.manifest_url}" target="_blank">manifest</a> ·
-              <a href="${p.feed_url}" target="_blank">view</a> ·
-              <a href="#" onclick="einkUseForCard('${p.id}');return false;">to card</a> ·
-              <a href="#" onclick="einkDeletePlaylist('${p.id}','${p.name.replace(/'/g, "")}');return false;">delete</a>
+              <a href="${einkEsc(p.manifest_url)}" target="_blank">manifest</a> ·
+              <a href="${einkEsc(p.feed_url)}" target="_blank">view</a> ·
+              <a href="#" data-eink-use="${einkEsc(p.id)}">to card</a> ·
+              <a href="#" data-eink-del="${einkEsc(p.id)}" data-eink-name="${einkEsc(p.name)}">delete</a>
             </td>
           </tr>`).join("")}
       </table>`;
+      host.querySelectorAll("[data-eink-use]").forEach((a) => {
+        a.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          einkUseForCard(a.getAttribute("data-eink-use"));
+        });
+      });
+      host.querySelectorAll("[data-eink-del]").forEach((a) => {
+        a.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          einkDeletePlaylist(a.getAttribute("data-eink-del"), a.getAttribute("data-eink-name") || "");
+        });
+      });
     }
 
-    let einkCardPlaylistId = null;
     function einkUseForCard(id) {
       einkCardPlaylistId = id;
       toast("card will use that saved feed's selection — set a path and write");
@@ -2105,8 +2122,8 @@
               <img loading="lazy" src="/works/${encodeURIComponent(i.work_id)}/eink_preview?target=${encodeURIComponent(target)}&dither=${encodeURIComponent(dither)}&max_px=380"
                    style="width:100%;border:1px solid #ddd;background:#eee" alt="">
               <figcaption class="sub" style="font-size:11px;line-height:1.25;margin-top:3px">
-                ${String(n + 1).padStart(3, "0")} · ${i.year || "????"}<br>
-                ${(i.artist || "—").slice(0, 30)}<br><em>${(i.title || "").slice(0, 42)}</em>
+                ${String(n + 1).padStart(3, "0")} · ${einkEsc(i.year || "????")}<br>
+                ${einkEsc((i.artist || "—").slice(0, 30))}<br><em>${einkEsc((i.title || "").slice(0, 42))}</em>
               </figcaption>
             </figure>`).join("")}
         </div>`;
