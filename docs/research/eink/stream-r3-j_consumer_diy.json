@@ -1,0 +1,982 @@
+{
+  "search_log": [
+    {"query": "reddit r/eink large e-ink art frame Spectra 6", "source": "WebSearch (Reddit-targeted)", "new_names_found": [], "notes": "Reddit is effectively invisible to this toolchain. Search returned only press/notebookcheck coverage of already-known brands (SwitchBot, PocketBook InkPoster, Fraimic, Aura Ink). No Reddit content surfaced."},
+    {"query": "site:reddit.com r/eink \"art frame\" e-paper 32 inch", "source": "WebSearch (Reddit)", "new_names_found": [], "notes": "Zero Reddit results returned; search engine substituted Walmart/eBay picture-frame listings. Direct WebFetch of both www.reddit.com/r/eink/search.json and old.reddit.com/r/eink/search were REFUSED by the fetch tool. Reddit surface is a genuine gap in this sweep."},
+    {"query": "github e-paper art frame project \"Spectra 6\" 13.3 inch gallery", "source": "WebSearch -> GitHub/blogs", "new_names_found": ["Inkplate 13Spectra (Soldered Electronics)", "Seeed XIAO ePaper DIY Kit EE02", "Duocervisia/e-paper-esp32-frame"], "notes": "First DIY controller names at 13.3\"."},
+    {"query": "Kickstarter e-ink poster frame campaign color e-paper 2025 2026", "source": "WebSearch (Kickstarter)", "new_names_found": ["LumiCap"], "notes": "Rest were known (BLOOMIN8, Fraimic, InkJoy, MelonFrame, Memoir, Galari). Kickstarter pages themselves return HTTP 403 to WebFetch throughout this session."},
+    {"query": "Hacker News e-ink art frame show HN e-paper display wall", "source": "WebSearch -> HN", "new_names_found": ["eliot.blog 42-inch generative-art frame", "Paperd.Ink"], "notes": "Identified the two highest-signal HN threads to mine."},
+    {"query": "WebFetch news.ycombinator.com/item?id=27682018", "source": "Hacker News comment thread", "new_names_found": ["FrameLabs ArtFrame", "EPDiy", "Inkplate", "Dmitry.GR Chroma74 pricetag hack"], "notes": "FrameLabs was the single most valuable new commercial name in the whole sweep. HN item pages returned HTTP 429 on later attempts; switched to the Algolia API instead."},
+    {"query": "FrameLabs ArtFrame e-paper 13.3 price API", "source": "WebSearch -> framelabs.eu + GitHub org", "new_names_found": ["Frame Labs (framelabs-eu GitHub org: firmware, imageserver, tools)"], "notes": "Led to discovery of the 31.2\" XL model and the open-source image server."},
+    {"query": "\"Home Assistant\" e-paper frame integration eink display custom component large", "source": "WebSearch -> HA community", "new_names_found": ["paperlesspaper", "Seeed reTerminal E series", "HomePlate (lanrat)"], "notes": "The only vendor with a HACS integration surfaced by search directly was paperlesspaper; GitHub search later found several more."},
+    {"query": "paperlesspaper ePaper picture frame API groesse inch", "source": "WebSearch", "new_names_found": ["paperlesspaper OpenPaper L (13.3\")", "Aluratek ePaper 13.3\" WiFi Digital Art Frame"], "notes": "Two solid new consumer entrants."},
+    {"query": "Etsy Tindie handmade e-ink picture frame 13.3 inch Spectra seller", "source": "WebSearch + WebFetch etsy.com", "new_names_found": [], "notes": "Etsy market page returned HTTP 403. No small-batch Etsy/Tindie maker selling a >=13\" finished frame was found on any surface this session. Tindie's largest relevant listing is a 2.13\" kit."},
+    {"query": "Indiegogo e-paper frame color eink canvas campaign", "source": "WebSearch (Indiegogo)", "new_names_found": [], "notes": "Only BLOOMIN8 (known) has an Indiegogo presence; everything else re-found."},
+    {"query": "\"e-ink\"/\"e-paper\" digital art frame 25/28/31.5 inch new brand 2026", "source": "WebSearch", "new_names_found": [], "notes": "Re-found InkPoster Tela 28.5/31.5, SwitchBot, Bloomin8."},
+    {"query": "Product Hunt e-ink art frame epaper display launch", "source": "WebSearch", "new_names_found": ["Reflection Frame", "SeekInk", "Orient Display"], "notes": "Product Hunt itself yielded nothing; the query surfaced E Ink's own blog and a Chinese ODM blog instead."},
+    {"query": "Crowd Supply e-paper display frame large color project", "source": "WebSearch (Crowd Supply)", "new_names_found": ["Inkplate 13SPECTRA"], "notes": "Modos already known. crowdsupply.com pages return HTTP 403 to WebFetch."},
+    {"query": "MpicoSys timing controller mini-LVDS large e-paper 31.2 42 inch driver board", "source": "WebSearch -> mpicosys.com + shopkits.eink.com", "new_names_found": ["MpicoSys TCM2/TCM3 timing controllers"], "notes": "The only DIY-purchasable controller path to 31.2\" and 42\" panels found anywhere."},
+    {"query": "Waveshare 13.3 Spectra 6 HAT+ QSPI driver ESP32 25.3 E6", "source": "WebSearch", "new_names_found": ["Waveshare ESP32-S3-ePaper-13.3E6"], "notes": "Also surfaced esphome discussion #3380 requesting 13.3\" E6 support."},
+    {"query": "\"e-paper\" art frame startup CES 2026 new brand color epaper wall art unveiled", "source": "WebSearch", "new_names_found": ["SEEKINK", "ePaint / Anhui Yutu", "InkPoster Duna (Pininfarina)"], "notes": "Confirmed the 40.5\" A1 ceiling of the consumer category."},
+    {"query": "amazon e-ink digital art frame Spectra 6 brand 13.3 inch", "source": "WebSearch (Amazon)", "new_names_found": ["Huessen"], "notes": "Amazon product pages returned HTTP 500 to WebFetch; Huessen could not be verified first-party."},
+    {"query": "\"ePaper\" digital art frame brand review 2026 \"no subscription\" open API local network push", "source": "WebSearch", "new_names_found": ["eco4life"], "notes": ""},
+    {"query": "Makuake dennshi peepaa gakubuchi art frame color E Ink (Japanese)", "source": "WebSearch (Makuake)", "new_names_found": ["MAXEVIS Kokonna / Oscar Japan", "Creative Design Worx (maker of Reflection Frame)", "HR Innovation (JP distributor)"], "notes": "Makuake project pages ARE fetchable, unlike Kickstarter. Highest-yield crowdfunding surface of the sweep."},
+    {"query": "Visionect Place and Play 32 inch e-paper REST API", "source": "WebSearch -> docs.visionect.com", "new_names_found": ["Visionect Place & Play 32\""], "notes": "31.2\" 2560x1440 mono with a self-hostable software suite; B2B signage but directly usable as a large art frame."},
+    {"query": "zeczec dianzizhi huakuang art e-ink frame (Chinese/Taiwan)", "source": "WebSearch (Zeczec)", "new_names_found": ["KoKonna / MoXiangKuang on Zeczec"], "notes": "Same product as MAXEVIS Kokonna, Taiwan-origin. Zeczec project page returned HTTP 403."},
+    {"query": "gh search repos: eink frame / e-paper art frame / epaper poster", "source": "GitHub API", "new_names_found": ["bluemax-365 EinkFrameServer fleet", "mullerdavid hass_EinkFrame"], "notes": "Both are personal DIY fleets, not products."},
+    {"query": "gh search repos: paperlesspaper, bloomin8, fraimic, inkposter, melonframe, epdiy, inkplate 13", "source": "GitHub API", "new_names_found": ["mcuelenaere/ha-inkposter", "ARPOBOT-BLOOMIN8 official HA component", "Dopiz/custom-bloomin8-canvas-* addon+desktop", "mrud/bloomin8-cli", "jacobstim/bloomin8-python", "moifort/bloomin8 self-hosted server", "Fraimic official REST API guide", "dsackr/ESP32-S3-ePaper-13.3E6 Fraimic-compatible firmware", "djiwondee/paperlesspaper-ha"], "notes": "DECISIVE for the openness question. The existence of third-party clients is exactly the signal the brief predicted: BLOOMIN8 and Fraimic both turn out to have unauthenticated LAN REST APIs; InkPoster turns out to be cloud-API + BLE."},
+    {"query": "BackerKit e-ink frame epaper canvas crowdfunding", "source": "WebSearch (BackerKit)", "new_names_found": [], "notes": "BackerKit only mirrors the known Kickstarter campaigns."},
+    {"query": "youtube review \"e-ink art frame\" comparison brands 13.3 28 inch 2026", "source": "WebSearch (YouTube/blogs)", "new_names_found": ["YIAIFRAME"], "notes": "YIAIFRAME is itself a Shenzhen manufacturer running a comparison page as SEO."},
+    {"query": "aliexpress/alibaba \"e-ink photo frame\" 13.3 Spectra 6 OEM", "source": "WebSearch", "new_names_found": ["AVLink Display (Shenzhen Avlink)", "Good Display DMPH133E61 / GDP133EW1"], "notes": "Confirms a deep white-label supply layer under the consumer brands."},
+    {"query": "\"e-paper\"/\"e-ink\" wall art frame brand comparison \"28.5\"/\"31.5\" cordless gallery", "source": "WebSearch", "new_names_found": [], "notes": "All known."},
+    {"query": "elektronisches Papier Bilderrahmen E-Ink Kunst Rahmen Hersteller neu 13 Zoll (German)", "source": "WebSearch (DE)", "new_names_found": ["APHEUM Frame (Stuttgart)"], "notes": "Best non-English find: a monochrome fine-art photography frame line topping out at 27.5\". Would not have surfaced in English search."},
+    {"query": "cadre photo e-ink couleur art mural epaper marque nouveau 2026 (French)", "source": "WebSearch (FR)", "new_names_found": ["PicPak (AutoHeart)"], "notes": "PicPak appears to be well under 13\" - logged as a lead, not a device."},
+    {"query": "Tindie e-paper display board large 13.3 inch kit seller", "source": "WebSearch (Tindie)", "new_names_found": ["TintTech (tinttech.io)", "Seeed reTerminal E1004"], "notes": "TintTech is a European PoE + REST-API mono frame - a genuinely open commercial product."},
+    {"query": "Seeed reTerminal E1004 13.3 open source Home Assistant ESPHome price", "source": "WebSearch", "new_names_found": ["reTerminal E1003 (10.3\" touch)", "TRMNL"], "notes": ""},
+    {"query": "kickstarter \"e-ink\" frame coming soon / launching 2026", "source": "WebSearch", "new_names_found": ["Inkanva", "LINKUADRO"], "notes": "Two pre-launch/live campaigns not in any roundup."},
+    {"query": "Inkplate 13Spectra soldered price availability ESPHome", "source": "WebSearch", "new_names_found": ["SolderedElectronics/Soldered-Inkplate-ESPHome"], "notes": "$309/$359, ships 2026-08-21, official ESPHome external component."},
+    {"query": "moshuiping dianzizhi huakuang 13.3 28 cun pinpai (Chinese)", "source": "WebSearch (CN)", "new_names_found": ["einkCN (aggregator)", "Easyblock MoQu art frame"], "notes": "Chinese domestic market has its own crowdfunded frames invisible to Western coverage."},
+    {"query": "community.home-assistant.io e-ink art frame Bloomin8 Fraimic InkPoster local control", "source": "WebSearch (HA forum)", "new_names_found": [], "notes": "Corroborated BLOOMIN8's 100%-local HA path; no new vendors."},
+    {"query": "DIY 25.3 / 31.5 inch Spectra 6 e-paper build ESP32 Raspberry Pi working project", "source": "WebSearch", "new_names_found": ["FrameOS (frameos.net)", "blog.shvn.dev build", "charnley.github.io local AI gallery"], "notes": "NO hobbyist build above 13.3\" using Spectra 6 was found. The colour ceiling for DIY is firmly 13.3\"."},
+    {"query": "hackaday.io large e-paper display project 13.3 inch IT8951 frame build", "source": "WebSearch (Hackaday)", "new_names_found": ["Hyepaper (13.3\" IT8951 + ESP32, Rust driver)"], "notes": "A real, documented, working 13.3\" mono build with a v2 revision."},
+    {"query": "\"31.2 inch\"/\"28 inch\" e-paper DIY build TCM2 Visionect hobbyist", "source": "WebSearch", "new_names_found": ["Digital View 32\" Outdoor E-Paper Display", "Good Display GDEP312TT3 31.2\" panel"], "notes": "Panels at 31.2\" are purchasable, but no hobbyist build log at that size was found."},
+    {"query": "Show HN 2026 e-paper art frame open source local server no cloud", "source": "WebSearch", "new_names_found": ["Openframe (openframe.io)", "paperlesspaper Paper 7 (7\", open source)"], "notes": "Openframe is LCD/Pi-oriented, not e-paper."},
+    {"query": "e-paper art frame gallery artist edition subscription Europe 30 inch", "source": "WebSearch", "new_names_found": [], "notes": "SATURATION SIGNAL 1 - only IONNYK, InkPoster, Reflection Frame returned; all already recorded."},
+    {"query": "\"e ink\" picture frame brand new startup 2026 13.3/28.5 (excluding known brands)", "source": "WebSearch", "new_names_found": [], "notes": "SATURATION SIGNAL 2 - returned only Aura, Aluratek, Bloomin8, SeekInk."},
+    {"query": "wadiz e-ink frame color epaper art frame (Korean)", "source": "WebSearch (KR)", "new_names_found": [], "notes": "SATURATION SIGNAL 3 - no Korean-market e-paper art frame found; only a phone-case campaign."},
+    {"query": "LumiCap e-ink canvas specs size inches price Kickstarter status", "source": "WebSearch", "new_names_found": [], "notes": "SATURATION SIGNAL 4 - could not obtain LumiCap size/price from any fetchable source."},
+    {"query": "\"e-paper\" frame vendor art/picture frame 2026 obscure brand roundup", "source": "WebSearch", "new_names_found": [], "notes": "SATURATION SIGNAL 5 - returned only SwitchBot, Aura, Aluratek plus non-e-paper Walmart frames."}
+  ],
+  "saturation_reached": true,
+  "saturation_note": "Saturation hit at roughly search 39 of 44. The final five queries - deliberately varied across language (Korean), framing (art-subscription/gallery), explicit brand-exclusion, and generic 'obscure brand roundup' - returned zero names not already recorded. The productive veins were, in order: (1) GitHub third-party-integration search, which was by far the highest-yield surface and is the only place the local-API facts about BLOOMIN8 and Fraimic exist; (2) non-English search (German surfaced APHEUM, Japanese surfaced MAXEVIS Kokonna, Chinese surfaced Easyblock); (3) an HN comment thread from 2021 that named FrameLabs. Two surfaces produced nothing because they are mechanically inaccessible, not because they are empty: Reddit (every fetch attempt refused by the tool; site: search returns nothing) and Kickstarter/Crowd Supply/Etsy/Amazon (HTTP 403/500). Reddit in particular should be treated as an unexplored surface, not a saturated one.",
+  "new_vendor_count": 19,
+  "known_vendor_count": 13,
+  "new_vs_known_note": "19 vendor names new to the survey (16 with a recorded >=13\" device: Frame Labs, paperlesspaper, Aluratek, Creative Design Worx/Reflection Frame, APHEUM, TintTech, Visionect, Oscar Japan/KoKonna, eco4life, SeekInk, ePaint/Anhui Yutu, AVLink, YIAIFRAME, Digital View, Huessen, Linkuadro; plus LumiCap, Inkanva and Easyblock as size-unconfirmed leads) versus 13 of the 17 pre-named vendors re-encountered (Aura Ink, BLOOMIN8/arpobot, Fraimic, InkJoy, InkPoster, PocketBook, IONNYK, MelonFrame, Memoir, Modos, SwitchBot, Galari, Good Display, Waveshare - Bigme, BOOX/Onyx and DASUNG did not surface in art-frame contexts at all). Ratio roughly 3:2 new to known. Of the 23 devices recorded, 19 are new to the survey. On the DIY side 9 of 11 controller entries are new (Modos and Waveshare were pre-named).",
+  "devices": [
+    {
+      "model": "ArtFrame 31.2\" (XL)",
+      "vendor": "Frame Labs",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": "2560x1440",
+      "panel": "E Ink monochrome (16 grey levels, dithered)",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://www.framelabs.eu/blog/31inch-device/"},
+      "availability": "First batch delivered to customers per vendor blog; price not published on the pages fetched.",
+      "integration": {
+        "openness": "open",
+        "local_push": "Device is set to 'WiFi mode' and given an Image Server URL pointing at a machine you control (e.g. http://192.168.0.100:8090/); the frame polls that URL over plain HTTP and renders what it gets. Also a standalone browser-based config UI served by the device itself, and a local storage mode for ~400 images.",
+        "sd_card": null,
+        "api": "Vendor publishes an open-source Python image-server library (framelabs-eu/imageserver) with example servers (folder-serving, Flask, VLC cover art). Firmware .bin files for every model incl. the 31.2\" XL are published in a public GitHub repo (framelabs-eu/firmware). Vendor blog describes 'an API to deliver content remotely'.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["framelabs-eu/imageserver (first-party, open source)", "framelabs-eu/firmware", "framelabs-eu/tools"],
+        "evidence": "Read framelabs-eu/imageserver and framelabs-eu/firmware READMEs directly via the GitHub API. The imageserver README's step 2 is literally 'Set the Image Server URL to point to your computer' - this is a pull-from-your-own-host architecture with no vendor cloud in the path. Firmware README lists a distinct '1.6.3XL' build for the 31.2\" device, confirming the XL is a real shipped SKU."
+      },
+      "art_suitability": "Strongest large-format option for someone who wants total local control, but monochrome only - 16 grey levels with dithering. 2560x1440 over 31.2\" is ~94 ppi. AA-battery powered rather than internal LiPo. Good for photography and line art, useless for colour work.",
+      "sources": [
+        {"url": "https://www.framelabs.eu/blog/31inch-device/", "what_it_supports": "31.2\" model exists, 2560x1440, 16 grey shades, AA batteries, WiFi + remote API, first batch delivered"},
+        {"url": "https://github.com/framelabs-eu/imageserver", "what_it_supports": "Open-source local image server; device pulls from a URL you set"},
+        {"url": "https://github.com/framelabs-eu/firmware", "what_it_supports": "Public firmware binaries including the XL build for the 31.2\" device"}
+      ]
+    },
+    {
+      "model": "ArtFrame 13.3\"",
+      "vendor": "Frame Labs",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200 (150 ppi)",
+      "panel": "E Ink monochrome, 16 grey shades",
+      "colour": "monochrome",
+      "price": {"amount": 899.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://goodereader.com/blog/electronic-readers/here-are-the-best-e-ink-picture-frames-worth-buying"},
+      "availability": "Shipping. Also 6\" HD (1448x1072, 300 ppi) and 9.7\" (1200x825) below 13\", and a 10.3\" HD model implied by the firmware list.",
+      "integration": {
+        "openness": "open",
+        "local_push": "Same as the XL: WiFi mode + user-supplied Image Server URL, or local storage of up to ~400 images, or the device's own WiFi-hotspot web UI.",
+        "sd_card": null,
+        "api": "Open-source Python image server library; documented remote-content API; public firmware.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["framelabs-eu/imageserver"],
+        "evidence": "framelabs.eu/specs fetched for panel/resolution/battery; price of EUR 899 comes from the Good e-Reader roundup I fetched, not from a vendor page (the specs page carries no pricing) - treat the exact figure as second-hand."
+      },
+      "art_suitability": "Well-reviewed on HN as far back as 2021-2022; mature product line. Monochrome.",
+      "sources": [
+        {"url": "https://www.framelabs.eu/specs/", "what_it_supports": "Model line-up, resolutions, 16 grey shades, LiPo battery ~7000 image changes / 1 year, WiFi hotspot config UI"},
+        {"url": "https://goodereader.com/blog/electronic-readers/here-are-the-best-e-ink-picture-frames-worth-buying", "what_it_supports": "EUR 349 / 449.99 / 899.00 pricing for 6\"/9.7\"/13.3\"; 'free web app' image transfer"},
+        {"url": "https://news.ycombinator.com/item?id=27682018", "what_it_supports": "Independent HN commenters citing FrameLabs pricing and WiFi URL-fetch behaviour"}
+      ]
+    },
+    {
+      "model": "OpenPaper L",
+      "vendor": "paperlesspaper",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200 (150 ppi)",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": 339.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://paperlesspaper.de/en/openpaper-l"},
+      "availability": "In stock, quoted 14-day delivery. Reduced from EUR 359.",
+      "integration": {
+        "openness": "open",
+        "local_push": "Web browser (Chrome/Safari/Firefox) plus iOS 18+/Android 15+ app over WiFi 6 / BLE. The product is explicitly badged 'Open Source Project' with published hardware, firmware and an offline firmware variant.",
+        "sd_card": null,
+        "api": "Yes - first-party developer API documented at docs.paperlesspaper.de, with a public GitHub org (paperlesspaper/*) containing paperlesspaper-web (the API and app), paperlesspaper-firmware, paperlesspaper-firmware-offline, paperlesspaper-hardware, and paperlesspaper-apps.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": ["djiwondee/paperlesspaper-ha (HACS Home Assistant integration)", "fwmone/paperlesspaper_push", "paperlesspaper/paperlesspaper-art (public-domain art on any eInk display)"],
+        "evidence": "Product page fetched; GitHub org repo list retrieved via the GitHub API. The existence of a separate 'firmware-offline' repo is the strongest single indicator that cloud is avoidable. The HA integration README (surfaced via search) describes it as controlling the frame 'via its cloud API', so the default path is cloud-mediated - I could not confirm from a fetched first-party page whether the stock firmware can be pointed at a purely local endpoint."
+      },
+      "art_suitability": "Cheapest colour 13.3\" from a vendor with genuinely open hardware/firmware. 4x AA (or NiMH) batteries, ~6 months at daily updates, USB-C alternative. The most hackable colour frame found.",
+      "sources": [
+        {"url": "https://paperlesspaper.de/en/openpaper-l", "what_it_supports": "13.3\", 1600x1200, Spectra 6, EUR 339, open source project, developer API link, GitHub link, AA batteries, WiFi 6 + BLE"},
+        {"url": "https://github.com/paperlesspaper/paperlesspaper-firmware-offline", "what_it_supports": "Existence of an offline firmware variant (repo metadata retrieved via GitHub API)"},
+        {"url": "https://github.com/djiwondee/paperlesspaper-ha", "what_it_supports": "Third-party Home Assistant integration exists (repo metadata retrieved via GitHub API)"}
+      ]
+    },
+    {
+      "model": "ePaper 13.3\" WiFi Digital Art Frame",
+      "vendor": "Aluratek",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1200x1600",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": 349.99, "currency": "USD", "as_of": "2026-08-06", "source_url": "https://aluratek.com/products/13-3-epaper-wifi-digital-photo-frame"},
+      "availability": "In stock, ready to ship. Launched June 2025.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "None documented. The 'eFrame' iOS/Android app over WiFi is the only route; the frame stores up to 10 photos locally.",
+        "sd_card": false,
+        "api": "None published.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party product page fetched. No subscription is mentioned and no cloud account is explicitly demanded, but app-mandatory setup means an undocumented backend is likely. No GitHub project of any kind references this device."
+      },
+      "art_suitability": "Cheapest US-retail colour 13.3\". A conventional US consumer-electronics accessory brand entering the category. 10-image local store is limiting for a rotating gallery.",
+      "sources": [
+        {"url": "https://aluratek.com/products/13-3-epaper-wifi-digital-photo-frame", "what_it_supports": "13.3\", 1200x1600, Spectra-6, $349.99, in stock, eFrame app, 10-photo local store, USB-C, ~1yr daily / 2yr weekly battery"}
+      ]
+    },
+    {
+      "model": "Reflection Frame Skipper 13.3\"",
+      "vendor": "Creative Design Worx (Reflection Frame)",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": 349.99, "currency": "USD", "as_of": "2026-08-06", "source_url": "https://reflectionframe.com/"},
+      "availability": "Ships immediately; $369.00 for solid oak/walnut. A 10\" 'Ringlet' at $199.99 early-bird is below the 13\" threshold and listed for Oct 2026. Kickstarter-funded, then Makuake (JPY 72,000 retail in Japan via HR Innovation).",
+      "integration": {
+        "openness": "closed",
+        "local_push": "NFC 'Tap-to-Print': hold the phone to the bottom-left of the mat, the app pushes the image phone-to-frame directly. Vendor states 'No Wi-Fi, no logins, no cloud uploads' and 'your photos remain private and are never sent to our servers'. Hardware includes WiFi 6 / BT 5.0 / NFC (ESP32).",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party site fetched, plus E Ink's own blog write-up and a Good e-Reader article. The privacy claim is first-party marketing; I found no independent teardown. There is no third-party client for it on GitHub, so the protocol appears to be undocumented even though the data path is local."
+      },
+      "art_suitability": "Interesting counter-example: local-only by design, but closed - you get privacy without programmability. No glass over the panel. Includes a no-cost 'Endless Gallery' image library with no subscription.",
+      "sources": [
+        {"url": "https://reflectionframe.com/", "what_it_supports": "Sizes, prices, finishes, NFC tap-to-print mechanics, no-subscription, no-cloud claim"},
+        {"url": "https://blog.eink.com/reflection-frame-display-week-2025", "what_it_supports": "E Ink's own confirmation of 13.3\" Spectra 6 and Tap-to-Print; Kickstarter completed"},
+        {"url": "https://goodereader.com/blog/e-paper/e-ink-spectra-6-photo-frame-is-on-kickstarter", "what_it_supports": "1600x1200, ESP32, WiFi 6, BT 5.0, NFC, 5000mAh, $249 early bird"},
+        {"url": "https://www.atpress.ne.jp/news/442926", "what_it_supports": "Maker is Creative Design Worx Inc.; JPY 72,000 retail; Japanese distribution via HR Innovation; prior Kickstarter raised JPY 17.7M"},
+        {"url": "https://www.thedigitalpictureframe.com/my-review-of-the-reflection-frame-with-its-paper-like-e-ink-display/", "what_it_supports": "Independent hands-on review confirming NFC/BT transfer, no account required"}
+      ]
+    },
+    {
+      "model": "APHEUM Frame L",
+      "vendor": "APHEUM",
+      "is_new_to_survey": true,
+      "status": "pre-order",
+      "diagonal_in": 27.5,
+      "resolution": null,
+      "panel": "E Ink monochrome with vendor 'Deep Grayscale' processing (claimed up to 255 grey levels), behind matte anti-glare Artglass",
+      "colour": "monochrome",
+      "price": {"amount": 2348.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://shop.apheum.com/"},
+      "availability": "Introductory pre-order price. Direct sales only, no retail channel. Stuttgart, Germany.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "Mobile app pushes wirelessly; a vendor-run server hosts both your uploads and curated collections. No local endpoint documented.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "No subscription for your own images - purchase includes a permanent personal-use licence. Curated Magnum Photos collections are bundled.",
+        "third_party_projects": [],
+        "evidence": "Fetched shop.apheum.com and a German design-press write-up. The 'server-based system' wording is from the press piece; the shop page only describes the app. Resolution is not published anywhere I could fetch."
+      },
+      "art_suitability": "The most deliberately art-directed product found - a black-and-white fine-art photography instrument with a Magnum Photos licensing deal, not a photo frame. AAA batteries, ~12 months. At 27.5\" it is the largest monochrome consumer art frame located. Its 'up to 255 grey levels' claim exceeds every other product's 16 and deserves independent verification.",
+      "sources": [
+        {"url": "https://shop.apheum.com/", "what_it_supports": "Three models S/M/L, EUR 386 / 768 / 2348, monochrome-only positioning, app transfer, AAA batteries, no subscription"},
+        {"url": "https://www.designerinaction.de/fotografie/digitaler-rahmen-fuer-monochrome-fotokunst/", "what_it_supports": "Stuttgart-based; S=9.7\", M=13.3\", L=27.5\"; Deep Grayscale up to 255 levels; Artglass; Magnum Photos collections; server-based image management"}
+      ]
+    },
+    {
+      "model": "APHEUM Frame M",
+      "vendor": "APHEUM",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "panel": "E Ink monochrome, 'Deep Grayscale'",
+      "colour": "monochrome",
+      "price": {"amount": 768.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://shop.apheum.com/"},
+      "availability": "Direct sales.",
+      "integration": {"openness": "closed", "local_push": "App only, via vendor server.", "sd_card": null, "api": "None published.", "cloud_required": true, "subscription": "None for own images.", "third_party_projects": [], "evidence": "As for Frame L."},
+      "art_suitability": "Same platform at 13.3\".",
+      "sources": [{"url": "https://shop.apheum.com/", "what_it_supports": "Model M pricing and positioning"}, {"url": "https://www.designerinaction.de/fotografie/digitaler-rahmen-fuer-monochrome-fotokunst/", "what_it_supports": "Model M = 13.3\", EUR 768"}]
+    },
+    {
+      "model": "13.3-inch ePaper Display",
+      "vendor": "TintTech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200 (150 dpi)",
+      "panel": "E Ink Carta, 16 grey levels",
+      "colour": "monochrome",
+      "price": {"amount": 555.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://tinttech.io/shop/13-3-inch-epaper-display/"},
+      "availability": "In production, designed and produced in Europe. A 13.3\" Lite and a 9.7\" are both EUR 495. Prices exclude tax.",
+      "integration": {
+        "openness": "open",
+        "local_push": "Power-over-Ethernet (3 m PoE cable in the box) with an internal management web interface. No WiFi, no SD, no USB.",
+        "sd_card": false,
+        "api": "Explicit 'REST API integration support for automated content updates', plus URL-pull integration against a web CMS.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party shop page fetched. This is one of only three products in the whole sweep whose vendor page states an unqualified REST API for content push (the others being Fraimic and BLOOMIN8)."
+      },
+      "art_suitability": "Wired PoE rather than battery, so it is a fixed-installation piece, not a hang-anywhere art frame - but for a wall with an Ethernet drop it is the cleanest documented local-push path at 13.3\". Monochrome.",
+      "sources": [{"url": "https://tinttech.io/shop/13-3-inch-epaper-display/", "what_it_supports": "13.3\", 1600x1200, E Ink Carta 16 grey, EUR 555, PoE, REST API, made in Europe, 9.7\"/Lite pricing"}]
+    },
+    {
+      "model": "Place & Play 32\"",
+      "vendor": "Visionect",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": "2560x1440",
+      "panel": "E Ink, 16-level greyscale, non-touch",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Sold via Visionect and Joan channels and via E Ink's own shopkits store; a separate Development Kit SKU exists with a licence permitting commercial products built on it. No price on any page I fetched.",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Devices talk to the Visionect Software Suite, which is deployed as server software (the ecosystem includes Docker-based deploy repos and a documented HTTP API at api.visionect.com). Content is rendered as web pages, so 'push an image' means 'point a session at a URL you host'.",
+        "sd_card": false,
+        "api": "Documented Visionect API with a first-party Python library (visionect/libpyvss, functions incl. get/update_session, get/update_device, reboot_device) and a Ruby client, a Node client, and third-party dashboards.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["visionect/libpyvss (official Python API library)", "elidickinson/newsvision (dockerised newspaper-frontpage pusher for the Place & Play 32)", "joelhawksley/visionect-ruby", "juicecultus/joan-dashboard", "pathikrit/visionect-deploy", "graiz/newsprint", "timeframe/ha-addon"],
+        "evidence": "Fetched the official device spec page. Read libpyvss and newsvision READMEs via the GitHub API - newsvision is a working third-party tool whose entire purpose is pushing images to a Place & Play 32, which is direct proof the platform is programmable by outsiders. The API-doc page I guessed at (docs.visionect.com/VisionectSoftwareSuite/API.html) 404'd, so the API's exact endpoint list is unconfirmed by me; libpyvss's function list is the evidence."
+      },
+      "art_suitability": "The largest greyscale panel that is straightforwardly buyable and programmable today. 2560x1440 across 31.2\" is ~94 ppi. Battery (10,800 mAh, up to 12 months), WiFi 2.4/5 GHz + BT5, portrait orientation. Sold as B2B signage, so expect a signage bezel and a B2B price, but the software story is the best of any large device found.",
+      "sources": [
+        {"url": "https://docs.visionect.com/PlaceAndPlay/Devices/PP32.html", "what_it_supports": "31.2\" 16:9, 2560x1440, 16-level greyscale, 10800 mAh / 12 months, WiFi 2.4+5GHz, BT5, Place & Play CMS + Visionect Software Suite"},
+        {"url": "https://github.com/visionect/libpyvss", "what_it_supports": "Official Python API library; session/device/config/reboot endpoints; points at api.visionect.com docs"},
+        {"url": "https://github.com/elidickinson/newsvision", "what_it_supports": "Working third-party image pusher specifically for the Place & Play 32"}
+      ]
+    },
+    {
+      "model": "MAXEVIS Kokonna 28.5\" (a.k.a. KoKonna / MoXiangKuang)",
+      "vendor": "Oscar Japan (JP distributor) / KoKonna (TW origin)",
+      "is_new_to_survey": true,
+      "status": "crowdfunded, campaign ended",
+      "diagonal_in": 28.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": 288000.0, "currency": "JPY", "as_of": "2026-08-06", "source_url": "https://www.makuake.com/project/maxevis_kokonna/"},
+      "availability": "Makuake campaign ran 2025-12-22 to 2026-02-15 and has completed. Manufactured in China, distributed in Japan by Oscar Japan Co., Ltd.; the same product ran on Taiwan's Zeczec as 'KoKonna MoXiangKuang'.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "Dedicated smartphone app over WiFi; images are stored in the vendor cloud. WiFi is required for operation and transfer (a displayed image persists offline).",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "Metered rather than subscription: each device ships with 100 AI-generation points; further generation costs roughly JPY 800 per 40 images (~JPY 20/image). Displaying your own photos is not metered.",
+        "third_party_projects": [],
+        "evidence": "Makuake project page fetched directly (Makuake, unlike Kickstarter, is fetchable). The 4\"/7.3\"/13.3\"/28.5\" size ladder and the JPY prices come from that page."
+      },
+      "art_suitability": "A large colour frame at roughly USD 1,900-equivalent, entirely invisible to English-language coverage. AI-generation is the headline feature and it is pay-per-use. Cloud-mandatory.",
+      "sources": [
+        {"url": "https://www.makuake.com/project/maxevis_kokonna/", "what_it_supports": "Oscar Japan; 4/7.3/13.3/28.5 inch ladder; Spectra 6; JPY prices incl. 288,000 for 28.5\"; app+WiFi+cloud; 100 free AI points then paid"}
+      ]
+    },
+    {
+      "model": "MAXEVIS Kokonna 13.3\"",
+      "vendor": "Oscar Japan / KoKonna",
+      "is_new_to_survey": true,
+      "status": "crowdfunded, campaign ended",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": 50700.0, "currency": "JPY", "as_of": "2026-08-06", "source_url": "https://www.makuake.com/project/maxevis_kokonna/"},
+      "availability": "JPY 50,700-53,820 depending on tier. Campaign ended.",
+      "integration": {"openness": "closed", "local_push": "App over WiFi, cloud-stored.", "sd_card": null, "api": "None published.", "cloud_required": true, "subscription": "Pay-per-AI-generation point system.", "third_party_projects": [], "evidence": "Makuake page fetched."},
+      "art_suitability": "Roughly USD 340-equivalent for a colour 13.3\", competitive on price but cloud-locked and AI-metered.",
+      "sources": [{"url": "https://www.makuake.com/project/maxevis_kokonna/", "what_it_supports": "13.3\" tier pricing and mechanics"}]
+    },
+    {
+      "model": "ePaper Frame 13.3\"",
+      "vendor": "eco4life",
+      "is_new_to_survey": true,
+      "status": "announced/shipping (price not published on the fetched page)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200 (150 ppi)",
+      "panel": "E Ink Spectra 6, anti-glare treated surface",
+      "colour": "6-colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Product page live; no price or buy button on the page fetched.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "WiFi via mobile app; USB-C for charging/comms.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": null,
+        "subscription": "Vendor page states 'NO SUBSCRIPTION' as a headline feature.",
+        "third_party_projects": [],
+        "evidence": "First-party product page fetched. 5200 mAh battery, 500x300x10.1 mm, ~1.3 lb, 170-degree viewing angle."
+      },
+      "art_suitability": "Standard 13.3\" Spectra 6 reference design in a smart-home vendor's clothing (eco4life is a smart-home brand). No differentiators beyond the no-subscription promise.",
+      "sources": [{"url": "https://www.eco4lifehome.com/single-project-1", "what_it_supports": "13.3\", 1600x1200, Spectra 6, WiFi app, USB-C, 5200mAh, no subscription, no power cord"}]
+    },
+    {
+      "model": "S133E6-F0 E Ink Photo Frame",
+      "vendor": "SeekInk",
+      "is_new_to_survey": true,
+      "status": "shipping (B2B/ODM only)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200 (150 dpi), 202.8 x 270.4 mm active",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour (R/Y/B/W/G/K)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Explicitly 'Not Available for Retail Sale' - ODM product with pre-designed mounting points for a customer's own outer casing. 10\", 25.3\" and 28.5\" variants stated as upcoming.",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Three routes: companion app over dual-band WiFi (2.4 + 5 GHz), USB Type-C, and a TF (microSD) card. BT 5.0 present.",
+        "sd_card": true,
+        "api": "Not published publicly; as an ODM, protocol access would come with a supply agreement.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party product page fetched. Notable as the only frame-class product in the sweep confirming an SD-card image path."
+      },
+      "art_suitability": "Matters as the likely silicon underneath several of the consumer brands above - the 5000 mAh / 6-month / 1600x1200 spec recurs almost verbatim across Aluratek, eco4life, Huessen and others. A buyer evaluating 'different' 13.3\" brands should assume they may be the same panel and firmware in different wood.",
+      "sources": [
+        {"url": "https://www.seekink.com/product/s133e6-f0-e-ink-photo-frame/", "what_it_supports": "Full spec, app/USB-C/TF-card update paths, 5000mAh ~6 months, B2B-only, upcoming 25.3\" and 28.5\""},
+        {"url": "https://www.seekink.com/blog/industry-insights-bringing-color-epaper-frame-into-life/", "what_it_supports": "SeekInk's own frame SKU list (S133E6-F0 13.3\", S101E6-F0 10.1\", T059E6HB 5.89\", T040E5HE 4\")"}
+      ]
+    },
+    {
+      "model": "ePaint digital frame line (13.3\" / 28\" / 32\")",
+      "vendor": "ePaint (Anhui Yutu Technology Co., Ltd.)",
+      "is_new_to_survey": true,
+      "status": "shipping (China; B2B-leaning)",
+      "diagonal_in": 32.0,
+      "resolution": null,
+      "panel": "reflective colour E Ink",
+      "colour": "colour",
+      "price": {"amount": null, "currency": "CNY", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Company markets 13.3\", 28\", 32\", shelf-edge and outdoor variants. No prices published.",
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Not detailed on the page fetched; the company lists 'APIs' among its technology offerings.",
+        "sd_card": null,
+        "api": "Claimed but not documented publicly.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Company news page fetched. Everything beyond the size list and the API mention is marketing prose. Flagged as lead-grade."
+      },
+      "art_suitability": "One of very few suppliers claiming a 32\" colour art frame. Unverified - I could find no independent coverage, no review, and no purchasable listing.",
+      "sources": [{"url": "https://www.epaint.global/news/133-digital-photo-frame-epaper-paper-like-aesthetic-decor-for-home-amp-commercial-scenarios", "what_it_supports": "Anhui Yutu Technology; 13.3/28/32 inch + shelf-edge + outdoor line; reflective colour E Ink; API mention"}]
+    },
+    {
+      "model": "AVL-ID133E (and 31.2\" variant)",
+      "vendor": "Shenzhen Avlink Technology Co., Ltd.",
+      "is_new_to_survey": true,
+      "status": "shipping (ODM, quote-based)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Quote-only (WhatsApp enquiry). Sizes offered: 10.1\", 13.3\", 31.2\". Optional 3000 mAh battery. 4,000 sqm factory.",
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Companion app over 2.4 GHz WiFi + BT 5.0. Nothing else documented.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party product page fetched."
+      },
+      "art_suitability": "Relevant mainly because it advertises a 31.2\" colour frame at ODM level - i.e. the large-format colour supply chain is open to anyone willing to place an order.",
+      "sources": [{"url": "https://www.avlinkdisplay.com/product/13-3-inch-spectra-6-color-e-ink-frame-epaper-display-wireless-ai-art/", "what_it_supports": "Shenzhen Avlink; AVL-ID133E; 1600x1200 Spectra 6; app + WiFi 2.4G + BT5.0; 3000mAh optional; 10.1/13.3/31.2 inch range"}]
+    },
+    {
+      "model": "YIAIFRAME 13.3\" e-Ink frame",
+      "vendor": "YIAIFRAME (Shenzhen)",
+      "is_new_to_survey": true,
+      "status": "shipping (bulk/ODM)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Bulk orders; brand claims 15 years in digital frames.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "Branded mobile app synchronised with a cloud service.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "First-party page fetched (which is also a competitor-comparison SEO page)."
+      },
+      "art_suitability": "Another white-label source. Its own comparison table is a useful cross-check on Western retail prices (Aura Ink 13\" $449, InkPoster Affresco 13.3\" $499, Aluratek $349.99, BLOOMIN8 13.3\" $449).",
+      "sources": [{"url": "https://www.yiaiframe.com/13-3-e-ink-frame-brand-comparison.html", "what_it_supports": "YIAIFRAME identity and cloud-app model; competitor price table"}]
+    },
+    {
+      "model": "32\" Outdoor E-Paper Display (V32-OSM)",
+      "vendor": "Digital View",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": "2560x1440",
+      "panel": "reflective E Ink, 16 grey levels, integrated front light",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Sold through E Ink's own shopkits store; no price shown.",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "USB image interface is the primary path ('other options available'); documentation covers PC-to-USB transfer, Google Drive and network options.",
+        "sd_card": null,
+        "api": "Programming guides referenced but not published on the page fetched.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "shopkits.eink.com product page fetched. Digital View founded 1995, supplies flat-panel interface controllers to non-consumer display makers."
+      },
+      "art_suitability": "IP65 / IK08 aluminium outdoor enclosure with UV/IR-treated glass and a front light - built for bus stops, not living rooms, but it is a 31.2\" panel with a USB drag-and-drop image path, which is about as simple as large-format local push gets.",
+      "sources": [{"url": "https://shopkits.eink.com/en/product/detail/DigitalView-32%27%27OutdoorEPaperDisplay", "what_it_supports": "Digital View company background; 31.2\" 2560x1440 16-grey; USB image interface; IP65/IK08; solar-suitable"}]
+    },
+    {
+      "model": "Huessen ePaper Wall Art Decor Digital Frame 13.3\"",
+      "vendor": "Huessen",
+      "is_new_to_survey": true,
+      "status": "shipping (Amazon US)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Listed on Amazon US (ASIN B0F844HH6R). Claims up to 18 months per charge.",
+      "integration": {
+        "openness": "unknown",
+        "local_push": "App-control over WiFi per the listing title.",
+        "sd_card": null,
+        "api": "None known.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "UNVERIFIED FIRST-PARTY. The Amazon product page returned HTTP 500 on fetch; all detail here comes from search-result snippets. Almost certainly a rebadge of a Shenzhen reference design (see SeekInk/AVLink)."
+      },
+      "art_suitability": "Included for completeness as an example of the Amazon marketplace layer of this category, where near-identical 13.3\" Spectra 6 frames appear under interchangeable brand names.",
+      "sources": [{"url": null, "what_it_supports": "Amazon listing could not be fetched (HTTP 500); brand and 13.3\" Spectra 6 claim come from search snippets only"}]
+    },
+    {
+      "model": "LINKUADRO",
+      "vendor": "Linkuadro",
+      "is_new_to_survey": true,
+      "status": "crowdfunding (Kickstarter)",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink monochrome (greyscale, paper-like)",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Kickstarter campaign; 5000 mAh battery claimed to last years; wall-mount either orientation.",
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Not established.",
+        "sd_card": null,
+        "api": "Unknown.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "UNVERIFIED. Kickstarter returns HTTP 403 to WebFetch; all detail is from a search-result snippet quoting the campaign FAQ. No first-party page fetched."
+      },
+      "art_suitability": "A greyscale 13.3\" campaign that appears in no roundup - worth a manual look at the Kickstarter page in a real browser.",
+      "sources": [{"url": null, "what_it_supports": "Kickstarter page unfetchable (403); 13.3\" / 1600x1200 / greyscale / 5000mAh from search snippet only"}]
+    },
+    {
+      "model": "E-Ink Canvas 28.5\"",
+      "vendor": "BLOOMIN8 (arpobot)",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 28.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6 (65,000 colours claimed), ~20 s refresh",
+      "colour": "6-colour",
+      "price": {"amount": 2399.0, "currency": "USD", "as_of": "2026-08-06", "source_url": "https://bloomin8.com/"},
+      "availability": "Available; 13.3\" at $499; a sub-$200 10\" announced for CES 2026.",
+      "integration": {
+        "openness": "open",
+        "local_push": "HTTP REST directly to the device's LAN IP address, plus a BLE wake to bring it out of deep sleep. Third-party clients construct a Bloomin8Client from a bare IP (e.g. 192.168.1.100) and POST dithered images to it. Also supports a pull mode where the device fetches from a server you run.",
+        "sd_card": null,
+        "api": "Vendor page lists 'RESTful APIs for developers' and a cloud-free desktop app; there is a first-party Home Assistant custom component published by ARPOBOT-BLOOMIN8.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component (first-party)", "mrud/bloomin8-cli (Node CLI+lib, Spectra 6 dithering, BLE wake)", "jacobstim/bloomin8-python", "moifort/bloomin8 (self-hosted Docker server + SwiftUI iOS app + lock-screen widget)", "Dopiz/custom-bloomin8-canvas-home-assistant-addon and -desktop (Tauri)", "fwmone/bloomin8_pull", "seanhub2000/bloomin8-canvas-desktop-app", "mistrsoft/bloomin8_bt_wake", "gabe-sky/bloomin8-simulacrum", "PhilWheat/Bloomin8HermesSkill"],
+        "evidence": "Read four of these READMEs directly via the GitHub API. mrud/bloomin8-cli's quick-start is 'bloomin8 device add living-room 192.168.1.100' then 'bloomin8 upload photo.jpg --show --dither' - unambiguous LAN HTTP. moifort/bloomin8 is a Docker self-hosted replacement for the official app, motivated by the official app 'uploading photos to an unknown third-party cloud'. Dopiz's add-on says the protocol was reverse-engineered from a device on the LAN and may break with firmware updates, so some of this openness is tolerated rather than contractual - but the first-party HA component and the vendor's own 'RESTful APIs' claim mean the core is sanctioned."
+      },
+      "art_suitability": "By a wide margin the richest third-party ecosystem of any commercial colour frame found - ten independent clients including two Home Assistant paths, a Docker self-hosted server, a Node CLI, a Python library and two desktop apps. If local control matters more than anything else and colour is required, this is the strongest evidence base at 28.5\".",
+      "sources": [
+        {"url": "https://bloomin8.com/", "what_it_supports": "13.3\" $499 / 28.5\" $2,399, Spectra 6, ~20 s refresh, RESTful APIs, HA integration, cloud-free desktop app"},
+        {"url": "https://github.com/mrud/bloomin8-cli", "what_it_supports": "Direct LAN HTTP push by IP with client-side Spectra 6 dithering and BLE wake"},
+        {"url": "https://github.com/moifort/bloomin8", "what_it_supports": "Self-hosted Docker server the device pulls from; motivation is avoiding the official app's cloud"},
+        {"url": "https://github.com/jacobstim/bloomin8-python", "what_it_supports": "Python folder-sync to device IP with BLE wake by name or MAC"},
+        {"url": "https://github.com/Dopiz/custom-bloomin8-canvas-home-assistant-addon", "what_it_supports": "LAN control with no cloud and no account; also states the protocol was studied from the device"}
+      ]
+    },
+    {
+      "model": "Fraimic Smart Canvas 31.5\" / 13.3\"",
+      "vendor": "Fraimic",
+      "is_new_to_survey": false,
+      "status": "crowdfunded (raised >$1M), shipping from ~May 2026",
+      "diagonal_in": 31.5,
+      "resolution": "13.3\" variant is 1600x1200 (EL133UF1)",
+      "panel": "E Ink Spectra 6",
+      "colour": "6-colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08-06", "source_url": null},
+      "availability": "Kickstarter shipping May 2026, D2C June 2026 (per press coverage; Kickstarter page itself unfetchable).",
+      "integration": {
+        "openness": "open",
+        "local_push": "Built-in unauthenticated HTTP REST API on the local network at http://fraimic.local/ - GET /api/info, GET /api/battery, POST /api/refresh, POST /api/image (uploads a .bin), POST /api/restart, POST /api/sleep. Vendor states 'No internet required for local communication. No account needed... No authentication is required. Anyone on your local network can access these endpoints.' The frame must be awake (deep sleep makes it unreachable; tap to wake).",
+        "sd_card": null,
+        "api": "Yes - the vendor itself publishes the REST API guide and a Home Assistant recipe, plus an official Python image-to-Spectra-6-.bin converter (Fraimic/fraimic_bin_converter).",
+        "cloud_required": false,
+        "subscription": "Press coverage describes it as subscription-free.",
+        "third_party_projects": ["Fraimic/Fraimic_eink_canvas_home_assistant_restAPI_guide (first-party)", "Fraimic/fraimic_bin_converter (first-party)", "klaptafel/ha-fraimic", "kristofferR/ha-fraimic-eink", "dsackr/fraimic-controller", "dsackr/ESP32-S3-ePaper-13.3E6 (Fraimic-protocol-compatible DIY firmware)"],
+        "evidence": "Read the vendor's own REST API guide README via the GitHub API, and dsackr's DIY firmware README which reimplements '/api/info, /api/battery, /api/refresh, /api/image, /api/restart, /api/sleep' on a Waveshare ESP32-S3-ePaper-13.3E6 board and confirms /api/image working end-to-end on real hardware with a ~33 s full-colour refresh. That an outsider could clone the protocol onto commodity hardware and have it work is the strongest possible openness evidence."
+      },
+      "art_suitability": "Already in the known list, but the openness finding is new and material: Fraimic is one of only two colour frames with a vendor-documented, unauthenticated, cloud-free local API. Note the wake constraint - a deep-sleeping frame cannot be pushed to until physically tapped, which limits fully unattended automation unless kept awake.",
+      "sources": [
+        {"url": "https://github.com/Fraimic/Fraimic_eink_canvas_home_assistant_restAPI_guide", "what_it_supports": "Vendor-published local REST API, endpoint list, no-auth/no-cloud statement, HA REST-sensor recipe, fraimic.local hostname"},
+        {"url": "https://github.com/dsackr/ESP32-S3-ePaper-13.3E6", "what_it_supports": "Independent reimplementation of the Fraimic API on a Waveshare board with the same EL133UF1 panel; ~33 s colour refresh confirmed on hardware"}
+      ]
+    },
+    {
+      "model": "InkPoster (Affresco 13.3\" / Tela 28.5\" / 31.5\" / Tela 40.5\" / Duna 40.5\")",
+      "vendor": "InkPoster (PocketBook)",
+      "is_new_to_survey": false,
+      "status": "shipping; Tela 40.5\" and Pininfarina-designed Duna launched at CES 2026",
+      "diagonal_in": 40.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6 (Tela 40.5\" reportedly on Sharp IGZO backplane)",
+      "colour": "6-colour",
+      "price": {"amount": 499.0, "currency": "USD", "as_of": "2026-08-06", "source_url": "https://www.yiaiframe.com/13-3-e-ink-frame-brand-comparison.html"},
+      "availability": "The $499 figure is for the 13.3\" Affresco per a competitor's comparison table; the 31.5\" was reported at $1,699 in search results I did not fetch first-party.",
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Cloud API is the primary path (account email/password). BLE gives local status reads and a small command set - discover 'InkP-*' devices, trigger fetch, reboot, run the ghosting cleaner - but image upload itself goes via the cloud API.",
+        "sd_card": null,
+        "api": "Not officially published, but a working third-party Home Assistant integration authenticates against the Inkposter cloud API and exposes upload_image_url / upload_image_data services plus battery, storage, WiFi, firmware and current-image sensors.",
+        "cloud_required": true,
+        "subscription": null,
+        "third_party_projects": ["mcuelenaere/ha-inkposter"],
+        "evidence": "Read the ha-inkposter README via the GitHub API. Its feature split is explicit: 'Cloud API: authenticate with your Inkposter account... upload images for display' vs 'BLE: discover InkP-* devices, read local status, send commands (fetch, reboot, ghosting cleaner)'. So automation is possible, but the image path is cloud-dependent."
+      },
+      "art_suitability": "Largest consumer colour art frame in existence at 40.5\" (A1). Known vendor; recorded here only because the cloud-mandatory finding is concrete and matters for the local-push question.",
+      "sources": [
+        {"url": "https://github.com/mcuelenaere/ha-inkposter", "what_it_supports": "Cloud API for uploads, BLE for local status/commands only; full sensor list"},
+        {"url": "https://www.yiaiframe.com/13-3-e-ink-frame-brand-comparison.html", "what_it_supports": "InkPoster Affresco 13.3\" at $499"}
+      ]
+    },
+    {
+      "model": "IONNYK Linn",
+      "vendor": "IONNYK",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 48.0,
+      "resolution": null,
+      "panel": "E Ink monochrome",
+      "colour": "monochrome",
+      "price": {"amount": 3250.0, "currency": "EUR", "as_of": "2026-08-06", "source_url": "https://goodereader.com/blog/electronic-readers/here-are-the-best-e-ink-picture-frames-worth-buying"},
+      "availability": "Shipping. 'Jane' model is 50x40 cm (~25\" diagonal) at EUR 1,350.",
+      "integration": {
+        "openness": "closed",
+        "local_push": "Online portal plus Android/iOS apps.",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "EUR/USD 12.99 per month for the artwork library.",
+        "third_party_projects": [],
+        "evidence": "Good e-Reader roundup fetched. NOTE: 100x70 cm and 50x40 cm are almost certainly frame outer dimensions, not active area, so the 48\" and 25\" diagonals I derive are upper bounds - treat as approximate."
+      },
+      "art_suitability": "Known vendor; retained because it and InkPoster Duna are the only entries above 40\" and because it is the clearest subscription-gated example in the category.",
+      "sources": [{"url": "https://goodereader.com/blog/electronic-readers/here-are-the-best-e-ink-picture-frames-worth-buying", "what_it_supports": "Jane 50x40 cm EUR 1,350; Linn 100x70 cm EUR 3,250; portal + apps; $12.99/month artwork subscription"}]
+    }
+  ],
+  "research_reference_only": "diy_controllers documents controller/reference material, not independently selectable e-paper display targets; it is intentionally excluded from config/eink_targets.json.",
+  "diy_controllers": [
+    {
+      "name": "MpicoSys TCM2 / TCM3 timing controllers",
+      "vendor": "MpicoSys (with E Ink; EVKs sold on E Ink's own shopkits store)",
+      "max_panel_in": 42.0,
+      "interface": "Dedicated E Ink timing controller driving the panel's native large-format interface; host side is a TCM board fed over USB (USB2TCM adapter) or integrated into WiFi/PoE/NFC products. EVK ships as TCM board + ribbon cables + USB-C + USB2TCM + panel + 2 hours of design-in support.",
+      "colour_capable": "Monochrome for the large sizes named (ED312TT2 31.2\" B/W, ED133UT2 13.3\" B/W, ED097CT2 9.7\" B/W). No colour large-format TCM found.",
+      "working_build_evidence": "PLAN/COMMERCIAL-KIT, not a hobbyist build log. TCM2 supports 7.8\", 9.7\", 11.3\", 13.3\", 28\", 31.2\" and 42\"; TCM3 supports 13.3\" and 28\". MpicoSys quotes 118 mJ for a 2-bit update on the 31.2\", explicitly enabling battery operation at that size. I found NO hobbyist build log at 28\" or 31.2\" anywhere in this sweep - the parts exist and are purchasable but the community has not documented builds at that size.",
+      "sources": [
+        {"url": "https://www.mpicosys.com/products/epaper-drivers-timing-controllers-for-eink-displays/", "what_it_supports": "TCM2 size list including 42\"; TCM3 13.3\"/28\"; FLASH+SRAM options"},
+        {"url": "https://shopkits.eink.com/en/product/list", "what_it_supports": "E Ink's shop carries MpicoSys TCM2 EVKs for 31.2\" and 13.3\" panels, with and without display"}
+      ]
+    },
+    {
+      "name": "E Ink 'Salt' driving board + VB3300-RBA 42\" panel",
+      "vendor": "E Ink",
+      "max_panel_in": 42.0,
+      "interface": "Vendor driver board; host is a Raspberry Pi connected to the controller over USB, running a small webserver that receives images.",
+      "colour_capable": "Monochrome, 16 grey levels.",
+      "working_build_evidence": "REAL WORKING BUILD AND THE ONLY ONE FOUND ABOVE 15 INCHES. eliot.blog documents a completed 42\" generative-art frame - Raspberry Pi on the back, blue-noise dithering for the 16 grey levels, full-white refresh cycles to manage ghosting, custom framing. The author notes the panel arrived with a 3-unit minimum order and that ribbon cables did not align on the variant chosen. HN commenters on the same thread cite $2,500 for the VB3300-RBA panel (MOQ 3) and $500 for the Salt driving board. E Ink's shopkits store lists a 'Salt' driving board among HULK / ICE / THOR / Luvia / Salt / CONCERTO / Venus / Scarlet / Vision.",
+      "sources": [
+        {"url": "https://eliot.blog/e-ink-frame", "what_it_supports": "Completed 42\" VB3300-RBA build, Raspberry Pi + webserver over USB, blue-noise dithering, 16 grey levels, MOQ 3, works"},
+        {"url": "https://hn.algolia.com/api/v1/items/37835995", "what_it_supports": "HN thread pricing: 42\" panel $2,500 MOQ 3, Salt driving board $500; IT8951 / ITE IT8951E-64-DX discussion"},
+        {"url": "https://shopkits.eink.com/en/product/list", "what_it_supports": "E Ink driving-board catalogue names incl. Salt"}
+      ]
+    },
+    {
+      "name": "Inkplate 13SPECTRA",
+      "vendor": "Soldered Electronics (Crowd Supply)",
+      "max_panel_in": 13.3,
+      "interface": "SPI to the 13.3\" Spectra 6 panel; ESP32-S3-WROOM-2-N32R16V (32 MB flash, 16 MB PSRAM). microSD slot, USB-C, JST for a 3000 mAh LiPo, three Qwiic connectors, GPIO expander.",
+      "colour_capable": "Yes - 6-colour Spectra, 1600x1200.",
+      "working_build_evidence": "SHIPPING SOON, NOT YET IN HANDS. $309 board / $359 with enclosure and battery; orders ship 2026-08-21. Official ESPHome external component exists (SolderedElectronics/Soldered-Inkplate-ESPHome, covering Inkplate 2, 6 Color and 13 Spectra), and Arduino + MicroPython are supported, so Home Assistant integration is a first-party path rather than a hack. Soldered's earlier Inkplate boards have a long track record of real builds (e.g. lanrat/homeplate).",
+      "sources": [
+        {"url": null, "what_it_supports": "crowdsupply.com returned HTTP 403 on fetch; price ($309/$359), 2026-08-21 ship date, ESP32-S3-WROOM-2-N32R16V, microSD, Qwiic and ESPHome-at-delivery pledge come from CNX Software / Liliputing / Hackster search snippets, not a page I fetched"}
+      ]
+    },
+    {
+      "name": "Seeed XIAO ePaper DIY Kit EE02",
+      "vendor": "Seeed Studio",
+      "max_panel_in": 13.3,
+      "interface": "SPI over a 60-pin 0.5 mm FPC to the 13.3\" Spectra 6 panel; XIAO ESP32S3 Plus (ESP32-S3R8, 8 MB PSRAM, 16 MB flash), microSD, USB-C. The board carries the level-shifting and power circuitry that large e-paper panels need - the reason a bare XIAO cannot drive one.",
+      "colour_capable": "Yes - 6-colour, 1600x1200, 0.169 mm pitch, ~315 x 210 mm.",
+      "working_build_evidence": "REAL WORKING BUILD at 13.3\". myembeddedstuff documents a finished IKEA RODALM (21x30 cm) frame using this kit with a 3.7 V 2000 mAh LiPo and 3D-printed spacers, working as intended. Board alone $14.90; full kit with panel $163.90 - the cheapest route to a colour 13.3\" frame by a wide margin. Default image path is Seeed's SenseCraft cloud tool; Arduino/MicroPython are possible but Seeed does not document them for this kit.",
+      "sources": [
+        {"url": "https://www.cnx-software.com/2026/01/10/xiao-epaper-diy-kit-ee02-an-esp32-s3-board-designed-for-13-3-inch-spectra-6-color-e-ink-display/", "what_it_supports": "Board/panel spec, SPI over 60-pin FPC, $14.90 / $163.90, SenseCraft HMI as the documented software path"},
+        {"url": "https://myembeddedstuff.com/diy-13-3-spectra-e-ink-photo-frame", "what_it_supports": "Completed IKEA RODALM build using the EE02 kit; cloud-managed via SenseCraft; works"}
+      ]
+    },
+    {
+      "name": "Seeed reTerminal E1004 (and E1003 10.3\" touch, E1001/E1002 smaller)",
+      "vendor": "Seeed Studio",
+      "max_panel_in": 13.3,
+      "interface": "Integrated ESP32-S3 + 13.3\" Spectra 6 panel + 5000 mAh battery in one open-source unit.",
+      "colour_capable": "Yes - full-colour Spectra 6.",
+      "working_build_evidence": "SHIPPING, and there is at least one documented art-frame build on the sibling E1002 using ESPHome + Home Assistant + an IKEA RODALM frame. $279.90. Supports Home Assistant, TRMNL, Arduino and ESP-IDF alongside SenseCraft HMI. Up to 6 months battery in low-power mode. This is the closest thing to a 'buy a finished hackable colour frame' option.",
+      "sources": [
+        {"url": null, "what_it_supports": "seeedstudio.com product page not fetched; $279.90, 13.3\" Spectra 6, 5000 mAh, HA/TRMNL/Arduino/ESP-IDF support from Hackster and Seeed search snippets"}
+      ]
+    },
+    {
+      "name": "Waveshare 13.3inch e-Paper HAT+ (E6) and ESP32-S3-ePaper-13.3E6",
+      "vendor": "Waveshare",
+      "max_panel_in": 13.3,
+      "interface": "SPI, with a master and a slave CS pin - each drives one half of the panel (two controller ICs). Raspberry Pi HAT+ standard version, a raw panel version, and an all-in-one ESP32-S3 driver board version with an onboard audio codec.",
+      "colour_capable": "Yes - Spectra 6, 1600x1200. Waveshare also resells the raw EL133UF1 panel.",
+      "working_build_evidence": "REAL WORKING BUILDS, multiple and independent. FrameOS documents completed 13.3\" Waveshare Spectra builds on a Raspberry Pi Zero 2 W. dsackr's Fraimic-compatible firmware runs on the Waveshare ESP32-S3-ePaper-13.3E6 board with the panel init/clear/push/sleep path 'adapted 1:1 from Waveshare's example' and a confirmed ~33 s full-colour refresh on real hardware. An ESPHome support request for this panel (esphome discussion #3380) exists, indicating it was not natively supported in ESPHome as of that thread.",
+      "sources": [
+        {"url": "https://frameos.net/blog/eink-spectra-waveshare-pimoroni/", "what_it_supports": "Working 13.3\" Waveshare Spectra builds on Pi Zero 2 W; explicit reasoning that ESP32-class MCUs are too RAM/flash-limited for FrameOS's approach"},
+        {"url": "https://github.com/dsackr/ESP32-S3-ePaper-13.3E6", "what_it_supports": "Waveshare ESP32-S3-ePaper-13.3E6 board driving EL133UF1 at 1600x1200, ~33 s colour refresh, verified on hardware; display push run on a dedicated task to avoid tripping the HTTP watchdog"}
+      ]
+    },
+    {
+      "name": "IT8951 / ITE IT8951E-64-DX controller",
+      "vendor": "ITE (used by Waveshare, Good Display and others)",
+      "max_panel_in": 13.3,
+      "interface": "SPI (and USB/I80 variants) from the host; the ASIC handles the panel's parallel timing and supports partial updates. This is the standard bridge that lets an MCU or Pi drive a large mono panel it could not otherwise time.",
+      "colour_capable": "Monochrome / greyscale only.",
+      "working_build_evidence": "REAL WORKING BUILD at 13.3\". Hackaday.io project 190478 'Hyepaper' is a 13.3\" 1600x1200 automatic-newspaper frame: ESP32, deep sleep, wakes once daily, all onboard software in Rust including a custom IT8951 driver; backend in Python generating a daily paper. Documented v2 revision with CAD, so it is a maintained build rather than a one-off.",
+      "sources": [
+        {"url": "https://hn.algolia.com/api/v1/items/37835995", "what_it_supports": "IT8951 / IT8951E-64-DX discussion, SPI interface, partial-update support, sourcing"},
+        {"url": null, "what_it_supports": "hackaday.io/project/190478 (Hyepaper) not fetched directly; Rust IT8951 driver, 13.3\" 1600x1200, ESP32 deep-sleep, v2 build from search snippet"}
+      ]
+    },
+    {
+      "name": "EPDiy",
+      "vendor": "vroland (open source, ~1,900 GitHub stars) with separate epdiy-hardware repo",
+      "max_panel_in": 13.3,
+      "interface": "ESP32 driving the panel's raw parallel interface directly - no IT8951 - which is what makes salvaged e-reader panels usable. Also used to build an e-paper PC monitor (amadeok/Epdiy-Eink-PC-monitor).",
+      "colour_capable": "Greyscale; the ecosystem is mono-panel oriented.",
+      "working_build_evidence": "REAL, LONG-RUNNING, MANY BUILDS. Cited on HN as ~EUR 200 for a 10\" setup driving salvaged Kindle DX panels (~$30 on AliExpress for 9.7\" stock), with open-source firmware and greyscale support. Spawned derivative boards (mcer12/Inkster-ESP32) and application projects (Fridge-Calendar, epdiy-mpd, epdiy-terminal).",
+      "sources": [
+        {"url": "https://news.ycombinator.com/item?id=27682018", "what_it_supports": "EPDiy at ~EUR 200 for a 10\" build using salvaged Kindle DX screens; open-source firmware; greyscale"},
+        {"url": "https://github.com/vroland/epdiy", "what_it_supports": "Project identity and scale (repo metadata retrieved via GitHub API: 'EPDiy is a driver board for affordable e-Paper displays', ~1897 stars)"}
+      ]
+    },
+    {
+      "name": "FrameOS",
+      "vendor": "frameos.net (open source, written in Nim)",
+      "max_panel_in": 13.3,
+      "interface": "Software layer, not a board. Runs on a Raspberry Pi Zero 2 W and deploys to frames over SSH; drives Waveshare 13.3\" Spectra 6 and Pimoroni Inky Impression among others.",
+      "colour_capable": "Yes.",
+      "working_build_evidence": "REAL WORKING BUILDS documented with photos across 13.3\" Waveshare Spectra, 7.3\" Waveshare (standard and slim) and Pimoroni variants. The author explicitly rejects ESP32-class MCUs for this architecture (16 MB flash / ~0.5 MB RAM is too little) and recommends the Pi Zero 2 W - a useful architectural datapoint for anyone choosing between MCU and SBC at 13.3\".",
+      "sources": [{"url": "https://frameos.net/blog/eink-spectra-waveshare-pimoroni/", "what_it_supports": "FrameOS identity, Nim, SSH deploy, Pi Zero 2 W recommendation, multiple completed builds, explicit MCU-vs-SBC reasoning"}]
+    },
+    {
+      "name": "TRMNL BYOD / BYOS",
+      "vendor": "TRMNL (usetrmnl)",
+      "max_panel_in": 10.3,
+      "interface": "Not a panel driver - a self-hostable server + open firmware contract. BYOS points a TRMNL device at your own server; BYOD lets custom hardware speak the TRMNL protocol. Own devices top out at 10.3\" (TRMNL X, 1872x1404, 16 grey), below the 13\" threshold, but Seeed's 13.3\" reTerminal E1004 lists TRMNL support.",
+      "colour_capable": "Device-dependent; TRMNL's own hardware is mono.",
+      "working_build_evidence": "REAL, with an official BYOS reference server (usetrmnl/inker, TypeScript/React/Prisma) and documented API. Relevant here as an off-the-shelf 'server your frame pulls from' if you do not want to write one.",
+      "sources": [{"url": null, "what_it_supports": "trmnl.com/docs.trmnl.com not fetched; BYOS/BYOD model, 7.5\" OG and 10.3\" TRMNL X specs, usetrmnl/inker from search snippets"}]
+    },
+    {
+      "name": "E Ink shopkits panels and driving boards (direct panel purchase)",
+      "vendor": "E Ink Corporation",
+      "max_panel_in": 31.5,
+      "interface": "Panel-dependent; E Ink sells the matching driving boards under codenames (HULK, ICE, THOR, Luvia, Salt, CONCERTO, Venus, Scarlet, Vision) alongside partner kits from MpicoSys, Visionect and Digital View.",
+      "colour_capable": "Yes at every size sold: 13.3\" Spectra 6 $449, 25.3\" Spectra 6 $1,400, 25.3\" Spectra 3100 (4-colour) $1,400, 31.5\" Spectra 6 (out of stock). Also 13.3\" Kaleido 3 $449, 25.3\" Kaleido 3, and 13.3\" B/W $449.",
+      "working_build_evidence": "PARTS ONLY - I found no hobbyist build log using the 25.3\" or 31.5\" Spectra 6 panels. This is the sharpest gap in the DIY landscape: colour panels above 13.3\" are purchasable retail at $1,400 with no documented community build behind them, and no MCU-class controller is known to drive them.",
+      "sources": [
+        {"url": "https://shopkits.eink.com/en/product/list", "what_it_supports": "Full catalogue with prices; driving-board codename list; Partner's Solutions category"},
+        {"url": "https://shopkits.eink.com/en/product/list?keyword=frame", "what_it_supports": "13.3\"/25.3\"/31.5\" Spectra and Kaleido pricing and stock status"}
+      ]
+    }
+  ],
+  "vendors": [
+    {
+      "name": "Frame Labs",
+      "country": "Germany (EU; site is framelabs.eu)",
+      "corporate_form": "unknown - appears to be a very small independent maker/company",
+      "ownership": "private, independent",
+      "public_ticker": null,
+      "funding": "unknown - no crowdfunding campaign found; sells direct",
+      "revenue_scale": "unknown, small",
+      "headcount": "unknown, likely single-digit",
+      "hardware_track_record": "Strong for its size. Shipping since at least 2021-2022 (HN threads from 2021 and a 2022 'ArtFrame: E-paper wireless artwork for your living room' post), with a documented generational progression: 6\" -> 9.7\" -> 13.3\" -> 10.3\" HD -> 31.2\" XL, and a firmware changelog running through 1.6.3 with per-model XL and M builds. Publishes firmware and an image-server library openly.",
+      "abandonment_history": "None found. The firmware repo shows continuous maintenance across five hardware variants.",
+      "staying_power": "medium",
+      "rationale": "Four-plus years of shipping and an actively maintained multi-model firmware line is unusually good for a micro-vendor, and the open image-server architecture means the frames keep working even if the company disappears - the device pulls from a URL you control, so there is no server to shut off. That is the single most important durability property in this whole category. Downside: monochrome only, and no visible funding or scale.",
+      "sources": [
+        {"url": "https://github.com/framelabs-eu/firmware", "what_it_supports": "Firmware changelog across 1.4-1.6.3 with distinct XL and M builds; five hardware variants supported"},
+        {"url": "https://github.com/framelabs-eu/imageserver", "what_it_supports": "Open-source local server = no vendor dependency for continued operation"},
+        {"url": "https://www.framelabs.eu/blog/31inch-device/", "what_it_supports": "31.2\" first batch delivered"}
+      ]
+    },
+    {
+      "name": "paperlesspaper",
+      "country": "Germany",
+      "corporate_form": "startup (covered by futurezone.at as a startup)",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small",
+      "headcount": "unknown, small",
+      "hardware_track_record": "Multiple shipped generations: an earlier greyscale frame, then 'Paper 7' (7\" Spectra 6, open source, covered by Linuxiac/Tux Machines in Aug 2025), then OpenPaper L at 13.3\". Runs a real public GitHub org with hardware, firmware, offline firmware, web/API, docs, apps and integrations repos, several with 30-60 stars.",
+      "abandonment_history": "None found.",
+      "staying_power": "medium",
+      "rationale": "The open-source posture is genuine and unusually deep - published hardware AND an explicit offline firmware variant AND developer API docs. That materially de-risks vendor death. Against that: it is a small German startup in a category that just attracted Aura, PocketBook and SwitchBot, and the default image path still runs through their cloud (the HA integration talks to a cloud API).",
+      "sources": [
+        {"url": "https://paperlesspaper.de/en/openpaper-l", "what_it_supports": "Open Source Project badge, docs.paperlesspaper.de developer API, GitHub link, EUR 339"},
+        {"url": "https://github.com/paperlesspaper/paperlesspaper-hardware", "what_it_supports": "Published hardware design (repo metadata via GitHub API, ~62 stars)"}
+      ]
+    },
+    {
+      "name": "APHEUM",
+      "country": "Germany (Stuttgart)",
+      "corporate_form": "unknown, small direct-sales company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "very small, premium/low-volume",
+      "headcount": "unknown",
+      "hardware_track_record": "New. S and M appear to be shipping; L (27.5\") is at introductory pre-order pricing.",
+      "abandonment_history": "No history either way - too new.",
+      "staying_power": "unknown",
+      "rationale": "A Magnum Photos content deal is real institutional validation and suggests the founders come from photography rather than consumer electronics. But it is a cloud-dependent, app-only, closed platform at EUR 2,348 for the large model from a company with no track record - the worst risk profile in the set if the server goes away. The 255-grey-level claim is unverified and, if it means panel greyscale rather than a dithering pipeline, would be extraordinary.",
+      "sources": [
+        {"url": "https://shop.apheum.com/", "what_it_supports": "Product line, pricing, direct-sales-only, no subscription for own images"},
+        {"url": "https://www.designerinaction.de/fotografie/digitaler-rahmen-fuer-monochrome-fotokunst/", "what_it_supports": "Stuttgart base, Magnum Photos collections, server-based image management, sizes"}
+      ]
+    },
+    {
+      "name": "TintTech",
+      "country": "Europe (exact country not stated on the page fetched)",
+      "corporate_form": "unknown",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small, B2B-leaning",
+      "headcount": "unknown",
+      "hardware_track_record": "Three SKUs in market (9.7\", 13.3\" Lite, 13.3\"), designed and produced in Europe. No history found beyond the shop.",
+      "abandonment_history": "Unknown.",
+      "staying_power": "unknown",
+      "rationale": "The REST API + PoE architecture means the device is useful independent of the vendor's continued existence, which is the same durability logic that favours Frame Labs. But there is essentially no public footprint - no press, no GitHub, no community - so I cannot assess the company at all.",
+      "sources": [{"url": "https://tinttech.io/shop/13-3-inch-epaper-display/", "what_it_supports": "European design/production, three SKUs, REST API, PoE, EUR 555"}]
+    },
+    {
+      "name": "Visionect",
+      "country": "Slovenia",
+      "corporate_form": "established B2B company; also operates the Joan meeting-room brand",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "meaningful B2B revenue - Joan is a widely deployed commercial product line",
+      "headcount": "unknown, but a real company with a knowledge base, an academy, distributors (e.g. Assured Systems) and a partner listing in E Ink's own shop",
+      "hardware_track_record": "Long. Multiple device generations, a 32\" development kit built in collaboration with E Ink, a documented software suite, an official Python API library and an ecosystem of third-party clients going back years.",
+      "abandonment_history": "libpyvss is marked DEPRECATED in favour of a fork, which is a minor maintenance smell rather than abandonment; the API and product line remain active.",
+      "staying_power": "medium-high",
+      "rationale": "The most institutionally solid vendor of any large-format option here: an E Ink partner with distributors, a self-hostable server, a documented API and independent tooling. It is B2B signage rather than consumer art, so expect signage industrial design and B2B pricing/purchasing friction, but the platform-longevity risk is the lowest in the set.",
+      "sources": [
+        {"url": "https://docs.visionect.com/PlaceAndPlay/Devices/PP32.html", "what_it_supports": "Maintained product documentation and knowledge base"},
+        {"url": "https://github.com/visionect/libpyvss", "what_it_supports": "Official API library; DEPRECATED notice pointing at a maintained fork"},
+        {"url": "https://github.com/elidickinson/newsvision", "what_it_supports": "Independent third parties building on the platform"}
+      ]
+    },
+    {
+      "name": "Creative Design Worx (Reflection Frame)",
+      "country": "US (Japanese distribution via HR Innovation Co., Ltd.)",
+      "corporate_form": "startup",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "Crowdfunded - Kickstarter completed, then a Makuake campaign in Japan that had previously raised JPY 17.7M on Kickstarter",
+      "revenue_scale": "small but with real retail distribution (Amazon US listing, own store, Japanese retail at JPY 72,000)",
+      "headcount": "unknown, small",
+      "hardware_track_record": "Delivered a Kickstarter (shipping quoted from April 2025), moved to open retail, added a second SKU (10\" Ringlet, Oct 2026) and multiple finishes, and got an E Ink corporate-blog feature plus an independent hands-on review. That is a completed crowdfunding-to-retail transition, which most of this cohort has not achieved.",
+      "abandonment_history": "None; trajectory is expansion.",
+      "staying_power": "medium",
+      "rationale": "Execution record is good and the NFC-local architecture means the frame does not depend on a server staying up - a real durability advantage over cloud-only rivals. But the protocol is closed and undocumented, so if you want programmatic control you are stuck with their app.",
+      "sources": [
+        {"url": "https://reflectionframe.com/", "what_it_supports": "Two SKUs, multiple finishes, in-stock shipping, no-cloud claim"},
+        {"url": "https://blog.eink.com/reflection-frame-display-week-2025", "what_it_supports": "E Ink corporate endorsement and completed Kickstarter"},
+        {"url": "https://www.atpress.ne.jp/news/442926", "what_it_supports": "Creative Design Worx as maker; HR Innovation as JP distributor; JPY 17.7M prior Kickstarter"}
+      ]
+    },
+    {
+      "name": "Aluratek",
+      "country": "USA",
+      "corporate_form": "established consumer-electronics accessory brand",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "self-funded/established",
+      "revenue_scale": "established mid-size accessory vendor with mainstream retail distribution",
+      "headcount": "unknown",
+      "hardware_track_record": "Long-standing digital-photo-frame vendor that entered e-paper in June 2025 via a BusinessWire launch, with an Fstoppers review. Conventional consumer-electronics operation rather than a startup.",
+      "abandonment_history": "None found for this product; as a broad accessory brand, individual-SKU discontinuation is a normal risk.",
+      "staying_power": "medium-high",
+      "rationale": "By far the most conventional, lowest-drama company in the new cohort - it will still exist in three years. The risk is not company death but app/backend neglect: the frame is app-mandatory with a 10-image local store and no API, so its useful life is tied to an app Aluratek has little incentive to maintain.",
+      "sources": [{"url": "https://aluratek.com/products/13-3-epaper-wifi-digital-photo-frame", "what_it_supports": "In-stock retail product, $349.99, eFrame app, 10-photo local store"}]
+    },
+    {
+      "name": "SeekInk",
+      "country": "China",
+      "corporate_form": "ePaper manufacturer / ODM",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "meaningful - exhibited a full ePaper portfolio at CES 2026 with a PRNewswire release",
+      "headcount": "unknown, factory-scale",
+      "hardware_track_record": "Full product ladder (4\", 5.89\", 10.1\", 13.3\" shipping; 25.3\" and 28.5\" announced) plus ESL, desk signs and other ePaper categories. Explicitly B2B/ODM, not retail.",
+      "abandonment_history": "N/A - supplies other people's brands.",
+      "staying_power": "medium-high",
+      "rationale": "Matters not as a purchase option but as the layer beneath several consumer brands. Recurring spec fingerprints (13.3\", 1600x1200, 5000 mAh, ~6 months, app + USB-C + TF card) suggest a number of the Western 13.3\" brands are reselling reference designs from SeekInk or peers like AVLink and ePaint. Anyone comparing 'different' 13.3\" frames should check whether they are comparing enclosures rather than products.",
+      "sources": [
+        {"url": "https://www.seekink.com/product/s133e6-f0-e-ink-photo-frame/", "what_it_supports": "Full spec, B2B-only, upcoming 25.3\"/28.5\""},
+        {"url": "https://www.seekink.com/blog/industry-insights-bringing-color-epaper-frame-into-life/", "what_it_supports": "Product ladder; industry-analysis posture"}
+      ]
+    },
+    {
+      "name": "Oscar Japan Co., Ltd. / KoKonna (MAXEVIS)",
+      "country": "Japan (distributor) / Taiwan (brand origin) / China (manufacture)",
+      "corporate_form": "distributor plus an originating brand",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "crowdfunded on Makuake (JP) and Zeczec (TW)",
+      "revenue_scale": "small",
+      "headcount": "unknown",
+      "hardware_track_record": "One completed Makuake campaign (Dec 2025 - Feb 2026) across a four-size ladder. No delivery record verifiable yet.",
+      "abandonment_history": "Unknown - too new.",
+      "staying_power": "low",
+      "rationale": "Cloud-mandatory, AI-metered, sold through a distributor rather than by the maker, with a manufacturer-in-China / brand-in-Taiwan / seller-in-Japan split that makes long-run support responsibility ambiguous. The pay-per-AI-generation point system is an ongoing revenue hook that only works while their servers run. Highest structural risk of the frames with a real price attached.",
+      "sources": [{"url": "https://www.makuake.com/project/maxevis_kokonna/", "what_it_supports": "Oscar Japan as distributor, China manufacture, campaign dates and completion, size/price ladder, cloud + points model"}]
+    },
+    {
+      "name": "BLOOMIN8 / arpobot",
+      "country": "unknown (Kickstarter + Indiegogo + BackerKit + direct)",
+      "corporate_form": "startup",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "crowdfunded across Kickstarter, Indiegogo and BackerKit",
+      "revenue_scale": "small but shipping at retail with a 28.5\" SKU at $2,399",
+      "headcount": "unknown",
+      "hardware_track_record": "Delivered from crowdfunding to retail with two shipping sizes and a third (10\", sub-$200) announced at CES 2026. Publishes a first-party Home Assistant component.",
+      "abandonment_history": "None found.",
+      "staying_power": "medium",
+      "rationale": "Known vendor, but its community position is the standout finding: ten independent third-party clients, a first-party HA component and vendor-acknowledged REST APIs. Even if arpobot folds, the LAN protocol is documented well enough by outsiders that the hardware stays usable - though Dopiz's disclaimer that the protocol 'was studied from a device on the local network' and 'may break at any time with a firmware update' means some of that is reverse-engineered rather than contractual.",
+      "sources": [
+        {"url": "https://bloomin8.com/", "what_it_supports": "Two shipping SKUs and prices, RESTful APIs, HA integration, cloud-free desktop app"},
+        {"url": "https://github.com/Dopiz/custom-bloomin8-canvas-home-assistant-addon", "what_it_supports": "Third-party LAN control with an explicit reverse-engineering disclaimer"}
+      ]
+    },
+    {
+      "name": "Fraimic",
+      "country": "unknown",
+      "corporate_form": "startup",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "Kickstarter, reported >$1M raised",
+      "revenue_scale": "pre-delivery to early-delivery",
+      "headcount": "unknown",
+      "hardware_track_record": "None yet at volume - Kickstarter shipping quoted from May 2026, D2C June 2026. Demonstrated prototypes at CES 2026 with a PRNewswire release.",
+      "abandonment_history": "N/A - too new.",
+      "staying_power": "medium",
+      "rationale": "Known vendor, but the material new fact is that Fraimic itself publishes the local REST API and an image converter, and an outsider has already reimplemented the full protocol on commodity Waveshare hardware. That makes it the most openly documented colour frame in the category and substantially reduces the 'company dies, frame bricks' risk. Offsetting: it has not yet proven volume delivery, and the deep-sleep-blocks-API behaviour is a real automation constraint.",
+      "sources": [
+        {"url": "https://github.com/Fraimic/Fraimic_eink_canvas_home_assistant_restAPI_guide", "what_it_supports": "Vendor-published unauthenticated local REST API and HA guide"},
+        {"url": "https://github.com/dsackr/ESP32-S3-ePaper-13.3E6", "what_it_supports": "Protocol independently reimplemented and verified on third-party hardware"}
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {"lead": "Reddit entirely (r/eink, r/einkdisplays, r/homeassistant, r/functionalprint). Every fetch attempt - www.reddit.com/r/eink/search.json and old.reddit.com/r/eink/search - was refused outright by the fetch tool, and site:reddit.com searches returned zero Reddit results.", "why_it_matters": "This was a named primary surface in the brief and it is completely unsampled. Reddit is where owners post the unflattering facts (ghosting, refresh artefacts, app quality, whether cloud is really optional) and where small makers get named. Treat this as an unexplored surface, not a saturated one - anything found there would be additive to this report."},
+    {"lead": "Kickstarter, Crowd Supply, Etsy and Amazon product pages all returned HTTP 403/500. LumiCap, InkJoy, Memoir/Zyvoralabs, LINKUADRO and Inkanva could not be read first-party.", "why_it_matters": "LumiCap and LINKUADRO have no diagonal or price recorded anywhere fetchable, so they are in this report as names only. A human with a browser can resolve all five in about ten minutes."},
+    {"lead": "Inkanva (inkanva.com) - pre-launch, claims Spectra 6 HD, perovskite indoor-light solar harvesting for 'infinite battery', and an OpenAPI for AI-agent automation. No size, resolution or price disclosed.", "why_it_matters": "If the OpenAPI claim is real it would join Fraimic/BLOOMIN8/TintTech in the small set of genuinely programmable frames, and indoor-light solar would remove the recharge problem entirely at large sizes. Currently pure marketing - not one verifiable spec. Worth a revisit when the Kickstarter goes live."},
+    {"lead": "Easyblock (Yiboluoke) 'MoQu' art frame, crowdfunded in China, full-colour E6 with low-power WiFi module and an app supporting scheduled refresh, carousels and remote push.", "why_it_matters": "Diagonal is not stated on the page I fetched, so I could not confirm it clears 13\". The Chinese domestic market appears to have its own crowdfunded frames with no Western coverage at all - einkcn.com is the aggregator to mine if that market matters."},
+    {"lead": "PicPak by AutoHeart - E Ink frame with a claimed 400-day battery, covered by iGeneration (FR) in Jan 2026.", "why_it_matters": "Almost certainly well under 13\" so out of scope, but it is another entrant absent from every English roundup, reinforcing that non-English search is where the long tail lives."},
+    {"lead": "The 25.3\" and 31.5\" Spectra 6 panels are on sale retail from E Ink at $1,400 with no known MCU-class controller and no community build log.", "why_it_matters": "This is the single biggest open question for DIY at large sizes. MpicoSys TCM2/TCM3 cover 28\"/31.2\"/42\" but only in monochrome as far as their published list goes. Somebody needs to answer 'what actually drives a 25.3\" Spectra 6' - a direct enquiry to MpicoSys or E Ink would settle it."},
+    {"lead": "E Ink shopkits 'Partner's Solutions' category (91 items total in the shop) - I enumerated the panels and the driving-board codenames but did not open the partner listings individually.", "why_it_matters": "The two partner entries I did open (Visionect, Digital View) were both new names with large-format products and real APIs. The remaining partner listings are a concentrated, high-yield source that I only sampled."},
+    {"lead": "The 'is it the same frame in different wood' question. Aluratek, eco4life, Huessen, YIAIFRAME and the generic Amazon listings all quote 13.3\" / 1600x1200 / Spectra 6 / ~5000 mAh / ~6-18 months / app-over-WiFi.", "why_it_matters": "If these are all SeekInk or AVLink reference designs, then brand choice at 13.3\" is a choice of enclosure, warranty and app - not of hardware. Confirming this would collapse a large part of the apparent variety in this market and is answerable by comparing FCC IDs."},
+    {"lead": "orientdisplay.com 'E-ink Digital Art Frame Introduction' returned HTTP 403.", "why_it_matters": "Orient Display is another display supplier that appears to be entering the art-frame space; unread."}
+  ],
+  "unverified_facts": [
+    {"claim": "Huessen is a real distinct brand with a 13.3\" Spectra 6 frame at 1600x1200 and 18-month battery.", "why_unverified": "The Amazon product page (ASIN B0F844HH6R) returned HTTP 500 on fetch. Everything comes from search-result snippets. No first-party Huessen site was located.", "url": null},
+    {"claim": "LINKUADRO is a 13.3\", 1600x1200 greyscale e-ink frame with a 5000 mAh battery, on Kickstarter.", "why_unverified": "Kickstarter returns HTTP 403 to WebFetch. Sourced entirely from a search snippet quoting the campaign FAQ.", "url": null},
+    {"claim": "LumiCap is a Spectra 6 e-ink canvas with 2-3 year battery, Kickstarter Nov 5 - Dec 12 2025.", "why_unverified": "Kickstarter 403; the Japanese site lumicap.increwavejp.com returned HTTP 404. No size, resolution or price obtained from any fetchable page.", "url": null},
+    {"claim": "InkPoster 31.5\" is $1,699 and the Tela 40.5\" uses a Sharp IGZO backplane.", "why_unverified": "Both figures come from search snippets of pages I did not fetch. The only InkPoster price I have from a fetched page is $499 for the 13.3\" Affresco, and that is from a competitor's comparison table, not from InkPoster.", "url": null},
+    {"claim": "APHEUM's 'Deep Grayscale' delivers up to 255 grey levels.", "why_unverified": "First-party marketing repeated by German design press. Every other e-paper product in this sweep quotes 16 grey levels. If real this is a significant panel/pipeline claim; if it describes a dithering result it is ordinary. No independent measurement exists.", "url": null},
+    {"claim": "IONNYK Jane is ~25\" and Linn ~48\" diagonal.", "why_unverified": "I derived these from the quoted 50x40 cm and 100x70 cm figures, which are very likely frame outer dimensions rather than active display area. The true active diagonals are probably smaller.", "url": null},
+    {"claim": "eco4life's 13.3\" frame is actually purchasable and at what price.", "why_unverified": "The fetched product page carries full specifications but no price and no buy path.", "url": null},
+    {"claim": "ePaint (Anhui Yutu) ships 28\" and 32\" colour art frames with API access.", "why_unverified": "Single company news page, marketing prose only. No product page, no price, no independent coverage, no purchasable listing found.", "url": null},
+    {"claim": "paperlesspaper's OpenPaper L can be driven purely locally with no vendor cloud.", "why_unverified": "The company publishes an 'offline firmware' repo and open hardware, which strongly implies it, but the Home Assistant integration description I saw says it controls the display 'via its cloud API'. I did not fetch docs.paperlesspaper.de to confirm whether the stock firmware accepts a local endpoint.", "url": null},
+    {"claim": "Inkplate 13SPECTRA pricing ($309/$359) and the 2026-08-21 ship date.", "why_unverified": "crowdsupply.com and soldered.com both failed to fetch (403 / 404). Figures come from CNX Software and Liliputing search snippets.", "url": null},
+    {"claim": "Seeed reTerminal E1004 is $279.90 with Home Assistant and TRMNL support.", "why_unverified": "seeedstudio.com product page not fetched; from Hackster/Seeed search snippets.", "url": null},
+    {"claim": "The Hyepaper 13.3\" IT8951 Rust build exists as described.", "why_unverified": "hackaday.io/project/190478 was not fetched directly; details come from a search snippet. The IT8951 details themselves are corroborated by the HN thread I did fetch.", "url": null},
+    {"claim": "SmartWiz+ Art (7.3\") as a brand.", "why_unverified": "Appeared only in a low-quality SEO listicle (hometosight) whose other entries were LCD frames misfiled as e-ink. Probably not a real e-paper product; recorded here so it is not mistaken for a finding. Below 13\" regardless.", "url": null}
+  ]
+}

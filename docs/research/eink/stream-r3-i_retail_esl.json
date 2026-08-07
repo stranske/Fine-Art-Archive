@@ -1,0 +1,1701 @@
+{
+  "search_log": [
+    {
+      "query": "\"e-paper poster\" ESL electronic shelf label large format retail display",
+      "new_names_found": ["Opticon", "Zkong", "Pervasive Displays", "e-shelf-labels.com / S&K Solutions", "esltags.com"],
+      "notes": "Orientation query. Mostly ESL-tag-sized products. Surfaced e-shelf-labels.com (a German distributor, S&K Solutions GmbH) which turned out to be a useful multi-vendor catalogue."
+    },
+    {
+      "query": "VusionGroup SES-imagotag e-paper poster large format display",
+      "new_names_found": ["VusionGroup (large-format intent confirmed, no poster SKU found)"],
+      "notes": "VUSION ESL line runs 1.6-12.2 inch, i.e. mostly below the 13 inch floor. VUSION Engage is LCD, not e-paper. No large-format e-paper poster SKU located for VusionGroup despite repeated attempts."
+    },
+    {
+      "query": "Hanshow \"e-paper\" poster large format signage Nebular Lumina display 25 inch",
+      "new_names_found": [],
+      "notes": "Hanshow Nebular = ESL 1.54-7.5 inch; Lumina = LCD, not e-paper. No large-format e-paper poster SKU found."
+    },
+    {
+      "query": "Pricer AB e-paper large format display digital signage poster",
+      "new_names_found": ["Castit (CMS)", "Ynvisible"],
+      "notes": "KEY HIT: a NoviSign page revealed Pricer supports BOTH a local on-premise Pricer server and the Pricer Plaza SaaS. That is the first on-prem signal in the ESL majors."
+    },
+    {
+      "query": "SoluM Newton e-paper large format signage 13 inch 32 inch EPD",
+      "new_names_found": ["SOLUM (Newton E-Paper 25.3-32 inch)"],
+      "notes": "Major hit. SOLUM launched a 25.3-32 inch Spectra 6 large-format lineup at NRF 2026. Exactly the segment the consumer roundups miss."
+    },
+    {
+      "query": "\"e-paper\" poster display 25.3 inch retail signage vendor buy",
+      "new_names_found": ["Sharp (ePoster EP-C131 / EP-C251)"],
+      "notes": "Sharp ePoster is a genuine pro-signage line with USB-C thumbdrive loading - a rare local push path."
+    },
+    {
+      "query": "Zkong e-paper poster large format digital signage 13.3 inch",
+      "new_names_found": ["DynaScan (13.3/25.3/42 inch)", "Zkong 13.3 inch"],
+      "notes": "BIGGEST size hit of the sweep: DynaScan 42 inch, described as the largest full-colour e-paper display."
+    },
+    {
+      "query": "DynaScan e-paper display 42 inch DP42 model specifications",
+      "new_names_found": [],
+      "notes": "Confirmed DynaScan 13.3/25.3/42 inch line on Kaleido 3, -15 to 65C, outdoor housing. No model numbers or content-loading method ever published."
+    },
+    {
+      "query": "MpicoSys \"e-paper\" large format display PaperTouch transit signage 32 inch",
+      "new_names_found": ["MpicoSys", "MyGica"],
+      "notes": "MyGica turned out to carry a full 13.3-42 inch e-paper catalogue. MpicoSys has a 31.2 inch battery/WiFi display and the EPIS transit system."
+    },
+    {
+      "query": "DIGI Teraoka e-paper large format display \"e-signage\" OR poster retail Japan",
+      "new_names_found": ["StellarLink", "J-Poster", "aecoPost", "AUO Display Plus"],
+      "notes": "Opened the Japanese lane. DIGI's own site is a placeholder shell with no product data."
+    },
+    {
+      "query": "aecoPost 31.5 inch ePaper signage vendor specifications",
+      "new_names_found": ["AUO Display Plus (aecoPost)"],
+      "notes": "aecoPost = 31.5 inch Spectra 6, 2560x1440, built by AUO Display Plus for StellarLink."
+    },
+    {
+      "query": "E Ink partner alliance ecosystem members list ePaper signage manufacturers 2026",
+      "new_names_found": ["ePaper Industry Alliance (epaperia.org)", "BOE", "DKE", "Yes Optoelectronics", "QINGYUE", "InnoLux", "Xingtai", "MVE", "Ink Cubic", "Netronix", "NewFace", "Agile Display Systems", "Mercury", "Navori", "LG", "TCL CSOT", "Lenovo", "HKC", "Doxent"],
+      "notes": "HIGHEST-YIELD QUERY OF THE SWEEP. The ePaper Industry Alliance is a 150-260+ member trade body with a member database. This is the structural answer to the sampling gap in the prior survey."
+    },
+    {
+      "query": "\"Agile Display Systems\" e-paper 75 inch Kaleido ACE conversion engine Navori signage",
+      "new_names_found": ["Agile Display Solutions", "Revel Digital"],
+      "notes": "75 inch Kaleido 3 - more than double the consumer ceiling. ACE middleware positions itself as an open integration standard for E Ink signage, but processing is cloud-side."
+    },
+    {
+      "query": "TPV e-paper signage 28 inch 25.3 inch color ePaper display system",
+      "new_names_found": ["TPV Technology", "Melford Technologies"],
+      "notes": "TPV (the Philips/AOC monitor ODM) shipped the first 25.3 inch four-colour ePaper signage. Melford is a UK reseller carrying 13.3/25.3/28/32 inch."
+    },
+    {
+      "query": "\"Mercury\" OR \"NewFace Optoelectronics\" e-paper signage large format display 31.5 inch manufacturer",
+      "new_names_found": ["Glory Star", "Mercury Innovation", "NewFace"],
+      "notes": "Glory Star sells a 31.5 inch Astro e-paper signage unit; page body would not render for verification."
+    },
+    {
+      "query": "Netronix e-paper large format signage ESL Taiwan display 13 inch 31 inch",
+      "new_names_found": ["Netronix", "Yanhe Technology"],
+      "notes": "Netronix (TWSE-listed, founded 1983) does 13/31.5/75 inch and showed a fully passive perovskite-solar 31.5 inch at Computex 2026."
+    },
+    {
+      "query": "Soofa sign e-paper 42 inch solar outdoor display neighborhood",
+      "new_names_found": ["Soofa"],
+      "notes": "42 inch mono solar outdoor. Sold as an advertising/managed-service network, not as hardware."
+    },
+    {
+      "query": "e-paper display \"local server\" OR \"on-premise\" OR \"REST API\" push image retail signage no cloud 13 inch",
+      "new_names_found": ["SyncSign", "Wallboard"],
+      "notes": "The integration-angle query. SyncSign has an on-prem mini server + open API but nothing at/above 13 inch. Wallboard has on-premise servers and supports Philips Tableaux + Sharp."
+    },
+    {
+      "query": "Advantech OR \"Onyx Healthcare\" OR Ricoh OR \"Toshiba Tec\" e-paper signage display 13 inch 32 inch epaper",
+      "new_names_found": ["Advantech", "TintTech"],
+      "notes": "Advantech EPD-138/EPD-662/28.6 inch with Wi-Fi + USB + Ethernet, and a DeviceOn/ePaper server installable on local Ubuntu hardware. TintTech surfaced here and became the best self-hosting candidate."
+    },
+    {
+      "query": "invidis e-paper signage vendors roundup ISE 2026 epaper displays manufacturers overview",
+      "new_names_found": ["LG (32 inch e-paper)", "AUO"],
+      "notes": "Trade-press confirmation that ~30 ISE 2026 exhibitors carried e-paper. LG added a 32 inch battery-powered webOS e-paper display."
+    },
+    {
+      "query": "bus stop e-paper display vendor Trueform OR Journeo OR Infotec OR Aesys OR Camea passenger information epaper 32 inch",
+      "new_names_found": ["Trueform", "Journeo", "Aesys"],
+      "notes": "Transit lane. All three are systems integrators selling managed transit deployments, not merchant hardware."
+    },
+    {
+      "query": "\"Doxent\" OR \"Yalatech\" OR \"HKC\" OR \"Ink Cubic\" e-paper large format signage display manufacturer 13 25 31 inch",
+      "new_names_found": ["YalaTech", "HKC"],
+      "notes": "YalaTech has a 13.3 inch frame + 25.3 inch monitor AND an 'ESL Local Mini Server'. HKC claims 2.13 inch to 50+ inch."
+    },
+    {
+      "query": "Revel Digital OR OptiSigns e-paper e-ink supported displays list Solis Philips Tableaux Sharp integration",
+      "new_names_found": ["OptiSigns"],
+      "notes": "CMS compatibility angle. Confirmed Revel Digital supports the whole Agile Solis line via ACE."
+    },
+    {
+      "query": "\"E Ink Marquee\" outdoor large format e-paper partners vendors displays 2026",
+      "new_names_found": [],
+      "notes": "SATURATION SIGNAL 1. Only names already collected (Navori, Philips, LG, Seekink, Agile, Meris)."
+    },
+    {
+      "query": "electronic shelf label company \"large format\" epaper poster display 2026 new entrant supplier signage",
+      "new_names_found": ["EATACCN"],
+      "notes": "SATURATION SIGNAL 2. Returned Philips, DynaScan, Sharp, Samsung, Visionect - all already held."
+    },
+    {
+      "query": "e-paper digital signage 13 inch 32 inch buy price USD 2026 poster display retail vendor list comparison",
+      "new_names_found": [],
+      "notes": "SATURATION SIGNAL 3. Entirely known names."
+    },
+    {
+      "query": "museum gallery e-paper display large format integrator art image push local network 25 inch 32 inch",
+      "new_names_found": ["Artec Design"],
+      "notes": "Art/museum lane - directly relevant to the eventual use. Artec Design (Estonia) built a 650-display PoE e-paper museum system; TintTech is its commercial spin-off."
+    },
+    {
+      "query": "DKE OR \"Yes Optoelectronics\" OR Qingyue OR \"Microview Electronics\" e-paper 13.3 25.3 31.5 inch signage module manufacturer",
+      "new_names_found": ["Holitech", "Wuxi Weifeng", "Guangzhou OED"],
+      "notes": "SATURATION SIGNAL 4. These are panel/module houses selling into OEMs, not finished-display vendors."
+    },
+    {
+      "query": "e-paper poster display ESL vendor India OR Brazil OR Turkey OR Poland large format epaper signage supplier",
+      "new_names_found": ["Crystalfontz"],
+      "notes": "SATURATION SIGNAL 5. Confirms geographic concentration in China/Taiwan/Korea/Japan/EU. No new large-format finished-goods vendors."
+    },
+    {
+      "query": "\"ePaper\" OR \"e-paper\" signage manufacturer 2026 large format 13 inch retail poster brand new company launch",
+      "new_names_found": [],
+      "notes": "SATURATION SIGNAL 6. Zero new names."
+    },
+    {
+      "query": "large format e-paper display supplier list 25 inch 31.5 inch signage brands retail ESL 2026 comparison vendors",
+      "new_names_found": ["Fortune Achieve", "Shenzhen Huayi", "Shenzhen Chance", "Startek", "VETO", "Zemso"],
+      "notes": "SATURATION SIGNAL 7. These six came only from an AI-generated aggregator page (accio.com) that I did not fetch and could not verify. Logged as unverified leads, NOT counted as vendors."
+    }
+  ],
+  "saturation_reached": true,
+  "saturation_note": "Saturation hit after the 'E Ink Marquee' query. Seven consecutive searches from deliberately different angles (outdoor platform, ESL-new-entrant, price comparison, module houses, non-Asian geography, 2026 launches, large-format supplier lists) returned either zero new names or only unverifiable Alibaba-tier OEM names from an AI aggregator page. The one exception was the museum/gallery query, which found Artec Design - that was a use-case-specific lane, not the retail/ESL lane, and it confirms that the productive remaining direction is application verticals (museum, transit, healthcare) rather than more retail vendors. The structural finding is that the ePaper Industry Alliance member database (150-260+ members) is the real backstop against this sampling gap; I enumerated its visible members but the full database is behind registration. COUNTING BASIS: new_vendor_count = 28 = every entry in the vendors[] array, all of which are absent from the supplied known list. known_vendor_count = 9 = known-list vendors re-encountered during this sweep (E Ink Holdings, PPDS/Philips Tableaux, Visionect, Geniatech, Samsung, SEEKINK, Dalian Good Display, Papercast, Digital View); MEiNK never appeared in any result. Ratio therefore ~3:1 new to known. One caution on the new count: MyGica publishes model numbers identical to Geniatech's, so it is Geniatech's brand and is deliberately NOT counted as a new vendor - a naive sweep would have double-counted it. Three of the 28 (Wallboard, SyncSign, ePaper Industry Alliance) are a CMS vendor, a sub-13-inch hardware vendor and a trade body respectively rather than large-format display vendors; excluding those gives 25 genuinely new large-format display vendors.",
+  "new_vendor_count": 28,
+  "known_vendor_count": 9,
+  "devices": [
+    {
+      "model": "Newton E-Paper 32\"",
+      "vendor": "SOLUM",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 32,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "launched at NRF 2026; sold through SOLUM retail channel, not consumer retail",
+      "sold_only_with_service": true,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "closed",
+        "local_push": "Not documented. SOLUM ESL hardware conventionally requires a SOLUM AP/gateway plus the SOLUM Solution Platform (SSP); no local image-push path is published.",
+        "sd_card": null,
+        "api": "SSP platform APIs exist for retail integration partners (Simbe, Competera, Upshop named) but no public device-level image API",
+        "cloud_required": true,
+        "subscription": "SOLUM Solution Platform (SSP)",
+        "third_party_projects": [],
+        "evidence": "SOLUM's own product page gives physical specs (16.24-16.44mm, 2.3-2.4kg, 7200mAh battery, >1yr on daily updates) but explicitly no content-delivery detail. The NRF 2026 release names SSP as the integrated platform and markets an 'open ecosystem' against vendor lock-in, but the openness described is retail-partner data integration, not device-level image push."
+      },
+      "art_suitability": "Panel is excellent (Spectra 6, thinnest/lightest large-format claimed). But this is an ESL-estate product: it presumes a SOLUM AP and the SSP platform. Not viable for a self-hosted archive without a partnership conversation.",
+      "sources": [
+        {"url": "https://www.solum-group.com/esl-n-iot/product-lineup/special-esl/newton-e-paper", "what_it_supports": "Spectra 6, 16.24-16.44mm thickness, 2.3-2.4kg, 7200mAh battery, mounting options; confirms no published content-delivery method"},
+        {"url": "https://www.solum-group.com/solum/press-release-detail.-press-release--solum-unveils-large-format-e-paper-display-lineup-at-nrf-2026--evolving-into-a-global-retail-platform-", "what_it_supports": "25.3-32 inch lineup, Newton E-paper 32\" named, SOLUM Solution Platform (SSP), open-ecosystem positioning, partners Simbe/Competera/Upshop"}
+      ]
+    },
+    {
+      "model": "Newton E-Paper 25.3\"",
+      "vendor": "SOLUM",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "launched at NRF 2026 as the lower bound of the 25.3-32 inch lineup",
+      "sold_only_with_service": true,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "closed",
+        "local_push": "Not documented; same SSP-mediated path as the 32 inch",
+        "sd_card": null,
+        "api": "SSP platform APIs only",
+        "cloud_required": true,
+        "subscription": "SOLUM Solution Platform (SSP)",
+        "third_party_projects": [],
+        "evidence": "The NRF 2026 release states the lineup spans 25.3 to 32 inches but names only the 32 inch model explicitly; the 25.3 inch SKU name is not given."
+      },
+      "art_suitability": "Same as the 32 inch: strong panel, ESL-estate delivery model.",
+      "sources": [
+        {"url": "https://www.solum-group.com/solum/press-release-detail.-press-release--solum-unveils-large-format-e-paper-display-lineup-at-nrf-2026--evolving-into-a-global-retail-platform-", "what_it_supports": "25.3 to 32 inch lineup range"}
+      ]
+    },
+    {
+      "model": "ePoster EP-C251",
+      "vendor": "Sharp",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": null,
+      "panel": "E Ink (Gallery Plus / Spectra 6 generation, IGZO backplane)",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "sold through Sharp ProAV channel (proavtools.sharpusa.com)",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "USB-C thumbdrive, direct PC connection, Wi-Fi, and Bluetooth. Sharp's own copy: content updates via 'PC, USB-C thumbdrive, Wireless or Bluetooth connections.'",
+        "sd_card": false,
+        "api": "No public API found; CMS partners referenced generically. Wallboard independently lists Sharp/NEC ePaper as supported hardware.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["Wallboard CMS (lists Sharp/NEC ePaper as supported)"],
+        "evidence": "Sharp's ProAV page explicitly enumerates USB-C thumbdrive and PC connection as content-loading methods and mentions no subscription. This is the clearest sideloading path of any large colour panel found in this segment."
+      },
+      "art_suitability": "STRONG CANDIDATE. 25.3 inch full colour with documented USB-C thumbdrive loading means an archive could push images with no vendor cloud at all - manually at minimum, and possibly scriptable over the PC connection. Sharp is a durable manufacturer. Worth a direct spec-sheet request.",
+      "sources": [
+        {"url": "https://proavtools.sharpusa.com/epapers", "what_it_supports": "EP-C131 (13.3\") and EP-C251 (25.3\") model numbers; content loading via USB-C thumbdrive, PC, Wi-Fi, Bluetooth; CMS partners; no subscription mentioned"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "Sharp named among first large-format manufacturers integrating e-paper; battery-powered models"}
+      ]
+    },
+    {
+      "model": "ePoster EP-C131",
+      "vendor": "Sharp",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "panel": "E Ink (IGZO backplane)",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Sharp ProAV channel",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "USB-C thumbdrive, PC, Wi-Fi, Bluetooth",
+        "sd_card": false,
+        "api": "no public API found",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["Wallboard CMS"],
+        "evidence": "Same Sharp ProAV page as EP-C251."
+      },
+      "art_suitability": "Same architecture as the EP-C251 at a smaller size; the sideloading story is the attraction.",
+      "sources": [
+        {"url": "https://proavtools.sharpusa.com/epapers", "what_it_supports": "EP-C131 13.3 inch model, USB-C/PC/Wi-Fi/Bluetooth loading"}
+      ]
+    },
+    {
+      "model": "42-inch colour ePaper display (model number never published)",
+      "vendor": "DynaScan",
+      "is_new_to_survey": true,
+      "status": "announced 2024, availability never confirmed",
+      "diagonal_in": 42,
+      "resolution": null,
+      "panel": "E Ink Kaleido 3",
+      "colour": "full colour; a monochrome 42 inch variant also announced",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Announced at ISE 2024 as 'the largest full-colour e-paper display to date'. DynaScan said pricing and availability would follow in early 2024; I found no subsequent confirmation of shipping.",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Never documented. Neither the launch coverage nor DynaScan's own blog explains how content reaches these displays.",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Two independent sources (invidis trade press and DynaScan's own blog post) describe the product without any content-management detail whatsoever - a notable omission that suggests the product may not have reached a documented shipping state."
+      },
+      "art_suitability": "ABOVE 32 INCHES - the size is the draw. But colour at 42 inch is Kaleido 3, which is a colour-filter-array technology: markedly lower colour saturation than Spectra 6, and generally a poor match for reproducing artwork. Combined with the total absence of integration documentation and unconfirmed availability, this is a lead rather than a buyable option.",
+      "sources": [
+        {"url": "https://invidis.com/news/2024/03/42-epaper-dynascan-presents-largest-e-paper-display/", "what_it_supports": "42 inch, largest full-colour e-paper to date, colour and mono versions, -15 to 65C, outdoor housing, 2024 launch plan, 13.3/25.3 inch siblings"},
+        {"url": "https://www.dynascan.com/blog/dynascan-technology-pioneers-next-generation-sunlight-readable-epaper-displays/", "what_it_supports": "13.3/25.3/42 inch colour plus 42 inch mono, E Ink Kaleido 3, availability and pricing deferred to early 2024"}
+      ]
+    },
+    {
+      "model": "DynaScan 25.3-inch and 13.3-inch ePaper",
+      "vendor": "DynaScan",
+      "is_new_to_survey": true,
+      "status": "announced 2024",
+      "diagonal_in": 25.3,
+      "resolution": null,
+      "panel": "E Ink Kaleido 3",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "announced alongside the 42 inch; a 13.3 inch sibling also exists",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "not documented", "sd_card": null, "api": "unknown", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "No content-management information published for the DynaScan e-paper line."},
+      "art_suitability": "Kaleido 3 colour; same documentation vacuum as the 42 inch.",
+      "sources": [{"url": "https://www.dynascan.com/blog/dynascan-technology-pioneers-next-generation-sunlight-readable-epaper-displays/", "what_it_supports": "13.3, 25.3 and 42 inch colour ePaper on Kaleido 3"}]
+    },
+    {
+      "model": "75\" DigiPoster Cassette / 75\" DigiPoster Monitor",
+      "vendor": "Agile Display Solutions",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 75,
+      "resolution": null,
+      "panel": "E Ink Kaleido 3",
+      "colour": "full colour (colour-filter-array)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "listed on Agile's own product page; demonstrated at InfoComm 2026 on the E Ink stand",
+      "sold_only_with_service": true,
+      "on_prem_server_option": false,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "None. Delivery is mediated by ACE (Agile Conversion Engine) middleware, which explicitly performs 'conversion, scheduling sync, device management' in the CLOUD.",
+        "sd_card": null,
+        "api": "ACE is positioned as 'the open integration standard for E Ink signage' - a single versioned interface letting any CMS connect to any certified E Ink display. Certified CMS integrations found: Navori Labs and Revel Digital.",
+        "cloud_required": true,
+        "subscription": "ACE middleware, plus a CMS subscription (Navori or Revel Digital)",
+        "third_party_projects": ["Navori Digital Signage Platform", "Revel Digital"],
+        "evidence": "The rAVe writeup states ACE handles conversion/scheduling/device-management in the cloud. Agile's PR describes ACE as an open integration standard with a versioned interface, but 'open' here means open to CMS vendors, not self-hostable by an end user. No on-prem ACE deployment is documented anywhere I could reach; Agile's own press-release page 404s."
+      },
+      "art_suitability": "FAR ABOVE 32 INCHES - the largest single-panel e-paper found. But three strikes for this use: Kaleido 3 colour saturation is weak for artwork, the ACE cloud is mandatory, and it is an enterprise-integrator sale. Interesting mainly as proof the segment goes to 75 inch. The ACE 'open standard' is worth watching - if it ever gains a self-hostable reference implementation the whole segment opens up.",
+      "sources": [
+        {"url": "https://agiledisplaysolutions.com/", "what_it_supports": "Product list: A1 Single-Sided EPD, Solis 32, Solis 13, 75\" DigiPoster Cassette (Kaleido 3), 75\" DigiPoster Monitor; Revel Digital ACE-enabled support"},
+        {"url": "https://ravepubs.com/new-integration-between-agile-display-solutions-ace-and-navori-labs-brings-cms-workflows-to-e-ink-digital-signage/", "what_it_supports": "ACE performs conversion/scheduling/device management in the cloud; Navori integration; Color Fidelity Algorithm; Solis and 75 inch outdoor Kaleido 3"},
+        {"url": "https://www.prnewswire.com/news-releases/revel-digital-adds-ace-enabled-support-for-agile-display-solutions-solis-epaper-displays-302823185.html", "what_it_supports": "ACE described as 'the open integration standard for E Ink signage', single versioned interface, any CMS to any certified display; Revel Digital as CMS"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "75-inch E Ink Kaleido 3 display developed with Agile; separately a 75-inch TILED Spectra 6 display shown by E Ink"}
+      ]
+    },
+    {
+      "model": "Solis 32",
+      "vendor": "Agile Display Solutions",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 32,
+      "resolution": null,
+      "panel": "E Ink (Spectra 6 per rAVe; Agile's page says full-colour without naming the tech)",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "on Agile's product page; supported by Revel Digital and Navori via ACE",
+      "sold_only_with_service": true,
+      "on_prem_server_option": false,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "none documented; ACE cloud pipeline",
+        "sd_card": null,
+        "api": "via ACE certified-CMS interface",
+        "cloud_required": true,
+        "subscription": "ACE + CMS",
+        "third_party_projects": ["Navori", "Revel Digital"],
+        "evidence": "Same ACE architecture as the DigiPoster."
+      },
+      "art_suitability": "Good panel size and (if Spectra 6) good colour, but the mandatory ACE cloud rules it out for a no-vendor-cloud archive.",
+      "sources": [
+        {"url": "https://agiledisplaysolutions.com/", "what_it_supports": "Solis 32 (32 inch) and Solis 13 (13 inch) in the product list"},
+        {"url": "https://ravepubs.com/new-integration-between-agile-display-solutions-ace-and-navori-labs-brings-cms-workflows-to-e-ink-digital-signage/", "what_it_supports": "a 32 inch Spectra 6 model in the Agile line"}
+      ]
+    },
+    {
+      "model": "Solis 13",
+      "vendor": "Agile Display Solutions",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": null,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Agile product page",
+      "sold_only_with_service": true,
+      "on_prem_server_option": false,
+      "integration": {"openness": "partly-open", "local_push": "none documented; ACE cloud", "sd_card": null, "api": "ACE certified-CMS interface", "cloud_required": true, "subscription": "ACE + CMS", "third_party_projects": ["Navori", "Revel Digital"], "evidence": "Same ACE pipeline."},
+      "art_suitability": "Cloud-bound.",
+      "sources": [{"url": "https://agiledisplaysolutions.com/", "what_it_supports": "Solis 13 listed"}]
+    },
+    {
+      "model": "A1 Single-Sided EPD",
+      "vendor": "Agile Display Solutions",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 40.5,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "unknown",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "listed on Agile's product page",
+      "sold_only_with_service": true,
+      "on_prem_server_option": false,
+      "integration": {"openness": "partly-open", "local_push": "none documented; ACE cloud", "sd_card": null, "api": "ACE", "cloud_required": true, "subscription": "ACE + CMS", "third_party_projects": ["Navori", "Revel Digital"], "evidence": "Listed by name only on Agile's site; no datasheet reached."},
+      "art_suitability": "ABOVE 32 INCHES if 'A1' denotes the ISO paper size. CAVEAT: I computed 40.5 inches from A1 = 594x841mm; Agile publishes no diagonal, and 'A1' may describe the poster-frame aperture rather than the panel. Treat the number as derived, not sourced.",
+      "sources": [{"url": "https://agiledisplaysolutions.com/", "what_it_supports": "product named 'A1 Single-Sided EPD' in Agile's lineup (diagonal not stated by Agile)"}]
+    },
+    {
+      "model": "aecoPost",
+      "vendor": "AUO Display Plus (for StellarLink)",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": "2560x1440",
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Japan-focused via StellarLink; AUO Display Plus is AUO's ready-to-buy integration arm for integrators and end customers",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Not documented. StellarLink advertises only 'remote content management capabilities'.",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "The E Ink/StellarLink partnership release describes remote content management without naming a platform, protocol, or deployment model. AUO Display Plus's own aecoPost page 404'd when I tried to fetch it."
+      },
+      "art_suitability": "Very good panel for artwork - 31.5 inch Spectra 6 at 2560x1440 is essentially the best large colour e-paper spec available. AUO is a tier-1 panel maker with real staying power. Unknown integration is the blocker; worth a direct enquiry to AUO Display Plus, which explicitly sells to integrators rather than only to managed-service operators.",
+      "sources": [
+        {"url": "https://www.globenewswire.com/news-release/2025/10/30/3177465/0/en/E-Ink-and-StellarLink-Announce-Partnership-to-Deliver-Sustainable-ePaper-Signage-in-Japan.html", "what_it_supports": "aecoPost = 31.5 inch ePaper signage manufactured by AUO Display Plus on E Ink Spectra 6; remote content management; retail/transport/campus/museum/hospitality targets"},
+        {"url": "https://www.eink.com/showcase", "what_it_supports": "AUO Display Plus aecoPost listed as a 31.5 inch E Ink Spectra 6 digital signage product in E Ink's official showcase"}
+      ]
+    },
+    {
+      "model": "J-Poster",
+      "vendor": "StellarLink",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 28.6,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "JPY", "as_of": "2026-08", "source_url": null},
+      "availability": "Japan; described as a domestically produced (Japan-made) A2-sized finished signage product",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "not documented beyond 'remote content management capabilities'",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Only the E Ink partnership release describes this product."
+      },
+      "art_suitability": "A2 Spectra 6 is an attractive artwork format. Diagonal of 28.6 inches is DERIVED from A2 = 420x594mm, not stated by StellarLink - it matches the known 28.5 inch Spectra 6 panel, which supports the inference. Japan-only distribution is the practical barrier.",
+      "sources": [
+        {"url": "https://www.globenewswire.com/news-release/2025/10/30/3177465/0/en/E-Ink-and-StellarLink-Announce-Partnership-to-Deliver-Sustainable-ePaper-Signage-in-Japan.html", "what_it_supports": "J-Poster = A2-sized, Japan-produced, E Ink Spectra 6 signage; StellarLink president quote; deployment targets"}
+      ]
+    },
+    {
+      "model": "28.6-inch Spectra 6 ePaper (open-frame)",
+      "vendor": "Advantech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 28.6,
+      "resolution": "3060x2160",
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Advantech industrial channel and eStore; open-frame design with metal bracket. Also referenced as EPD-288 (28 inch) in Advantech's ePaper collateral.",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "USB (with carousel playback) AND Ethernet (LAN/WAN) on this model, plus Wi-Fi 802.11b/g/n. USB carousel means images can be shown from a stick with no network at all.",
+        "sd_card": null,
+        "api": "Managed by DeviceOn/ePaper, which performs 'device management, service management and image generator services through 2-way communications'. No public REST API doc reached (Advantech's ESS-WIKI host did not resolve).",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "DECISIVE: Advantech's EPD Server page states the 'DeviceOn/ePaper installer can be installed on local HW, which support Ubuntu 20.04', and sells EPD-ARK-1123H, a fanless box PC, as the on-prem server appliance. Combined with the 28.6 inch model's USB and Ethernet ports, this is a genuinely self-hostable stack."
+      },
+      "art_suitability": "BEST OVERALL FIT FOUND. 28.6 inch Spectra 6 at 3060x2160 is a high pixel density for this size, the colour technology is the good one, USB carousel gives a zero-infrastructure fallback, and DeviceOn/ePaper installs on your own Ubuntu box - no vendor cloud. Advantech is a large, durable industrial vendor that sells single units through an eStore rather than only via managed-service contracts. The unknown is whether DeviceOn/ePaper exposes a scriptable API; that needs a direct check.",
+      "sources": [
+        {"url": "https://www.advantech.com/en-us/resources/news/advantech-introduces-spectra-6-the-next-generation-colored-epaper-for-smart-healthcare", "what_it_supports": "28.6 inch model at 3060x2160 on Spectra 6, open-frame with metal bracket, Wi-Fi 802.11b/g/n, USB with carousel, Ethernet LAN/WAN; 13.3 inch EPD-662 with 5V DC or 8233mAh battery"},
+        {"url": "https://www.advantech.com/en-us/products/epd-server/sub_6a962f35-ccac-4443-8be0-1a8a98f1e784", "what_it_supports": "EPD-ARK-1123H on-prem server appliance; DeviceOn/ePaper installable on local hardware running Ubuntu 20.04; 2-way communication and image generator services"},
+        {"url": "https://www.advantech.com/en-us/products/wireless-epaper-display-solutions/sub_7f12d612-abe0-4851-833f-7c97a264115c", "what_it_supports": "four-part architecture: EPD Device, EPD Router (WISE-3200), EPD Server, EPD Module"}
+      ]
+    },
+    {
+      "model": "EPD-662",
+      "vendor": "Advantech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "Advantech eStore and industrial channel",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Wi-Fi 802.11b/g/n and USB; mobile app used for Wi-Fi provisioning. Ethernet is listed only for the 28.6 inch model.",
+        "sd_card": null,
+        "api": "DeviceOn/ePaper (self-hostable on Ubuntu 20.04)",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Advantech's Spectra 6 announcement covers both the 13.3 inch EPD-662 and the 28.6 inch model. A sibling EPD-138 (13 inch) with Wi-Fi and BLE also appears in Advantech's ePaper collateral."
+      },
+      "art_suitability": "Same self-hostable stack as the 28.6 inch, at a desk-friendly size. Powered by 5V DC or an 8233mAh battery.",
+      "sources": [
+        {"url": "https://www.advantech.com/en-us/resources/news/advantech-introduces-spectra-6-the-next-generation-colored-epaper-for-smart-healthcare", "what_it_supports": "EPD-662 13.3 inch Spectra 6, 5V DC or 8233mAh battery, Wi-Fi, USB, mobile app provisioning"},
+        {"url": "https://www.advantech.com/en-us/products/epd-server/sub_6a962f35-ccac-4443-8be0-1a8a98f1e784", "what_it_supports": "on-premise DeviceOn/ePaper server on Ubuntu 20.04"}
+      ]
+    },
+    {
+      "model": "32-inch wired ePaper display",
+      "vendor": "TintTech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 32,
+      "resolution": "1440x2560",
+      "panel": "E Ink",
+      "colour": "MONOCHROME - 16 levels of grey only",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08", "source_url": "https://tinttech.io/products/wired-epaper-digital-signage/"},
+      "availability": "quote-based for the 32 inch; the 9.7 and 13.3 inch models are openly priced at EUR 495-555. Designed and assembled in Europe (Tallinn, Estonia).",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "open",
+        "local_push": "Ethernet to an ON-SITE CMS. Smaller models are PoE; the 32 inch takes 24V DC, 2.0W typical. No USB or SD option.",
+        "sd_card": false,
+        "api": "Documented REST API for automated real-time integrations, plus URL-fetch content rendering and a web UI. Explicitly supports 'custom integrations with internal systems' and 'content automation by dynamically publishing new contents'.",
+        "cloud_required": false,
+        "subscription": "NONE - 'No recurring costs', licence valid for the entire product lifetime",
+        "third_party_projects": [],
+        "evidence": "STRONGEST INTEGRATION EVIDENCE IN THE WHOLE SWEEP. The CMS is sold as a one-off EUR 1,495-3,295 licence, installs as a Linux Debian virtual machine on your own servers or on a supplied mini PC, manages up to 10 displays in base config, and exposes a REST API. This is a fully self-hosted, no-cloud, no-subscription architecture."
+      },
+      "art_suitability": "PERFECT ARCHITECTURE, WRONG PANEL. Everything the archive wants on the integration side - self-hosted Debian CMS, REST API, one-off licence, no cloud - but every TintTech display is greyscale (16 grey levels), including the 32 inch and the 13.3 inch. For a colour art archive that is disqualifying; for monochrome or duotone work it would be ideal. Worth asking whether they plan a Spectra 6 model, since the CMS is the hard part and they have already built it.",
+      "sources": [
+        {"url": "https://tinttech.io/products/wired-epaper-digital-signage/", "what_it_supports": "32 inch at 1440x2560, 16 levels of grey, 24V DC 2.0W; full size list 7.8/9.7/13.3/32 inch; 9.7 inch EUR 495, 13.3 inch EUR 555 (Lite EUR 495); PoE on smaller models; on-site CMS via Ethernet; REST API; no USB/SD"},
+        {"url": "https://tinttech.io/shop/content-management-system-for-epaper-displays/", "what_it_supports": "CMS EUR 1,495-3,295, no recurring costs, lifetime licence, Virtual Machine or Mini PC, Linux Debian, up to 10 displays base, REST API, URL integration, Office365/Outlook, NFC/RFID sequences"},
+        {"url": "https://artecdesign.ee/portfolio/e-ink-displays-for-museums-galleries-multilingual-exhibitions/", "what_it_supports": "TintTech is a spin-off affiliate of Artec Design, commercialising the museum ePaper platform for broader markets"}
+      ]
+    },
+    {
+      "model": "13.3-inch wired ePaper display (and 13.3-inch Lite)",
+      "vendor": "TintTech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13.3,
+      "resolution": "1600x1200",
+      "panel": "E Ink",
+      "colour": "MONOCHROME - 16 levels of grey",
+      "price": {"amount": 555, "currency": "EUR", "as_of": "2026-08", "source_url": "https://tinttech.io/products/wired-epaper-digital-signage/"},
+      "availability": "openly listed and priced on TintTech's shop; Lite version EUR 495",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "open",
+        "local_push": "Power over Ethernet to the on-site CMS",
+        "sd_card": false,
+        "api": "REST API via the self-hosted CMS",
+        "cloud_required": false,
+        "subscription": "none; one-off lifetime licence",
+        "third_party_projects": [],
+        "evidence": "Same self-hosted Debian CMS stack as the 32 inch."
+      },
+      "art_suitability": "Greyscale only, so not a colour art display - but the cleanest self-hosted push path found at any size, and openly purchasable at a published price.",
+      "sources": [
+        {"url": "https://tinttech.io/products/wired-epaper-digital-signage/", "what_it_supports": "13.3 inch at 1600x1200, 16 grey levels, EUR 555 / EUR 495 Lite, PoE"},
+        {"url": "https://tinttech.io/shop/content-management-system-for-epaper-displays/", "what_it_supports": "self-hosted CMS, REST API, no recurring fees"}
+      ]
+    },
+    {
+      "model": "Artec Design 32-inch museum ePaper display",
+      "vendor": "Artec Design",
+      "is_new_to_survey": true,
+      "status": "deployed (Estonian National Museum, 20 units at 32 inch)",
+      "diagonal_in": 32,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "greyscale (inferred from the TintTech lineage; not stated)",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08", "source_url": null},
+      "availability": "project/bespoke - Artec is an electronics and software engineering house, and has spun the commercial product out into TintTech",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Power over Ethernet for both data and power - chosen deliberately for reliability and low maintenance",
+        "sd_card": false,
+        "api": "Artec built its own ePaper digital signage platform with a CMS managing all displays via a single web interface. Deployment model not stated on this page, but the TintTech commercialisation of the same platform is self-hosted.",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Estonian National Museum: 413 x 6.8 inch, 217 x 9.7 inch, 20 x 32 inch, all PoE, seven languages switched via ISO15693/NFC-5 tickets. This is the largest documented museum e-paper deployment found and the closest analogue to the archive use case."
+      },
+      "art_suitability": "Directly analogous use case - a museum pushing its own content to 650 PoE e-paper displays from its own CMS. Greyscale limits artwork reproduction, but as a reference architecture and a potential bespoke partner this is the most relevant find for the archive. Small engineering firm, so bespoke pricing and bus-factor risk.",
+      "sources": [
+        {"url": "https://artecdesign.ee/portfolio/e-ink-displays-for-museums-galleries-multilingual-exhibitions/", "what_it_supports": "6.8/9.7/32 inch sizes; 413/217/20 unit counts at Estonian National Museum; PoE for data and power; own CMS with single web interface; 7 languages via NFC/RFID ISO15693; TintTech is the spin-off affiliate"}
+      ]
+    },
+    {
+      "model": "31.5-inch passive full-colour ePaper advertising display (perovskite-solar)",
+      "vendor": "Netronix",
+      "is_new_to_survey": true,
+      "status": "unveiled at COMPUTEX 2026",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour (6-pigment)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "announced June 2026; Netronix also does 13 inch and 75 inch formats",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "not documented",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Coverage focuses on the power innovation (Yanhe perovskite PV, fully passive, no external power or battery replacement, ~10 year indoor life) rather than content delivery."
+      },
+      "art_suitability": "Notable engineering - a colour art panel that needs no wiring or battery changes would suit an archive well. Netronix is TWSE-listed since 2002 and has ~20% of the global e-reader market, so it is a credible manufacturer. But it is primarily an ODM: likely sells through brand partners rather than direct, and integration is undocumented.",
+      "sources": [
+        {"url": "https://www.epaperia.org/News/6724.html", "what_it_supports": "Netronix 31.5 inch full-colour Spectra 6 passive display with Yanhe perovskite PV cells, ~10 year indoor life, COMPUTEX 2026; other Yanhe partners Xingtai, Jinyatai, Meikai Innovation, Fengzhuo"}
+      ]
+    },
+    {
+      "model": "LG 32-inch e-paper signage display",
+      "vendor": "LG Electronics",
+      "is_new_to_survey": true,
+      "status": "shipping (introduced ISE 2026, US debut InfoComm 2026)",
+      "diagonal_in": 32,
+      "resolution": "2560x1440 (QHD)",
+      "panel": "E Ink Spectra 6 (per trade-press inference, not LG confirmation)",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "LG commercial signage channel",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Runs webOS, which supports remote content updates, monitoring, software updates and scheduling directly; alternatively via LG SuperSign CMS.",
+        "sd_card": null,
+        "api": "webOS signage platform; LG SuperSign. LG's webOS signage line historically supports USB media playback and local network content, but I did not verify that for this specific e-paper model.",
+        "cloud_required": null,
+        "subscription": "SuperSign CMS is optional per the coverage - webOS alone can update content",
+        "third_party_projects": [],
+        "evidence": "invidis reports two content paths: directly via webOS, or via SuperSign for multi-display scheduling. Notably the article says the panel 'appears to' use Spectra 6 'like most comparable solutions' - that is the journalist's inference, not an LG spec."
+      },
+      "art_suitability": "PROMISING AND UNDER-EXPLORED. 32 inch QHD colour from a tier-1 manufacturer, with a 72Wh battery and detachable magnetic wireless charging. webOS signage is a comparatively open platform and the coverage implies SuperSign is optional. Worth a dedicated follow-up on whether this model accepts USB or local-network media - that single fact would decide it.",
+      "sources": [
+        {"url": "https://invidis.com/news/2026/06/e-paper-lg-adds-battery-powered-e-ink-display-to-signage-portfolio/", "what_it_supports": "32 inch QHD 2560x1440, 72Wh built-in battery, detachable magnetic battery with wireless charging, webOS, content via webOS directly or LG SuperSign CMS; Spectra 6 attributed by inference only"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "LG named as an E Ink partner exhibiting at InfoComm 2026"}
+      ]
+    },
+    {
+      "model": "25.3-inch four-colour ePaper signage",
+      "vendor": "TPV Technology",
+      "is_new_to_survey": true,
+      "status": "shipping since 2021",
+      "diagonal_in": 25.3,
+      "resolution": null,
+      "panel": "E Ink Spectra 3100",
+      "colour": "four-colour (black, white, red, yellow)",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "targeted at transportation and smart retail; TPV also showed a 28 inch version, a 7.3 inch advertising tag and a 10.3 inch eNote",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "not documented", "sd_card": null, "api": "unknown", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "E Ink's partner-ecosystem release lists TPV's sizes but no integration detail."},
+      "art_suitability": "POOR for artwork. Spectra 3100 is a four-pigment technology (black/white/red/yellow) - it cannot render a general-purpose colour image. Listed for completeness of the segment survey. TPV is significant as the ODM behind Philips-branded displays.",
+      "sources": [
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "TPV showing 28 inch and 25.3 inch colour ePaper signage systems, plus 7.3 inch advertising tag and 10.3 inch eNote"}
+      ]
+    },
+    {
+      "model": "28-inch colour ePaper signage",
+      "vendor": "TPV Technology",
+      "is_new_to_survey": true,
+      "status": "shown in E Ink partner ecosystem",
+      "diagonal_in": 28,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "ecosystem showcase",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "not documented", "sd_card": null, "api": "unknown", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "Size only, from E Ink's partner release."},
+      "art_suitability": "Unknown colour generation; undocumented integration.",
+      "sources": [{"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "28 inch colour ePaper signage system from TPV"}]
+    },
+    {
+      "model": "EPC3200 / EPC3200B / EPC3200C (31.5\")",
+      "vendor": "MyGica (consumer/AV brand of Geniatech)",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6 (EPC3200), E Ink mono (EPC3200B), Cholesteric LCD (EPC3200C, outdoor)",
+      "colour": "full colour / mono / ChLCD colour depending on variant",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "quote via sales@mygica.com",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Not stated on either the MyGica or Geniatech catalogue page. Geniatech markets 'built-in CMS/API' and 'remote content management' without specifying deployment.",
+        "sd_card": null,
+        "api": "'built-in CMS/API' claimed but undocumented",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "IMPORTANT CORRECTION: MyGica and Geniatech publish IDENTICAL model numbers (EPC1330, EPC2530, EPC2850, EPC3200, EWB4200, BSS1330, EPC1330C, EPC3200C). MyGica is Geniatech's brand, not an independent vendor. Since Geniatech is on the known list, I have NOT counted this as a new vendor - flagging it because a naive sweep would double-count it."
+      },
+      "art_suitability": "31.5 inch Spectra 6 is a good artwork panel. The 'built-in CMS/API' claim is promising but wholly undocumented - it needs a direct enquiry before it can be relied on.",
+      "sources": [
+        {"url": "https://www.mygica.com/products/e-paper-displays/", "what_it_supports": "full model table: EPC1330 13.3\" Spectra 6, EPC2530 25.3\" Spectra 6, EPC2850 28.5\" Spectra 6, EPC3200 31.5\" Spectra 6, EPC1330B 13.3\" mono outdoor, EPC2800B 28\" mono outdoor, EPC3200B 31.5\" mono, EPC1330C 13.3\" ChLCD, EPC3200C 31.5\" ChLCD, EM2530 25.3\" Kaleido 3, EPC2800 28\" bar-type, BSS1330 triple 13.3\" bus stop, EWB4200 42\" interactive whiteboard"},
+        {"url": "https://www.geniatech.com/products/e-paper-display/", "what_it_supports": "identical model numbers under the Geniatech brand, confirming MyGica = Geniatech; adds EPC2530K 25.3\" Kaleido and EPC2800 28\" E Ink Gallery"}
+      ]
+    },
+    {
+      "model": "EWB4200 (42\" e-paper interactive whiteboard)",
+      "vendor": "MyGica / Geniatech",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 42,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "not stated",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "quote-based",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "not stated", "sd_card": null, "api": "unknown", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "Listed in both the MyGica and Geniatech catalogues at 42 inch."},
+      "art_suitability": "ABOVE 32 INCHES. But it is an interactive whiteboard, not a signage panel - likely monochrome and optimised for stylus latency rather than image fidelity.",
+      "sources": [
+        {"url": "https://www.mygica.com/products/e-paper-displays/", "what_it_supports": "EWB4200 42 inch interactive whiteboard"},
+        {"url": "https://www.geniatech.com/products/e-paper-display/", "what_it_supports": "EWB4200 42 inch e-paper interactive whiteboard under Geniatech brand"}
+      ]
+    },
+    {
+      "model": "EPC2850 (28.5\") / EPC2530 (25.3\") / EPC1330 (13.3\")",
+      "vendor": "MyGica / Geniatech",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 28.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "quote-based; Geniatech advertises a 10-75 inch range overall",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "not stated", "sd_card": null, "api": "'built-in CMS/API' claimed", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "Catalogue listing only."},
+      "art_suitability": "Spectra 6 across 13.3/25.3/28.5 inch is a good artwork range from one supplier; integration undocumented.",
+      "sources": [
+        {"url": "https://www.mygica.com/products/e-paper-displays/", "what_it_supports": "EPC2850 28.5\", EPC2530 25.3\", EPC1330 13.3\", all Spectra 6"},
+        {"url": "https://www.geniatech.com/products/e-paper-display/", "what_it_supports": "same models under Geniatech branding"}
+      ]
+    },
+    {
+      "model": "Soofa Sign",
+      "vendor": "Soofa",
+      "is_new_to_survey": true,
+      "status": "deployed across US metros",
+      "diagonal_in": 42,
+      "resolution": "2160x2880",
+      "panel": "E Ink (built on Visionect hardware)",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "not sold as hardware - Soofa operates it as a city-partnership and outdoor-advertising network",
+      "sold_only_with_service": true,
+      "on_prem_server_option": false,
+      "integration": {
+        "openness": "closed",
+        "local_push": "none - content flows through Soofa's neighbourhood news-feed platform",
+        "sd_card": false,
+        "api": "no public device API",
+        "cloud_required": true,
+        "subscription": "advertising/city-partnership model",
+        "third_party_projects": [],
+        "evidence": "Soofa is a managed-service network business (MIT/Harvard spinout, 2014), not a display vendor. Installs with four bolts into concrete, solar powered."
+      },
+      "art_suitability": "Not applicable - cannot be bought as a display. Included because it is a genuine 42 inch e-paper product, above the 32 inch consumer ceiling, and it proves out large mono e-paper in harsh outdoor service.",
+      "sources": [
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "context on the large-format e-paper vendor landscape including Visionect's role"}
+      ]
+    },
+    {
+      "model": "MpicoSys 31.2-inch battery/WiFi ePaper display",
+      "vendor": "MpicoSys",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 31.2,
+      "resolution": null,
+      "panel": "E Ink (driven by MpicoSys's own TCM2-E312 timing controller)",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08", "source_url": null},
+      "availability": "MpicoSys sells timing controllers and finished systems; TCM evaluation kits are sold through the E Ink online shop",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "PicoSign indoor signage is Wi-Fi updated; EPIS outdoor transit uses GSM/2G/4G/LTE to a server. MpicoSys sells the TCM timing controllers separately, which is the most component-level (and therefore most hackable) offering in this segment.",
+        "sd_card": null,
+        "api": "not published on the site",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": ["TCM2 evaluation kits distributed via E Ink's own shop"],
+        "evidence": "MpicoSys self-describes as having developed ultra-low-power battery-operated WiFi displays 'even the 31.2 inch', plus the EPIS transit system live since 2014 and claimed as the world's largest such installation."
+      },
+      "art_suitability": "Monochrome, so not a colour art display. But MpicoSys is the one vendor here that sells the driving electronics as a component - relevant if the archive ever wanted to drive a bare large panel itself. Their product pages are JS-rendered and would not yield detail to fetching.",
+      "sources": [
+        {"url": "https://www.mpicosys.com/", "what_it_supports": "EPIS realtime ePaper passenger information (GSM/2G/4G/LTE, live since 2014), PicoSign indoor WiFi-updated signage, PicoLabel NFC-updated labels, TCM timing controllers, TCM2-E312 for a 31.2 inch E Ink display"}
+      ]
+    },
+    {
+      "model": "Zkong 13.3-inch battery-powered e-ink digital signage / doorplate",
+      "vendor": "Zkong",
+      "is_new_to_survey": true,
+      "status": "shipping (OEM/wholesale)",
+      "diagonal_in": 13.3,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "not stated",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "OEM/wholesale via zkongesl.com; Zkong (Hangzhou ZKONG Network Co.) is an ePaper Industry Alliance member",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "NFC mentioned for the doorplate variant; ESL estate otherwise implies an AP/gateway plus Zkong's platform",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Search-result level evidence only: Zkong's big-size e-paper labels are battery powered with a claimed 5-8 year replaceable battery. I did not successfully fetch a Zkong product page."
+      },
+      "art_suitability": "Low confidence overall. ESL-estate architecture, colour unconfirmed, and I could not verify against a fetched page.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "Hangzhou ZKONG Network Co., Ltd. listed as an ePaper Industry Alliance member"}
+      ]
+    },
+    {
+      "model": "25.3-inch e-paper monitor and 13.3-inch Bluetooth e-ink frame",
+      "vendor": "YalaTech",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "the 13.3 inch is colour; the 25.3 inch is presented as an eye-protection monitor, colour unstated",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "quote-based; YalaTech (Yala Group, founded 2007) claims No.1 ESL sales volume in South America",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Bluetooth with a dedicated Android/iOS app for the 13.3 inch frame; Wi-Fi via an ESL Gateway AP for the estate products.",
+        "sd_card": null,
+        "api": "not published",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "NOTABLE: YalaTech's catalogue explicitly lists an 'ESL Local Mini Server' alongside the Gateway AP - a second on-prem signal from the ESL world after Pricer. Deployment detail is not published."
+      },
+      "art_suitability": "The 13.3 inch colour Bluetooth frame with an app is close to a consumer art frame in behaviour. The local mini server is the interesting part and merits a direct enquiry, but documentation is thin and this is an OEM-style supplier.",
+      "sources": [
+        {"url": "https://www.yalatechnology.com/product-list/e-paper-display-signage", "what_it_supports": "13.3 inch Bluetooth colour e-ink photo frame with app control; 25.3 inch e-paper monitor; 10.2 inch dual-screen retail POP; ESL Gateway AP and ESL Local Mini Server; Bluetooth/WiFi/local server/cloud options"}
+      ]
+    },
+    {
+      "model": "Colour e-paper displays (13.3 / 25.3 / 28 / 32 inch)",
+      "vendor": "Melford Technologies",
+      "is_new_to_survey": true,
+      "status": "shipping (UK reseller/integrator)",
+      "diagonal_in": 32,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "colour",
+      "price": {"amount": null, "currency": "GBP", "as_of": "2026-08", "source_url": null},
+      "availability": "UK supplier; datasheets are download-gated",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "Melford lists 'Mobile, WiFi or ethernet connectivity' but gives no protocol, API or server detail.",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "Melford does not identify who manufactures the units - only that they use E Ink technology. Given the exact size set (13.3/25.3/28/32) this is very likely a rebadge of one of the Chinese or Taiwanese lines already in this list."
+      },
+      "art_suitability": "Useful as a UK/EU purchasing route into these panel sizes without importing. Ethernet connectivity is a positive signal but is entirely unspecified. Ask for the datasheets.",
+      "sources": [
+        {"url": "https://www.melfordtechnologies.com/products/e-ink/colour-e-ink-displays", "what_it_supports": "13.3, 25.3, 28 and 32 inch colour e-paper; mobile/WiFi/ethernet connectivity; manufacturer not identified; datasheets download-gated"}
+      ]
+    },
+    {
+      "model": "Astro 31.5-inch e-paper display",
+      "vendor": "Glory Star",
+      "is_new_to_survey": true,
+      "status": "listed for sale",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "not verified",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "listed on glorystartouch.com",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "unknown",
+        "local_push": "unknown",
+        "sd_card": null,
+        "api": "unknown",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": [],
+        "evidence": "LOW CONFIDENCE. I attempted to fetch the product page and it returned only the page title with the body truncated. Everything beyond 'Glory Star sells a 31.5 inch e-paper signage product called Astro' is unverified."
+      },
+      "art_suitability": "Cannot assess - the page would not render. Glory Star is normally an Android-touch-signage maker, which would suggest an Android media player behind the panel and therefore possibly USB/local playback, but that is speculation, not evidence.",
+      "sources": [
+        {"url": null, "what_it_supports": "The product page https://www.glorystartouch.com/product-page/31-5-inch-astro-e-paper-display-digital-signage appeared in search results with the title '31.5inch E-Paper Display | E-Ink Signage | Glory Star'. I fetched it but the body was truncated to nothing, so I am not citing it as supporting any specification."}
+      ]
+    },
+    {
+      "model": "Philips Tableaux 25BDL4150I / 25BDL4050I (25.3\")",
+      "vendor": "PPDS / Philips",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 25.3,
+      "resolution": "3200x1800",
+      "panel": "E Ink Advanced Colour ePaper (ACeP)",
+      "colour": "60,000 colours",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08", "source_url": null},
+      "availability": "widely available through pro-AV channels; a 32 inch Spectra 6 Tableaux and a 13 inch Tableaux 4150 also exist",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Runs Android 11 with 16GB internal memory, WLAN and Ethernet, and is PoE-powered. Content can be authored in Photoshop or Illustrator. Android + internal storage + Ethernet is a favourable combination for local push.",
+        "sd_card": null,
+        "api": "Philips pro-signage Android platform; Wallboard lists Philips Tableaux as supported hardware.",
+        "cloud_required": false,
+        "subscription": null,
+        "third_party_projects": ["Wallboard CMS", "Castit (generic e-paper support)"],
+        "evidence": "KNOWN VENDOR - brief note only. Included because the distributor spec sheet adds integration facts the consumer roundups omit: Android 11, 16GB internal memory, WLAN AND Ethernet, PoE."
+      },
+      "art_suitability": "Already on the known list, but the Android-11-plus-16GB-plus-Ethernet detail makes it materially more interesting for a self-hosted archive than a consumer frame would be.",
+      "sources": [
+        {"url": "https://www.e-shelf-labels.com/hardware/e-ink-displays/colour-e-ink-displays.html", "what_it_supports": "Philips Tableaux 602.4x357.4x37.5mm, 3200x1800, 60,000 colours, 2.4kg, Android 11, 16GB internal memory, WLAN and Ethernet"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "Philips Tableaux uses Power over Ethernet"},
+        {"url": "https://www.wallboard.us/epaper-integration", "what_it_supports": "Wallboard CMS lists Philips Tableaux as supported e-paper hardware"}
+      ]
+    },
+    {
+      "model": "Visionect Place & Play 32\" / 13\"",
+      "vendor": "Visionect",
+      "is_new_to_survey": false,
+      "status": "shipping",
+      "diagonal_in": 32,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "monochrome",
+      "price": {"amount": null, "currency": "EUR", "as_of": "2026-08", "source_url": null},
+      "availability": "6, 13 and 32 inch sizes",
+      "sold_only_with_service": null,
+      "on_prem_server_option": null,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Visionect's own Place & Play platform is web-based; the company has historically shipped a self-hostable Visionect Software Suite, though I did not verify that this session.",
+        "sd_card": null,
+        "api": "Visionect Software Suite API (not verified this session)",
+        "cloud_required": null,
+        "subscription": null,
+        "third_party_projects": ["Soofa Sign is built on Visionect hardware"],
+        "evidence": "KNOWN VENDOR - brief note only. Visionect is now shifting focus toward software and appeared under the Joan brand at ISE 2026."
+      },
+      "art_suitability": "Known. Monochrome at 32 inch. Noted here mainly to record that Visionect is the hardware base under Soofa's 42 inch sign.",
+      "sources": [
+        {"url": "https://www.visionect.com/blog/best-digital-signage-cms/", "what_it_supports": "Visionect Place & Play e-paper displays in 6, 13 and 32 inch; web-based; the only e-paper-supporting CMS in their own comparison of 11 platforms"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "Visionect specialises in e-paper with proprietary CMS software"}
+      ]
+    },
+    {
+      "model": "BOE 13.3\" and 31.5\" Spectra 6 e-paper",
+      "vendor": "BOE",
+      "is_new_to_survey": true,
+      "status": "shipping (panel/module and reference systems)",
+      "diagonal_in": 31.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "BOE is primarily a panel and module supplier into OEMs; Chongqing BOE Smart Electronics System and BOE Yiyun Technology are both ePaper Industry Alliance members",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "n/a at module level", "sd_card": null, "api": "n/a", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "BOE appears in E Ink's module-partner list and exhibited 13.3 and 31.5 inch Spectra 6 at InfoComm/ISE 2026."},
+      "art_suitability": "Not a finished product for an end user - BOE sells into OEMs. Listed because BOE is one of the largest display manufacturers in the world and its presence indicates the segment has real volume behind it.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "Chongqing BOE Smart Electronics System Co., Ltd. as an EPIA member"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "BOE listed among the eight module-manufacturing partners"},
+        {"url": "https://blog.eink.com/what-to-expect-from-e-ink-at-infocomm-2026", "what_it_supports": "BOE named as an InfoComm 2026 ecosystem partner"}
+      ]
+    },
+    {
+      "model": "E Ink Spectra 6 Flex-E 28.5-inch flexible ePaper",
+      "vendor": "E Ink Holdings",
+      "is_new_to_survey": false,
+      "status": "platform demonstration",
+      "diagonal_in": 28.5,
+      "resolution": null,
+      "panel": "E Ink Spectra 6 flexible",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "platform, sold to partners not end users",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "n/a", "sd_card": null, "api": "n/a", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "KNOWN VENDOR - brief note. Recorded because 28.5 inch flexible Spectra 6 is the panel behind several finished products in this list (StellarLink J-Poster, Geniatech EPC2850, Advantech 28.6 inch)."},
+      "art_suitability": "Panel platform, not a purchasable display.",
+      "sources": [{"url": "https://blog.eink.com/what-to-expect-from-e-ink-at-infocomm-2026", "what_it_supports": "28.5 inch Flex-E Spectra 6 described as a full-colour signage platform; E Ink Marquee for outdoor; 75 inch Kaleido 3 with Agile"}]
+    },
+    {
+      "model": "E Ink 75-inch tiled Spectra 6 display",
+      "vendor": "E Ink Holdings",
+      "is_new_to_survey": false,
+      "status": "demonstration",
+      "diagonal_in": 75,
+      "resolution": null,
+      "panel": "E Ink Spectra 6 (tiled multi-panel)",
+      "colour": "full colour",
+      "price": {"amount": null, "currency": "USD", "as_of": "2026-08", "source_url": null},
+      "availability": "shown at InfoComm 2026; not a catalogue product",
+      "sold_only_with_service": false,
+      "on_prem_server_option": null,
+      "integration": {"openness": "unknown", "local_push": "n/a", "sd_card": null, "api": "n/a", "cloud_required": null, "subscription": null, "third_party_projects": [], "evidence": "KNOWN VENDOR - brief note. Included because it is the largest Spectra 6 (i.e. genuinely artwork-capable colour) surface found anywhere in this sweep."},
+      "art_suitability": "FAR ABOVE 32 INCHES and on the good colour technology - but tiled, so it has visible seams, and it is a trade-show demonstration rather than a product. Signals where the ceiling is heading.",
+      "sources": [{"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "75-inch tiled Spectra 6 display for retail, advertising and information displays"}]
+    },
+    {
+      "model": "Pricer smart posters / SmartTAG Color",
+      "vendor": "Pricer AB",
+      "is_new_to_survey": true,
+      "status": "shipping",
+      "diagonal_in": 13,
+      "resolution": null,
+      "panel": "E Ink",
+      "colour": "4 and 6 colour displays",
+      "price": {"amount": null, "currency": "SEK", "as_of": "2026-08", "source_url": null},
+      "availability": "Pricer retail channel. CAVEAT: Pricer's own electronic-displays page names only SmartTAG Color and gives no dimensions. The 13 inch figure here is a FLOOR-OF-SCOPE placeholder, not a sourced specification - I could not confirm any Pricer e-paper product at or above 13 inches.",
+      "sold_only_with_service": false,
+      "on_prem_server_option": true,
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "Deployments run against EITHER a local on-premise Pricer server (addressed by IP) OR the Pricer Plaza SaaS (addressed by URL). This is the clearest on-prem architecture among the ESL majors.",
+        "sd_card": null,
+        "api": "NoviSign integrates with both the local Pricer server and Pricer Plaza, which implies a documented integration interface; the API itself is not public.",
+        "cloud_required": false,
+        "subscription": "Pricer Plaza is optional - the local server is the alternative",
+        "third_party_projects": ["NoviSign CMS integration"],
+        "evidence": "The NoviSign integration guide is the load-bearing source: it instructs installers to enter an IP address for a local Pricer server or a URL for Pricer Plaza. That is a third party documenting a real on-prem deployment path, which is stronger evidence than a vendor marketing claim."
+      },
+      "art_suitability": "The architecture is the attraction, not the hardware: Pricer is the one ESL major with a documented, third-party-confirmed on-premise server. If Pricer ships a large colour poster, that combination would be very strong. As it stands I could not confirm a 13-inch-or-larger Pricer e-paper product, so treat this entry as a vendor-level lead rather than a device.",
+      "sources": [
+        {"url": "https://www.novisign.com/blog/tech/howto-link-products-pricer-shelf-display/", "what_it_supports": "two deployment options - local Pricer server via IP address, or Pricer Plaza SaaS via URL; smart posters concept; Pricer smartphone app for linking"},
+        {"url": "https://www.pricer.com/products/electronic-displays", "what_it_supports": "SmartTAG Color with 4 and 6 colour displays, sub-second updates, 10-year battery; Pricer Plaza referenced; no dimensions published"}
+      ]
+    }
+  ],
+  "vendors": [
+    {
+      "name": "SOLUM",
+      "country": "South Korea",
+      "corporate_form": "public company (spun out of Samsung Electro-Mechanics in 2015)",
+      "ownership": "independent, KOSPI-listed",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "large - one of the top three global ESL vendors",
+      "headcount": "large (thousands)",
+      "hardware_track_record": "Long-running ESL manufacturer; Newton line spans ESL through large-format signage. Launched a 25.3-32 inch Spectra 6 lineup at NRF 2026 and is pursuing an explicit 'open ecosystem' retail-platform strategy with partners Simbe, Competera and Upshop.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "Samsung lineage, public listing, top-tier ESL share and an active large-format roadmap. The risk to the archive is not vendor survival but architecture: this is an ESL-estate product tied to the SOLUM Solution Platform. I could not confirm the ticker symbol so it is left null.",
+      "sources": [
+        {"url": "https://www.solum-group.com/solum/press-release-detail.-press-release--solum-unveils-large-format-e-paper-display-lineup-at-nrf-2026--evolving-into-a-global-retail-platform-", "what_it_supports": "NRF 2026 large-format launch, 25.3-32 inch, SSP platform, open-ecosystem positioning, named partners"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "SoluM listed as one of five smart-retail ESL system integrators in E Ink's partner ecosystem"}
+      ]
+    },
+    {
+      "name": "Sharp",
+      "country": "Japan",
+      "corporate_form": "public corporation (majority-owned by Foxconn/Hon Hai)",
+      "ownership": "Foxconn-controlled",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "very large",
+      "headcount": "very large",
+      "hardware_track_record": "Decades of display manufacturing; supplies IGZO backplanes to E Ink's own ecosystem as well as selling finished ePoster products through its ProAV channel.",
+      "abandonment_history": "Sharp has restructured its display business substantially over the past decade, which is a mild risk signal, but the ePoster line is current and channel-supported.",
+      "staying_power": "high",
+      "rationale": "A tier-1 manufacturer that both makes a key component (IGZO backplane) and sells the finished product. The USB-C thumbdrive loading path means the display retains value even if Sharp discontinued its software.",
+      "sources": [
+        {"url": "https://proavtools.sharpusa.com/epapers", "what_it_supports": "EP-C131 and EP-C251 sold through Sharp's ProAV channel with USB-C/PC/wireless/Bluetooth content loading"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Sharp as E Ink's IGZO backplane partner"},
+        {"url": "https://blog.eink.com/what-to-expect-from-e-ink-at-infocomm-2026", "what_it_supports": "Sharp as an InfoComm 2026 e-paper ecosystem partner"}
+      ]
+    },
+    {
+      "name": "Advantech",
+      "country": "Taiwan",
+      "corporate_form": "public corporation",
+      "ownership": "independent, TWSE-listed",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "large - a major global industrial IoT and embedded computing vendor",
+      "headcount": "large (~8,000+)",
+      "hardware_track_record": "Long-established industrial computing vendor with a dedicated four-part ePaper architecture (EPD Device, EPD Router, EPD Server, EPD Module), an eStore selling individual units, and award recognition (Taiwan Excellence, BC Award).",
+      "abandonment_history": "none found; industrial vendors of this type typically commit to long product lifecycles",
+      "staying_power": "high",
+      "rationale": "THE BEST STAYING-POWER-PLUS-OPENNESS COMBINATION FOUND. Industrial vendors sell single units, publish datasheets, support long lifecycles, and here explicitly support installing the management server on your own Ubuntu hardware. That is the opposite of the ESL managed-service posture.",
+      "sources": [
+        {"url": "https://www.advantech.com/en-us/products/epd-server/sub_6a962f35-ccac-4443-8be0-1a8a98f1e784", "what_it_supports": "EPD-ARK-1123H server appliance; DeviceOn/ePaper installable on local hardware running Ubuntu 20.04"},
+        {"url": "https://www.advantech.com/en-us/resources/news/advantech-introduces-spectra-6-the-next-generation-colored-epaper-for-smart-healthcare", "what_it_supports": "13.3 inch EPD-662 and 28.6 inch Spectra 6 models with Wi-Fi, USB and Ethernet"},
+        {"url": "https://www.advantech.com/en-us/products/wireless-epaper-display-solutions/sub_7f12d612-abe0-4851-833f-7c97a264115c", "what_it_supports": "four-part EPD architecture including a distinct EPD Server product category"}
+      ]
+    },
+    {
+      "name": "TintTech",
+      "country": "Estonia",
+      "corporate_form": "private company - spin-off affiliate of Artec Design",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "bootstrapped from the Artec Design engineering business",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "Commercialises the ePaper platform Artec Design built and proved at the Estonian National Museum (650 displays in service). Products designed and assembled in Europe.",
+      "abandonment_history": "none found, but the company is young and small",
+      "staying_power": "medium",
+      "rationale": "Small-company risk is real, but it is substantially mitigated by the architecture: the CMS is a one-off perpetual licence running on a Debian VM you control, with a REST API. If TintTech disappeared tomorrow the installation would keep working, which is exactly the property a self-hosted archive should weight most heavily. The disqualifier is the panel, not the company: everything they sell is greyscale.",
+      "sources": [
+        {"url": "https://tinttech.io/shop/content-management-system-for-epaper-displays/", "what_it_supports": "EUR 1,495-3,295 perpetual licence, no recurring costs, VM or mini PC, Linux Debian, REST API"},
+        {"url": "https://tinttech.io/products/wired-epaper-digital-signage/", "what_it_supports": "7.8/9.7/13.3/32 inch range, all 16-level greyscale, PoE on smaller models, published EUR prices"},
+        {"url": "https://artecdesign.ee/portfolio/e-ink-displays-for-museums-galleries-multilingual-exhibitions/", "what_it_supports": "TintTech is a spin-off affiliate of Artec Design commercialising the museum platform"}
+      ]
+    },
+    {
+      "name": "Artec Design",
+      "country": "Estonia",
+      "corporate_form": "private electronics and software engineering company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "services revenue",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "Built and delivered a 650-unit PoE e-paper installation for the Estonian National Museum (413 x 6.8 inch, 217 x 9.7 inch, 20 x 32 inch) with its own CMS and NFC-driven multilingual switching.",
+      "abandonment_history": "none found; has spun the product line into TintTech rather than dropping it",
+      "staying_power": "medium",
+      "rationale": "An engineering house rather than a product vendor, so buying from them means a bespoke project. Included because the museum deployment is the single closest documented analogue to what this archive wants to do, and because they demonstrably can build a self-hosted large-format e-paper system end to end.",
+      "sources": [
+        {"url": "https://artecdesign.ee/portfolio/e-ink-displays-for-museums-galleries-multilingual-exhibitions/", "what_it_supports": "Estonian National Museum deployment, unit counts and sizes, PoE for data and power, own CMS with single web interface, seven-language NFC switching, TintTech spin-off"}
+      ]
+    },
+    {
+      "name": "AUO Display Plus (AUO group)",
+      "country": "Taiwan",
+      "corporate_form": "subsidiary of AUO Corporation (public)",
+      "ownership": "AUO group",
+      "public_ticker": null,
+      "funding": "parent company",
+      "revenue_scale": "very large parent; AUO Display Plus is the group's signage integration arm",
+      "headcount": "very large parent",
+      "hardware_track_record": "AUO is a tier-1 panel maker in a strategic partnership with E Ink for large-size colour ePaper. AUO Display Plus was established specifically to turn group components into ready-to-buy solutions for integrators and end customers, and manufactures the aecoPost 31.5 inch Spectra 6 signage.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "Tier-1 panel manufacturer with an explicit strategic partnership with E Ink on large-format colour, plus a subsidiary whose stated purpose is selling finished units to integrators and end customers rather than only to managed-service operators. That posture is unusually favourable. Integration is entirely undocumented, which is the open question.",
+      "sources": [
+        {"url": "https://www.eink.com/showcase", "what_it_supports": "AUO Display Plus aecoPost listed in E Ink's official product showcase as 31.5 inch Spectra 6 digital signage"},
+        {"url": "https://www.globenewswire.com/news-release/2025/10/30/3177465/0/en/E-Ink-and-StellarLink-Announce-Partnership-to-Deliver-Sustainable-ePaper-Signage-in-Japan.html", "what_it_supports": "aecoPost manufactured through AUO Display Plus on E Ink Spectra 6"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "AUO collaborating with E Ink on large-format development"}
+      ]
+    },
+    {
+      "name": "StellarLink",
+      "country": "Japan",
+      "corporate_form": "private IT solutions provider",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small to mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Announced an E Ink partnership in October 2025 with two products: the Japan-made A2 J-Poster and the AUO-built 31.5 inch aecoPost. Collaborates with Tohoku University, Waseda University and Iwate Prefectural University.",
+      "abandonment_history": "none found - too new to assess",
+      "staying_power": "medium",
+      "rationale": "New entrant with a credible manufacturing partner (AUO) and a direct E Ink relationship, but Japan-focused distribution and no track record yet. The J-Poster's A2 Spectra 6 format is genuinely interesting for artwork if it can be sourced.",
+      "sources": [
+        {"url": "https://www.globenewswire.com/news-release/2025/10/30/3177465/0/en/E-Ink-and-StellarLink-Announce-Partnership-to-Deliver-Sustainable-ePaper-Signage-in-Japan.html", "what_it_supports": "J-Poster (A2, Japan-made, Spectra 6) and aecoPost (31.5 inch, AUO-built); president Yasuhiro Maeda; university collaborations; retail/transport/campus/museum/hospitality targets"}
+      ]
+    },
+    {
+      "name": "Agile Display Solutions",
+      "country": "Taiwan",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small to mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Sells an unusually broad large-format e-paper range (Solis 13, Solis 32, A1 EPD, 75 inch DigiPoster in cassette and monitor form) and has built ACE, positioned as an open integration standard for E Ink signage. Certified CMS integrations with Navori Labs and Revel Digital; showcased on E Ink's own stand at InfoComm 2026.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Strategically the most interesting company in this segment because ACE is an attempt to standardise the CMS-to-e-paper interface that everyone else keeps proprietary. But ACE is cloud-side by design, so the openness benefits CMS vendors rather than self-hosters. A small private company carrying the largest panels in the segment.",
+      "sources": [
+        {"url": "https://agiledisplaysolutions.com/", "what_it_supports": "product line: A1 Single-Sided EPD, Solis 32, Solis 13, 75\" DigiPoster Cassette (Kaleido 3), 75\" DigiPoster Monitor; Revel Digital ACE support"},
+        {"url": "https://www.prnewswire.com/news-releases/revel-digital-adds-ace-enabled-support-for-agile-display-solutions-solis-epaper-displays-302823185.html", "what_it_supports": "ACE as 'the open integration standard for E Ink signage', single versioned interface, any CMS to any certified display"},
+        {"url": "https://ravepubs.com/new-integration-between-agile-display-solutions-ace-and-navori-labs-brings-cms-workflows-to-e-ink-digital-signage/", "what_it_supports": "ACE conversion/scheduling/device management happens in the cloud; Navori integration; Color Fidelity Algorithm"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "75-inch Kaleido 3 developed with Agile shown on E Ink's InfoComm 2026 stand"}
+      ]
+    },
+    {
+      "name": "DynaScan Technology",
+      "country": "Taiwan / USA",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "mid - established in high-brightness LCD signage",
+      "headcount": "unknown",
+      "hardware_track_record": "Well-known for high-brightness window displays. Announced a 13.3/25.3/42 inch e-paper line at ISE 2024, including what was then the largest full-colour e-paper display. Availability and pricing were promised for early 2024 and I found no confirmation they materialised.",
+      "abandonment_history": "POSSIBLE. Two and a half years after announcement I could find no shipping confirmation, no model numbers, no pricing and no content-management documentation for the e-paper line. That pattern is consistent with a stalled or quietly shelved product.",
+      "staying_power": "medium",
+      "rationale": "The company itself is established in signage, but this specific product line shows the classic signature of an announcement that did not convert. Treat the 42 inch as unproven until DynaScan publishes a datasheet.",
+      "sources": [
+        {"url": "https://invidis.com/news/2024/03/42-epaper-dynascan-presents-largest-e-paper-display/", "what_it_supports": "42 inch largest full-colour e-paper, colour and mono, outdoor housing, -15 to 65C, 2024 launch plan"},
+        {"url": "https://www.dynascan.com/blog/dynascan-technology-pioneers-next-generation-sunlight-readable-epaper-displays/", "what_it_supports": "13.3/25.3/42 inch on Kaleido 3; availability and pricing deferred to early 2024"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "DynaScan named among the first large-format manufacturers integrating e-paper, 42 inch"}
+      ]
+    },
+    {
+      "name": "Netronix",
+      "country": "Taiwan",
+      "corporate_form": "public corporation",
+      "ownership": "independent, listed on the Taiwan Stock Exchange since 2002",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "mid to large - roughly 20% global share of e-reader products",
+      "headcount": "unknown",
+      "hardware_track_record": "Founded 1983, headquartered in Hsinchu. A core E Ink ecosystem ODM listed among the five smart-retail ESL system integrators. Developing 13, 31.5 and 75 inch large-format signage; unveiled a fully passive perovskite-solar 31.5 inch Spectra 6 display at COMPUTEX 2026.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "Forty-plus years old, publicly listed since 2002, and a substantial share of an adjacent market. Very likely to still exist in a decade. The catch is that it is an ODM - you would probably buy its hardware under someone else's brand.",
+      "sources": [
+        {"url": "https://www.epaperia.org/News/6724.html", "what_it_supports": "founded 1983, Hsinchu HQ, TWSE-listed since 2002, ~20% global e-reader share, 31.5 inch passive Spectra 6 with Yanhe perovskite PV at COMPUTEX 2026, ~10 year indoor life"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Netronix as one of five smart-retail solution partners alongside Hanshow, Pricer, SES-imagotag and SoluM"}
+      ]
+    },
+    {
+      "name": "LG Electronics",
+      "country": "South Korea",
+      "corporate_form": "public corporation",
+      "ownership": "LG Group",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "very large",
+      "headcount": "very large",
+      "hardware_track_record": "Entered e-paper signage in 2026 with a 32 inch QHD battery-powered webOS display, introduced at ISE and given its US debut at InfoComm. Backed by the mature webOS signage platform and SuperSign CMS.",
+      "abandonment_history": "LG has discontinued display categories before, but its commercial signage business is long-running and well supported.",
+      "staying_power": "high",
+      "rationale": "Tier-1 manufacturer entering the category with an existing, mature signage software platform behind it. webOS signage is comparatively open and the reporting suggests SuperSign is optional. This is the most under-explored promising lead in the sweep.",
+      "sources": [
+        {"url": "https://invidis.com/news/2026/06/e-paper-lg-adds-battery-powered-e-ink-display-to-signage-portfolio/", "what_it_supports": "32 inch QHD, 72Wh battery with detachable magnetic wireless charging, webOS, content via webOS directly or SuperSign CMS"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-Showcases-the-Future-of-Sustainable-Large-Format-Color-Signage-at-InfoComm-2026", "what_it_supports": "LG as an E Ink InfoComm 2026 partner"}
+      ]
+    },
+    {
+      "name": "Pricer AB",
+      "country": "Sweden",
+      "corporate_form": "public company",
+      "ownership": "independent, Nasdaq Stockholm listed",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "large - a top-three global ESL vendor",
+      "headcount": "large",
+      "hardware_track_record": "Long-standing ESL vendor, named in E Ink's smart-retail partner set. SmartTAG Color offers 4 and 6 colour displays with sub-second updates and a claimed 10-year battery.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "MOST ARCHITECTURALLY INTERESTING OF THE ESL MAJORS. Pricer is the only one with a documented, third-party-confirmed local on-premise server as an alternative to its SaaS. That is precisely the property the archive cares about. The gap is product: I could not confirm any Pricer e-paper display at or above 13 inches, so the on-prem advantage may not be reachable at poster size.",
+      "sources": [
+        {"url": "https://www.novisign.com/blog/tech/howto-link-products-pricer-shelf-display/", "what_it_supports": "local Pricer server (IP-addressed) vs Pricer Plaza SaaS (URL-addressed); smart posters; third-party CMS integration"},
+        {"url": "https://www.pricer.com/products/electronic-displays", "what_it_supports": "SmartTAG Color, 4 and 6 colour, sub-second updates, 10-year battery; Pricer Plaza referenced"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Pricer as an E Ink smart-retail partner"}
+      ]
+    },
+    {
+      "name": "VusionGroup (formerly SES-imagotag)",
+      "country": "France",
+      "corporate_form": "public company",
+      "ownership": "independent, Euronext Paris listed",
+      "public_ticker": "SESL",
+      "funding": "public markets",
+      "revenue_scale": "very large - the largest global ESL vendor",
+      "headcount": "large",
+      "hardware_track_record": "Global ESL leader; VUSION ESL range spans 1.6 to 12.2 inch, i.e. it stops just below this survey's 13 inch floor. VUSION Engage, its in-store media product, is LCD rather than e-paper. Listed as an ePaper Industry Alliance member and an E Ink smart-retail partner.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "NEGATIVE FINDING WORTH RECORDING. The brief hypothesised that ESL majors sell large e-paper posters that consumer roundups miss. For VusionGroup - the largest of them - that hypothesis did not hold: its e-paper stops at 12.2 inch and its large in-store media is LCD. The hypothesis held strongly for SOLUM and partially for Pricer, but not here. Ticker SESL is carried from the brief, not independently verified this session.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "VusionGroup S.A. listed as an ePaper Industry Alliance member"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "SES-imagotag as one of five smart-retail ESL partners"},
+        {"url": "https://www.e-shelf-labels.com/hardware/digital-signage.html", "what_it_supports": "VUSION Rail and Vusion Engage are LCD video rails, not e-paper"}
+      ]
+    },
+    {
+      "name": "Hanshow Technology",
+      "country": "China",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "venture and growth capital",
+      "revenue_scale": "large - a top-three global ESL vendor",
+      "headcount": "large",
+      "hardware_track_record": "Nebular and Nebular Pro ESL lines (1.54-7.5 inch, IP68, up to 15-year battery), Lumina LCD line, All-Star IoT cloud platform. ePaper Industry Alliance member and E Ink smart-retail partner.",
+      "abandonment_history": "none found",
+      "staying_power": "medium-high",
+      "rationale": "SECOND NEGATIVE FINDING. Like VusionGroup, Hanshow's e-paper tops out around 7.5 inch and its large-format products (Lumina) are LCD. No e-paper poster SKU found at or above 13 inches. Private ownership makes it slightly less transparent than the listed majors.",
+      "sources": [
+        {"url": "https://www.hanshow.com/en", "what_it_supports": "product lines Nebular, Nebular Pro, Lumina Aqua, Polaris Pro, Lumina Edge, All-Star IoT cloud platform; no large-format e-paper sizes published"},
+        {"url": "https://epaperia.org/", "what_it_supports": "Hanshow Technology as an EPIA member"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "Hanshow as an E Ink smart-retail partner"}
+      ]
+    },
+    {
+      "name": "TPV Technology",
+      "country": "China / Hong Kong / Taiwan",
+      "corporate_form": "public corporation",
+      "ownership": "independent; the ODM behind Philips-branded and AOC-branded displays",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "very large - one of the world's largest monitor manufacturers",
+      "headcount": "very large",
+      "hardware_track_record": "Launched the first 25.3 inch four-colour ePaper signage with E Ink in 2021 for transportation and smart retail; also shows a 28 inch version, a 7.3 inch advertising tag and a 10.3 inch eNote.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "Enormous manufacturing base and an early mover in large-format e-paper signage. But its products here use Spectra 3100 four-pigment colour, which cannot reproduce general artwork, and as an ODM it sells through brands rather than direct.",
+      "sources": [
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "TPV showing 28 inch and 25.3 inch colour ePaper signage systems plus smaller products"}
+      ]
+    },
+    {
+      "name": "MpicoSys",
+      "country": "Netherlands / Poland",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "Strong and long: self-developed TCM timing controllers enabling ultra-low-power battery WiFi displays up to 31.2 inch; the EPIS outdoor transit passenger-information system has been live since 2014 and is claimed as the world's largest such installation. TCM evaluation kits are distributed through E Ink's own online shop.",
+      "abandonment_history": "none found - twelve-plus years of continuous EPIS operation is a strong durability signal",
+      "staying_power": "medium",
+      "rationale": "Small but unusually deep technically, and the only vendor found that sells the driving electronics as a component. E Ink distributing their kits is a meaningful endorsement. Their website is JS-rendered and yields little to automated inspection, so specifics need a direct conversation.",
+      "sources": [
+        {"url": "https://www.mpicosys.com/", "what_it_supports": "TCM timing controllers, 31.2 inch battery WiFi display, EPIS live since 2014 and claimed largest installation, PicoSign indoor WiFi signage, PicoLabel NFC labels"}
+      ]
+    },
+    {
+      "name": "Soofa",
+      "country": "USA",
+      "corporate_form": "private company (MIT/Harvard spinout, founded 2014)",
+      "ownership": "venture-backed, woman-led",
+      "public_ticker": null,
+      "funding": "venture capital",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "Operates a network of 42 inch solar-powered mono e-paper signs in US metros, built on Visionect hardware. Ten-plus years of outdoor operation.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Not a hardware vendor - a managed advertising and civic-communication network. Cannot be bought as a display. Recorded because it demonstrates a 42 inch e-paper product surviving years of outdoor service, and because it identifies Visionect as the underlying hardware.",
+      "sources": [
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "context on Visionect's role as an e-paper specialist with proprietary CMS"}
+      ]
+    },
+    {
+      "name": "Mercury Innovation",
+      "country": "Australia",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "EXCELLENT FIELD RECORD: solar-powered e-paper traffic signs deployed in Sydney since 2013, with a claimed zero failures across nearly 400 installations. Products include an urban bus stop and e-paper parking signs, rated -15C to +65C (-20C extended).",
+      "abandonment_history": "none found - thirteen years of continuous field deployment",
+      "staying_power": "medium",
+      "rationale": "Small company, but a reliability record most large vendors could not match. Also appears as a named E Ink InfoComm 2026 partner. Content management model is entirely undocumented and the product is outdoor traffic/transit signage, so relevance to an indoor art archive is limited.",
+      "sources": [
+        {"url": "https://www.mercuryinnovation.com.au/outdoor-epaper-signs", "what_it_supports": "solar-powered e-paper signage, urban bus stop and parking signs, -15 to +65C (-20C extended), weatherproof enclosure, Sydney traffic signs since 2013 with zero failures across nearly 400 installations"},
+        {"url": "https://blog.eink.com/what-to-expect-from-e-ink-at-infocomm-2026", "what_it_supports": "Mercury named as an E Ink InfoComm 2026 ecosystem partner"}
+      ]
+    },
+    {
+      "name": "Melford Technologies",
+      "country": "United Kingdom",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "UK supplier of colour e-paper displays at 13.3, 25.3, 28 and 32 inch with mobile, WiFi or ethernet connectivity. Does not identify the underlying manufacturer.",
+      "abandonment_history": "unknown",
+      "staying_power": "low",
+      "rationale": "Almost certainly a reseller or rebadger rather than a manufacturer - the size set matches the standard E Ink panel range exactly and no manufacturing is claimed. Useful as a UK/EU purchasing route; not a source of long-term platform commitment.",
+      "sources": [
+        {"url": "https://www.melfordtechnologies.com/products/e-ink/colour-e-ink-displays", "what_it_supports": "13.3/25.3/28/32 inch colour e-paper, mobile/WiFi/ethernet connectivity, E Ink technology, manufacturer not identified, download-gated datasheets"}
+      ]
+    },
+    {
+      "name": "YalaTech (Yala Group)",
+      "country": "China",
+      "corporate_form": "private company, founded 2007",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Claims No.1 ESL sales volume in South America. Catalogue spans a 13.3 inch colour Bluetooth e-ink frame, a 25.3 inch e-paper monitor, meeting-room signs and retail POP, with an ESL Gateway AP and an ESL Local Mini Server.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Regionally significant ESL maker with an on-prem 'local mini server' in its catalogue - the second on-prem signal from the ESL world. Documentation is thin and quote-gated, and the company profile is OEM-flavoured.",
+      "sources": [
+        {"url": "https://www.yalatechnology.com/product-list/e-paper-display-signage", "what_it_supports": "13.3 inch Bluetooth colour e-ink frame with app, 25.3 inch e-paper monitor, ESL Gateway AP and ESL Local Mini Server, Bluetooth/WiFi/local server/cloud"}
+      ]
+    },
+    {
+      "name": "Zkong (Hangzhou ZKONG Network Co.)",
+      "country": "China",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "mid",
+      "headcount": "unknown",
+      "hardware_track_record": "ESL manufacturer and ePaper Industry Alliance member; markets a 13.3 inch battery-powered e-ink digital signage / office doorplate with NFC.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Established EPIA member, but I could not fetch a Zkong product page this session so device-level detail rests on search-result summaries only. Confidence is correspondingly low.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "Hangzhou ZKONG Network Co., Ltd. as an EPIA member"}
+      ]
+    },
+    {
+      "name": "HKC",
+      "country": "China (with a Japanese sales arm, HKC Japan / KOORUI brand)",
+      "corporate_form": "large private display manufacturer",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "corporate",
+      "revenue_scale": "large",
+      "headcount": "large",
+      "hardware_track_record": "Claims e-paper displays from 2.13 inch to over 50 inch with full-colour technology, up to 35% reflectivity and near-180-degree viewing. ePaper Industry Alliance member. Sells through Amazon Japan, Rakuten and the KOORUI brand store.",
+      "abandonment_history": "none found",
+      "staying_power": "medium-high",
+      "rationale": "A large panel manufacturer claiming the widest size range of anyone in this survey (up to 50+ inch), but publishing no model names, resolutions or specifications on the page I reached. The 50+ inch claim is therefore unverified and I have not created device records from it.",
+      "sources": [
+        {"url": "https://hkcj.jp/en/products/epaper", "what_it_supports": "e-paper range from 2.13 inch to over 50 inch, full-colour, up to 35% reflectivity, ~180 degree viewing; retail via Amazon Japan, Rakuten, KOORUI; no model-level specifications published"},
+        {"url": "https://epaperia.org/", "what_it_supports": "HKC Co., LTD as an EPIA member"}
+      ]
+    },
+    {
+      "name": "BOE",
+      "country": "China",
+      "corporate_form": "public corporation",
+      "ownership": "independent, Shenzhen-listed",
+      "public_ticker": null,
+      "funding": "public markets",
+      "revenue_scale": "very large - one of the world's largest display manufacturers",
+      "headcount": "very large",
+      "hardware_track_record": "E Ink module-manufacturing partner; showed 13.3 and 31.5 inch Spectra 6 at 2026 shows. Two BOE entities (Chongqing BOE Smart Electronics System, BOE Yiyun Technology) are EPIA members. Trade press notes BOE transitioning from ESL supply into professional signage.",
+      "abandonment_history": "none found",
+      "staying_power": "high",
+      "rationale": "Enormous and durable, but sells panels and modules to OEMs rather than finished displays to end users. Relevant as evidence of segment volume rather than as a purchasing option.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "Chongqing BOE Smart Electronics System Co., Ltd. as an EPIA member"},
+        {"url": "https://epaperia.org/Search.html", "what_it_supports": "multiple BOE entities including BOE Yiyun Technology in the EPIA member database"},
+        {"url": "https://www.eink.com/news/detail/E-Ink-and-Its-25-Partners-Jointly-Showcase-a-Complete-ePaper-Ecosystem", "what_it_supports": "BOE among E Ink's eight module-manufacturing partners"},
+        {"url": "https://invidis.com/news/2024/08/e-paper-displays-supersizing-shelf-labels/", "what_it_supports": "BOE as a leading ESL provider transitioning to professional signage"}
+      ]
+    },
+    {
+      "name": "Glory Star",
+      "country": "China",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small to mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Android touch-signage manufacturer that lists a 31.5 inch Astro e-paper signage product.",
+      "abandonment_history": "unknown",
+      "staying_power": "low",
+      "rationale": "LOW CONFIDENCE ENTRY. I attempted to fetch the product page and got only a title with an empty body, so I have verified nothing beyond the product's existence and claimed size. Flagged for follow-up rather than relied upon.",
+      "sources": [
+        {"url": null, "what_it_supports": "Only a search-result title ('31.5inch E-Paper Display | E-Ink Signage | Glory Star') supports this vendor's existence in the segment. The page body would not render when fetched, so no URL is cited as evidence."}
+      ]
+    },
+    {
+      "name": "Trueform",
+      "country": "United Kingdom",
+      "corporate_form": "private company (Trueform Manufacturing & Technologies Group)",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Long-established UK street-furniture and transit-display manufacturer. Markets an 'Elite' e-paper bus stop system alongside countdown RTI displays and electronic timetables.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Real transit-infrastructure manufacturer, but the e-paper product page publishes no display sizes, resolution, panel supplier or content-delivery method - everything is gated behind a brochure download. Sells whole bus-stop systems to transit authorities, not displays to individuals.",
+      "sources": [
+        {"url": "https://trueform.com/news/new-elite-e-paper-bus-stop-system/", "what_it_supports": "Elite e-paper bus stop system exists and is marketed as vandal-resistant; no sizes, resolution, panel supplier or content-delivery method published"}
+      ]
+    },
+    {
+      "name": "Wallboard",
+      "country": "USA / Hungary",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small to mid",
+      "headcount": "unknown",
+      "hardware_track_record": "Digital signage CMS vendor that explicitly supports e-paper hardware (Philips Tableaux and Sharp/NEC ePaper) AND offers on-premise server deployment.",
+      "abandonment_history": "none found",
+      "staying_power": "medium",
+      "rationale": "Not a display maker, but structurally important: it is the only CMS found that combines named e-paper hardware support with an on-premise deployment option. That pairing is the software half of a no-vendor-cloud stack. It does not, however, document a local push API.",
+      "sources": [
+        {"url": "https://www.wallboard.us/epaper-integration", "what_it_supports": "supports Philips Tableaux and Sharp/NEC ePaper; on-premise solutions offered; connects to data sources, APIs and scheduling tools"}
+      ]
+    },
+    {
+      "name": "SyncSign",
+      "country": "China",
+      "corporate_form": "private company",
+      "ownership": "private",
+      "public_ticker": null,
+      "funding": "unknown",
+      "revenue_scale": "small",
+      "headcount": "small",
+      "hardware_track_record": "E-paper workplace signage in 2.9, 4.2 and 7.5 inch - all BELOW this survey's 13 inch floor, so no device records were created.",
+      "abandonment_history": "none found",
+      "staying_power": "low",
+      "rationale": "Included as a vendor despite being out of scope on size because its ARCHITECTURE is the model the archive wants and shows what is achievable: an on-premise mini server, an open API/SDK allowing Python code deployed to the hub, and IFTTT/web-service integration, with cloud strictly optional. If they ever go large-format they would be a top candidate.",
+      "sources": [
+        {"url": "https://sync-sign.com/display/", "what_it_supports": "2.9/4.2/7.5 inch red+black+white displays; mini server for on-premises deployment; Open API/SDK with deployable Python; cloud optional"}
+      ]
+    },
+    {
+      "name": "ePaper Industry Alliance (EPIA)",
+      "country": "international (China-registered secretariat)",
+      "corporate_form": "trade body / industry alliance",
+      "ownership": "member-governed",
+      "public_ticker": null,
+      "funding": "membership",
+      "revenue_scale": "n/a",
+      "headcount": "n/a",
+      "hardware_track_record": "n/a - runs a member database, an industry news feed and an 'ePaper Mall' listing products with prices (a 31.5 inch Spectra 6 at USD 1,199 and a 13.3 inch Spectra 6 at USD 499 were visible).",
+      "abandonment_history": "n/a",
+      "staying_power": "unknown",
+      "rationale": "THE STRUCTURAL ANSWER TO THE SAMPLING GAP IN THE PRIOR SURVEY. EPIA claims 150+ and elsewhere 260+ members with a searchable database at /Search.html and per-member pages at /Members/[ID].html. Roughly 50 members were visible without registration. Anyone wanting exhaustive coverage of this industry should enumerate this database rather than searching vendor-by-vendor. The full listing appears to require registration.",
+      "sources": [
+        {"url": "https://epaperia.org/", "what_it_supports": "16 members visible on the landing page including E Ink, Chongqing BOE, Jiangxi Xingtai, Lenovo, TCL CSOT, Hanshow, Chengdu Doxent, Hangzhou ZKONG, DKE, Yiwu Qingyue, MVE, VusionGroup, Newface, HKC; '260+ EPIA members' claim; categories Smart Retail/Smart Office/Consumer/Smart Healthcare; ePaper Mall prices USD 1,199 for 31.5 inch and USD 499 for 13.3 inch Spectra 6"},
+        {"url": "https://epaperia.org/Search.html", "what_it_supports": "50+ member organisations in the database directory; individual member pages exist but product specifications require deeper access"},
+        {"url": "https://www.epaperia.org/News/6724.html", "what_it_supports": "EPIA also publishes an industry news feed carrying member product launches"}
+      ]
+    }
+  ],
+  "leads_not_followed": [
+    {
+      "lead": "The full ePaper Industry Alliance member database at epaperia.org/Search.html and the per-member pages at /Members/[ID].html. EPIA claims 150-260+ members; roughly 50 were visible to me without registration.",
+      "why_it_matters": "This is the single highest-leverage remaining action and the structural fix for the sampling gap the brief describes. A registered account would enumerate the whole industry in one pass instead of vendor-by-vendor searching. Their 'ePaper Mall' also publishes actual prices, which almost no vendor does."
+    },
+    {
+      "lead": "Whether Advantech's DeviceOn/ePaper exposes a scriptable REST API for pushing an image to a specific display. Their ESS-WIKI documentation host (ess-wiki.advantech.com.tw) did not resolve for me.",
+      "why_it_matters": "Advantech is the best overall candidate found - 28.6 inch Spectra 6 at 3060x2160, USB and Ethernet, and a management server that installs on your own Ubuntu box. The only missing fact is whether the archive could script image pushes rather than clicking through a web UI. That one answer would likely settle the whole search."
+    },
+    {
+      "lead": "Whether the LG 32-inch e-paper display accepts USB media or local-network content directly through webOS, without SuperSign.",
+      "why_it_matters": "A tier-1 manufacturer, 32 inch, QHD, colour, battery-powered. LG's webOS signage line has historically supported USB playback. If that carries over, this becomes a mainstream, well-supported, no-cloud option - the most durable of any candidate here."
+    },
+    {
+      "lead": "AUO Display Plus's aecoPost integration model. Their product page 404'd; AUO Display Plus exists specifically to sell finished units to integrators and end customers.",
+      "why_it_matters": "31.5 inch Spectra 6 at 2560x1440 is arguably the best artwork panel found, from a tier-1 manufacturer with an integrator-friendly sales posture. Only the content-delivery mechanism is unknown."
+    },
+    {
+      "lead": "Whether TintTech or Artec Design plan a colour (Spectra 6) panel, or would build one on commission.",
+      "why_it_matters": "They already have the hard part - a self-hosted Debian CMS with a REST API, a perpetual licence and no cloud. Their only disqualifier is that every panel they sell is greyscale. A colour variant would make them the outright best fit for this use case."
+    },
+    {
+      "lead": "Whether the Agile ACE 'open integration standard' has, or will have, a self-hostable reference implementation or published interface specification.",
+      "why_it_matters": "ACE is the only attempt in this industry to standardise the CMS-to-e-paper interface. Today it is cloud-only, which blocks self-hosting. If it opens up it would unlock the largest panels in the segment (75 inch) and many vendors at once."
+    },
+    {
+      "lead": "Sharp's EP-C251 full datasheet - specifically whether the PC connection is a scriptable interface or a manual desktop utility. Sharp's global and NEC-branded e-paper pages both 404'd or redirected away.",
+      "why_it_matters": "USB-C thumbdrive loading on a 25.3 inch colour panel from a tier-1 manufacturer is the single most promising local-push signal found. Whether it can be automated determines if it suits a self-hosted archive app or only manual curation."
+    },
+    {
+      "lead": "Six OEM names (Fortune Achieve, Shenzhen Huayi, Shenzhen Chance Technology, Shenzhen Startek, Dongguan VETO, Guangzhou Zemso) that appeared only in AI-generated aggregator summaries on accio.com, which I deliberately did not fetch.",
+      "why_it_matters": "Probably real Alibaba-tier OEMs at 25.3 and 31.5 inch, but the only source was a synthesised aggregator page - exactly the kind of source that produces fabricated specifications. Listed for completeness; would need first-party verification before being treated as real."
+    },
+    {
+      "lead": "HKC's claim of e-paper displays 'over 50 inches'.",
+      "why_it_matters": "If true this would be the second-largest single e-paper panel in existence after the 75 inch units. HKC published no model names or specifications to support it, so it stays unverified."
+    },
+    {
+      "lead": "Transit integrators Journeo, Aesys and Trueform, and the transit-authority procurement channel generally.",
+      "why_it_matters": "Probably a dead end for this use case - they sell managed transit infrastructure to public authorities, not displays to individuals - but they are large-format e-paper buyers and their supplier lists would name panel vendors."
+    }
+  ],
+  "unverified_facts": [
+    {
+      "claim": "The Agile Display Solutions 'A1 Single-Sided EPD' has a ~40.5 inch diagonal.",
+      "why_unverified": "Agile lists the product by name only and publishes no diagonal. I computed 40.5 inches from ISO A1 (594x841mm). 'A1' may refer to the poster-frame aperture or the mounting format rather than the active panel area. The number is derived, not sourced.",
+      "url": null
+    },
+    {
+      "claim": "The StellarLink J-Poster has a ~28.6 inch diagonal.",
+      "why_unverified": "StellarLink describes it only as 'A2-sized'. I computed 28.6 inches from ISO A2 (420x594mm). This is corroborated by the existence of a standard 28.5 inch E Ink Spectra 6 panel used in several other products in this list, but StellarLink never states a diagonal.",
+      "url": null
+    },
+    {
+      "claim": "The LG 32-inch e-paper display uses E Ink Spectra 6.",
+      "why_unverified": "The invidis article explicitly frames this as inference - the panel 'appears to' use Spectra 6 'like most comparable solutions'. LG has not confirmed the panel technology in any source I reached.",
+      "url": null
+    },
+    {
+      "claim": "Glory Star sells a 31.5 inch 'Astro' e-paper signage display.",
+      "why_unverified": "The product page returned only its title with an empty body when fetched. I have a page title and nothing else. No specifications, colour capability, price or integration detail is verified.",
+      "url": null
+    },
+    {
+      "claim": "HKC offers e-paper displays over 50 inches.",
+      "why_unverified": "HKC's own page states a '2.13 inch to over 50 inch' range but publishes no model names, resolutions or specifications to substantiate the upper bound.",
+      "url": null
+    },
+    {
+      "claim": "DynaScan's 42 inch e-paper display actually shipped.",
+      "why_unverified": "Announced at ISE 2024 with pricing and availability promised for early 2024. Two and a half years later I could find no model number, datasheet, price, or content-management documentation. Both sources I fetched are from the announcement period. Possible quiet cancellation.",
+      "url": null
+    },
+    {
+      "claim": "SOLUM, Sharp, Netronix, Advantech, Pricer, LG and TPV ticker symbols and headcounts.",
+      "why_unverified": "I confirmed listing status in prose for Netronix (TWSE since 2002) and Pricer/VusionGroup/SOLUM as public companies, but did not fetch any exchange or filing page this session, so all public_ticker fields are null except VusionGroup's SESL, which is carried from the task brief rather than independently verified. Headcount and revenue figures are qualitative characterisations, not sourced numbers.",
+      "url": null
+    },
+    {
+      "claim": "Zkong's 13.3 inch battery-powered e-ink signage specifications (5-8 year replaceable battery).",
+      "why_unverified": "Comes from a search-result summary of zkongesl.com. I did not successfully fetch any Zkong product page this session. Only Zkong's EPIA membership is verified.",
+      "url": null
+    },
+    {
+      "claim": "Geniatech/MyGica's 'built-in CMS/API' and the claimed 10-75 inch range.",
+      "why_unverified": "Both the MyGica and Geniatech catalogue pages assert remote content management and CMS/API support without specifying deployment model, protocol, or any API detail. The largest item actually in their published model table is the 42 inch EWB4200 whiteboard, not a 75 inch signage panel, so the '10-75 inch' marketing range is not supported by their own product list.",
+      "url": null
+    },
+    {
+      "claim": "Pricer offers an e-paper display at or above 13 inches.",
+      "why_unverified": "Pricer's electronic-displays page names only SmartTAG Color and publishes no dimensions. The 13 inch value in that device record is a floor-of-scope placeholder, explicitly not a sourced specification. Pricer's documented local-server architecture is verified; a large-format Pricer product is not.",
+      "url": null
+    },
+    {
+      "claim": "Soofa Sign resolution of 2160x2880 and 150 dpi.",
+      "why_unverified": "These figures came from search-result summaries citing Adafruit and Good e-Reader; the summaries were also internally inconsistent (quoting both 150 dpi and 85 dpi). I did not fetch Soofa's own site or the Visionect 42 inch page, so no resolution figure is cited to a URL.",
+      "url": null
+    }
+  ]
+}

@@ -1,0 +1,1764 @@
+{
+ "search_log": [
+  {
+   "query": "e-paper art exhibition electronic paper artwork display gallery installation",
+   "vertical": "art",
+   "new_names_found": [
+    "Galari",
+    "E Ink Gallery (einkgallery.com)"
+   ],
+   "notes": "Mostly consumer frames already in the survey. Galari and SonicGrace surfaced but both were already logged by the frames/delivery sweeps."
+  },
+  {
+   "query": "museum e-paper labels electronic paper exhibit label case study",
+   "vertical": "museums",
+   "new_names_found": [
+    "AMLABEL",
+    "AMSYS Innovative Solutions"
+   ],
+   "notes": "Surfaced the Museum of Fine Arts Houston / AMLABEL deployment (2016 CORE Exhibition, ~20 labels) built on Visionect panels. Also Leicester Museums."
+  },
+  {
+   "query": "AMLABEL digital gallery display museum e-paper label company",
+   "vertical": "museums",
+   "new_names_found": [
+    "AMSYS Innovative Solutions"
+   ],
+   "notes": "AMLABEL is an AMSYS Innovative Solutions product; 6in and 9.7in only, so below the 13in threshold. Retained as an integrator, not a device."
+  },
+  {
+   "query": "e-paper systems integrator company installs electronic paper displays AV integrator",
+   "vertical": "integrators",
+   "new_names_found": [
+    "Ynvisible",
+    "Avocor"
+   ],
+   "notes": "Low yield. AV trade press mostly recycles Samsung/PPDS/Sharp/Papercast. Ynvisible is electrochromic segment display, not image-capable."
+  },
+  {
+   "query": "hospital e-paper ward bed signage e-ink on-premise server healthcare deployment",
+   "vertical": "healthcare",
+   "new_names_found": [
+    "Review Display Systems (RDS)",
+    "Omnivex"
+   ],
+   "notes": "Healthcare is rhetorically on-prem but almost nobody names a vendor+hospital pair. Best artefact was the JMIR paper."
+  },
+  {
+   "query": "e-paper meeting room booking panel alternatives to Joan Visionect on-premise server",
+   "vertical": "corporate",
+   "new_names_found": [
+    "Humly",
+    "MIDAS",
+    "Awaio",
+    "NexBoard"
+   ],
+   "notes": "NEGATIVE RESULT WORTH RECORDING: the 'Joan alternatives' listicles are almost all software; the e-paper hardware layer in room booking is Joan/Visionect, SyncSign, Visix and e-shelf-labels. No new e-paper hardware vendor."
+  },
+  {
+   "query": "JMIR 'Electronic Paper Displays in Hospital Operations' full text",
+   "vertical": "healthcare",
+   "new_names_found": [],
+   "notes": "Brigham and Women's Hospital ED deployment. Architecture explicitly a hospital-network virtual server + FHIR/HL7 + PoE. Discusses >=40in e-paper for command centres. No vendor named beyond E Ink."
+  },
+  {
+   "query": "library e-paper shelf signage e-ink wayfinding university deployment case study",
+   "vertical": "libraries/universities",
+   "new_names_found": [
+    "ATDEC"
+   ],
+   "notes": "ATDEC is a mounting specialist, not a display maker, but its round-up named Praevar alongside Samsung/PPDS/Sharp/DynaScan/Agile."
+  },
+  {
+   "query": "e-paper bus stop display manufacturer transit e-ink passenger information not Papercast",
+   "vertical": "transport",
+   "new_names_found": [
+    "Luminator Technology Group"
+   ],
+   "notes": "Luminator is a genuine new hardware name: builds 13.3in e-paper stop displays at its Plano, Texas factory."
+  },
+  {
+   "query": "Luminator ePaper signage station onboard E Ink product size",
+   "vertical": "transport",
+   "new_names_found": [
+    "Luminator Technology Group"
+   ],
+   "notes": "Found and parsed the actual 13-inch datasheet PDF: 13.3in, 1200x1600, 4 grey levels, solar kit, aluminium IK10 housing."
+  },
+  {
+   "query": "hotel door sign e-paper e-ink meeting room signage hospitality deployment vendor",
+   "vertical": "hospitality",
+   "new_names_found": [
+    "Noventri"
+   ],
+   "notes": "Hospitality e-paper is dominated by Good Display modules and known room-signage brands. No new large-format hardware."
+  },
+  {
+   "query": "e-paper digital signage on-premise server self-hosted no cloud vendor large format",
+   "vertical": "cross-vertical / architecture",
+   "new_names_found": [
+    "LOOK DS",
+    "FRAMR",
+    "Nento",
+    "Wilyer",
+    "Poppulo"
+   ],
+   "notes": "All software-only. Important negative: Visionect's own on-prem-vs-cloud article is a pitch for their CLOUD CMS and does not document a self-hosted option."
+  },
+  {
+   "query": "invidis e-paper digital signage hersteller neue anbieter 32 zoll farb-epaper (German)",
+   "vertical": "cross-vertical",
+   "new_names_found": [
+    "Concept International",
+    "Wi-Charge"
+   ],
+   "notes": "German trade press. Surfaced the BMW i5 Flow NOSTOKANA art car and Deutsche Telekom DooH trial."
+  },
+  {
+   "query": "BMW i5 Flow NOSTOKANA Esther Mahlangu E Ink art car e-paper segments",
+   "vertical": "art",
+   "new_names_found": [],
+   "notes": "ARTWORK ON E-PAPER, confirmed: 1,349 E Ink Prism 3 film segments carrying Esther Mahlangu's Ndebele patterns, unveiled at Frieze Los Angeles 2024."
+  },
+  {
+   "query": "E Ink Prism Tiles architecture art installation building facade deployment",
+   "vertical": "art / architecture",
+   "new_names_found": [
+    "Ueberall International",
+    "Nooka Art",
+    "3Form"
+   ],
+   "notes": "HIGHEST-VALUE ART HIT of the sweep: DAZZLE at San Diego International Airport, ~2,100 solar E Ink Prism tiles over a 1,600ft facade, designed by Ueberall International (Nik Hafermaas)."
+  },
+  {
+   "query": "Ueberall International DAZZLE San Diego airport E Ink Prism tiles studio",
+   "vertical": "art",
+   "new_names_found": [
+    "Ueberall International"
+   ],
+   "notes": "Confirmed the studio, the airport authority and the 15 animation programs. ArchDaily fetch verified venue and E Ink Prism; VentureBeat returned 403."
+  },
+  {
+   "query": "FETCH go.eink.com US transportation outdoor installations",
+   "vertical": "transport",
+   "new_names_found": [
+    "GDS (Global Display Solutions)",
+    "SolStreet",
+    "Brasco"
+   ],
+   "notes": "Best single deployment inventory of the sweep: 8 named transit agencies with sizes (13.3in, 32in, 42in)."
+  },
+  {
+   "query": "'General Display Systems' GDS e-paper transit displays company",
+   "vertical": "transport",
+   "new_names_found": [
+    "GDS Global Display Solutions"
+   ],
+   "notes": "Italian, Cornedo Vicentino. eTela e-paper line at 32in and 42in with an embedded media player. Genuinely new vendor for this survey."
+  },
+  {
+   "query": "generative art e-ink display gallery collectors NFT e-paper frame exhibition",
+   "vertical": "art",
+   "new_names_found": [
+    "Frame Labs"
+   ],
+   "notes": "Weak. The physical-NFT gallery playbook names no e-paper hardware at all - it says 'E-ink frames' generically. Evidence that the fine-art world has not standardised on any e-paper vendor."
+  },
+  {
+   "query": "Museum E-Paper Beschilderung Installation Ausstellung (German)",
+   "vertical": "museums",
+   "new_names_found": [
+    "Densitron (Densi-Paper)",
+    "Kommatec-red",
+    "SIGNAMEDIA",
+    "visunext"
+   ],
+   "notes": "Densi-Paper tops out at 10.2in so it fails the size bar. visunext turned out to be the best public price list found in the whole sweep."
+  },
+  {
+   "query": "FETCH visunext.co.uk e-paper displays category",
+   "vertical": "cross-vertical (pricing)",
+   "new_names_found": [],
+   "notes": "HARD GBP PRICES for 12 large e-paper SKUs from Samsung, Philips, Sharp, DynaScan and Joan. All known vendors, but the pricing is new evidence."
+  },
+  {
+   "query": "museum gallery installs Philips Tableaux OR Samsung color e-paper 32 inch case study",
+   "vertical": "museums",
+   "new_names_found": [],
+   "notes": "Found the Beeld & Geluid (Netherlands Institute for Sound and Vision) Tableaux deployment."
+  },
+  {
+   "query": "Power over Ethernet e-paper display system museum exhibition labels PoE",
+   "vertical": "museums",
+   "new_names_found": [],
+   "notes": "Returned only TintTech, Artec Design, Visionect and MpicoSys - all known. This is the query that most directly re-ran the Artec precedent and found nothing new: a strong saturation signal for the museum vertical."
+  },
+  {
+   "query": "FETCH tinttech.io wired ePaper digital signage",
+   "vertical": "museums/universities (architecture)",
+   "new_names_found": [],
+   "notes": "CRITICAL ARCHITECTURE EVIDENCE (known vendor): TintTech's CMS ships pre-installed on a mini PC OR installs on a VM on your own servers, and exposes a REST API. 32in is 1440x2560 but 16-level GREYSCALE only."
+  },
+  {
+   "query": "FETCH eink.com InfoComm 2026 large-format colour signage",
+   "vertical": "cross-vertical",
+   "new_names_found": [
+    "Meris",
+    "Cream Guitars"
+   ],
+   "notes": "Ecosystem partners: Agile, Navori Labs, BOE, NewFace, Sharp, Mercury, Meris, Seekink. 75in tiled Spectra 6 and 75in Kaleido 3."
+  },
+  {
+   "query": "電子ペーパー サイネージ 美術館 博物館 導入事例 大型 カラー (Japanese)",
+   "vertical": "museums",
+   "new_names_found": [
+    "CREA (株式会社クレア)",
+    "DNP (Dai Nippon Printing)"
+   ],
+   "notes": "Japanese-language search was the single most productive query of the sweep. Both vendors had already been logged by the Asia/ODM sweep, but the Japanese museum framing produced the art deployment and the full HDMI/SD spec."
+  },
+  {
+   "query": "FETCH crea2007.co.jp EPS and EPS s-color product pages",
+   "vertical": "museums/offices (architecture)",
+   "new_names_found": [],
+   "notes": "DECISIVE for the end use: CREA EPS 42in is 2160x2880 mono with HDMI IN, RJ-45, USB host and an SD slot, four modes including standalone slideshow and FTP auto-update. EPS s-color 31.5in is Spectra 6 with a microSD slideshow app."
+  },
+  {
+   "query": "FETCH crea2007.co.jp case studies index",
+   "vertical": "art",
+   "new_names_found": [],
+   "notes": "ART ON COLOUR E-PAPER, confirmed: Cloud8 Blanc Co., Ltd. installed a 31.5in EPS s-color in 2025 at a facility connected to the late illustrator/painter Minoru Nagao, showing illustration posters."
+  },
+  {
+   "query": "sixteen-nine e-paper category and OED article",
+   "vertical": "cross-vertical",
+   "new_names_found": [
+    "Exaprobe",
+    "Telelogos",
+    "M-Cube",
+    "Trison",
+    "ComQi"
+   ],
+   "notes": "Best integrator-layer yield of the sweep. Also gave the Institut Pasteur and Chichester deployments."
+  },
+  {
+   "query": "Institut Pasteur e-paper displays Exaprobe Telelogos wayfinding deployment",
+   "vertical": "corporate/research campus",
+   "new_names_found": [
+    "Exaprobe",
+    "Telelogos"
+   ],
+   "notes": "20 displays across a 50,000 sq m Paris campus; PPDS hardware, Exaprobe integrator, Telelogos software. Textbook 'find the deployment, then the integrator'."
+  },
+  {
+   "query": "e-paper display reseller partner program integrator North America",
+   "vertical": "integrators",
+   "new_names_found": [
+    "Tekdis",
+    "SignageNow",
+    "Castit"
+   ],
+   "notes": "Tekdis page returned 403. Castit page fetched: Serbia/Netherlands, supports e-paper in its CMS, one named deployment (Center Parcs)."
+  },
+  {
+   "query": "FETCH eink.com 25 partners ePaper ecosystem",
+   "vertical": "component layer",
+   "new_names_found": [
+    "Yes Optoelectronics",
+    "Ink Cubic",
+    "Exeger"
+   ],
+   "notes": "Component/IC layer only (Fitipower, Himax, UltraChip, Solomon, Realtek, IST, Mediatek, Novatek, BOE, DKE, InnoLux, Xingtai, MVE). Not display vendors for this purpose."
+  },
+  {
+   "query": "hotel deployment e-paper displays case study hospitality 2025",
+   "vertical": "hospitality",
+   "new_names_found": [
+    "Nonius",
+    "Bluefin International",
+    "Pickcel"
+   ],
+   "notes": "Nonius (Portugal) added Samsung e-paper support to its hotel signage CMS. No hospitality-specific e-paper HARDWARE vendor exists."
+  },
+  {
+   "query": "Visionect case studies museum library 2025 projects",
+   "vertical": "museums/libraries/corporate/healthcare",
+   "new_names_found": [],
+   "notes": "Deployment names: Slovenian National and University Library (2022), Leicester Museums, MFA Houston, BOKU University, Elevance Health, EcoLogic, CCIS."
+  },
+  {
+   "query": "e-paper signage museum art centre Estonia Finland Sweden Norway Denmark",
+   "vertical": "museums",
+   "new_names_found": [],
+   "notes": "Re-ran the Artec Design precedent deliberately. Returned only Artec, TintTech, Visionect. Confirms the Nordic/Baltic museum seam is now mined out."
+  },
+  {
+   "query": "FETCH tinttech.io references",
+   "vertical": "museums/universities",
+   "new_names_found": [],
+   "notes": "Deployment counts: Johannes Gutenberg University Mainz 153x13.3in; Estonian National Museum 867 displays; University of Tartu 106x13.3in."
+  },
+  {
+   "query": "FETCH framelabs.eu and specs",
+   "vertical": "art",
+   "new_names_found": [],
+   "notes": "Known vendor, but the architecture is the best no-cloud story found: images upload through a web interface served by the DEVICE'S OWN WiFi hotspot, no cloud account required. Greyscale only."
+  },
+  {
+   "query": "e-paper displayed airport stadium church retail bank branch 32 inch installation",
+   "vertical": "transport/DooH",
+   "new_names_found": [
+    "OMNI Media"
+   ],
+   "notes": "Taoyuan International Airport 75in Kaleido 3 colour ePaper in Terminal 2 baggage claim, DynaScan hardware, OMNI Media operator, 1 June 2026."
+  },
+  {
+   "query": "e-ink photography exhibition gallery IONNYK museum",
+   "vertical": "art",
+   "new_names_found": [],
+   "notes": "IONNYK (known) opened a Paris showroom in summer 2024 with a travelling Olympics exhibition using Paris Match archive photography. Frames EUR 1,680-8,000. Real ART shown publicly on e-paper, but monochrome."
+  },
+  {
+   "query": "e-paper signage integrator Australia Singapore Middle East",
+   "vertical": "integrators",
+   "new_names_found": [
+    "Engagis",
+    "Click Grafix",
+    "Best View Media",
+    "Ascenstar"
+   ],
+   "notes": "Engagis (Australia) confirmed to have an e-paper line. The others are generic signage integrators with no verified e-paper practice."
+  },
+  {
+   "query": "e-paper hospital deployment named NHS trust ward signage vendor",
+   "vertical": "healthcare",
+   "new_names_found": [],
+   "notes": "Saturation probe. Returned only the same JMIR paper and the same RDS marketing page. The NHS bed-end claim is unattributed vendor copy - logged as unverified."
+  },
+  {
+   "query": "new e-paper display vendor 2026 large format colour launch 25/31 inch",
+   "vertical": "cross-vertical",
+   "new_names_found": [],
+   "notes": "Saturation probe. Every name returned (E Ink, SOLUM, Samsung, InkPoster Tela 40.5in) was already in the survey."
+  }
+ ],
+ "saturation_reached": true,
+ "saturation_note": "Saturation reached for NEW HARDWARE VENDORS, not for deployments. The last six queries - PoE museum labels, Nordic/Baltic museum e-paper, NHS ward signage, Korean-language large colour e-paper, generic 2026 large-format launches, and APAC/Middle East integrators - returned only names already in the survey (E Ink, Samsung, LG, SOLUM, Visionect, TintTech, Artec, MpicoSys, Papercast, InkPoster). Notably, the query designed to re-run the exact Artec Design precedent ('Power over Ethernet e-paper museum exhibition labels') returned Artec, TintTech, Visionect and MpicoSys and nothing else - the museum seam that produced the original breakthrough is now mined out. The genuinely new hardware names this sweep produced - Luminator, GDS and, at the component level, the corroborated E-Paper Innovation panels - all came from TRANSPORT and INDUSTRIAL channels, not from museums. The one channel that is NOT saturated is non-English search: the single Japanese-language query was the most productive of the sweep, and Chinese-language searching produced the Guangzhou OED find in an earlier sweep. Deployments remain far from saturated - every vendor case-study page fetched yielded new named installations, and that supply is effectively unlimited. COUNTING NOTE: new_vendor_count = 48 is the number of company names surfaced this session that do not appear anywhere in the nine prior sweep outputs (checked programmatically against a 499-name index built from every prior devices/vendors/search_log entry). Only 12 of those 48 were substantive enough to profile in the vendors array; the rest are signage-software companies, room-booking SaaS, mounting and distribution channel, or regional AV integrators with no verified e-paper hardware. The honest new-to-known ratio for names that actually touch >=13in e-paper HARDWARE is about 3 new (Luminator, GDS, and the corroborated E-Paper Innovation panel line) against roughly 30 known - a low yield that is itself the saturation evidence. Names I initially believed were new but which the index showed were already captured: CREA, DNP/Dai Nippon Printing, Frame Labs, Densitron, Galari, SonicGrace, Digital Signbox, Orient Display, Ynvisible, Praevar and Aluratek.",
+ "new_vendor_count": 48,
+ "known_vendor_count": 30,
+ "devices": [
+  {
+   "model": "Passenger Information Stationary E-Paper Display, 13 inch",
+   "vendor": "Luminator Technology Group",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "1200 x 1600 (portrait 3:4)",
+   "panel": "E Ink (type not stated; 4 grey levels)",
+   "colour": "monochrome, 4 levels of greyscale",
+   "price": {
+    "amount": null,
+    "currency": "USD",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Transit-agency project sales; manufactured at Luminator's Plano, Texas factory",
+   "sells_single_units": false,
+   "integration": {
+    "openness": "closed",
+    "local_push": "Content managed by Luminator's own CMS; the display has a physical push button to page through pre-loaded screens. No documented local file or image push.",
+    "sd_card": null,
+    "api": "No public API documented",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Product page states content is managed through Luminator's CMS with network-wide status monitoring; the 13-inch datasheet PDF gives the panel specs and the solar kit but names no open interface."
+   },
+   "art_suitability": "Poor. Four grey levels and a 202.8 x 270.4 mm active area with an anti-vandal aluminium enclosure and a nighttime LED - an outdoor transit fixture, not an art surface.",
+   "sources": [
+    {
+     "url": "https://luminator.com/images/stories/solutions/stationary/stop_displays/luminator_datasheet_e-paper-display_13-inch_en.pdf",
+     "what_it_supports": "13.3in, 3:4, 1200x1600, 4 levels of greyscale, 202.8x270.4mm active area, aluminium IK-10 housing, solar power kit, text-to-speech, -15C to 40C"
+    },
+    {
+     "url": "https://luminator.com/en-us/products/at-stations-and-stops-bus-and-tram-platform/bus-and-tram-platform-displays/e-paper.html",
+     "what_it_supports": "Resolution up to 2560x1440 across the line, optional solar, Luminator CMS for network monitoring and content update"
+    },
+    {
+     "url": "https://go.eink.com/us-transportation-outdoor-installations-1",
+     "what_it_supports": "Luminator Technology Group listed by E Ink as a transit system integrator"
+    }
+   ]
+  },
+  {
+   "model": "eTela ePaper 32 inch",
+   "vendor": "GDS - Global Display Solutions",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink (bistable); a back-to-back variant pairs a mono module with a colour module",
+   "colour": "monochrome primarily; a colour E Ink module exists in the back-to-back configuration",
+   "price": {
+    "amount": null,
+    "currency": "EUR",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Project sales to transit operators and DOOH networks in Europe and North America",
+   "sells_single_units": false,
+   "integration": {
+    "openness": "closed",
+    "local_push": "Embedded media player in the display; content pushed over broadband, Wi-Fi or LoRa",
+    "sd_card": null,
+    "api": "Not documented publicly",
+    "cloud_required": true,
+    "subscription": null,
+    "self_hostable_server": false,
+    "third_party_projects": [],
+    "evidence": "GDS states 'Mass content management via single location GDS cloud Device Management Server (DMS)'. The embedded media player means a local HDMI/file path might exist on request, but nothing is documented."
+   },
+   "art_suitability": "Poor for paintings. Mono-dominant, outdoor-hardened (G+Bond weatherproofing), and cloud-managed with no documented local push.",
+   "sources": [
+    {
+     "url": "https://www.gdsdisplays.com/gds-e-ink-display/",
+     "what_it_supports": "E Ink bistable, 180-degree viewing, solar/battery, broadband/WiFi/LoRa, GDS cloud Device Management Server, HQ Cornedo Vicentino Italy"
+    },
+    {
+     "url": "https://www.gdsdisplays.com/e-paper-display-5-applications-must-know/",
+     "what_it_supports": "eTela available in 32in and 42in including an indoor menu-board version; embedded media player for remote content update"
+    },
+    {
+     "url": "https://blog.eink.com/spotted-e-ink-in-the-wild",
+     "what_it_supports": "GDS named as the supplier of E Ink bus-stop displays for Metro Transit, Minneapolis"
+    }
+   ]
+  },
+  {
+   "model": "eTela ePaper 42 inch",
+   "vendor": "GDS - Global Display Solutions",
+   "is_new_to_survey": true,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": null,
+   "panel": "E Ink bistable",
+   "colour": "monochrome",
+   "price": {
+    "amount": null,
+    "currency": "EUR",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Project sales; indoor menu-board version offered alongside the transit version",
+   "sells_single_units": false,
+   "integration": {
+    "openness": "closed",
+    "local_push": "Embedded media player, remote update by the transit operator",
+    "sd_card": null,
+    "api": "Not documented",
+    "cloud_required": true,
+    "subscription": null,
+    "self_hostable_server": false,
+    "third_party_projects": [],
+    "evidence": "Same GDS DMS cloud architecture as the 32in."
+   },
+   "art_suitability": "Poor - monochrome.",
+   "sources": [
+    {
+     "url": "https://www.gdsdisplays.com/e-paper-display-5-applications-must-know/",
+     "what_it_supports": "'GDS offers an indoor version of eTela ePaper 32'' and 42'' displays for menu boards'"
+    }
+   ]
+  },
+  {
+   "model": "31.2 inch monochrome EPD panel",
+   "vendor": "E-Paper Innovation Ltd",
+   "is_new_to_survey": true,
+   "status": "mass production",
+   "diagonal_in": 31.2,
+   "resolution": "2560 x 1440",
+   "panel": "Electrophoretic, glass backplane",
+   "colour": "monochrome, 16 grey levels",
+   "price": {
+    "amount": 915.0,
+    "currency": "USD",
+    "as_of": "2026-08",
+    "source_url": "https://www.e-pi.com/displays/"
+   },
+   "availability": "Sold single-unit through their own online shop; engineering samples and low-volume orders accepted",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Bare panel with an Intel80 parallel interface - you supply the controller. Evaluation kits with processor board and interface board are available.",
+    "sd_card": false,
+    "api": "None - this is a component, not a system",
+    "cloud_required": false,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Product listing gives Intel80 interface, notes external EPD power management is required for some models, and offers eval kits."
+   },
+   "art_suitability": "Monochrome, so wrong for paintings, but the commercial posture (single units, published price, eval kit) is exactly what a self-hosted builder needs.",
+   "sources": [
+    {
+     "url": "https://www.e-pi.com/displays/",
+     "what_it_supports": "31.2in B&W, 16 grey levels, 2560x1440, Intel80 interface, $915, mass production, single-unit shop"
+    },
+    {
+     "url": "https://www.e-pi.com/about/",
+     "what_it_supports": "UK company with a German innovation team, 20+ years EPD experience, multinational manufacturing/supply chain"
+    }
+   ]
+  },
+  {
+   "model": "31.2 inch colour EPD panel",
+   "vendor": "E-Paper Innovation Ltd",
+   "is_new_to_survey": true,
+   "status": "mass production",
+   "diagonal_in": 31.2,
+   "resolution": "1280 x 720",
+   "panel": "Electrophoretic, glass backplane",
+   "colour": "4096 colours",
+   "price": {
+    "amount": 1215.0,
+    "currency": "USD",
+    "as_of": "2026-08",
+    "source_url": "https://www.e-pi.com/displays/"
+   },
+   "availability": "Single units via their shop",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Intel80 parallel interface, bring your own controller",
+    "sd_card": false,
+    "api": "None - component level",
+    "cloud_required": false,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Same listing as the mono variant."
+   },
+   "art_suitability": "Interesting but weak: 4096 colours at only 1280x720 over 31.2 inches is ~47 ppi. Too coarse for paintings at close viewing distance, and the buyer must build the whole driver stack.",
+   "sources": [
+    {
+     "url": "https://www.e-pi.com/displays/",
+     "what_it_supports": "31.2in colour, 4096 colours, 1280x720, Intel80, $1,215, mass production"
+    }
+   ]
+  },
+  {
+   "model": "EPS (C06-EPS42-3) 42 inch monochrome e-paper signage",
+   "vendor": "CREA Co., Ltd. (株式会社クレア)",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": "2160 x 2880",
+   "panel": "E Ink monochrome",
+   "colour": "monochrome, 16 grey levels, anti-glare surface",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Japan-focused; roughly one week delivery when in stock, quoted on enquiry",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "FOUR paths, three of them fully local: (1) standalone slideshow from internal memory, USB or SD card; (2) FTP auto-update over the LAN; (3) HDMI IN from any local machine; (4) optional EPS SLIDE EDIT cloud. RJ-45, USB 2.0 host and an SD slot (to 32GB) are all on the unit.",
+    "sd_card": true,
+    "api": "No REST API documented, but FTP push and HDMI in are documented operating modes",
+    "cloud_required": false,
+    "subscription": "EPS SLIDE EDIT cloud is optional",
+    "self_hostable_server": true,
+    "third_party_projects": [],
+    "evidence": "Fetched the EPS spec page: HDMI input on the 42in and 32in only, RJ-45, USB 2.0 host, SD card slot up to 32GB, optional WiFi, and four named operating modes including standalone and FTP."
+   },
+   "art_suitability": "Wrong colour (mono) but architecturally the closest thing found to an ideal: 2160x2880 at 42 inches is ~86 ppi, and HDMI-in plus SD plus FTP means a self-hosted app can drive it with no vendor account at all.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/eps/",
+     "what_it_supports": "Model numbers C06-EPS42-3 / C07-EPS32-3 / C09-EPSL13-3; 42in 2160x2880; 16-level greyscale; HDMI on 42/32; RJ-45; USB 2.0 host; SD to 32GB; four operating modes; 7.5kg; AC or 12V battery"
+    },
+    {
+     "url": "https://www.crea2007.co.jp/epaper/",
+     "what_it_supports": "Full CREA line: mono 42/32/13.3in and colour 31.5/13.3in; wired LAN port; about one week delivery"
+    }
+   ]
+  },
+  {
+   "model": "EPS (C07-EPS32-3) 32 inch monochrome e-paper signage",
+   "vendor": "CREA Co., Ltd.",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "2560 x 1440",
+   "panel": "E Ink monochrome",
+   "colour": "monochrome, 16 grey levels",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Japan; quoted on enquiry",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Same four modes as the 42in including HDMI in and SD card",
+    "sd_card": true,
+    "api": "FTP + HDMI, no REST",
+    "cloud_required": false,
+    "subscription": "optional",
+    "self_hostable_server": true,
+    "third_party_projects": [],
+    "evidence": "Same spec page; HDMI listed for 42in and 32in models."
+   },
+   "art_suitability": "Mono. But 4.5kg, 33mm deep, AC or 12V battery, with HDMI - a very tractable target for a self-hosted pipeline.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/eps/",
+     "what_it_supports": "32in 2560x1440, HDMI, 4.5kg, 704x411x33mm"
+    }
+   ]
+  },
+  {
+   "model": "EPS s-color (C18-EPS32S) 31.5 inch colour e-paper signage",
+   "vendor": "CREA Co., Ltd.",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 31.5,
+   "resolution": "1440 x 2560 at 94 ppi",
+   "panel": "E Ink Spectra 6",
+   "colour": "6 colours (black, white, red, yellow, green, blue)",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08",
+    "source_url": "https://mono.ipros.com/product/detail/2001525838/"
+   },
+   "availability": "Japan; an industrial marketplace listing puts it in a JPY 1,000,000-5,000,000 enquiry band, which is a B2B bucket rather than a street price",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "microSD card with a pre-installed slideshow app supporting scheduling; USB-C PD 30W; Wi-Fi 2.4GHz. 'EPS SLIDE EDIT color' browser cloud is offered for fleet management but is not required for microSD playback.",
+    "sd_card": true,
+    "api": "None documented",
+    "cloud_required": false,
+    "subscription": "EPS SLIDE EDIT color is optional",
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Product page documents the microSD slideshow app with schedule settings as a first-class mode alongside the cloud."
+   },
+   "art_suitability": "The best colour+local combination found in this sweep. Spectra 6 is only 6 primaries so it dithers heavily and cannot render subtle painterly gradation, and 94 ppi over 31.5in is coarse - but an SD card holding a scheduled slideshow, with an internal 24,500mAh battery and no mandatory account, is precisely the architecture the archive wants. CREA has an actual art-facility reference.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/epsec/",
+     "what_it_supports": "31.5in C18-EPS32S 1440x2560 94ppi 5.1kg; 13.3in lite C20-EPSL13S 1200x1600 150ppi 0.82kg; Spectra 6; microSD slideshow with schedule; EPS SLIDE EDIT color cloud; USB-C PD; WiFi 2.4GHz; 24500mAh / 9800mAh batteries; CREA in Chiyoda-ku, Tokyo"
+    },
+    {
+     "url": "https://mono.ipros.com/product/detail/2001525838/",
+     "what_it_supports": "JPY 1,000,000-5,000,000 listed price band; microSD slot; USB 3.1 Type-C; applications include museums"
+    }
+   ]
+  },
+  {
+   "model": "EPS s-color 13.3 inch lite (C20-EPSL13S)",
+   "vendor": "CREA Co., Ltd.",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "1200 x 1600 at 150 ppi",
+   "panel": "E Ink Spectra 6",
+   "colour": "6 colours",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Japan",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "microSD slideshow app; USB-C PD 20W; WiFi",
+    "sd_card": true,
+    "api": "None documented",
+    "cloud_required": false,
+    "subscription": "optional",
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Same product page."
+   },
+   "art_suitability": "150 ppi is respectable; 6-primary Spectra 6 still limits tonal range. 820g, so easily hung.",
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/epaper/epsec/",
+     "what_it_supports": "13.3in lite 1200x1600 150ppi 0.82kg, USB PD 20W, 9800mAh"
+    }
+   ]
+  },
+  {
+   "model": "Electronic poster, 42 inch monochrome and 25.3 inch colour",
+   "vendor": "DNP (Dai Nippon Printing)",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 42,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "monochrome at 42in; full colour at 25.3in",
+   "price": {
+    "amount": null,
+    "currency": "JPY",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Japan, B2B project sales",
+   "sells_single_units": false,
+   "integration": {
+    "openness": "closed",
+    "local_push": "Network-connected units support simultaneous remote update across a fleet; integrates with DNP's proprietary 'Smart Signage' management system on selected models. Mobile-battery operation is supported, implying a manual-load mode, but no local API is documented.",
+    "sd_card": null,
+    "api": "Not documented",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Product page describes remote simultaneous update and the Smart Signage platform, and documents mobile-battery-driven deployments."
+   },
+   "art_suitability": "The 25.3in colour unit is the interesting one for imagery; 42in is mono. DNP is a printing giant, so longevity risk is low, but there is no self-serve purchase path and no documented local API.",
+   "sources": [
+    {
+     "url": "https://www.dnp.co.jp/biz/products/detail/20172387_4986.html",
+     "what_it_supports": "42in mono and 25.3in colour electronic posters; battery operation; remote simultaneous update; Smart Signage platform; JR West Osaka Station 16x42in; Keikyu at Haneda 25.3in colour; JR East PRISM"
+    }
+   ]
+  },
+  {
+   "model": "Wired ePaper Digital Signage 32 inch",
+   "vendor": "TintTech",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": "1440 x 2560",
+   "panel": "E Ink",
+   "colour": "monochrome, 16 grey levels",
+   "price": {
+    "amount": null,
+    "currency": "EUR",
+    "as_of": "2026-08",
+    "source_url": "https://tinttech.io/products/wired-epaper-digital-signage/"
+   },
+   "availability": "Custom pricing for the 32in; the 9.7in is EUR 495 and 13.3in EUR 555 / EUR 495 lite",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Ethernet to an ON-SITE CMS. The CMS ships pre-installed on a mini PC or installs on a virtual machine on your own servers.",
+    "sd_card": false,
+    "api": "REST API for automated real-time integrations, plus URL-fetch content integration",
+    "cloud_required": false,
+    "subscription": null,
+    "self_hostable_server": true,
+    "third_party_projects": [],
+    "evidence": "Product page: 'Our wired ePaper digital signage displays connect to an on-site CMS via Ethernet', deployable 'pre-installed on a mini PC or installed on a virtual machine on your servers', with a 'REST API for automated real-time integrations'."
+   },
+   "art_suitability": "Architecturally near-perfect for a no-cloud archive - self-hosted CMS on your own VM, REST API, PoE cabling - and completely wrong on colour. 16 grey levels only.",
+   "sources": [
+    {
+     "url": "https://tinttech.io/products/wired-epaper-digital-signage/",
+     "what_it_supports": "9.7in EUR495 1200x825; 13.3in EUR555 and lite EUR495 1600x1200; 32in 1440x2560 custom price; all 16-level greyscale, PoE; on-site CMS on mini PC or your VM; REST API"
+    },
+    {
+     "url": "https://tinttech.io/references/",
+     "what_it_supports": "Named deployments with counts: Johannes Gutenberg University Mainz 153x13.3in, Estonian National Museum 867 displays, University of Tartu 106x13.3in"
+    }
+   ]
+  },
+  {
+   "model": "ArtFrame 13.3 inch",
+   "vendor": "Frame Labs",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 13.3,
+   "resolution": "1600 x 1200 at 150 ppi",
+   "panel": "E Ink (Carta-class)",
+   "colour": "monochrome, 16 grey shades with dithering and a scaling algorithm",
+   "price": {
+    "amount": null,
+    "currency": "EUR",
+    "as_of": "2026-08",
+    "source_url": null
+   },
+   "availability": "Direct from Frame Labs, made in Germany",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "open",
+    "local_push": "THE STRONGEST NO-CLOUD STORY IN THIS SWEEP: images upload through a web interface served by the device's own WiFi hotspot, so it works with no external network at all; joining your local WiFi additionally allows remote content sources. Local memory 60-400 images depending on model, unlimited in WiFi mode.",
+    "sd_card": false,
+    "api": "Web interface; the specs page states explicitly that no cloud account is required",
+    "cloud_required": false,
+    "subscription": null,
+    "self_hostable_server": true,
+    "third_party_projects": [],
+    "evidence": "Specs page: 'Web interface via device's own WiFi hotspot' with no cloud account or external connectivity required; built-in image editor with crop and contrast/brightness."
+   },
+   "art_suitability": "Museum-grade framing and a genuinely offline pipeline, but greyscale only and capped at 13.3in - too small and too colourless for a painting archive on its own. Worth owning as the reference implementation of the architecture the archive wants.",
+   "sources": [
+    {
+     "url": "https://www.framelabs.eu/",
+     "what_it_supports": "The ArtFrame, e-ink not LCD, 6/9.7/13.3in, made in Germany, local WiFi config interface and internal hotspot"
+    },
+    {
+     "url": "https://www.framelabs.eu/specs/",
+     "what_it_supports": "6in 1448x1072 300ppi, 9.7in 1200x825 150ppi, 13.3in 1600x1200 150ppi; 16 grey shades; up to 7000 image changes per charge; web interface via own hotspot, no cloud account required; 1.25kg, 27mm deep"
+    }
+   ]
+  },
+  {
+   "model": "Color E-Paper EM32DX / EM32DX-A (32 inch)",
+   "vendor": "Samsung",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "colour",
+   "price": {
+    "amount": 799.0,
+    "currency": "GBP",
+    "as_of": "2026-08",
+    "source_url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/"
+   },
+   "availability": "In stock at a UK reseller, 3-5 days; the EM32DX-A variant listed at GBP 1,800",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Managed via Samsung VXT; reseller notes CMS management. Prior sweeps established the deeper local paths.",
+    "sd_card": null,
+    "api": "VXT platform",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Reseller listing only; integration depth was established by earlier sweeps, not re-derived here."
+   },
+   "art_suitability": "Covered by earlier sweeps. Recorded here only because this session found a hard UK retail price.",
+   "sources": [
+    {
+     "url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/",
+     "what_it_supports": "Samsung EM32DX 32in colour GBP 799 in stock; EM32DX-A GBP 1,800; EM13DX 13in GBP 916.54"
+    }
+   ]
+  },
+  {
+   "model": "Philips Tableaux 32BDL5150I/00 (32 inch) and 25BDL4150I/00 (25 inch)",
+   "vendor": "PPDS / Philips",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 32,
+   "resolution": null,
+   "panel": "E Ink Spectra 6 (32in)",
+   "colour": "colour",
+   "price": {
+    "amount": 3782.4,
+    "currency": "GBP",
+    "as_of": "2026-08",
+    "source_url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/"
+   },
+   "availability": "UK reseller: 32in GBP 3,782.40 with a 10-12 week lead time; 25in GBP 1,560.08; 13in GBP 780.79",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Android SoC platform; museum deployment confirms content can be managed manually or entirely remotely",
+    "sd_card": null,
+    "api": "Philips professional signage platform",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [
+     "Telelogos (Institut Pasteur)"
+    ],
+    "evidence": "Beeld & Geluid case report states the displays run on an Android SoC and the museum team manages content manually or remotely."
+   },
+   "art_suitability": "Established by earlier sweeps. This session adds pricing plus two verified institutional deployments (Beeld & Geluid, Institut Pasteur).",
+   "sources": [
+    {
+     "url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/",
+     "what_it_supports": "UK prices and lead times for Philips Tableaux 13/25/32in"
+    },
+    {
+     "url": "https://www.lsionline.com/news/media-museum-adopts-philips-tableaux-epaper",
+     "what_it_supports": "Beeld & Geluid chose 25in Tableaux; Android SoC; manual or fully remote content management; PPDS supported implementation; October 2025"
+    }
+   ]
+  },
+  {
+   "model": "Sharp EP-C131 (13.3 inch) and EP-C251 (25.3 inch) Advanced Color ePaper",
+   "vendor": "Sharp",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 25.3,
+   "resolution": null,
+   "panel": "Advanced Color ePaper",
+   "colour": "colour",
+   "price": {
+    "amount": 2278.8,
+    "currency": "GBP",
+    "as_of": "2026-08",
+    "source_url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/"
+   },
+   "availability": "UK reseller, 5-8 days; EP-C131 at GBP 790.91",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Battery powered per trade press; not re-derived here",
+    "sd_card": null,
+    "api": "Not established this session",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Reseller listing plus AV trade press noting Sharp's EP-CA22 28.6in and battery power."
+   },
+   "art_suitability": "Covered by earlier sweeps; price evidence added.",
+   "sources": [
+    {
+     "url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/",
+     "what_it_supports": "Sharp EP-C131 13.3in GBP 790.91; EP-C251 25.3in GBP 2,278.80"
+    },
+    {
+     "url": "https://invidis.de/2024/08/e-paper-displays-geben-gas-der-labelgroesse-entwachsen/",
+     "what_it_supports": "Sharp e-paper signage is battery powered, in contrast to Philips PoE"
+    }
+   ]
+  },
+  {
+   "model": "NAVO A2 / A2 Plus (28 inch) and NAVO 13 / 13 PLUS",
+   "vendor": "DynaScan",
+   "is_new_to_survey": false,
+   "status": "shipping",
+   "diagonal_in": 28,
+   "resolution": null,
+   "panel": "E Ink colour",
+   "colour": "colour",
+   "price": {
+    "amount": 2280.0,
+    "currency": "GBP",
+    "as_of": "2026-08",
+    "source_url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/"
+   },
+   "availability": "UK reseller, 7-9 week lead; NAVO A2 Plus GBP 2,760; NAVO 13 GBP 960; NAVO 13 PLUS GBP 1,080",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "unknown",
+    "local_push": "Not established this session",
+    "sd_card": null,
+    "api": "Not established",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [],
+    "evidence": "Reseller listing. Separately, DynaScan built the 75in Kaleido 3 colour ePaper unit deployed at Taoyuan Airport, which is evidence they will do large-format integration work."
+   },
+   "art_suitability": "Price evidence added; DynaScan's willingness to build a 75in colour unit makes them a plausible partner for oversized work.",
+   "sources": [
+    {
+     "url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/",
+     "what_it_supports": "DynaScan NAVO 13 GBP 960, NAVO 13 PLUS GBP 1,080, NAVO A2 28in GBP 2,280, NAVO A2 Plus GBP 2,760"
+    },
+    {
+     "url": "https://www.eink.com/news/detail/A-New-Global-Benchmark-for-Sustainable-Airport-Media-75-inch-Color-ePaper-Advertising-Display-Debuts-at-Taoyuan-International-Airport",
+     "what_it_supports": "DynaScan Technology named as hardware integrator of the 75in Kaleido 3 airport display"
+    }
+   ]
+  },
+  {
+   "model": "Joan 13",
+   "vendor": "Visionect (Joan)",
+   "is_new_to_survey": false,
+   "status": "announced for August 2026 at this reseller",
+   "diagonal_in": 13,
+   "resolution": null,
+   "panel": "E Ink",
+   "colour": "not stated on the listing",
+   "price": {
+    "amount": 1018.8,
+    "currency": "GBP",
+    "as_of": "2026-08",
+    "source_url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/"
+   },
+   "availability": "Listed as available August 2026",
+   "sells_single_units": true,
+   "integration": {
+    "openness": "partly-open",
+    "local_push": "Joan/Visionect platform; note that Visionect's own on-prem-vs-cloud article promotes only their cloud CMS",
+    "sd_card": null,
+    "api": "Visionect Software Suite API (established by earlier sweeps)",
+    "cloud_required": null,
+    "subscription": null,
+    "self_hostable_server": null,
+    "third_party_projects": [
+     "AMLABEL museum labels"
+    ],
+    "evidence": "Reseller listing; Visionect's blog is a pitch for the cloud CMS and does not document a self-hosted option, which slightly weakens the self-hosting story earlier sweeps recorded."
+   },
+   "art_suitability": "Room-booking hardware, not art hardware.",
+   "sources": [
+    {
+     "url": "https://www.visunext.co.uk/c/displays/displays-by-application/e-paper-displays/",
+     "what_it_supports": "Joan 13 at GBP 1,018.80, available August 2026; Joan 6 RE and 6 Pro pricing"
+    },
+    {
+     "url": "https://www.visionect.com/blog/cloud-based-vs-on-prem/",
+     "what_it_supports": "Visionect's cloud-vs-on-prem article describes only their cloud CMS and documents no self-hosted alternative"
+    }
+   ]
+  }
+ ],
+ "research_reference_only": "deployments documents named installation case studies, not hardware targets; it is intentionally excluded from config/eink_targets.json.",
+ "deployments": [
+  {
+   "organisation": "Museum of Fine Arts, Houston",
+   "vertical": "museums",
+   "what_was_installed": "AMLABEL Digital Gallery Display e-paper object labels running on Visionect e-paper hardware, wireless and battery powered, no drilling",
+   "scale": "about 20 displays for the 2016 CORE Exhibition; sizes 6in and 9.7in",
+   "integrator": "AMLABEL (an AMSYS Innovative Solutions company)",
+   "hardware_vendor": "Visionect",
+   "year": "2016",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.visionect.com/blog/epaper-museum-label/",
+     "what_it_supports": "MFA Houston among the first museums to try e-paper labels, ~20 displays in the 2016 CORE Exhibition, 6in and 9.7in, powered by Visionect"
+    },
+    {
+     "url": "https://mw2016.museumsandtheweb.com/proposal/save-cost-and-improve-productivity-by-leveraging-gallery-digital-label/index.html",
+     "what_it_supports": "MW2016 exhibitor briefing co-presented by Khalid Parekh (AMLABEL) and Shemon Bar-Tal (Museum of Fine Arts, Houston); project began 2013"
+    }
+   ]
+  },
+  {
+   "organisation": "Beeld & Geluid (Netherlands Institute for Sound and Vision), Hilversum",
+   "vertical": "museums",
+   "what_was_installed": "Philips Tableaux 25in colour ePaper for welcome messages, events, exhibit information and wayfinding, replacing printed signage",
+   "scale": "count not disclosed; 25in units",
+   "integrator": "PPDS supported the implementation",
+   "hardware_vendor": "PPDS / Philips",
+   "year": "2025",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.lsionline.com/news/media-museum-adopts-philips-tableaux-epaper",
+     "what_it_supports": "Museum, country, 25in Tableaux, Android SoC, manual or fully remote content management, reported October 2025"
+    }
+   ]
+  },
+  {
+   "organisation": "Institut Pasteur, Paris",
+   "vertical": "corporate / research campus",
+   "what_was_installed": "Philips Tableaux ePaper plus Philips Signage EcoDesign LCD for wayfinding, campus mapping and institutional messaging",
+   "scale": "20 displays across a 538,000 sq ft (50,000 sq m) campus, 39 buildings, 3,000+ staff",
+   "integrator": "Exaprobe",
+   "hardware_vendor": "PPDS / Philips (software by Telelogos)",
+   "year": "2026",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://invidis.com/sixteen-nine/category/e-paper/",
+     "what_it_supports": "Exaprobe as integrator partner and Telelogos as software provider on the Institut Pasteur project; 20 displays across a 538,000-square-foot campus for wayfinding and institutional messaging"
+    }
+   ]
+  },
+  {
+   "organisation": "Estonian National Museum, Tartu",
+   "vertical": "museums",
+   "what_was_installed": "PoE-powered E Ink exhibit signage with NFC/RFID ticket interaction for visitor-selected exhibit language",
+   "scale": "867 ePaper displays across 6,000+ sq m; 6.8in, 9.7in and 32in",
+   "integrator": "Artec Design (also cited by TintTech as a reference)",
+   "hardware_vendor": "E Ink panels; Artec Design system",
+   "year": "opened 2016",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://tinttech.io/references/",
+     "what_it_supports": "Estonian National Museum, 867 displays in multiple sizes (6.8in, 9.7in, 32in E Ink)"
+    }
+   ]
+  },
+  {
+   "organisation": "Johannes Gutenberg University Mainz",
+   "vertical": "universities",
+   "what_was_installed": "Wired PoE ePaper signage",
+   "scale": "153 units of 13.3in",
+   "integrator": "TintTech",
+   "hardware_vendor": "TintTech",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://tinttech.io/references/",
+     "what_it_supports": "153 units, 13.3in, Germany"
+    }
+   ]
+  },
+  {
+   "organisation": "University of Tartu",
+   "vertical": "universities",
+   "what_was_installed": "Wired PoE ePaper signage",
+   "scale": "106 units of 13.3in",
+   "integrator": "TintTech",
+   "hardware_vendor": "TintTech",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://tinttech.io/references/",
+     "what_it_supports": "106 units, 13.3in, Estonia"
+    }
+   ]
+  },
+  {
+   "organisation": "Slovenian National and University Library (NUK)",
+   "vertical": "libraries",
+   "what_was_installed": "Visionect e-paper displays chosen to avoid disturbing the building's historic ambience",
+   "scale": "not disclosed",
+   "integrator": null,
+   "hardware_vendor": "Visionect",
+   "year": "2022",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.visionect.com/blog/e-paper-displays-for-museums-and-libraries/",
+     "what_it_supports": "NUK, Slovenia, 2022"
+    }
+   ]
+  },
+  {
+   "organisation": "BOKU University, Austria",
+   "vertical": "universities",
+   "what_was_installed": "E-paper displays for lecture hall, meeting room and hallway schedules",
+   "scale": "not disclosed",
+   "integrator": null,
+   "hardware_vendor": "Visionect",
+   "year": "2025",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.visionect.com/blog/2025-digital-signage-projects-review/",
+     "what_it_supports": "BOKU University named in Visionect's 2025 project review"
+    }
+   ]
+  },
+  {
+   "organisation": "Elevance Health",
+   "vertical": "healthcare",
+   "what_was_installed": "Energy-efficient e-paper digital signage across facilities",
+   "scale": "not disclosed",
+   "integrator": null,
+   "hardware_vendor": "Visionect",
+   "year": "2025",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.visionect.com/blog/2025-digital-signage-projects-review/",
+     "what_it_supports": "Elevance Health listed as a 2025 Visionect deployment"
+    }
+   ]
+  },
+  {
+   "organisation": "Chamber of Commerce and Industry of Slovenia (CCIS) and EcoLogic (Switzerland)",
+   "vertical": "corporate",
+   "what_was_installed": "Mixed LCD and e-paper managed by Place & Play CMS (CCIS); office information e-paper (EcoLogic)",
+   "scale": "not disclosed",
+   "integrator": null,
+   "hardware_vendor": "Visionect",
+   "year": "2025",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.visionect.com/blog/2025-digital-signage-projects-review/",
+     "what_it_supports": "CCIS and EcoLogic named in the 2025 review"
+    }
+   ]
+  },
+  {
+   "organisation": "Brigham and Women's Hospital, Boston - Emergency Department",
+   "vertical": "healthcare",
+   "what_was_installed": "Electronic ink displays showing information about a patient's emergency stay",
+   "scale": "not quantified in the paper",
+   "integrator": null,
+   "hardware_vendor": "E Ink (no system vendor named)",
+   "year": "2021 publication",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8374667/",
+     "what_it_supports": "Deployment in the emergency department; architecture is a server-based command control in a virtual environment on the hospital network, PoE, with FHIR/HL7 EHR integration; >=40in form factors discussed for command centres"
+    }
+   ]
+  },
+  {
+   "organisation": "San Diego International Airport - Rental Car Center",
+   "vertical": "art / public art (transport venue)",
+   "what_was_installed": "DAZZLE, a permanent media facade of E Ink Prism tiles running 15 animation programs, inspired by WW1 razzle-dazzle camouflage",
+   "scale": "more than 2,000 (reported as ~2,100) individual solar-powered tiles across a 1,600 ft facade",
+   "integrator": "Ueberall International (design studio; Nik Hafermaas)",
+   "hardware_vendor": "E Ink (Prism)",
+   "year": "2017",
+   "artwork_displayed": true,
+   "sources": [
+    {
+     "url": "https://www.archdaily.com/887248/this-e-paper-tile-facade-is-inspired-by-the-ww1-military-optical-illusion-razzle-dazzle",
+     "what_it_supports": "DAZZLE at San Diego Airport Rental Car Centre, E Ink prism technology at architectural scale, commissioned by the San Diego County Regional Airport Authority, permanent interactive artwork"
+    }
+   ]
+  },
+  {
+   "organisation": "BMW / Frieze Los Angeles - i5 Flow NOSTOKANA",
+   "vertical": "art",
+   "what_was_installed": "A car surfaced in 1,349 colour-changing E Ink Prism 3 film segments rendering Esther Mahlangu's Ndebele patterns; homage to her 1991 BMW Art Car",
+   "scale": "1,349 film segments over roof, bonnet, rear and sides",
+   "integrator": "BMW (engineer Stella Clarke) with E Ink",
+   "hardware_vendor": "E Ink (Prism 3)",
+   "year": "2024",
+   "artwork_displayed": true,
+   "sources": [
+    {
+     "url": "https://invidis.de/2024/08/e-paper-displays-geben-gas-der-labelgroesse-entwachsen/",
+     "what_it_supports": "BMW i5 Flow Nostokana art car uses E-Paper foils, listed among E Ink deployments"
+    }
+   ]
+  },
+  {
+   "organisation": "Cloud8 Blanc Co., Ltd. (クラウドエイトブラン株式会社)",
+   "vertical": "art",
+   "what_was_installed": "A 31.5in CREA EPS s-color colour e-paper display showing illustration posters, at a facility connected to the late illustrator and painter Minoru Nagao",
+   "scale": "31.5in EPS s-color",
+   "integrator": "CREA Co., Ltd.",
+   "hardware_vendor": "CREA Co., Ltd. (E Ink Spectra 6 panel)",
+   "year": "2025",
+   "artwork_displayed": true,
+   "sources": [
+    {
+     "url": "https://www.crea2007.co.jp/pr/",
+     "what_it_supports": "Case list entry: Cloudait/Cloud8 Blanc Co., Ltd., art facility related to the late Minoru Nagao, EPS s-color 31.5in, 2025, displaying illustration posters"
+    }
+   ]
+  },
+  {
+   "organisation": "IONNYK Paris showroom and travelling Olympics exhibition",
+   "vertical": "art",
+   "what_was_installed": "Monochrome e-paper art frames showing photography, including an Olympics collection drawn from Paris Match France's photo archives",
+   "scale": "showroom plus a travelling exhibition; frames priced EUR 1,680-8,000",
+   "integrator": "IONNYK",
+   "hardware_vendor": "IONNYK (Belgium)",
+   "year": "2024",
+   "artwork_displayed": true,
+   "sources": [
+    {
+     "url": "https://www.wallonia.be/en/news/walloon-start-ionnyk-installs-its-photographic-art-frames-paris",
+     "what_it_supports": "First showroom outside Belgium opened in Paris summer 2024; Olympics collection presented as a travelling exhibition with access to Paris Match France archives; founded 2021 in La Hulpe; products EUR 1,680-8,000; B2B with hotel groups and luxury brands"
+    }
+   ]
+  },
+  {
+   "organisation": "Taoyuan International Airport, Terminal 2 baggage claim",
+   "vertical": "transport / DooH",
+   "what_was_installed": "75in colour ePaper advertising display, described as the first of its size in an international airport, supporting animation and video and able to run for long periods on battery",
+   "scale": "one 75in E Ink Kaleido 3 unit",
+   "integrator": "DynaScan Technology (hardware); OMNI Media (media operator)",
+   "hardware_vendor": "E Ink / DynaScan",
+   "year": "2026-06-01",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.eink.com/news/detail/A-New-Global-Benchmark-for-Sustainable-Airport-Media-75-inch-Color-ePaper-Advertising-Display-Debuts-at-Taoyuan-International-Airport",
+     "what_it_supports": "75in Kaleido 3, Terminal 2 baggage carousel area, DynaScan hardware integrator, OMNI Media operator, 1 June 2026"
+    }
+   ]
+  },
+  {
+   "organisation": "Chichester City Centre, England",
+   "vertical": "civic / wayfinding",
+   "what_was_installed": "Battery-powered E-Ink screens at key sites for wayfinding and public information",
+   "scale": "three 13-inch screens",
+   "integrator": null,
+   "hardware_vendor": "not named in the source I could verify",
+   "year": "2025 pilot",
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://invidis.com/sixteen-nine/category/e-paper/",
+     "what_it_supports": "'three battery-powered, 13-inch E-Ink screens installed at key sites' in Chichester City Center to enhance wayfinding and public information"
+    }
+   ]
+  },
+  {
+   "organisation": "Capital Metropolitan Transit Authority (Capital Metro), Austin TX",
+   "vertical": "transport",
+   "what_was_installed": "13in and 32in ePaper passenger information displays, solar and mains powered, remotely updated",
+   "scale": "over 148 installations",
+   "integrator": "Connectpoint / E Ink ecosystem",
+   "hardware_vendor": "E Ink",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://go.eink.com/us-transportation-outdoor-installations-1",
+     "what_it_supports": "Capital Metro, 13in and 32in, over 148 installations, solar and traditionally powered, remote updates"
+    }
+   ]
+  },
+  {
+   "organisation": "MBTA (Boston), Port Authority of Allegheny County, VIA Metropolitan Transit (San Antonio), Sonoma County Transit, Miami International Airport, SMART (Michigan), City of Boston City Hall Plaza",
+   "vertical": "transport",
+   "what_was_installed": "ePaper passenger information displays at 13.3in, 32in and 42in, largely solar powered",
+   "scale": "MBTA 13.3in and 32in; Allegheny 42in; VIA 42in; Sonoma 42in; Miami Intl 13.3in; SMART 32in in Brasco shelters; Boston City Hall Plaza 42in",
+   "integrator": "Connectpoint, Luminator, GDS, Papercast, ETA Transit (E Ink's named system integrators)",
+   "hardware_vendor": "E Ink",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://go.eink.com/us-transportation-outdoor-installations-1",
+     "what_it_supports": "Full agency-by-agency list with display sizes and the five named system integrators, plus Soofa 42in in Boston/Cambridge/Las Vegas/Miami-Dade/Atlanta and SolStreet 42in in New York City"
+    }
+   ]
+  },
+  {
+   "organisation": "Metro Transit Minneapolis; Manama Bahrain; Christchurch City Council NZ; Kanawha Valley RTA, West Virginia",
+   "vertical": "transport",
+   "what_was_installed": "Solar-powered E Ink bus stop displays",
+   "scale": "Manama 13in via Papercast; Minneapolis via GDS; Christchurch via Papercast; KVRTA via Connectpoint",
+   "integrator": "Papercast, GDS, Connectpoint",
+   "hardware_vendor": "E Ink",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://blog.eink.com/spotted-e-ink-in-the-wild",
+     "what_it_supports": "Four named transit installations with their partner/hardware attribution"
+    }
+   ]
+  },
+  {
+   "organisation": "Center Parcs (European holiday park)",
+   "vertical": "hospitality / leisure",
+   "what_was_installed": "E-paper displays showing instant opening hours, managed through the Castit digital signage platform",
+   "scale": "13 e-paper displays",
+   "integrator": "Castit",
+   "hardware_vendor": "not named",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://castitsignage.com/digital-signage-hardware/epaper-digital-signage",
+     "what_it_supports": "Case study 'E-Paper Displays for Instant Opening Hours at a European Holiday Park' involving 13 e-paper displays at a Center Parcs location; Castit addresses in Nis, Serbia with Netherlands phone numbers"
+    }
+   ]
+  },
+  {
+   "organisation": "Heureka Science Centre (Helsinki) and the National Museum in Krakow",
+   "vertical": "museums",
+   "what_was_installed": "TintTech ePaper display solutions",
+   "scale": "not quantified in a source I could fetch",
+   "integrator": "TintTech",
+   "hardware_vendor": "TintTech",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": null,
+     "what_it_supports": "Named in search-result summaries of TintTech's materials as museums it has supplied. The references page I fetched lists only Mainz, the Estonian National Museum and Tartu, so I could not verify these two directly."
+    }
+   ]
+  },
+  {
+   "organisation": "Restaurant Nenuphar, Ghent, Belgium",
+   "vertical": "hospitality",
+   "what_was_installed": "E-paper replacing paper signage",
+   "scale": "not stated",
+   "integrator": null,
+   "hardware_vendor": "not clearly attributed",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://www.avnetwork.com/news/e-paper-makes-its-case-as-digital-signage-option",
+     "what_it_supports": "Named as a paper-signage replacement deployment. NOTE: this fetch returned one clearly spurious entity in its company list, so I treat its detail as low confidence."
+    }
+   ]
+  },
+  {
+   "organisation": "Deutsche Telekom",
+   "vertical": "telecom street furniture / DooH",
+   "what_was_installed": "Trial of Philips e-paper for DooH on DSL distribution boxes",
+   "scale": "trial",
+   "integrator": null,
+   "hardware_vendor": "PPDS / Philips",
+   "year": null,
+   "artwork_displayed": false,
+   "sources": [
+    {
+     "url": "https://invidis.de/2024/08/e-paper-displays-geben-gas-der-labelgroesse-entwachsen/",
+     "what_it_supports": "Deutsche Telekom testing Philips E-Paper for DooH at DSL distribution boxes"
+    }
+   ]
+  }
+ ],
+ "vendors": [
+  {
+   "name": "Luminator Technology Group",
+   "country": "United States (Plano, Texas), with European operations",
+   "corporate_form": "Private company / group",
+   "ownership": "Private (owner not established this session)",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established; a long-established transit electronics supplier",
+   "headcount": "Not established",
+   "hardware_track_record": "Decades in transit destination signs and passenger information; manufactures its 13.3in e-paper displays at its own North American factory and partners with E Ink on onboard and in-station ePaper",
+   "abandonment_history": "None found",
+   "staying_power": "medium-high",
+   "rationale": "A serious industrial supplier with its own factory and an E Ink partnership. Irrelevant to an art buyer on product grounds - 4 grey levels, vandal-resistant transit housings, no single-unit sales - but a credible name for the survey's completeness.",
+   "sources": [
+    {
+     "url": "https://luminator.com/images/stories/solutions/stationary/stop_displays/luminator_datasheet_e-paper-display_13-inch_en.pdf",
+     "what_it_supports": "Datasheet exists as a Luminator document with full specs"
+    },
+    {
+     "url": "https://go.eink.com/us-transportation-outdoor-installations-1",
+     "what_it_supports": "Listed by E Ink as one of five transit system integrators"
+    }
+   ]
+  },
+  {
+   "name": "GDS - Global Display Solutions",
+   "country": "Italy (Cornedo Vicentino), with EMEA and North American operations",
+   "corporate_form": "Private company (GDS group)",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Over 45 years in transportation and DOOH displays; the eTela e-paper line at 32in and 42in with proprietary G+Bond weatherproofing; supplied Metro Transit Minneapolis bus stops",
+   "abandonment_history": "None found",
+   "staying_power": "medium-high",
+   "rationale": "Long-lived industrial display manufacturer with its own e-paper product line and named transit references. But the whole architecture funnels through a GDS cloud Device Management Server, and there is no consumer or single-unit channel.",
+   "sources": [
+    {
+     "url": "https://www.gdsdisplays.com/gds-e-ink-display/",
+     "what_it_supports": "Italy HQ address, eTela, GDS cloud DMS, broadband/WiFi/LoRa, solar"
+    },
+    {
+     "url": "https://www.gdsdisplays.com/e-paper-display-5-applications-must-know/",
+     "what_it_supports": "32in and 42in indoor menu-board versions, embedded media player"
+    },
+    {
+     "url": "https://blog.eink.com/spotted-e-ink-in-the-wild",
+     "what_it_supports": "GDS supplied Metro Transit Minneapolis"
+    }
+   ]
+  },
+  {
+   "name": "AMSYS Innovative Solutions (AMLABEL)",
+   "country": "United States (Houston, Texas area implied by the MFA Houston partnership)",
+   "corporate_form": "Private company; AMLABEL is described as an AMSYS Innovative Solutions company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Small",
+   "headcount": "Not established",
+   "hardware_track_record": "AMLABEL museum gallery labels built on Visionect e-paper, deployed at the Museum of Fine Arts Houston; project started 2013, product shown at MW2016 and awarded a 2016 thought-leadership award",
+   "abandonment_history": "Unknown - the public trail is heavily weighted to 2016-2017 and I found no recent activity, which is itself a mild warning sign",
+   "staying_power": "low",
+   "rationale": "An integrator, not a manufacturer, and only at 6in and 9.7in. Included because it is the clearest documented museum-label integrator in North America and shows the pattern: a small integrator wraps someone else's panel in a vertical-specific CMS.",
+   "sources": [
+    {
+     "url": "https://mw2016.museumsandtheweb.com/proposal/save-cost-and-improve-productivity-by-leveraging-gallery-digital-label/index.html",
+     "what_it_supports": "Khalid Parekh of AMLABEL, co-presented with MFA Houston, project began 2013"
+    },
+    {
+     "url": "https://www.visionect.com/blog/epaper-museum-label/",
+     "what_it_supports": "AMLABEL runs on Visionect e-paper, 6in and 9.7in, WiFi and a custom CMS"
+    }
+   ]
+  },
+  {
+   "name": "Review Display Systems (RDS)",
+   "country": "United Kingdom",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Describes itself as a manufacturer and systems integrator of customised display solutions for medical and industrial use, offering e-paper modules from 1.5in wristband tags to 32in, with bespoke firmware and APIs and HL7 EHR integration",
+   "abandonment_history": "None found",
+   "staying_power": "medium",
+   "rationale": "Potentially very relevant: an integrator that explicitly offers BESPOKE FIRMWARE AND APIS around large e-paper, which is the escape hatch from vendor clouds. Caveat: their healthcare article is marketing prose with an unattributed NHS statistic and their own e-paper product URL 404'd, so treat the 32in claim as unconfirmed until quoted.",
+   "sources": [
+    {
+     "url": "https://www.review-displays.co.uk/about-us/news/revolutionizing-patient-care-e-paper-displays-in-hospitals-and-medical-settings",
+     "what_it_supports": "Self-description as manufacturer and systems integrator; e-paper modules 4.2in to 32in and 1.5in tags to 13in+ panels; bespoke firmware and APIs; HL7 support; end-to-end customisation"
+    }
+   ]
+  },
+  {
+   "name": "Exaprobe",
+   "country": "France",
+   "corporate_form": "Private company (IT/AV integrator)",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Integrator on the Institut Pasteur Paris deployment of Philips ePaper and EcoDesign displays",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Pure integrator layer. Worth knowing as one of the few named European integrators with a delivered e-paper campus project.",
+   "sources": [
+    {
+     "url": "https://invidis.com/sixteen-nine/category/e-paper/",
+     "what_it_supports": "Exaprobe named as integrator partner on the Institut Pasteur project"
+    }
+   ]
+  },
+  {
+   "name": "Telelogos",
+   "country": "France",
+   "corporate_form": "Private software company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Digital signage / device management software; software provider on the Institut Pasteur e-paper deployment",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Software layer. Relevant only as evidence that third-party CMSes can drive Philips Tableaux, which slightly loosens the vendor-cloud lock on that panel.",
+   "sources": [
+    {
+     "url": "https://invidis.com/sixteen-nine/category/e-paper/",
+     "what_it_supports": "Telelogos named as software provider on Institut Pasteur"
+    }
+   ]
+  },
+  {
+   "name": "Ueberall International",
+   "country": "United States / Germany (studio led by Nik Hafermaas, then Graphic Design chair at ArtCenter College of Design)",
+   "corporate_form": "Design studio",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Small studio",
+   "headcount": "Small",
+   "hardware_track_record": "Designed and delivered DAZZLE, the largest E Ink Prism installation ever built: 2,000+ solar tiles across a 1,600ft facade at San Diego International Airport, with 15 animation programs",
+   "abandonment_history": "None found; DAZZLE is described as permanent",
+   "staying_power": "unknown",
+   "rationale": "THE closest analogue in this sweep to the Artec precedent: a studio nobody would find via a product search, discovered only through the art vertical. They are not a display vendor, but they are proof that a bespoke large-scale e-paper artwork commission is a thing that gets built and maintained.",
+   "sources": [
+    {
+     "url": "https://www.archdaily.com/887248/this-e-paper-tile-facade-is-inspired-by-the-ww1-military-optical-illusion-razzle-dazzle",
+     "what_it_supports": "DAZZLE at San Diego Airport using E Ink prism technology at architectural scale, permanent interactive artwork, commissioned by the San Diego County Regional Airport Authority"
+    }
+   ]
+  },
+  {
+   "name": "Concept International",
+   "country": "Germany (Munich)",
+   "corporate_form": "Value-add distributor",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Distributes professional digital signage; showed a WiFi e-paper door-signage display at ISE 2026 that disables its WiFi after setup for up to two years of battery life",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "A distributor, and the e-paper item shown was door signage with no size given. Logged for completeness of the DACH channel.",
+   "sources": [
+    {
+     "url": "https://invidis.de/2026/02/concept-auf-der-ise-2026-e-paper-und-3d-screen-als-highlights/",
+     "what_it_supports": "Munich value-add distributor; e-paper door display with WiFi disabled after setup, up to two years battery; also a 3D display at 16/27/86in"
+    }
+   ]
+  },
+  {
+   "name": "OMNI Media",
+   "country": "Taiwan",
+   "corporate_form": "Media / DooH network operator",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Operates the 75in Kaleido 3 colour ePaper advertising display at Taoyuan International Airport Terminal 2",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Media operator rather than vendor. Relevant only as evidence that 75in colour e-paper is now in real commercial service, not just on trade-show stands.",
+   "sources": [
+    {
+     "url": "https://www.eink.com/news/detail/A-New-Global-Benchmark-for-Sustainable-Airport-Media-75-inch-Color-ePaper-Advertising-Display-Debuts-at-Taoyuan-International-Airport",
+     "what_it_supports": "OMNI Media named as the media operator; DynaScan the hardware integrator; 1 June 2026"
+    }
+   ]
+  },
+  {
+   "name": "Castit",
+   "country": "Serbia (Nis) with Netherlands contact numbers",
+   "corporate_form": "Private software company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Small",
+   "headcount": "Not established",
+   "hardware_track_record": "Digital signage CMS with declared e-paper support alongside LCD and LED; one named e-paper case study (Center Parcs, 13 displays)",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Software only. The page does not disclose which e-paper models are supported, nor whether the CMS can be self-hosted - both of which would be the only reasons to care.",
+   "sources": [
+    {
+     "url": "https://castitsignage.com/digital-signage-hardware/epaper-digital-signage",
+     "what_it_supports": "E-paper fully supported in the Castit CMS; Center Parcs case with 13 displays; Nis Serbia address"
+    }
+   ]
+  },
+  {
+   "name": "Engagis",
+   "country": "Australia",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "End-to-end digital signage integrator with a declared e-paper and shelf-edge-label line; Impress Plus CMS",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Confirms an APAC integrator channel exists for e-paper but discloses no brands, sizes or architecture. Low value for this buyer.",
+   "sources": [
+    {
+     "url": "https://engagis.com/",
+     "what_it_supports": "E-Paper & Shelf Edge Labels listed as a display technology; Impress Plus software; Australian contact details"
+    }
+   ]
+  },
+  {
+   "name": "ATDEC",
+   "country": "United Kingdom (contact number listed) / Australia-origin mounting brand",
+   "corporate_form": "Private company",
+   "ownership": "Private",
+   "public_ticker": null,
+   "funding": "Not established",
+   "revenue_scale": "Not established",
+   "headcount": "Not established",
+   "hardware_track_record": "Display mounting infrastructure, not display manufacture. Publishes an e-ink signage explainer naming Samsung, PPDS, Sharp, DynaScan, Agile Display Solutions and Praevar",
+   "abandonment_history": "None found",
+   "staying_power": "unknown",
+   "rationale": "Included only because mounting is a real practical problem for a 32-42in reflective panel that must be hung like a painting, and this is the one mounting specialist that publicly addresses e-paper.",
+   "sources": [
+    {
+     "url": "https://atdec.co.uk/know-how/e-ink-displays-the-digital-signage-innovation-that-runs-on-virtually-nothing/",
+     "what_it_supports": "Mounting specialist; names Samsung 13/25/32/75in, PPDS, Sharp, DynaScan, Agile Display Solutions and Praevar; Agile CMS integration with Navori Labs at ISE 2026"
+    }
+   ]
+  }
+ ],
+ "leads_not_followed": [
+  {
+   "lead": "Nooka Art's 'Light Dynamic Wave' e-paper installation in a ribbon window at the Taipei Dome",
+   "why_it_matters": "A second architectural-scale ART installation on e-paper, in Asia, by a studio nobody in this survey has looked at. Surfaced only in a search summary; I never fetched a page about it, so it is unverified. Worth one fetch of Nooka Art's own site."
+  },
+  {
+   "lead": "3Form's 'Viva' architectural material co-developed with E Ink",
+   "why_it_matters": "An architectural-materials company embedding e-paper into panels. If e-paper is being sold as an interior surface rather than a screen, that is a different procurement channel with different sizes."
+  },
+  {
+   "lead": "Review Display Systems' actual e-paper product catalogue",
+   "why_it_matters": "Their claim of 32in e-paper modules with bespoke firmware and APIs is the single most interesting integrator claim found. Their own product URL 404'd. A direct enquiry would settle whether a UK integrator will build a custom colour e-paper display with a local API."
+  },
+  {
+   "lead": "CREA's 42in EPS pricing and whether they will export outside Japan",
+   "why_it_matters": "CREA is the only vendor found with HDMI input plus SD card plus FTP on a 42in e-paper panel. Everything about the architecture fits; the unknowns are price, export, and whether the s-color line will ever reach 42in."
+  },
+  {
+   "lead": "Guangzhou OED's 31.2in colour e-paper at 18fps entering mass production",
+   "why_it_matters": "A non-E-Ink colour electrophoretic panel at 30in+ would be the first real price competition in the category. Known vendor, but the mass-production claim from March 2025 was never followed up to see if it shipped."
+  },
+  {
+   "lead": "Whether Philips Tableaux's Android SoC will run a sideloaded app",
+   "why_it_matters": "If it will, a 32in Spectra 6 colour panel becomes drivable from a self-hosted server with no PPDS cloud - which would change the answer for this project. The Institut Pasteur deployment proves third-party software (Telelogos) can drive it."
+  },
+  {
+   "lead": "E Ink Prism / Prism 3 availability to non-automotive, non-architectural buyers",
+   "why_it_matters": "Prism is the only E Ink product line with a documented history of being used for actual commissioned artwork (DAZZLE, BMW NOSTOKANA). It is a segmented film, not an image display, so it cannot show a painting - but it is worth knowing whether E Ink still sells it at all."
+  },
+  {
+   "lead": "Heureka Science Centre (Helsinki) and the National Museum in Krakow as TintTech references",
+   "why_it_matters": "Two more museum deployments of the PoE + self-hosted-CMS architecture. They appeared in search summaries of TintTech material but not on the references page I fetched."
+  }
+ ],
+ "unverified_facts": [
+  {
+   "claim": "Review Display Systems offers e-paper modules up to 32 inches and 13-inch+ panels with bespoke firmware and APIs",
+   "why_unverified": "Only stated in their own marketing article; their /products/e-paper-displays URL returned HTTP 404 so I could not see a catalogue.",
+   "url": null
+  },
+  {
+   "claim": "Bed-end e-paper displays in NHS trusts reduced nursing update time by 15 minutes per shift, and digital bed-end displays reduce medication errors by up to 20%",
+   "why_unverified": "Unattributed vendor marketing copy on the RDS page and in a search summary; no trust named, no audit cited, and the JMIR paper I did read makes no such claim.",
+   "url": null
+  },
+  {
+   "claim": "Nooka Art's 'Light Dynamic Wave' e-paper installation at the Taipei Dome",
+   "why_unverified": "Appeared only in a search-result summary. I never fetched a page describing it.",
+   "url": null
+  },
+  {
+   "claim": "3Form and E Ink's 'Viva' architectural product",
+   "why_unverified": "Search-result title only; not fetched.",
+   "url": null
+  },
+  {
+   "claim": "Institut Pasteur specifically used 32-inch Philips Tableaux plus 55-inch Signage 3000 EcoDesign displays",
+   "why_unverified": "The sizes came from search-result summaries of press coverage. The page I actually fetched confirms 20 displays, the campus size, Exaprobe and Telelogos, but not the diagonals.",
+   "url": null
+  },
+  {
+   "claim": "Chichester City Council's E-Ink pilot cost GBP 13,499 of CIL funding and uses cloud-based updates with five-year batteries",
+   "why_unverified": "From a search summary of the council's own page; chichestercity.gov.uk returned HTTP 425 and the council page could not be fetched. The screen count and 13-inch size ARE verified via the invidis/Sixteen:Nine category page.",
+   "url": null
+  },
+  {
+   "claim": "Digital Signbox (UK) sells 13-inch indoor and outdoor e-paper displays",
+   "why_unverified": "Their product pages returned HTTP 403. They appear as a Papercast distributor in an earlier sweep, so the listing is plausible but the specs and price are unseen.",
+   "url": null
+  },
+  {
+   "claim": "Tekdis supplies small-to-large e-ink displays",
+   "why_unverified": "tekdisllc.com returned HTTP 403.",
+   "url": null
+  },
+  {
+   "claim": "Restaurant Nenuphar in Ghent replaced paper signage with e-paper",
+   "why_unverified": "From an AVNetwork fetch whose extracted entity list contained at least one clearly spurious item, so I do not trust its detail. No hardware vendor attributed.",
+   "url": null
+  },
+  {
+   "claim": "CREA EPS s-color sells for JPY 1,000,000 to 5,000,000",
+   "why_unverified": "That is a marketplace enquiry band on an industrial B2B listing, not a quoted price, and it spans 5x. CREA's own pages publish no price.",
+   "url": null
+  },
+  {
+   "claim": "Galari is built by a team in Kyoto and Silicon Valley and is shipping",
+   "why_unverified": "The product page discloses no company name, no panel spec, no size and no image-transfer mechanism, and describes itself as a Kickstarter late pledge. An earlier sweep in this project recorded Galari as a delivery-risk case.",
+   "url": null
+  },
+  {
+   "claim": "AMSYS Innovative Solutions is the company behind AMLABEL",
+   "why_unverified": "Stated in a search-result summary. The Visionect and MW2016 pages I fetched name AMLABEL and Khalid Parekh but do not name AMSYS.",
+   "url": null
+  }
+ ]
+}

@@ -241,6 +241,65 @@ def main() -> int:
         ),
     )
 
+    # ---- placeholder vendor filter ----------------------------------------
+    check(
+        "assorted marketplace placeholder is filtered",
+        mg.is_placeholder("Assorted marketplace ODMs"),
+    )
+    check(
+        "EPIA alliance placeholder is filtered",
+        mg.is_placeholder("China E-Paper Industry Alliance member"),
+    )
+    check(
+        "real vendor is not a placeholder",
+        not mg.is_placeholder("CREA Co., Ltd."),
+    )
+    check(
+        "E Ink Holdings is not a placeholder",
+        not mg.is_placeholder("E Ink Holdings"),
+    )
+
+    # ---- generic colour? compatible with spectra6 -------------------------
+    check(
+        "Sharp ePoster colour? folds into Spectra 6 twin",
+        same(
+            {
+                "vendor": "Sharp",
+                "model": "ePoster EP-C251",
+                "diagonal_in": 25.3,
+                "colour": "colour",
+            },
+            {
+                "vendor": "Sharp",
+                "model": "ePoster EP-C251",
+                "diagonal_in": 25.3,
+                "colour": "Spectra 6",
+            },
+        ),
+    )
+    check(
+        "mono and spectra6 still stay distinct",
+        not same(
+            dev("Sharp", "ePoster EP-C251", 25.3, colour="monochrome"),
+            dev("Sharp", "ePoster EP-C251", 25.3, colour="Spectra 6"),
+        ),
+    )
+
+    # ---- price currency formatting ----------------------------------------
+    writer = writer_mod()
+    check(
+        "USD price keeps $ prefix",
+        writer.price({"price": {"amount": 1299, "currency": "USD"}}) == "$1,299",
+    )
+    check(
+        "KRW price keeps currency label",
+        writer.price({"price": {"amount": 1710000, "currency": "KRW"}}) == "KRW 1,710,000",
+    )
+    check(
+        "missing amount is an em dash",
+        writer.price({"price": {}}) == "—",
+    )
+
     print(f"\n{'ALL PASS' if not _fails else f'{len(_fails)} FAILURE(S)'}")
     return 1 if _fails else 0
 

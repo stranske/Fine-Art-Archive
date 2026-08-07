@@ -42,7 +42,49 @@ STREAMS = [
     ("upcoming-openhw", RESEARCH / "stream-b-upcoming-openhw.json"),
     ("vendor-viability", RESEARCH / "stream-c-vendor-viability.json"),
     ("art-frames", RESEARCH / "stream-d-art-frames.json"),
+    # Round 3: discovery-first sweeps entered from search vocabulary rather than
+    # from a vendor list. The earlier rounds were briefed with names and so
+    # mostly re-found them; these returned 2.7:1 to 17:1 new-to-known.
+    ("poster-en", RESEARCH / "stream-r3-g_poster_en.json"),
+    ("asia-odm", RESEARCH / "stream-r3-h_asia_odm.json"),
+    ("retail-esl", RESEARCH / "stream-r3-i_retail_esl.json"),
+    ("consumer-diy", RESEARCH / "stream-r3-j_consumer_diy.json"),
+    ("korea-directory", RESEARCH / "stream-r3-k_korea_directory.json"),
+    ("verticals", RESEARCH / "stream-r3-l_verticals.json"),
 ]
+
+# Rows that are not a vendor: aggregate placeholders a researcher used to say
+# "and a tier of others". Counting them inflates the vendor total and puts a
+# non-existent company in the ranked table.
+NOT_A_VENDOR = (
+    "assorted marketplace",
+    "known vendors encountered",
+    "unnamed epia member",
+    "other named-but-upstream",
+    "not individually verified",
+    "epaper industry alliance",
+    "e-paper industry alliance",
+    "china e-paper industry alliance",
+)
+
+KNOWN_STREAM_KEYS = {
+    "devices",
+    "vendors",
+    "leads_not_followed",
+    "unverified_facts",
+    "search_log",
+    "saturation_reached",
+    "saturation_note",
+    "new_vendor_count",
+    "known_vendor_count",
+    "research_reference_only",
+}
+
+
+def is_placeholder(name: str) -> bool:
+    n = (name or "").lower()
+    return any(t in n for t in NOT_A_VENDOR)
+
 
 # Round-2 streams that are not device/vendor shaped. They answer one question
 # each rather than cataloguing hardware, so they ride alongside the device list
@@ -126,12 +168,75 @@ BRAND_CANON: list[tuple[str, tuple[str, ...]]] = [
     ("eink", ("e ink", "e-ink", "eink")),
     ("fraimic", ("fraimic",)),
     ("switchbot", ("switchbot", "woan")),
-    ("geniatech", ("geniatech",)),
-    ("seekink", ("seekink", "xingtai")),
+    ("geniatech", ("geniatech", "mygica")),
+    ("seekink", ("seekink", "xingtai", "holitech", "合力泰", "江西兴泰")),
     ("epaint", ("epaint", "anhui yutu", "e-chroma", "e-polar")),
     ("digital-view", ("digital view",)),
     ("papercast", ("papercast",)),
     ("modos", ("modos",)),
+    # --- round-3 brands and the collisions they exposed ---------------------
+    # Several of these are ONE manufacturer behind several logos, which is the
+    # same brand-vs-maker confusion that inflated the device count before:
+    #   MyGica is Geniatech's consumer brand (identical model numbers);
+    #   Jiangxi Xingtai trades as SEEKINK (and sits under Holitech);
+    #   StellarLink's 31.5in aecoPost is built by AUO Display Plus;
+    #   TPV is the manufacturing parent behind Philips/PPDS.
+    ("auo-display-plus", ("auo display plus", "adp", "au optronics", "友達數位看板")),
+    ("adlab", ("advanced display lab", "adlab", "宇豐光電")),
+    ("crea", ("crea",)),
+    ("stellarlink", ("stellarlink",)),
+    ("dke", ("dke", "oriental kemai", "dongfang kemai", "东方科脉")),
+    ("boe", ("boe", "京东方")),
+    ("tcl-csot", ("tcl csot", "tcl china star", "csot")),
+    ("hkc", ("hkc", "huike", "惠科")),
+    ("oed", ("guangzhou oed", "oed technologies", "奥翼")),
+    ("qingyue", ("qingyue", "清越光电")),
+    ("mve", ("microview", "lianji", "联积")),
+    ("newface", ("newface", "奇新光电")),
+    ("netronix", ("netronix",)),
+    ("solomon-systech", ("solomon systech",)),
+    ("innolux", ("innolux",)),
+    ("solum", ("solum",)),
+    ("sharp", ("sharp",)),
+    ("advantech", ("advantech",)),
+    ("teidec", ("teidec",)),
+    ("tinttech", ("tinttech",)),
+    ("artec", ("artec design",)),
+    ("paperlesspaper", ("paperlesspaper",)),
+    ("frame-labs", ("frame labs",)),
+    ("apheum", ("apheum",)),
+    ("seeed", ("seeed",)),
+    ("aluratek", ("aluratek",)),
+    ("eco4life", ("eco4life",)),
+    ("praevar", ("praevar", "eluminex")),
+    ("nanov", ("nanov",)),
+    ("melford", ("melford",)),
+    ("luminator", ("luminator",)),
+    ("gds", ("global display solutions", "gds -")),
+    ("epaper-innovation", ("e-paper innovation",)),
+    ("agile", ("agile display", "agile (e ink")),
+    ("dynascan", ("dynascan",)),
+    ("soofa", ("soofa",)),
+    ("mpicosys", ("mpicosys",)),
+    ("zkong", ("zkong",)),
+    ("hanshow", ("hanshow",)),
+    ("pricer", ("pricer",)),
+    ("vusion", ("vusiongroup", "ses-imagotag")),
+    ("yalatech", ("yalatech", "yala group")),
+    ("avlink", ("avlink",)),
+    ("shineworld", ("shineworld", "swicn")),
+    ("glory-star", ("glory star",)),
+    ("hanjentek", ("hanjentek", "漢晶")),
+    ("hanvon", ("hanvon", "汉王")),
+    ("kokonna", ("kokonna", "maxevis", "oscar japan")),
+    ("yeebo", ("yeebo", "yashi", "亚世光电")),
+    ("laibao", ("laibao", "莱宝高科")),
+    ("wuxi-weifeng", ("wuxi weifeng", "vpaper", "威峰")),
+    ("etulipa", ("etulipa", "miortech")),
+    ("connectpoint", ("connectpoint",)),
+    ("dnp", ("dai nippon", "dnp")),
+    ("amt", ("apex material",)),
+    ("ueberall", ("ueberall",)),
     ("pocketbook", ("pocketbook",)),  # parent, only if no product brand hit
 ]
 
@@ -229,6 +334,19 @@ def dev_key(d: dict) -> str:
 DISTINCT_MARKERS = ("kit", "bare", "devkit", "evaluation", "reference")
 
 
+def _colours_compatible(a: str, b: str) -> bool:
+    """Treat generic `colour?` as compatible with a specific colour family.
+
+    Researchers sometimes record only "colour" while another stream names the
+    panel family (Spectra 6, Kaleido, …). Those are the same SKU, not rivals.
+    Conflicting specifics (mono vs spectra6, kaleido vs gallery) still diverge.
+    """
+    if a == b:
+        return True
+    specific = {"spectra6", "kaleido", "gallery", "acep"}
+    return (a == "colour?" and b in specific) or (b == "colour?" and a in specific)
+
+
 def same_product(a: dict, b: dict) -> bool:
     """True when two records describe one product under different spellings.
 
@@ -241,7 +359,7 @@ def same_product(a: dict, b: dict) -> bool:
     """
     if brand_of(a) != brand_of(b):
         return False
-    if colour_class(a) != colour_class(b):
+    if not _colours_compatible(colour_class(a), colour_class(b)):
         return False
     try:
         if round(float(a.get("diagonal_in") or 0), 1) != round(float(b.get("diagonal_in") or 0), 1):
@@ -335,11 +453,17 @@ def main() -> int:
             print(f"MISSING {path}")
             continue
         d = json.loads(path.read_text())
+        extra = sorted(set(d) - KNOWN_STREAM_KEYS)
+        if extra:
+            print(f"UNREAD KEYS in {stream}: {', '.join(extra)}")
         counts[stream] = {
             "devices": len(d.get("devices") or []),
             "vendors": len(d.get("vendors") or []),
         }
         for dev in d.get("devices") or []:
+            if is_placeholder(dev.get("vendor") or ""):
+                print(f"skip placeholder device: {dev.get('vendor')!r} / {dev.get('model')!r}")
+                continue
             k = dev_key(dev)
             devices[k] = (
                 deep_merge(devices.get(k, {}), dev, stream)
@@ -347,6 +471,9 @@ def main() -> int:
                 else deep_merge(dict(dev), {}, stream)
             )
         for v in d.get("vendors") or []:
+            if is_placeholder(v.get("name") or ""):
+                print(f"skip placeholder vendor: {v.get('name')!r}")
+                continue
             k = vendor_key(v)
             vendors[k] = (
                 deep_merge(vendors.get(k, {}), v, stream)

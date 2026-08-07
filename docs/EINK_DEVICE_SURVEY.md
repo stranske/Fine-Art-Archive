@@ -17,8 +17,8 @@ push, and to stay readable during development. Two criteria dominate:
 2. **Integration openness** — can this app push images over the local network,
    with no vendor cloud in the path?
 
-**Coverage:** 47 device records (37 above 15"),
-54 vendors, 59 recorded
+**Coverage:** 179 device records (136 above 15"),
+131 vendors, 122 recorded
 leads, from six researcher streams across two rounds.
 
 ---
@@ -62,13 +62,23 @@ the transport.
 
 ### The three serious alternatives, and what each costs
 
-**Fraimic Large Canvas 31.5" — $1,299, and it has actually shipped.** Backers
-posted receipts on the public campaign wall on 4–5 August 2026; New Atlas and
-Notebookcheck both independently confirm a working `fraimic.local` Home
-Assistant integration, one noting the frame "won't turn into a paperweight if
-Fraimic ever disappears." Against that: Fraimic's own user manual documents only
-the cloud path and never mentions the API or local mode, so the local route
-works but is unspecified; the list price rose ~50% from the announced $999;
+**Fraimic Large Canvas 31.5" — $1,299, shipped, and genuinely documented.**
+Backers posted receipts on the public campaign wall on 4–5 August 2026.
+
+An earlier draft here called its local API "a marketing claim, not a documented
+one". That was wrong, and the correction matters: **Fraimic's own GitHub
+organisation publishes a REST API guide** — "No internet required for local
+communication. No account needed." — covering `GET /api/info`, refresh, sleep,
+restart and direct artwork upload, with no authentication. The same org
+publishes **`fraimic_bin_converter`** under MIT, which packs an image into the
+exact 4-bit indexed format the panel expects (960,000 bytes at 1200×1600 for the
+EL133UF1). So Fraimic, not only BLOOMIN8, accepts pre-dithered data. Its README
+independently confirms this survey's colour finding, quantising with "a metric
+tuned for the muted, real-world colours of Spectra 6" rather than naive RGB.
+Eight public repos exist including two Home Assistant integrations and a
+third-party ESP32-S3 reimplementation. Caveat: the converter targets the 13.3"
+panel; whether the 31.5" uses the same path is unconfirmed. Against it: the list
+price rose ~50% from the announced $999;
 both SKUs currently show sold out; and delivery ran ~3 months late.
 
 **BLOOMIN8 EinkCanvas 28.5" — the best-documented local control surface in the
@@ -109,42 +119,141 @@ Sorted by openness, then vendor durability, then size.
 | Size | Vendor | Model | Status | Price | Openness | Durability |
 |---|---|---|---|---|---|---|
 | 31.5" | Samsung Electronics | Samsung Color E-Paper EMDX / EM32DX-A… | shipping | $1,350 | **open** | high |
-| 31.5" | E Ink Holdings | E Ink 31.5" Spectra 6 ePaper Display… | shipping | — | **open** | high |
 | 25.3" | Onyx International Inc… | BOOX Mira Pro (monochrome) 25.3" | shipping | — | **open** | high |
+| 31.2" | Visionect d.o.o. | Visionect Place & Play 32" Development… | dev-kit | $6,000 | **open** | medium-high |
 | 31.5" | Dalian Good Display Co… | Good Display GDEP315C01(E6) 31.5"… | shipping | — | **open** | medium |
 | 31.5" | Dalian Good Display / E… | GDEP315C01(E6) - 31.5" bare panel (E… | dev-kit | — | **open** | medium |
-| 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | $2,300 | **open** | medium |
-| 31.2" | Visionect d.o.o. | Visionect Place & Play 32" Development… | dev-kit | $6,000 | **open** | medium |
+| 31.5" | Fraimic | Fraimic Smart Canvas 31.5" / 13.3" | crowdfunded (raised >$1M), shipping from ~May 2026 | $999 | **open** | medium |
+| 31.2" | Shineworld Innovations… | 31.2in EPD module SOPM312A1 / SED312TT2 | shipping | $1,500 | **open** | medium |
+| 31.2" | Frame Labs | ArtFrame 31.2" (XL) | shipping | — | **open** | medium |
 | 25.3" | Dalian Good Display | GDEP253C02(E6) - 25.3" bare panel | dev-kit | $898 | **open** | medium |
+| 31.5" | E Ink Holdings | E Ink 31.5" Spectra 6 ePaper Display… | shipping | — | **open** | unknown |
+| 31.5" | E Ink Holdings (KNOWN… | E Ink shopkit bare panels: 13.3in… | shipping | $449 | **open** | unknown |
+| 28.0" | E Ink Holdings (KNOWN… | Colour ePaper signage 13.3 / 25.3 /… | shipping | — | **open** | unknown |
+| 32.0" | Samsung Electronics | Color E-Paper EM32DX (EMDX series) | shipping | $780 | **partly-open** | high |
+| 32.0" | Samsung | Color E-Paper EM32DX / EM32DX-A (32… | shipping | $799 | **partly-open** | high |
+| 28.6" | Advantech | 28.6-inch Spectra 6 ePaper (open-frame) | shipping | — | **partly-open** | high |
 | 25.3" | Onyx International Inc… | Boox Mira Pro Color 25.3 (and Mira Pro… | shipping | $1,899 | **partly-open** | high |
+| 75.0" | Agile Display Solutions | 75" DigiPoster Cassette / 75"… | shipping | — | **partly-open** | medium-high |
+| 40.5" | Agile Display Solutions | A1 Single-Sided EPD | shipping | — | **partly-open** | medium-high |
+| 32.0" | Agile Display Solutions | EPD32-FD 'Forever Display' and Solis… | shipping | — | **partly-open** | medium-high |
+| 32.0" | Visionect (KNOWN vendor) | Visionect Place & Play 32" / 13" | shipping | — | **partly-open** | medium-high |
+| 31.5" | SEEKINK (Jiangxi Xingtai… | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | medium-high |
+| 31.5" | Geniatech (brand: MyGica) | EPC3200 31.5in / EPC2850 28.5in /… | shipping | — | **partly-open** | medium-high |
+| 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | $2,300 | **partly-open** | medium-high |
+| 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") /… | shipping | — | **partly-open** | medium-high |
+| 25.3" | Sharp | ePoster EP-C251 | shipping | — | **partly-open** | medium-high |
+| 25.3" | Sharp | ePoster EP-C251 | shipping | — | **partly-open** | medium-high |
+| 42.0" | CREA Co., Ltd. (株式会社クレア) | EPS (電子ペーパーサイネージ) - monochrome 42in | shipping | — | **partly-open** | medium |
+| 42.0" | CREA Co., Ltd. (株式会社クレア) | EPS (C06-EPS42-3) 42 inch monochrome… | shipping | — | **partly-open** | medium |
+| 40.5" | Teidec | Colour e-paper digital signage ladder… | shipping | — | **partly-open** | medium |
 | 32.0" | PPDS (TP Vision Europe… | Philips Tableaux 5150I 32in (and 25in… | shipping | — | **partly-open** | medium |
+| 32.0" | Artec Design | Artec Design 32-inch museum ePaper… | deployed (Estonian National Museum, 20 units at 32 inch) | — | **partly-open** | medium |
+| 32.0" | CREA Co., Ltd. | EPS (C07-EPS32-3) 32 inch monochrome… | shipping | — | **partly-open** | medium |
+| 32.0" | PPDS / Philips | Philips Tableaux 32BDL5150I/00 (32… | shipping | $3,782 | **partly-open** | medium |
 | 31.5" | PPDS / TP Vision / MMD… | Philips Tableaux 5150I — 32BDL5150I/00… | shipping | — | **partly-open** | medium |
 | 31.5" | Dalian Good Display Co… | DMPH315E62 — 31.5" Spectra 6 finished… | shipping | $1,636 | **partly-open** | medium |
-| 31.2" | Digital View | Digital View 32in Outdoor E Paper… | shipping | — | **partly-open** | medium |
+| 31.5" | Fraimic | Large Canvas 31.5" (Smart Canvas line) | preorder | $1,299 | **partly-open** | medium |
+| 31.5" | CREA Co., Ltd. (株式会社クレア) | EPS s-color (C18-EPS32S) 31.5 inch… | shipping | — | **partly-open** | medium |
+| 31.5" | Dalian Good Display | 31.5in Spectra 6 poster DMPH315E61 /… | shipping | $1,636 | **partly-open** | medium |
+| 31.2" | Advanced Display Lab Inc… | E-paper signage: WYED312L / WYED280L /… | shipping | — | **partly-open** | medium |
+| 31.2" | MpicoSys | MpicoSys 31.2-inch battery/WiFi ePaper… | shipping | — | **partly-open** | medium |
+| 28.5" | BLOOMIN8 (arpobot) | BLOOMIN8 E-Ink Canvas Large 28.5 | preorder | $2,399 | **partly-open** | medium |
+| 28.0" | Advanced Display Lab Inc… | WYED280L 28" e-Paper Signage | shipping | — | **partly-open** | medium |
+| 28.0" | Advanced Display Lab Inc… | ADEP28NF01.0 28" Bar Type e-Paper… | shipping | — | **partly-open** | medium |
 | 25.3" | DASUNG Tech Co., Ltd. | Dasung Paperlike 253 / 253U and… | shipping | $1,698 | **partly-open** | medium |
 | 25.3" | DASUNG Tech Co., Ltd. | DASUNG Paperlike 253 (Revolutionary)… | shipping | $1,549 | **partly-open** | medium |
 | 25.3" | Bigme (brand of Xinruizhi… | Bigme B251 Pro 25.3 colour e-ink monitor | shipping | $1,349 | **partly-open** | medium |
 | 25.3" | PPDS / TP Vision / MMD… | Philips Tableaux 25BDL4050I/00 (25.3") | shipping | — | **partly-open** | medium |
-| 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") /… | shipping | — | **partly-open** | medium |
 | 25.3" | Dalian Good Display | DMPH253E61 (25.3") and DMPH315E61… | shipping | $1,636 | **partly-open** | medium |
-| 31.5" | SEEKINK (Jiangxi Xingtai… | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | unknown |
+| 25.3" | PPDS / Philips | Philips Tableaux 25BDL4150I /… | shipping | — | **partly-open** | medium |
+| 75.0" | E Ink Holdings | 75in tiled Spectra 6; 75in Kaleido 3… | announced / demo | — | **partly-open** | unknown |
+| 32.0" | TintTech | Wired ePaper Digital Signage (13.3in… | shipping | $555 | **partly-open** | unknown |
 | 31.5" | MEiNK (sold by media mea) | MEiNK 32" E Ink Spectra 6 ePaper Signage | shipping | $1,850 | **partly-open** | unknown |
-| 31.5" | Fraimic | Large Canvas 31.5" (Smart Canvas line) | preorder | $1,299 | **partly-open** | low |
-| 28.5" | BLOOMIN8 (arpobot) | BLOOMIN8 E-Ink Canvas Large 28.5 | preorder | $2,399 | **partly-open** | low |
+| 31.2" | Digital View | Digital View 32in Outdoor E Paper… | shipping | — | **partly-open** | unknown |
+| 31.2" | E-Paper Innovation Ltd | 31.2 inch monochrome EPD panel | mass production | $915 | **partly-open** | unknown |
+| 31.2" | E-Paper Innovation Ltd | 31.2 inch colour EPD panel | mass production | $1,215 | **partly-open** | unknown |
+| 25.3" | E Ink Holdings | Kit-shop panels: 13.3in Spectra 6 /… | shipping | $1,400 | **partly-open** | unknown |
+| 25.3" | YalaTech | 25.3-inch e-paper monitor and 13.3-inch… | shipping | — | **partly-open** | unknown |
 | 75.0" | Samsung Electronics | Color E-Paper EMDX 75" | announced | — | **unknown** | high |
-| 25.3" | E Ink Holdings | E Ink 25.3" Spectra 6 ePaper Display… | shipping | $1,400 | **unknown** | high |
+| 31.5" | TCL CSOT | Electronic Paper Signage 31.5in and… | announced | — | **unknown** | high |
+| 31.5" | BOE | BOE 13.3" and 31.5" Spectra 6 e-paper | shipping (panel/module and reference systems) | — | **unknown** | high |
+| 28.0" | TPV Technology | 28-inch colour ePaper signage | shown in E Ink partner ecosystem | — | **unknown** | high |
+| 28.0" | TPV Technology | 28" ePaper Signage System | shown in the E Ink partner ecosystem | — | **unknown** | high |
+| 25.3" | TPV Technology | 25.3-inch four-colour ePaper signage | shipping since 2021 | — | **unknown** | high |
+| 25.3" | TPV Technology | 25.3" Four-Color ePaper Signage (E Ink… | shipping since 2021 | — | **unknown** | high |
+| 42.0" | Dynascan | e-paper lineup: 13.3in, 25.3in, 42in | shipping | — | **unknown** | medium-high |
+| 42.0" | Sharp | ePoster EP-421 | shipping | — | **unknown** | medium-high |
+| 42.0" | DynaScan | 42-inch colour ePaper display (model… | announced 2024, availability never confirmed | — | **unknown** | medium-high |
+| 42.0" | MyGica / Geniatech | EWB4200 (42" e-paper interactive… | shipping | — | **unknown** | medium-high |
+| 40.0" | Sharp | ePoster (A3 20in / A2 28in / A1 40in /… | shipping | $2,000 | **unknown** | medium-high |
+| 31.5" | StellarLink | J-Poster (A2) and aecoPost (31.5in) | announced | — | **unknown** | medium-high |
+| 31.5" | StellarLink | aecoPost (31.5in) and J-Poster (A2… | shipping | — | **unknown** | medium-high |
+| 31.5" | DKE (Zhejiang Oriental… | Colour e-paper displays 4-31.5in and… | shipping | $120 | **unknown** | medium-high |
+| 31.5" | MyGica (consumer/AV brand… | EPC3200 / EPC3200B / EPC3200C (31.5") | shipping | — | **unknown** | medium-high |
+| 31.5" | DKE Holding Co., Ltd… | DKE 31.5 inch Full-Color ePaper Display… | shipping | — | **unknown** | medium-high |
+| 31.2" | Guangzhou OED Technologies | 31.2in colour e-paper display… | shipping | — | **unknown** | medium-high |
+| 28.6" | Sharp | ePoster A2 (self-manufactured, June… | shipping | — | **unknown** | medium-high |
+| 28.6" | StellarLink Inc. | J-Poster (A2 ePaper signage) | announced (partnership announced 30 Oct 2025) | — | **unknown** | medium-high |
+| 28.5" | MyGica / Geniatech | EPC2850 (28.5") / EPC2530 (25.3") /… | shipping | — | **unknown** | medium-high |
+| 28.0" | DynaScan | NAVO A2 / A2 Plus (28 inch) and NAVO 13… | shipping | $2,280 | **unknown** | medium-high |
+| 25.3" | DynaScan | DynaScan 25.3-inch and 13.3-inch ePaper | announced 2024 | — | **unknown** | medium-high |
+| 25.3" | Sharp | Sharp EP-C131 (13.3 inch) and EP-C251… | shipping | $2,279 | **unknown** | medium-high |
+| 75.0" | Praevar | eLuminex EP75 ePoster | shipping | — | **unknown** | medium |
+| 32.0" | Nanov Display | NIASM-320PC / NZEPD-320PC solar e-paper… | shipping | — | **unknown** | medium |
+| 31.5" | Glory Star | Astro 31.5in E-Paper Display | shipping | — | **unknown** | medium |
+| 31.5" | Hanjentek | 13.3in and 31.5in Spectra 6 solar… | shipping | — | **unknown** | medium |
+| 31.5" | Glory Star | Astro 31.5-inch e-paper display | listed for sale | — | **unknown** | medium |
 | 28.5" | Dalian Good Display | GDES285E01(E6) - 28.5" A2 bare panel | dev-kit | — | **unknown** | medium |
+| 23.7" | PPDS / Philips (KNOWN… | Philips Tableaux (approx. 23.7in listed… | shipping | — | **unknown** | medium |
+| 55.0" | E Ink Holdings (KNOWN… | E Ink Marquee (40.5in and 55in, roadmap… | announced | — | **unknown** | unknown |
+| 42.0" | Melford Technologies | Colour e-paper displays 13.3 / 25.3 /… | shipping | — | **unknown** | unknown |
+| 42.0" | ATZ LLC | 42in E Ink display (largest listed) | shipping | $3,420 | **unknown** | unknown |
+| 32.0" | Digital View (KNOWN… | Digital View 32in Outdoor E-Paper… | shipping | — | **unknown** | unknown |
+| 32.0" | Clientop Technology Co… | 32in E-ink Outdoor Monitor / 31.5in… | shipping | $1,400 | **unknown** | unknown |
+| 32.0" | Guangzhou Zemso Electron… | Outdoor large-format e-paper display | shipping | $1,800 | **unknown** | unknown |
+| 32.0" | Melford Technologies | Colour e-paper displays (13.3 / 25.3 /… | shipping (UK reseller/integrator) | — | **unknown** | unknown |
+| 32.0" | ePaint (Anhui Yutu… | ePaint digital frame line (13.3" / 28"… | shipping (China; B2B-leaning) | — | **unknown** | unknown |
 | 31.5" | ePaint (Anhui Yutu… | e-Chroma 28" / 31.5" (indoor) and… | shipping | — | **unknown** | unknown |
-| 31.5" | Fraimic | Fraimic Smart Canvas Large 31.5 | preorder | $999 | **unknown** | low |
-| 75.0" | E Ink Corporation / E Ink… | E Ink Spectra 6 75" module (single) and… | announced | — | **closed** | high |
-| 40.5" | InkPoster (brand of… | PocketBook InkPoster Tela 40.5" | announced | $4,200 | **closed** | medium-high |
+| 31.5" | IDROID MEDIA CO. | 31.5in colour e-paper frame | shipping | $1,665 | **unknown** | unknown |
+| 31.5" | Netronix | 31.5-inch passive full-colour ePaper… | unveiled at COMPUTEX 2026 | — | **unknown** | unknown |
+| 28.5" | E Ink Holdings | E Ink Spectra 6 Flex-E 28.5-inch… | platform demonstration | — | **unknown** | unknown |
+| 25.3" | E Ink Holdings | E Ink 25.3" Spectra 6 ePaper Display… | shipping | $1,400 | **unknown** | unknown |
+| 25.3" | Shenzhen Huayi Technology… | Round and rectangular 13.3-25.3in… | shipping | $750 | **unknown** | unknown |
+| 32.0" | Dongguan VETO Technology… | VETO ePaper Advertising Display 32in | shipping | $1,159 | **unknown** | low |
+| 31.5" | Fortune Achieve (Beijing)… | 31.5in E Ink E6 full-colour display… | shipping | $995 | **unknown** | low |
+| 31.5" | I C T S (Myanmar) Limited | Large-size colour E Ink displays 13.3in… | shipping | $1,264 | **unknown** | low |
+| 31.5" | I-S Solution (아이에스솔루션) | INKVIA 31.5" E-Paper Display | demonstrated (demo video published 2026-07-27); commercial status unclear | — | **unknown** | low |
+| 25.3" | Guangdong Mingjinkang… | 25.3in Customized E Ink Digital Poster | shipping | $390 | **unknown** | low |
+| 32.0" | LG Electronics | LG e-Paper Display (32in QHD commercial… | shipping (introduced ISE 2026, US debut InfoComm 2026) | — | **closed** | high |
+| 32.0" | SOLUM Co., Ltd | SOLUM Newton E-Paper 32" (and 25.3"-32"… | unveiled at NRF 2026; award-winning at K-Display 2026 | — | **closed** | high |
+| 32.0" | Samsung (KNOWN vendor) | Samsung Color E-Paper EM13DX (13in)… | shipping | — | **closed** | high |
+| 32.0" | SOLUM | Newton E-Paper 32" | shipping | — | **closed** | high |
+| 32.0" | Samsung Electronics | Samsung Color E-Paper EM32D (EM32DX) /… | shipping | $1,710,000 | **closed** | high |
+| 32.0" | LG Electronics | LG E-paper Display (32") | shipping (Korea launch June 2026, then Europe and other markets) | — | **closed** | high |
+| 25.3" | SOLUM | Newton E-Paper 25.3" | shipping | — | **closed** | high |
+| 42.0" | GDS - Global Display… | eTela ePaper 42 inch | shipping | — | **closed** | medium-high |
+| 40.5" | InkPoster (brand of… | InkPoster (Affresco 13.3" / Tela 28.5"… | shipping; Tela 40.5" and Pininfarina-designed Duna launched at CES 2026 | $4,200 | **closed** | medium-high |
 | 40.5" | InkPoster (brand of… | PocketBook InkPoster Duna 40.5"… | announced | $6,500 | **closed** | medium-high |
+| 32.0" | GDS - Global Display… | eTela ePaper 32 inch | shipping | — | **closed** | medium-high |
 | 31.5" | InkPoster (brand of… | PocketBook InkPoster Affresco 31.5" | shipping | $1,699 | **closed** | medium-high |
 | 28.5" | PocketBook International… | PocketBook InkPoster Tela 28.5" | shipping | $2,399 | **closed** | medium-high |
+| 48.0" | IONNYK | IONNYK Linn | shipping | $3,250 | **closed** | medium |
+| 42.0" | Connectpoint | Digital Bus Stop (10in, 13in, 22in… | shipping | — | **closed** | medium |
+| 42.0" | Urban Solar | Solar e-paper transit displays (13in to… | shipping | — | **closed** | medium |
+| 42.0" | Soofa | Soofa Sign | deployed across US metros | — | **closed** | medium |
 | 40.2" | IONNYK (brand of… | IONNYK Jane (~25in), Linn (~50in)… | shipping | — | **closed** | medium |
+| 32.0" | Praevar Corporation | eLuminex Placard EP32 ePoster | shipping | — | **closed** | medium |
 | 31.5" | SwitchBot (Woan… | SwitchBot AI Art Frame 31.5 | shipping | $1,300 | **closed** | medium |
+| 31.5" | StellarLink Inc… | aecoPost 31.5" (StellarLink-badged) | announced for Japan | — | **closed** | medium |
+| 31.5" | TEIDEC Corporation… | e-paper digital signage 13.3in / 31.5in | shipping | — | **closed** | medium |
 | 31.2" | IONNYK (owned by… | Linn (Large Format) | shipping | $3,890 | **closed** | medium |
+| 75.0" | E Ink Corporation / E Ink… | E Ink Spectra 6 75" module (single) and… | demonstration | — | **closed** | unknown |
+| 42.0" | DNP (Dai Nippon Printing) | Electronic poster, 42 inch monochrome… | shipping | — | **closed** | unknown |
 | 32.0" | Papercast | Papercast 32" Indoor E-Paper Display —… | shipping | — | **closed** | unknown |
+| 32.0" | Project E Ink | Project E Ink Art Display 32in | shipping | $2,783 | **closed** | unknown |
+| 27.5" | APHEUM | APHEUM Frame L | pre-order | $2,348 | **closed** | unknown |
+| 28.5" | Oscar Japan (JP… | MAXEVIS Kokonna 28.5" (a.k.a. KoKonna /… | crowdfunded, campaign ended | $288,000 | **closed** | low |
 
 ---
 
@@ -192,8 +301,15 @@ supply chain. E Ink's own filings name BOE, DKE, Seekink, Innolux, Qingyue and
 Yes Optoelectronics as **module** partners supplied with E Ink colour film. BOE,
 the most-cited challenger, co-founded E Ink's trade alliance and holds ~40% of
 the ESL *module* market while buying E Ink film. LG's 32" unit is an E Ink
-Spectra 6 panel. The AUO arrangement is **still only a term sheet**, covering
-module assembly. Tianma is at 6.7" prototypes; CLEARink never shipped.
+Spectra 6 panel. Tianma is at 6.7" prototypes; CLEARink never shipped.
+
+**Correction from round 3:** an earlier version of this document said the AUO
+arrangement was "still only a term sheet". It is not. **AUO Display Plus and
+E Ink formed a joint venture** (ADP 51% / E Ink 49%, Taoyuan) with large-format
+EPD modules **in mass production since Q4 2025** — the first genuine second
+source for large-format modules. It comes with a warning attached: StellarLink's
+31.5" aecoPost is ADP-built, so an unknown number of apparently independent
+31.5" brands are one production line under different logos.
 
 **What breaks it — two genuine second sources above 15":**
 
@@ -234,6 +350,75 @@ large-format e-paper device on the market, then closed the division and deleted
 the page within about three years. reMarkable — the only vendor here with
 audited financials and real profit — has cut ~40% of staff in eight months and
 carries a bond maturing inside the three-year window.
+
+---
+
+## Round 3 — what a discovery-first sweep added
+
+Rounds 1 and 2 briefed researchers with vendor NAMES, so they largely re-found
+what was already known. Round 3 started from search vocabulary instead — English
+"poster"/signage terms, Chinese and Japanese manufacturer searches, the retail
+ESL industry, community/DIY surfaces, Korean, and application verticals. The
+new-to-known ratio ran from 3:2 to 17:1, which says the earlier ~33-vendor
+picture was a sampling artifact rather than a small field.
+
+**The strongest architectural finds, all new:**
+
+- **CREA** (Japan) is the standout. Its **EPS 42"** monochrome (2160×2880, 16
+  grey) has **HDMI in, RJ-45, USB host and an SD slot**, with documented
+  standalone-slideshow and FTP auto-update modes — a self-hosted app can drive it
+  with no vendor account at all. HDMI on a 42" e-paper panel means an ordinary
+  computer drives it. Its **EPS s-color 31.5"** (Spectra 6, 1440×2560) is the
+  colour sibling and takes a scheduled slideshow from a **microSD card**, cloud
+  optional. CREA sells single units and lends evaluation units for two weeks.
+- **Advantech** — 28.6" Spectra 6 at 3060×2160, USB carousel plus Ethernet and
+  Wi-Fi, and `DeviceOn/ePaper` **installs on your own Ubuntu server**. Industrial
+  vendor, single units, real datasheets.
+- **Sharp ePoster** (EP-C251, 25.3" colour) loads purely from a **USB-C
+  thumbdrive** — the cleanest offline path from a tier-1 manufacturer.
+- **ADLAB** (Korea, found only via its Korean-language site) — 31.2" mono and
+  13.3" colour running **stock Linux** with USB-A host, RJ45, IP65 and removable
+  micro-SD system storage. Update path undocumented; one email would settle it.
+- **AUO Display Plus AecoPost 31.5" *Mobile*** — Spectra 6, pushed from a phone
+  over WiFi or Bluetooth. AUO sells a separate "Cloud Model", which is itself
+  evidence the Mobile SKU needs none.
+- **Frame Labs** — the frame **pulls from an image-server URL you set**, with an
+  open-source server library, so there is no vendor server to switch off.
+
+**Artwork actually on e-paper — one real precedent.** Cloud8 Blanc installed a
+31.5" **CREA EPS s-color** in 2025 at a facility devoted to the late
+illustrator Minoru Nagao, showing illustration posters. That is a colour e-paper
+panel doing this exact job. (The other cases found — DAZZLE's 2,100-tile facade
+at San Diego airport, the BMW i5 Flow NOSTOKANA carrying Esther Mahlangu's
+Ndebele patterns — use E Ink Prism, which is segmented film, not an image
+display.) Artec Design's 650-display PoE installation at the Estonian National
+Museum remains the closest institutional analogue.
+
+**A ceiling worth planning around.** 42" is the largest SINGLE panel; everything
+above (75", 102") is tiled. And above 32" the colour is **Kaleido 3**, a
+colour-filter array with weak saturation. **Artwork-capable colour (Spectra 6)
+tops out at about 31.5–32" in shipping product.**
+
+**Price floor, with a caveat.** Roughly fifteen Chinese suppliers accept MOQ 1,
+including a 25.3" colour poster at USD 390–430 against $1,400 for E Ink's own
+module. But essentially none of them document how an image gets onto the screen
+— that silence is the finding. Several marketplace figures came via an AI
+aggregator that demonstrably misclassifies (it listed a 4K Android LCD as
+e-paper), so that tier is leads to verify, not quotes.
+
+**Two hypotheses disconfirmed, recorded so nobody re-runs them.** The ESL majors
+do NOT have large poster lines: VusionGroup stops at 12.2" e-paper and goes LCD
+above; Hanshow tops out ~7.5". Only SOLUM fit the hypothesis. And there is **no
+hidden Korean manufacturer tier** at ≥13" — thirteen Korean queries converged on
+Samsung, LG and SOLUM. The Korean sweep still paid for itself by finding ADLAB
+and a real street price for the Samsung 32" (₩1,710,000 against ₩2,390,000 list).
+
+**Where the remaining tail is.** Saturation was reached in every stream, but on
+the *reachable* web. Blocked or gated: Touch Taiwan's 101-partner exhibitor list,
+every Alibaba/1688 product page, and Reddit (refused on every fetch — genuinely
+unsampled, not saturated). The ePaper Industry Alliance directory turned out to
+publish **52 members, not the 260+ assumed**; the remaining ~208 sit behind
+registration, which is an account decision rather than a research one.
 
 ---
 
