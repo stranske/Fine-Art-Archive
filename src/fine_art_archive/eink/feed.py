@@ -27,6 +27,7 @@ Playlists are stored resolved-at-serve-time, not frozen: a feed re-runs its
 query on each request, so works that gain tags later appear automatically. That
 is the point of saving the *spec* rather than the resulting list of work_ids.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -104,19 +105,26 @@ class PlaylistStore:
     def _write(self, raw: dict[str, dict]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(".json.partial")
-        tmp.write_text(json.dumps(
-            {"_schema": "faa-eink-playlists/1", "playlists": raw}, indent=2))
+        tmp.write_text(json.dumps({"_schema": "faa-eink-playlists/1", "playlists": raw}, indent=2))
         tmp.replace(self.path)
 
     def list(self) -> list[SavedPlaylist]:
-        return sorted(
-            (SavedPlaylist(**v) for v in self._load_raw().values()),
-            key=lambda p: p.name.lower(),
-        )
+        playlists = []
+        for value in self._load_raw().values():
+            try:
+                playlists.append(SavedPlaylist(**value))
+            except TypeError:
+                continue
+        return sorted(playlists, key=lambda p: p.name.lower())
 
     def get(self, pid: str) -> SavedPlaylist | None:
         raw = self._load_raw().get(pid)
-        return SavedPlaylist(**raw) if raw else None
+        if not raw:
+            return None
+        try:
+            return SavedPlaylist(**raw)
+        except TypeError:
+            return None
 
     def save(self, pl: SavedPlaylist) -> SavedPlaylist:
         raw = self._load_raw()
@@ -134,8 +142,9 @@ class PlaylistStore:
         return True
 
 
-def rotation_index(n_items: int, interval: str, *, now: datetime | None = None,
-                   offset: int = 0) -> int:
+def rotation_index(
+    n_items: int, interval: str, *, now: datetime | None = None, offset: int = 0
+) -> int:
     """Which item a clock-driven feed should be showing.
 
     Deterministic from the wall clock so that a device with no memory, and two
@@ -157,9 +166,7 @@ def item_etag(work_id: str, target_key: str, dither: str, mtime: float | int) ->
     otherwise a device would keep showing a stale image that no longer matches
     the playlist it is pointed at.
     """
-    h = hashlib.sha256(
-        f"{work_id}|{target_key}|{dither}|{mtime}".encode()
-    ).hexdigest()
+    h = hashlib.sha256(f"{work_id}|{target_key}|{dither}|{mtime}".encode()).hexdigest()
     return f'W/"{h[:24]}"'
 
 

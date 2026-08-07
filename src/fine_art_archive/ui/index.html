@@ -1984,6 +1984,7 @@
               <button onclick="einkExport(true)" style="padding:6px 12px;border-color:var(--accent);color:var(--accent)">Write card</button>
             </div>
             <div class="sub" style="margin-top:4px">Must be under: ${T.export_roots.join(", ")}</div>
+            <div id="ek-using" class="sub" style="margin-top:4px"></div>
           </fieldset>
           <div id="ek-out" style="margin-top:16px"></div>
         </div>`;
@@ -2078,6 +2079,13 @@
     function einkUseForCard(id) {
       einkCardPlaylistId = id;
       toast("card will use that saved feed's selection — set a path and write");
+      const banner = document.getElementById("ek-using");
+      if (banner) {
+        banner.innerHTML = `Card uses saved feed <strong>${einkEsc(id)}</strong> — filters above are ignored. <a href="#" id="ek-clear">use filters instead</a>`;
+        document.getElementById("ek-clear")?.addEventListener("click", (ev) => {
+          ev.preventDefault(); einkCardPlaylistId = null; banner.textContent = "";
+        });
+      }
       const el = document.getElementById("ek-path");
       if (el) el.focus();
     }
@@ -2102,8 +2110,8 @@
           body: JSON.stringify({ spec: einkSpec(), target, sample: 24 }),
         });
         d = await r.json();
-        if (!r.ok) { out.innerHTML = `<div class="sub">${d.detail || r.status}</div>`; return; }
-      } catch (e) { out.innerHTML = `<div class="sub">${e}</div>`; return; }
+        if (!r.ok) { out.innerHTML = `<div class="sub">${einkEsc(d.detail || r.status)}</div>`; return; }
+      } catch (e) { out.innerHTML = `<div class="sub">${einkEsc(e)}</div>`; return; }
       einkLastPreview = d;
 
       const cov = d.coverage.excluded_for_missing_metadata || {};
@@ -2159,7 +2167,7 @@
         if (!r.ok) { st.textContent = d.detail || `error ${r.status}`; return; }
         st.innerHTML = `<strong>${write ? "Wrote" : "Would write"} ${d.written} file(s)</strong>`
           + (write && d.bytes_written ? ` · ${(d.bytes_written / 1e6).toFixed(1)} MB` : "")
-          + ` → ${d.path}`
+          + ` → ${einkEsc(d.path)}`
           + (d.skipped ? ` · ${d.skipped} skipped` : "")
           + (d.palette_measured ? "" : ` · <span style="color:#a06000">colours estimated</span>`);
       } catch (e) {

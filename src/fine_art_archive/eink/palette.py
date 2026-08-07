@@ -36,6 +36,7 @@ white -- only "a yellowish grey". `Palette.white` therefore is not #FFFFFF for
 the colour profiles, because mapping image white onto a white the panel cannot
 produce throws away headroom at the top of the range.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -81,7 +82,7 @@ class Palette:
         for rgb in self.colours:
             flat.extend(rgb)
         n = len(self.colours)
-        for i in range(n, 256):                     # cycle, never pad with black
+        for i in range(n, 256):  # cycle, never pad with black
             flat.extend(self.colours[i % n])
         pal = Image.new("P", (1, 1))
         pal.putpalette(flat)
@@ -106,12 +107,12 @@ class Palette:
 SPECTRA6 = Palette(
     name="spectra6",
     colours=(
-        (28, 28, 28),        # black  — reflective black is never 0,0,0
-        (222, 219, 205),     # white  — warm, well below 255
-        (158, 48, 44),       # red
-        (198, 168, 60),      # yellow
-        (44, 70, 132),       # blue
-        (54, 108, 74),       # green
+        (28, 28, 28),  # black  — reflective black is never 0,0,0
+        (222, 219, 205),  # white  — warm, well below 255
+        (158, 48, 44),  # red
+        (198, 168, 60),  # yellow
+        (44, 70, 132),  # blue
+        (54, 108, 74),  # green
     ),
     note="E Ink Spectra 6 / E6. Estimated primaries; replace by measurement.",
 )
@@ -123,10 +124,14 @@ SPECTRA6 = Palette(
 KALEIDO3 = Palette(
     name="kaleido3",
     colours=(
-        (30, 30, 30), (232, 230, 226),
-        (140, 74, 70), (150, 138, 82),
-        (72, 88, 124), (78, 112, 92),
-        (118, 96, 108), (168, 160, 148),
+        (30, 30, 30),
+        (232, 230, 226),
+        (140, 74, 70),
+        (150, 138, 82),
+        (72, 88, 124),
+        (78, 112, 92),
+        (118, 96, 108),
+        (168, 160, 148),
     ),
     note="Kaleido 3 CFA. Low saturation by construction; estimated.",
 )
@@ -139,33 +144,35 @@ MONO1BIT = Palette(
 
 GRAY16 = Palette(
     name="gray16",
-    colours=tuple((v, v, v) for v in range(20, 229, 14)),
+    colours=tuple((round(20 + i * 208 / 15),) * 3 for i in range(16)),
     note="16-level greyscale, as most mono panels actually address.",
 )
 
-PALETTES: dict[str, Palette] = {
-    p.name: p for p in (SPECTRA6, KALEIDO3, MONO1BIT, GRAY16)
-}
+PALETTES: dict[str, Palette] = {p.name: p for p in (SPECTRA6, KALEIDO3, MONO1BIT, GRAY16)}
 
 
 def get_palette(name: str) -> Palette:
     try:
         return PALETTES[name]
     except KeyError:
-        raise KeyError(
-            f"unknown palette {name!r}; have {sorted(PALETTES)}"
-        ) from None
+        raise KeyError(f"unknown palette {name!r}; have {sorted(PALETTES)}") from None
 
 
 # --------------------------------------------------------------------------
 # Dithering
 # --------------------------------------------------------------------------
-_FS_KERNEL = (           # (dx, dy, weight/16) — Floyd-Steinberg
-    (1, 0, 7 / 16), (-1, 1, 3 / 16), (0, 1, 5 / 16), (1, 1, 1 / 16),
+_FS_KERNEL = (  # (dx, dy, weight/16) — Floyd-Steinberg
+    (1, 0, 7 / 16),
+    (-1, 1, 3 / 16),
+    (0, 1, 5 / 16),
+    (1, 1, 1 / 16),
 )
-_ATKINSON_KERNEL = (     # spreads only 6/8 of the error — less noise, more
-    (1, 0, 1 / 8), (2, 0, 1 / 8),          # contrast on reflective media
-    (-1, 1, 1 / 8), (0, 1, 1 / 8), (1, 1, 1 / 8),
+_ATKINSON_KERNEL = (  # spreads only 6/8 of the error — less noise, more
+    (1, 0, 1 / 8),
+    (2, 0, 1 / 8),  # contrast on reflective media
+    (-1, 1, 1 / 8),
+    (0, 1, 1 / 8),
+    (1, 1, 1 / 8),
     (0, 2, 1 / 8),
 )
 
@@ -257,8 +264,9 @@ def map_to_panel_range(img: Image.Image, palette: Palette) -> Image.Image:
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), mode="RGB")
 
 
-def dither_error(original: Image.Image, dithered: Image.Image,
-                 blur_radius: float = 1.5) -> dict[str, float]:
+def dither_error(
+    original: Image.Image, dithered: Image.Image, blur_radius: float = 1.5
+) -> dict[str, float]:
     """Quality of a dither, measured the way an eye actually sees it.
 
     **Per-pixel error is the wrong metric for dithering, and reporting it alone
@@ -289,10 +297,15 @@ def dither_error(original: Image.Image, dithered: Image.Image,
         raise ValueError(f"shape mismatch {a.shape} vs {b.shape}")
     d = np.sqrt(((a - b) ** 2).sum(axis=2))
 
-    blurred = np.sqrt(((
-        np.asarray(a_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
-        - np.asarray(b_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
-    ) ** 2).sum(axis=2))
+    blurred = np.sqrt(
+        (
+            (
+                np.asarray(a_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
+                - np.asarray(b_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
+            )
+            ** 2
+        ).sum(axis=2)
+    )
 
     return {
         "perceived_rgb_distance": float(blurred.mean()),

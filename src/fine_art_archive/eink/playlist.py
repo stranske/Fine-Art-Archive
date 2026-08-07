@@ -22,6 +22,7 @@ Coverage honesty: filters over tags can only ever select from tagged works.
 no value on a filtered field, so a thin result reads as thin METADATA rather
 than as a thin archive.
 """
+
 from __future__ import annotations
 
 import json
@@ -140,6 +141,9 @@ class PlaylistSpec:
             # Fail loudly: a typo'd facet that is silently ignored produces a
             # playlist that looks filtered and is not.
             raise ValueError(f"unknown playlist field(s): {sorted(unknown)}")
+        sort = d.get("sort", "fit")
+        if sort not in {"fit", "quality", "year", "artist", "title", "random", "as-filtered"}:
+            raise ValueError(f"unknown playlist sort {sort!r}")
         return cls(**d)
 
 
@@ -203,14 +207,14 @@ def load_ratings(path: Path) -> dict[str, dict[str, int]]:
         try:
             ev = json.loads(line)
         except ValueError:
-            continue          # a corrupt line must not sink the whole playlist
+            continue  # a corrupt line must not sink the whole playlist
         wid = ev.get("work_id")
         if not wid:
             continue
         rec = out.setdefault(wid, {})
         for axis in ("quality", "fit"):
             v = ev.get(axis)
-            if isinstance(v, (int, float)) and v == v:      # v == v rejects NaN
+            if isinstance(v, (int, float)) and v == v:  # v == v rejects NaN
                 rec[axis] = int(v)
     return out
 
@@ -241,10 +245,10 @@ def build(
     ratings = ratings or {}
     dossier_ids = dossier_ids or set()
 
-    period_ranges = [PERIODS[p][1:] for p in spec.periods] if spec.periods else []
     for p in spec.periods:
         if p not in PERIODS:
             raise KeyError(f"unknown period {p!r}; have {sorted(PERIODS)}")
+    period_ranges = [PERIODS[p][1:] for p in spec.periods]
     artists_lc = {a.strip().lower() for a in spec.artists if a.strip()}
 
     total = 0
@@ -290,8 +294,10 @@ def build(
             continue
         if spec.not_tags and (tags & set(spec.not_tags)):
             continue
-        if spec.exclude_filters and (tags & {f"filter:{f}" if not f.startswith("filter:") else f
-                                             for f in spec.exclude_filters}):
+        if spec.exclude_filters and (
+            tags
+            & {f"filter:{f}" if not f.startswith("filter:") else f for f in spec.exclude_filters}
+        ):
             continue
         if spec.moods and not any(_mood_ok(m, tags, genre) for m in spec.moods):
             continue
@@ -310,11 +316,17 @@ def build(
         if spec.require_dossier and wid not in dossier_ids:
             continue
 
-        rows.append({
-            "work_id": wid, "artist": artist, "genre": genre, "year": year,
-            "title": sc.get("title") or "",
-            "fit": r.get("fit"), "quality": r.get("quality"),
-        })
+        rows.append(
+            {
+                "work_id": wid,
+                "artist": artist,
+                "genre": genre,
+                "year": year,
+                "title": sc.get("title") or "",
+                "fit": r.get("fit"),
+                "quality": r.get("quality"),
+            }
+        )
         if artist:
             facet_artist[artist] += 1
         if genre:
@@ -338,7 +350,8 @@ def build(
 
     if spec.sort == "random":
         import random
-        rnd = random.Random(spec.seed)   # seeded so a card is reproducible
+
+        rnd = random.Random(spec.seed)  # seeded so a card is reproducible
         rnd.shuffle(rows)
     elif spec.sort != "as-filtered":
         rows.sort(key=sort_value)
@@ -354,8 +367,8 @@ def build(
         coverage={
             "excluded_for_missing_metadata": dict(skipped),
             "note": "Tag filters can only select from tagged works; these "
-                    "counts say how many were dropped for having no value on a "
-                    "filtered field, so a small result is legible.",
+            "counts say how many were dropped for having no value on a "
+            "filtered field, so a small result is legible.",
         },
         facets={
             "artist": facet_artist.most_common(25),
@@ -364,6 +377,7 @@ def build(
         },
         spec=spec.__dict__.copy(),
     )
+
 
 def discover_facets(sidecars: Iterable[tuple[str, dict]]) -> dict:
     """Enumerate every filterable value that actually exists in the corpus.
@@ -409,11 +423,11 @@ def discover_facets(sidecars: Iterable[tuple[str, dict]]) -> dict:
         "families": {
             fam: {
                 "count": sum(c.values()),
-                "values": [{"value": v, "tag": f"{fam}:{v}", "count": n}
-                           for v, n in c.most_common()],
+                "values": [
+                    {"value": v, "tag": f"{fam}:{v}", "count": n} for v, n in c.most_common()
+                ],
             }
-            for fam, c in sorted(families.items(),
-                                 key=lambda kv: -sum(kv[1].values()))
+            for fam, c in sorted(families.items(), key=lambda kv: -sum(kv[1].values()))
         },
         "artists": [{"value": a, "count": n} for a, n in artists.most_common(400)],
         "year_range": [min(years), max(years)] if years else None,
@@ -423,10 +437,14 @@ def discover_facets(sidecars: Iterable[tuple[str, dict]]) -> dict:
         # belong together. Each still reports which underlying tags it uses, so a
         # mood whose tags have no coverage reads as empty rather than broken.
         "moods": [
-            {"key": k, "label": v["label"],
-             "uses": sorted(set(v.get("any_tags", []) + v.get("genres", [])))}
+            {
+                "key": k,
+                "label": v["label"],
+                "uses": sorted(set(v.get("any_tags", []) + v.get("genres", []))),
+            }
             for k, v in MOODS.items()
         ],
-        "periods": [{"key": k, "label": lbl, "from": lo, "to": hi}
-                    for k, (lbl, lo, hi) in PERIODS.items()],
+        "periods": [
+            {"key": k, "label": lbl, "from": lo, "to": hi} for k, (lbl, lo, hi) in PERIODS.items()
+        ],
     }

@@ -26,6 +26,7 @@ Merge rules
   on the customer's own server, both of which downgrade an "open" rating that
   another stream had given in good faith.
 """
+
 from __future__ import annotations
 
 import json
@@ -56,16 +57,34 @@ STREAMS = [
 # "and a tier of others". Counting them inflates the vendor total and puts a
 # non-existent company in the ranked table.
 NOT_A_VENDOR = (
-    "assorted marketplace", "known vendors encountered", "unnamed epia member",
-    "other named-but-upstream", "not individually verified",
-    "epaper industry alliance", "e-paper industry alliance",
+    "assorted marketplace",
+    "known vendors encountered",
+    "unnamed epia member",
+    "other named-but-upstream",
+    "not individually verified",
+    "epaper industry alliance",
+    "e-paper industry alliance",
     "china e-paper industry alliance",
 )
+
+KNOWN_STREAM_KEYS = {
+    "devices",
+    "vendors",
+    "leads_not_followed",
+    "unverified_facts",
+    "search_log",
+    "saturation_reached",
+    "saturation_note",
+    "new_vendor_count",
+    "known_vendor_count",
+    "research_reference_only",
+}
 
 
 def is_placeholder(name: str) -> bool:
     n = (name or "").lower()
     return any(t in n for t in NOT_A_VENDOR)
+
 
 # Round-2 streams that are not device/vendor shaped. They answer one question
 # each rather than cataloguing hardware, so they ride alongside the device list
@@ -89,9 +108,9 @@ CORRECTIONS: list[dict] = [
         "only_if": {"diagonal_in": 62},
         "set": {"diagonal_in": 40.2},
         "why": "IONNYK publishes FRAME dimensions, not screen sizes. The 62in "
-               "figure in round 1 is Maxine's frame diagonal; its display is "
-               "~40.2in (Jane is 13.2in, Linn ~31.2in). Corrected by the "
-               "art-frames stream, which read IONNYK's own spec pages.",
+        "figure in round 1 is Maxine's frame diagonal; its display is "
+        "~40.2in (Jane is 13.2in, Linn ~31.2in). Corrected by the "
+        "art-frames stream, which read IONNYK's own spec pages.",
         "by": "art-frames",
     },
 ]
@@ -109,11 +128,14 @@ def apply_corrections(devices: dict) -> list[str]:
             for k, v in c["set"].items():
                 if dev.get(k) != v:
                     dev.setdefault("_corrections", []).append(
-                        {"field": k, "was": dev.get(k), "now": v,
-                         "why": c["why"], "by": c["by"]})
+                        {"field": k, "was": dev.get(k), "now": v, "why": c["why"], "by": c["by"]}
+                    )
                     dev[k] = v
-                    applied.append(f"{c['match_brand']}.{k}: {dev['_corrections'][-1]['was']} -> {v}")
+                    applied.append(
+                        f"{c['match_brand']}.{k}: {dev['_corrections'][-1]['was']} -> {v}"
+                    )
     return applied
+
 
 # Most restrictive first.
 OPENNESS_ORDER = ["closed", "partly-open", "open", "unknown"]
@@ -215,7 +237,7 @@ BRAND_CANON: list[tuple[str, tuple[str, ...]]] = [
     ("dnp", ("dai nippon", "dnp")),
     ("amt", ("apex material",)),
     ("ueberall", ("ueberall",)),
-    ("pocketbook", ("pocketbook",)),   # parent, only if no product brand hit
+    ("pocketbook", ("pocketbook",)),  # parent, only if no product brand hit
 ]
 
 # Words that carry no identity: they appear in some spellings of a model and
@@ -223,7 +245,8 @@ BRAND_CANON: list[tuple[str, tuple[str, ...]]] = [
 _MODEL_NOISE = re.compile(
     r"\b(e[\s-]?ink|e[\s-]?paper|epaper|display|module|monitor|signage|"
     r"panel|finished|version|series|the|and|with|inch(es)?|in|"
-    r"colou?r|monochrome|mono|greyscale|grayscale)\b")
+    r"colou?r|monochrome|mono|greyscale|grayscale)\b"
+)
 
 
 def _fallback_vendor_key(name: str) -> str:
@@ -281,10 +304,10 @@ def colour_class(dev: dict) -> str:
 
 def model_core(dev: dict) -> str:
     m = (dev.get("model") or "").lower()
-    for _, tokens in BRAND_CANON:            # drop the brand from the model
+    for _, tokens in BRAND_CANON:  # drop the brand from the model
         for t in tokens:
             m = m.replace(t, " ")
-    m = re.sub(r"\(.*?\)", " ", m)            # parentheticals are commentary
+    m = re.sub(r"\(.*?\)", " ", m)  # parentheticals are commentary
     # Strip sizes in every spelling that appears: 40.5" / 40.5 inch / bare 40.5
     # / the run-together 405 and 253 left behind by earlier passes. Without the
     # bare form, "Tela 40.5" and "Tela 40.5in" produced different cores.
@@ -326,8 +349,7 @@ def same_product(a: dict, b: dict) -> bool:
     if colour_class(a) != colour_class(b):
         return False
     try:
-        if round(float(a.get("diagonal_in") or 0), 1) != round(
-                float(b.get("diagonal_in") or 0), 1):
+        if round(float(a.get("diagonal_in") or 0), 1) != round(float(b.get("diagonal_in") or 0), 1):
             return False
     except (TypeError, ValueError):
         return False
@@ -354,12 +376,11 @@ def consolidate(devices: dict[str, dict], stream_of: dict[str, str]) -> dict:
     for i, ka in enumerate(keys):
         if ka in merged_into:
             continue
-        for kb in keys[i + 1:]:
+        for kb in keys[i + 1 :]:
             if kb in merged_into or kb not in devices:
                 continue
             if same_product(devices[ka], devices[kb]):
-                devices[ka] = deep_merge(devices[ka], devices[kb],
-                                         stream_of.get(kb, "merged"))
+                devices[ka] = deep_merge(devices[ka], devices[kb], stream_of.get(kb, "merged"))
                 merged_into[kb] = ka
     for k in merged_into:
         devices.pop(k, None)
@@ -381,16 +402,14 @@ def restrictive_openness(a: str | None, b: str | None) -> str | None:
     vals = [v for v in (a, b) if v]
     if not vals:
         return None
-    return min(vals, key=lambda v: OPENNESS_ORDER.index(v)
-               if v in OPENNESS_ORDER else 99)
+    return min(vals, key=lambda v: OPENNESS_ORDER.index(v) if v in OPENNESS_ORDER else 99)
 
 
 def deep_merge(cur: dict, new: dict, stream: str) -> dict:
     for k, v in new.items():
         if k == "sources":
             cur[k] = merge_sources(cur.get(k), v)
-        elif k == "integration" and isinstance(v, dict) and isinstance(
-                cur.get(k), dict):
+        elif k == "integration" and isinstance(v, dict) and isinstance(cur.get(k), dict):
             o = restrictive_openness(cur[k].get("openness"), v.get("openness"))
             cur[k] = deep_merge(cur[k], v, stream)
             if o:
@@ -400,11 +419,7 @@ def deep_merge(cur: dict, new: dict, stream: str) -> dict:
         elif (
             k not in cur
             or cur[k] in (None, "", [], {})
-            or (
-                isinstance(v, str)
-                and isinstance(cur[k], str)
-                and len(v) > len(cur[k])
-            )
+            or (isinstance(v, str) and isinstance(cur[k], str) and len(v) > len(cur[k]))
         ):
             cur[k] = v
     cur.setdefault("_streams", [])
@@ -425,32 +440,49 @@ def main() -> int:
             print(f"MISSING {path}")
             continue
         d = json.loads(path.read_text())
-        counts[stream] = {"devices": len(d.get("devices") or []),
-                          "vendors": len(d.get("vendors") or [])}
+        extra = sorted(set(d) - KNOWN_STREAM_KEYS)
+        if extra:
+            print(f"UNREAD KEYS in {stream}: {', '.join(extra)}")
+        counts[stream] = {
+            "devices": len(d.get("devices") or []),
+            "vendors": len(d.get("vendors") or []),
+        }
         for dev in d.get("devices") or []:
             if is_placeholder(dev.get("vendor") or ""):
+                print(f"skip placeholder device: {dev.get('vendor')!r} / {dev.get('model')!r}")
                 continue
             k = dev_key(dev)
-            devices[k] = deep_merge(devices.get(k, {}), dev, stream) \
-                if k in devices else deep_merge(dict(dev), {}, stream)
+            devices[k] = (
+                deep_merge(devices.get(k, {}), dev, stream)
+                if k in devices
+                else deep_merge(dict(dev), {}, stream)
+            )
         for v in d.get("vendors") or []:
             if is_placeholder(v.get("name") or ""):
+                print(f"skip placeholder vendor: {v.get('name')!r}")
                 continue
             k = vendor_key(v)
-            vendors[k] = deep_merge(vendors.get(k, {}), v, stream) \
-                if k in vendors else deep_merge(dict(v), {}, stream)
+            vendors[k] = (
+                deep_merge(vendors.get(k, {}), v, stream)
+                if k in vendors
+                else deep_merge(dict(v), {}, stream)
+            )
         for lead in d.get("leads_not_followed") or []:
-            leads.append({"_stream": stream, **lead} if isinstance(lead, dict)
-                         else {"_stream": stream, "lead": lead})
+            leads.append(
+                {"_stream": stream, **lead}
+                if isinstance(lead, dict)
+                else {"_stream": stream, "lead": lead}
+            )
         for u in d.get("unverified_facts") or []:
-            unverified.append({"_stream": stream, **u} if isinstance(u, dict)
-                              else {"_stream": stream, "fact": u})
+            unverified.append(
+                {"_stream": stream, **u} if isinstance(u, dict) else {"_stream": stream, "fact": u}
+            )
 
     corrections_applied = apply_corrections(devices)
-    devices = consolidate(devices, {k: (v.get("_streams") or ["merged"])[0]
-                                    for k, v in devices.items()})
-    dev_list = sorted(devices.values(),
-                      key=lambda x: -(x.get("diagonal_in") or 0))
+    devices = consolidate(
+        devices, {k: (v.get("_streams") or ["merged"])[0] for k, v in devices.items()}
+    )
+    dev_list = sorted(devices.values(), key=lambda x: -(x.get("diagonal_in") or 0))
     sidecars = {}
     for key, path in SIDECAR_STREAMS:
         if path.exists():
@@ -461,10 +493,10 @@ def main() -> int:
     out = {
         "_schema": "faa-eink-targets/2",
         "_purpose": "Development target for the archive's E-Ink display push. "
-                    "Ranked on vendor staying power and integration openness, "
-                    "not on spec sheets.",
+        "Ranked on vendor staying power and integration openness, "
+        "not on spec sheets.",
         "_scope": "Reflective e-paper with viewing area >15in diagonal, "
-                  "shipping or announced. LCD art frames excluded.",
+        "shipping or announced. LCD art frames excluded.",
         "_streams": counts,
         "_merge": "scripts/merge_eink_survey.py from docs/research/eink/*.json",
         "devices": dev_list,
@@ -479,9 +511,11 @@ def main() -> int:
 
     big = [d for d in dev_list if (d.get("diagonal_in") or 0) > 15]
     print(f"streams: {counts}")
-    print(f"merged : {len(dev_list)} devices ({len(big)} above 15in), "
-          f"{len(vendors)} vendors, {len(leads)} leads, "
-          f"{len(unverified)} unverified facts")
+    print(
+        f"merged : {len(dev_list)} devices ({len(big)} above 15in), "
+        f"{len(vendors)} vendors, {len(leads)} leads, "
+        f"{len(unverified)} unverified facts"
+    )
     for c in corrections_applied:
         print(f"correction: {c}")
     for k, v in sidecars.items():

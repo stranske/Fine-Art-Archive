@@ -10,6 +10,7 @@ it, because those are the failures worth locking down:
 * per-pixel error says dithering makes images WORSE, which inverts the real
   answer and would mislead anyone tuning the pipeline.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,8 +39,11 @@ def gradient(w: int = 320, h: int = 200) -> Image.Image:
     px = img.load()
     for y in range(h):
         for x in range(w):
-            px[x, y] = (int(255 * x / (w - 1)), int(255 * y / (h - 1)),
-                        int(255 * (1 - x / (w - 1))))
+            px[x, y] = (
+                int(255 * x / (w - 1)),
+                int(255 * y / (h - 1)),
+                int(255 * (1 - x / (w - 1))),
+            )
     return img
 
 
@@ -59,7 +63,7 @@ def test_pil_palette_image_never_pads_with_black():
     entries = pal_img.getpalette()
     legal = {tuple(c) for c in SPECTRA6.colours}
     for i in range(256):
-        assert tuple(entries[i * 3:i * 3 + 3]) in legal, f"entry {i} is not a palette colour"
+        assert tuple(entries[i * 3 : i * 3 + 3]) in legal, f"entry {i} is not a palette colour"
 
 
 def test_white_is_not_pure_white_for_reflective_colour_palettes():
@@ -81,9 +85,9 @@ def test_dithering_beats_nearest_colour_perceptually():
     src = gradient()
     plain = dither_error(src, quantize(src, pal, method="none"))
     fs = dither_error(src, quantize(src, pal, method="floyd-steinberg"))
-    assert fs["perceived_rgb_distance"] < plain["perceived_rgb_distance"], (
-        "dithering should reduce PERCEIVED error"
-    )
+    assert (
+        fs["perceived_rgb_distance"] < plain["perceived_rgb_distance"]
+    ), "dithering should reduce PERCEIVED error"
     # And the counter-intuitive half, asserted so nobody "fixes" it later:
     assert fs["per_pixel_mean"] > plain["per_pixel_mean"], (
         "dithering is expected to INCREASE per-pixel error; that is the "
@@ -98,7 +102,7 @@ def test_dither_error_rejects_mismatched_sizes():
 
 # ---------------------------------------------------------------- targets ----
 def test_fit_contain_letterboxes_in_panel_white_not_ffffff():
-    t = get_target("gooddisplay-315-diy")          # 2560x1440 landscape
+    t = get_target("gooddisplay-315-diy")  # 2560x1440 landscape
     tall = Image.new("RGB", (400, 1200), (10, 200, 10))
     out = fit_to_target(tall, t, fit="contain")
     assert out.size == t.size
@@ -109,7 +113,8 @@ def test_fit_cover_fills_frame_and_crops():
     t = get_target("gooddisplay-315-diy")
     out = fit_to_target(Image.new("RGB", (400, 1200), (10, 200, 10)), t, fit="cover")
     assert out.size == t.size
-    assert out.getpixel((2, 2)) == (10, 200, 10)     # no bars
+    assert out.getpixel((2, 2)) == (10, 200, 10)  # no bars
+
 
 def test_render_for_target_end_to_end_is_palette_clean():
     t = get_target("generic-mono-1bit")
@@ -128,27 +133,34 @@ def test_unknown_names_raise_rather_than_defaulting():
 
 
 # --------------------------------------------------------------- playlist ----
-def sidecar(wid, *, artist=None, canonical=None, year=None, genre=None, tags=(),
-            title="T"):
+def sidecar(wid, *, artist=None, canonical=None, year=None, genre=None, tags=(), title="T"):
     a: dict = {}
     if artist:
         a["name"] = artist
     if canonical:
         a["canonical"] = canonical
-    return (wid, {
-        "work_id": wid, "title": title, "year": year, "artist": a,
-        "subject": {
-            "genre": genre,
-            "content_tags": [{"id": t, "state": "proposed", "source": "x"} for t in tags],
+    return (
+        wid,
+        {
+            "work_id": wid,
+            "title": title,
+            "year": year,
+            "artist": a,
+            "subject": {
+                "genre": genre,
+                "content_tags": [{"id": t, "state": "proposed", "source": "x"} for t in tags],
+            },
         },
-    })
+    )
 
 
 def test_artist_canonical_is_a_record_not_a_string():
     """The bug: .strip() on a dict raised AttributeError for most works."""
-    _, sc = sidecar("w", artist="Jacob von Ruisdael",
-                    canonical={"display_name": "Jacob van Ruisdael",
-                               "wikidata_q": "Q1", "confidence": 0.9})
+    _, sc = sidecar(
+        "w",
+        artist="Jacob von Ruisdael",
+        canonical={"display_name": "Jacob van Ruisdael", "wikidata_q": "Q1", "confidence": 0.9},
+    )
     assert _artist_of(sc) == "Jacob van Ruisdael"
 
 
@@ -164,10 +176,19 @@ def test_artist_filter_unifies_source_spelling_variants():
     assert res.work_ids == ["a", "b"]
 
 
-@pytest.mark.parametrize("raw,expected", [
-    (1648, 1648), ("1648", 1648), ("c. 1648", 1648), ("1648–1650", 1648),
-    ("oil on canvas", None), (None, None), ("", None), ("12", None),
-])
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        (1648, 1648),
+        ("1648", 1648),
+        ("c. 1648", 1648),
+        ("1648–1650", 1648),
+        ("oil on canvas", None),
+        (None, None),
+        ("", None),
+        ("12", None),
+    ],
+)
 def test_parse_year_handles_real_record_messiness(raw, expected):
     assert parse_year(raw) == expected
 
@@ -192,7 +213,8 @@ def test_mood_not_tags_excludes():
 
 def test_period_filter_and_missing_year_is_reported_not_hidden():
     rows = [
-        sidecar("in", year=1650), sidecar("out", year=1850),
+        sidecar("in", year=1650),
+        sidecar("out", year=1850),
         sidecar("noyear", year=None),
     ]
     res = build(rows, PlaylistSpec(periods=["golden-age"]))
@@ -237,6 +259,7 @@ def test_unknown_mood_and_period_raise():
 
 def test_corrupt_ratings_line_does_not_sink_the_playlist(tmp_path):
     from fine_art_archive.eink import load_ratings
+
     p = tmp_path / "r.jsonl"
     p.write_text('{"work_id":"a","fit":9}\nNOT JSON\n{"work_id":"b","fit":4}\n')
     r = load_ratings(p)
@@ -245,6 +268,7 @@ def test_corrupt_ratings_line_does_not_sink_the_playlist(tmp_path):
 
 def test_nan_rating_is_not_treated_as_a_value(tmp_path):
     from fine_art_archive.eink import load_ratings
+
     p = tmp_path / "r.jsonl"
     p.write_text('{"work_id":"a","fit":NaN,"quality":7}\n')
     r = load_ratings(p)
@@ -263,8 +287,13 @@ def _master_factory(tmp_path):
 def test_export_writes_ordered_playable_card(tmp_path):
     card = tmp_path / "card"
     items = [ExportItem("w1", "One", "A", 1600), ExportItem("w2", "Two", "B", 1700)]
-    rep = export(items, card, get_target("generic-mono-1bit"),
-                 master_for=_master_factory(tmp_path), dry_run=False)
+    rep = export(
+        items,
+        card,
+        get_target("generic-mono-1bit"),
+        master_for=_master_factory(tmp_path),
+        dry_run=False,
+    )
     names = sorted(p.name for p in card.glob("*.png"))
     assert names == ["001_w1.png", "002_w2.png"], "ordinal prefix IS the play order"
     assert rep.bytes_written > 0
@@ -280,8 +309,13 @@ def test_export_writes_ordered_playable_card(tmp_path):
 
 def test_export_dry_run_writes_nothing(tmp_path):
     card = tmp_path / "card"
-    rep = export([ExportItem("w1")], card, get_target("generic-mono-1bit"),
-                 master_for=_master_factory(tmp_path), dry_run=True)
+    rep = export(
+        [ExportItem("w1")],
+        card,
+        get_target("generic-mono-1bit"),
+        master_for=_master_factory(tmp_path),
+        dry_run=True,
+    )
     assert rep.written == ["001_w1.png"]
     assert not card.exists() or not list(card.glob("*.png"))
 
@@ -305,17 +339,20 @@ def test_export_never_deletes_files_it_did_not_write(tmp_path):
     precious.write_bytes(b"not ours")
     sub = card / "DCIM"
     sub.mkdir()
-    rep = export([ExportItem("w2")], card, t, master_for=mf,
-                 dry_run=False, overwrite=True)
+    rep = export([ExportItem("w2")], card, t, master_for=mf, dry_run=False, overwrite=True)
     assert precious.exists(), "an unrelated file was deleted"
     assert sub.is_dir(), "an unrelated directory was removed"
     assert "001_w1.png" in rep.removed
 
 
 def test_export_reports_missing_master_instead_of_failing(tmp_path):
-    rep = export([ExportItem("w1"), ExportItem("ghost")], tmp_path / "c",
-                 get_target("generic-mono-1bit"),
-                 master_for=_master_factory(tmp_path), dry_run=False)
+    rep = export(
+        [ExportItem("w1"), ExportItem("ghost")],
+        tmp_path / "c",
+        get_target("generic-mono-1bit"),
+        master_for=_master_factory(tmp_path),
+        dry_run=False,
+    )
     assert rep.written == ["001_w1.png"]
     assert rep.skipped and rep.skipped[0][0] == "ghost"
 
@@ -324,8 +361,13 @@ def test_export_numbers_by_written_count_when_earlier_items_skip(tmp_path):
     """Skipped works must not leave gaps in filenames or manifest order."""
     card = tmp_path / "card"
     items = [ExportItem("ghost"), ExportItem("w1"), ExportItem("w2")]
-    rep = export(items, card, get_target("generic-mono-1bit"),
-                 master_for=_master_factory(tmp_path), dry_run=False)
+    rep = export(
+        items,
+        card,
+        get_target("generic-mono-1bit"),
+        master_for=_master_factory(tmp_path),
+        dry_run=False,
+    )
     assert rep.written == ["001_w1.png", "002_w2.png"]
     assert rep.skipped and rep.skipped[0][0] == "ghost"
     manifest = json.loads((card / "playlist.json").read_text())
@@ -333,16 +375,38 @@ def test_export_numbers_by_written_count_when_earlier_items_skip(tmp_path):
     assert [i["file"] for i in manifest["items"]] == ["001_w1.png", "002_w2.png"]
 
 
+@pytest.mark.parametrize("kwargs", [{"fit": "conatin"}, {"method": "nope"}])
+def test_export_rejects_invalid_render_settings(tmp_path, kwargs):
+    with pytest.raises(ValueError):
+        export(
+            [ExportItem("w1")],
+            tmp_path / "card",
+            get_target("generic-mono-1bit"),
+            master_for=_master_factory(tmp_path),
+            dry_run=False,
+            **kwargs,
+        )
+
+
+def test_export_rejects_unsafe_work_id_before_writing(tmp_path):
+    with pytest.raises(ValueError, match="unsafe work_id"):
+        export(
+            [ExportItem("../outside")],
+            tmp_path / "card",
+            get_target("generic-mono-1bit"),
+            master_for=_master_factory(tmp_path),
+            dry_run=False,
+        )
+
+
 def test_coerce_fit_treats_empty_string_as_unset():
     from fine_art_archive.eink.targets import coerce_fit
+
     assert coerce_fit(None) is None
     assert coerce_fit("") is None
     assert coerce_fit("contain") == "contain"
-    try:
+    with pytest.raises(ValueError):
         coerce_fit("nope")
-        raise AssertionError("expected ValueError")
-    except ValueError:
-        pass
 
 
 # ------------------------------------------------------- feed + facets -------
@@ -378,11 +442,14 @@ def test_facets_are_discovered_from_data_not_declared():
 
 def test_facets_skip_non_dict_content_tags():
     rows = [
-        ("messy", {
-            "subject": {
-                "content_tags": ["legacy-string-tag", {"id": "setting:night"}, None],
-            }
-        }),
+        (
+            "messy",
+            {
+                "subject": {
+                    "content_tags": ["legacy-string-tag", {"id": "setting:night"}, None],
+                }
+            },
+        ),
     ]
     f = discover_facets(rows)
     assert f["families"]["setting"]["count"] == 1
@@ -399,8 +466,11 @@ def test_facets_report_real_counts_so_an_empty_filter_reads_as_empty():
 
 
 def test_facets_year_range_ignores_unparseable_years():
-    rows = [sidecar("a", year=1648), sidecar("b", year="oil on canvas"),
-            sidecar("c", year="c. 1700")]
+    rows = [
+        sidecar("a", year=1648),
+        sidecar("b", year="oil on canvas"),
+        sidecar("c", year="c. 1700"),
+    ]
     f = discover_facets(rows)
     assert f["year_range"] == [1648, 1700]
     assert f["years_known"] == 2
@@ -488,10 +558,12 @@ def test_slugify_never_returns_empty():
 # ---- manifest --------------------------------------------------------------
 def test_manifest_urls_are_absolute_and_indices_line_up():
     pl = SavedPlaylist.new("X", {}, interval="daily")
-    items = [{"work_id": f"w{i}", "title": f"T{i}", "artist": "A", "year": 1600 + i}
-             for i in range(3)]
-    m = build_manifest(pl, items, base_url="http://host:8932/",
-                       now=datetime(2026, 8, 6, tzinfo=UTC))
+    items = [
+        {"work_id": f"w{i}", "title": f"T{i}", "artist": "A", "year": 1600 + i} for i in range(3)
+    ]
+    m = build_manifest(
+        pl, items, base_url="http://host:8932/", now=datetime(2026, 8, 6, tzinfo=UTC)
+    )
     assert m["count"] == 3
     assert m["items"][2]["url"] == f"http://host:8932/feed/{pl.id}/image/2"
     assert m["current_url"] == f"http://host:8932/feed/{pl.id}/current"

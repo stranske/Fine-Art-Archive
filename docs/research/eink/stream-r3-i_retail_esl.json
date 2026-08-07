@@ -386,7 +386,7 @@
       "vendor": "Agile Display Solutions",
       "is_new_to_survey": true,
       "status": "shipping",
-      "diagonal_in": 13,
+      "diagonal_in": null,
       "resolution": null,
       "panel": "E Ink",
       "colour": "colour",

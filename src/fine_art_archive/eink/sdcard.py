@@ -33,6 +33,7 @@ their photos, so:
     manifests are removed — anything else on the card is left alone;
   * a dry run reports exactly what would be written before anything is.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -49,6 +50,7 @@ from PIL import Image
 from .targets import RenderTarget, coerce_fit, render_for_target
 
 OURS_RE = re.compile(r"^\d{3,5}_[A-Za-z0-9._-]+\.(png|bmp|jpg|jpeg)$")
+WORK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 MANIFESTS = ("playlist.json", "playlist.m3u", "README.txt")
 
 
@@ -70,8 +72,10 @@ class ExportReport:
 
     def as_dict(self) -> dict:
         return {
-            "written": len(self.written), "skipped": len(self.skipped),
-            "removed": len(self.removed), "bytes_written": self.bytes_written,
+            "written": len(self.written),
+            "skipped": len(self.skipped),
+            "removed": len(self.removed),
+            "bytes_written": self.bytes_written,
             "dry_run": self.dry_run,
             "skipped_detail": self.skipped[:20],
         }
@@ -82,7 +86,8 @@ def _reclaimable(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
     return [
-        p for p in sorted(root.iterdir())
+        p
+        for p in sorted(root.iterdir())
         if p.is_file() and (OURS_RE.match(p.name) or p.name in MANIFESTS)
     ]
 
@@ -109,6 +114,12 @@ def export(
     fmt = fmt.lower().lstrip(".")
     if fmt not in ("png", "bmp", "jpg", "jpeg"):
         raise ValueError(f"unsupported format {fmt!r}")
+    if method not in ("none", "floyd-steinberg", "atkinson"):
+        raise ValueError(f"unsupported dither method {method!r}")
+    normalized_fit = coerce_fit(fit)
+    bad_work_ids = [item.work_id for item in items if not WORK_ID_RE.fullmatch(item.work_id)]
+    if bad_work_ids:
+        raise ValueError(f"unsafe work_id {bad_work_ids[0]!r}")
 
     existing = _reclaimable(root)
     if existing and not overwrite:
@@ -120,9 +131,6 @@ def export(
 
     if not dry_run:
         root.mkdir(parents=True, exist_ok=True)
-        for p in existing:
-            p.unlink()
-            rep.removed.append(p.name)
 
     manifest_items: list[dict[str, object]] = []
     width = max(3, len(str(len(items))))
@@ -135,6 +143,7 @@ def export(
         written_idx = len(rep.written) + 1
         name = f"{written_idx:0{width}d}_{it.work_id}.{fmt}"
         dest = root / name
+        partial = root / f".{name}.partial"
         if progress:
             progress(i, len(items), it.work_id)
         if not dry_run:
@@ -148,37 +157,56 @@ def export(
                     with contextlib.suppress(Exception):
                         im.draft("RGB", (target.width * 2, target.height * 2))
                     out = render_for_target(
-                        im, target, fit=coerce_fit(fit), method=method,
-                        compress_range=compress_range, fast=fast,
+                        im,
+                        target,
+                        fit=normalized_fit,
+                        method=method,
+                        compress_range=compress_range,
+                        fast=fast,
                     )
                     # JPEG is the only format here that takes a quality
                     # setting; PNG/BMP reject the kwarg outright.
                     if fmt in ("jpg", "jpeg"):
-                        out.save(dest, quality=95)
+                        out.save(partial, format="JPEG", quality=95)
                     else:
-                        out.save(dest)
-            except Exception as exc:                      # noqa: BLE001
+                        out.save(partial, format=fmt.upper())
+            except Exception as exc:  # noqa: BLE001
+                partial.unlink(missing_ok=True)
                 rep.skipped.append((it.work_id, f"render failed: {exc}"))
                 continue
+            if not rep.written:
+                for prior in existing:
+                    prior.unlink()
+                    rep.removed.append(prior.name)
+            partial.replace(dest)
             rep.bytes_written += dest.stat().st_size
         rep.written.append(name)
-        manifest_items.append({
-            "order": written_idx, "file": name, "work_id": it.work_id,
-            "title": it.title, "artist": it.artist, "year": it.year,
-        })
+        manifest_items.append(
+            {
+                "order": written_idx,
+                "file": name,
+                "work_id": it.work_id,
+                "title": it.title,
+                "artist": it.artist,
+                "year": it.year,
+            }
+        )
 
     manifest = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "target": target.as_dict(),
         "render": {
-            "dither": method, "fit": fit or target.fit,
-            "range_compressed": compress_range, "format": fmt,
+            "dither": method,
+            "fit": normalized_fit or target.fit,
+            "range_compressed": compress_range,
+            "format": fmt,
             "fast_dither": fast,
         },
         "palette_measured": target.palette.measured,
         "palette_warning": (
-            None if target.palette.measured else
-            "Palette values are ESTIMATES, not measurements. No vendor "
+            None
+            if target.palette.measured
+            else "Palette values are ESTIMATES, not measurements. No vendor "
             "publishes a colour profile at these sizes. Colours on the panel "
             "will differ until the palette is measured on real hardware."
         ),
@@ -189,9 +217,7 @@ def export(
 
     if not dry_run and manifest_items:
         (root / "playlist.json").write_text(json.dumps(manifest, indent=2))
-        (root / "playlist.m3u").write_text(
-            "\n".join(str(m["file"]) for m in manifest_items) + "\n"
-        )
+        (root / "playlist.m3u").write_text("\n".join(str(m["file"]) for m in manifest_items) + "\n")
         (root / "README.txt").write_text(
             "Fine Art Archive — e-paper playlist card\n"
             "=======================================\n\n"
@@ -202,10 +228,14 @@ def export(
             "Files are named NNN_<work-id> so that a panel which plays a folder\n"
             "in filename order plays them in the intended order.\n\n"
             "playlist.json carries the full selection and render provenance.\n\n"
-            + ("NOTE: the colour palette used here is ESTIMATED, not measured.\n"
-               "No vendor publishes a colour profile for panels this size, so\n"
-               "on-panel colour will differ from the preview until the palette\n"
-               "is measured on real hardware.\n" if not target.palette.measured else "")
+            + (
+                "NOTE: the colour palette used here is ESTIMATED, not measured.\n"
+                "No vendor publishes a colour profile for panels this size, so\n"
+                "on-panel colour will differ from the preview until the palette\n"
+                "is measured on real hardware.\n"
+                if not target.palette.measured
+                else ""
+            )
         )
 
     return rep

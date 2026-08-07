@@ -1016,6 +1016,7 @@
    ]
   }
  ],
+ "research_reference_only": "deployments documents named installation case studies, not hardware targets; it is intentionally excluded from config/eink_targets.json.",
  "deployments": [
   {
    "organisation": "Museum of Fine Arts, Houston",

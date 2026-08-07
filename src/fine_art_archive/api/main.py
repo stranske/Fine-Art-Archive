@@ -314,10 +314,10 @@ def eink_targets() -> dict:
     return {
         "targets": [t.as_dict() for t in _eink.TARGETS.values()],
         "export_roots": [str(r) for r in EINK_EXPORT_ROOTS],
-        "palette_warning":
-            "All palettes are ESTIMATES. No vendor publishes a colour profile "
-            "at these sizes, so on-panel colour will differ until a real panel "
-            "is measured.",
+        "intervals": sorted(_eink.INTERVALS),
+        "palette_warning": "All palettes are ESTIMATES. No vendor publishes a colour profile "
+        "at these sizes, so on-panel colour will differ until a real panel "
+        "is measured.",
     }
 
 
@@ -349,21 +349,27 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     sidecars = _all_sidecars()
     ratings = _eink.load_ratings(store.RATINGS_LOG)
     try:
-        res = _eink.build(sidecars, spec, ratings=ratings,
-                          dossier_ids=set(store.work_ids_with_dossier()))
+        res = _eink.build(
+            sidecars, spec, ratings=ratings, dossier_ids=set(store.work_ids_with_dossier())
+        )
     except KeyError as exc:
         raise HTTPException(400, str(exc)) from exc
 
     by_id = dict(sidecars)
     from fine_art_archive.eink.playlist import _artist_of, parse_year
+
     items = []
     for wid in res.work_ids[: body.sample]:
         sc = by_id.get(wid) or {}
-        items.append({
-            "work_id": wid, "title": sc.get("title") or "",
-            "artist": _artist_of(sc), "year": parse_year(sc.get("year")),
-            "has_master": _eink_master(wid) is not None,
-        })
+        items.append(
+            {
+                "work_id": wid,
+                "title": sc.get("title") or "",
+                "artist": _artist_of(sc),
+                "year": parse_year(sc.get("year")),
+                "has_master": _eink_master(wid) is not None,
+            }
+        )
     return {
         "total_candidates": res.total_candidates,
         "matched": res.matched,
@@ -394,7 +400,12 @@ def eink_preview(
         raise HTTPException(404, f"no local master for {work_id}")
     try:
         tgt = _eink.get_target(target)
+        render_fit = _eink.coerce_fit(fit)
+        if dither not in ("none", "floyd-steinberg", "atkinson"):
+            raise ValueError(f"unsupported dither method {dither!r}")
     except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
     # Local import to match the surrounding style (the resize endpoint below
@@ -405,24 +416,27 @@ def eink_preview(
 
     scale = min(1.0, max_px / max(tgt.width, tgt.height))
     small = _eink.RenderTarget(
-        key=tgt.key, label=tgt.label,
-        width=max(8, int(tgt.width * scale)), height=max(8, int(tgt.height * scale)),
-        palette_name=tgt.palette_name, fit=tgt.fit, rotate=tgt.rotate,
+        key=tgt.key,
+        label=tgt.label,
+        width=max(8, int(tgt.width * scale)),
+        height=max(8, int(tgt.height * scale)),
+        palette_name=tgt.palette_name,
+        fit=tgt.fit,
+        rotate=tgt.rotate,
     )
     try:
         with Image.open(master) as im:
             im.draft("RGB", (small.width * 2, small.height * 2))
-            out = _eink.render_for_target(
-                im, small, fit=_eink.coerce_fit(fit), method=dither)
+            out = _eink.render_for_target(im, small, fit=render_fit, method=dither)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
 
     buf = io.BytesIO()
     out.save(buf, format="PNG")
     return Response(
-        buf.getvalue(), media_type="image/png",
-        headers={"Cache-Control": "no-store",
-                 "X-Palette-Measured": str(tgt.palette.measured)},
+        buf.getvalue(),
+        media_type="image/png",
+        headers={"Cache-Control": "no-store", "X-Palette-Measured": str(tgt.palette.measured)},
     )
 
 
@@ -442,14 +456,18 @@ def eink_playlist_export(body: ExportIn) -> dict:
 
     sidecars = _all_sidecars()
     try:
-        res = _eink.build(sidecars, spec,
-                          ratings=_eink.load_ratings(store.RATINGS_LOG),
-                          dossier_ids=set(store.work_ids_with_dossier()))
+        res = _eink.build(
+            sidecars,
+            spec,
+            ratings=_eink.load_ratings(store.RATINGS_LOG),
+            dossier_ids=set(store.work_ids_with_dossier()),
+        )
     except KeyError as exc:
         raise HTTPException(400, str(exc)) from exc
 
     by_id = dict(sidecars)
     from fine_art_archive.eink.playlist import _artist_of, parse_year
+
     items = [
         _eink.ExportItem(
             work_id=wid,
@@ -461,9 +479,16 @@ def eink_playlist_export(body: ExportIn) -> dict:
     ]
     try:
         rep = _eink.export(
-            items, dest, tgt, master_for=_eink_master, fmt=body.fmt,
-            method=dither, fit=fit, overwrite=body.overwrite,
-            dry_run=not body.write, spec=spec.__dict__,
+            items,
+            dest,
+            tgt,
+            master_for=_eink_master,
+            fmt=body.fmt,
+            method=dither,
+            fit=fit,
+            overwrite=body.overwrite,
+            dry_run=not body.write,
+            spec=spec.__dict__,
         )
     except FileExistsError as exc:
         raise HTTPException(409, str(exc)) from exc
@@ -471,10 +496,14 @@ def eink_playlist_export(body: ExportIn) -> dict:
         raise HTTPException(400, str(exc)) from exc
 
     out = rep.as_dict()
-    out.update({
-        "path": str(dest), "target": tgt.key, "selected": len(items),
-        "palette_measured": tgt.palette.measured,
-    })
+    out.update(
+        {
+            "path": str(dest),
+            "target": tgt.key,
+            "selected": len(items),
+            "palette_measured": tgt.palette.measured,
+        }
+    )
     return out
 
 
@@ -886,8 +915,14 @@ def _append_subject_tag_event(event: dict) -> None:
 # Claude Project/scripts/test_vision_tag_merge.py.
 # --------------------------------------------------------------------------
 DEFAULT_TAGGER_SCRIPT = (
-    Path.home() / "Library" / "CloudStorage" / "Dropbox" / "Pictures"
-    / "Claude Project" / "scripts" / "vision_tag_works.py"
+    Path.home()
+    / "Library"
+    / "CloudStorage"
+    / "Dropbox"
+    / "Pictures"
+    / "Claude Project"
+    / "scripts"
+    / "vision_tag_works.py"
 )
 TAGGER_SCRIPT = env_path("FAA_TAGGER_SCRIPT", DEFAULT_TAGGER_SCRIPT)
 TAGGER_PYTHON = os.environ.get("FAA_TAGGER_PYTHON") or sys.executable
@@ -909,14 +944,13 @@ def propose_tags(work_id: str) -> dict:
             f"tagger not available: {TAGGER_SCRIPT} not found. Set "
             f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
         )
-    cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id,
-           "--json", "--apply"]
+    cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True,
-                              timeout=TAGGER_TIMEOUT_S, check=False)
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+        )
     except subprocess.TimeoutExpired:
-        raise HTTPException(
-            504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
     if proc.returncode != 0:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger failed: " + " / ".join(tail))
@@ -924,8 +958,7 @@ def propose_tags(work_id: str) -> dict:
         payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
     except (ValueError, IndexError):
         tail = (proc.stderr or "").strip().splitlines()[-4:]
-        raise HTTPException(
-            500, "tagger produced no JSON: " + " / ".join(tail)) from None
+        raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
 
     works = payload.get("works") or []
     w = works[0] if works else {}
@@ -957,9 +990,7 @@ def propose_tags(work_id: str) -> dict:
 # gains a matching tag tomorrow joins the feed with no action from anyone, which
 # is the whole reason the spec is what gets saved.
 # --------------------------------------------------------------------------
-EINK_PLAYLISTS = env_path(
-    "FAA_EINK_PLAYLISTS", REPO_ROOT / "data" / "eink_playlists.json"
-)
+EINK_PLAYLISTS = env_path("FAA_EINK_PLAYLISTS", REPO_ROOT / "data" / "eink_playlists.json")
 _playlists = _eink.PlaylistStore(EINK_PLAYLISTS)
 
 
@@ -970,7 +1001,7 @@ class SavePlaylistIn(BaseModel):
     dither: str = "floyd-steinberg"
     fit: str | None = None
     interval: str = "daily"
-    id: str | None = None      # present = update in place
+    id: str | None = None  # present = update in place
 
 
 def _resolve_playlist(pl) -> list[dict]:
@@ -981,13 +1012,17 @@ def _resolve_playlist(pl) -> list[dict]:
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
     sidecars = _all_sidecars()
     try:
-        res = _eink.build(sidecars, spec,
-                          ratings=_eink.load_ratings(store.RATINGS_LOG),
-                          dossier_ids=set(store.work_ids_with_dossier()))
+        res = _eink.build(
+            sidecars,
+            spec,
+            ratings=_eink.load_ratings(store.RATINGS_LOG),
+            dossier_ids=set(store.work_ids_with_dossier()),
+        )
     except KeyError as exc:
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
     by_id = dict(sidecars)
     from fine_art_archive.eink.playlist import _artist_of, parse_year
+
     out = []
     for wid in res.work_ids:
         sc = by_id.get(wid) or {}
@@ -995,8 +1030,14 @@ def _resolve_playlist(pl) -> list[dict]:
         # polling `next` walks into a 404 and shows nothing.
         if _eink_master(wid) is None:
             continue
-        out.append({"work_id": wid, "title": sc.get("title") or "",
-                    "artist": _artist_of(sc), "year": parse_year(sc.get("year"))})
+        out.append(
+            {
+                "work_id": wid,
+                "title": sc.get("title") or "",
+                "artist": _artist_of(sc),
+                "year": parse_year(sc.get("year")),
+            }
+        )
     return out
 
 
@@ -1007,7 +1048,7 @@ def _get_playlist_or_404(playlist_id: str):
     return pl
 
 
-def _render_feed_image(pl, work_id: str) -> Response:
+def _render_feed_image(pl, work_id: str, request: Request) -> Response:
     from PIL import Image
 
     master = _eink_master(work_id)
@@ -1015,17 +1056,19 @@ def _render_feed_image(pl, work_id: str) -> Response:
         raise HTTPException(404, f"no local master for {work_id}")
     tgt = _eink.get_target(pl.target)
     etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime)
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag})
     try:
         with Image.open(master) as im:
             im.draft("RGB", (tgt.width * 2, tgt.height * 2))
-            out = _eink.render_for_target(
-                im, tgt, fit=_eink.coerce_fit(pl.fit), method=pl.dither)
+            out = _eink.render_for_target(im, tgt, fit=_eink.coerce_fit(pl.fit), method=pl.dither)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
     buf = io.BytesIO()
     out.save(buf, format="PNG")
     return Response(
-        buf.getvalue(), media_type="image/png",
+        buf.getvalue(),
+        media_type="image/png",
         headers={
             "ETag": etag,
             # Short cache: a panel refreshing hourly should not re-download an
@@ -1056,7 +1099,7 @@ def eink_playlists() -> dict:
 @app.post("/eink/playlists")
 def eink_save_playlist(body: SavePlaylistIn) -> dict:
     try:
-        _eink.PlaylistSpec.from_dict(body.spec)      # validate before storing
+        _eink.PlaylistSpec.from_dict(body.spec)  # validate before storing
         _eink.get_target(body.target)
         fit = _eink.coerce_fit(body.fit)
     except (ValueError, TypeError, KeyError) as exc:
@@ -1075,8 +1118,13 @@ def eink_save_playlist(body: SavePlaylistIn) -> dict:
         pl.dither, pl.fit, pl.interval = body.dither, fit, body.interval
     else:
         pl = _eink.SavedPlaylist.new(
-            body.name, body.spec, target=body.target, dither=body.dither,
-            fit=fit, interval=body.interval)
+            body.name,
+            body.spec,
+            target=body.target,
+            dither=body.dither,
+            fit=fit,
+            interval=body.interval,
+        )
     _playlists.save(pl)
     d = pl.as_dict()
     d["resolved_count"] = len(_resolve_playlist(pl))
@@ -1099,7 +1147,9 @@ def feed_manifest(playlist_id: str, request: Request) -> dict:
 
 
 @app.get("/feed/{playlist_id}/current")
-def feed_current(playlist_id: str, offset: int = Query(0, ge=0, le=64)) -> Response:
+def feed_current(
+    playlist_id: str, request: Request, offset: int = Query(0, ge=0, le=64)
+) -> Response:
     """The one URL a dumb panel can poll forever and still see a gallery.
 
     Which work this returns is computed from the clock, not from server state,
@@ -1111,18 +1161,18 @@ def feed_current(playlist_id: str, offset: int = Query(0, ge=0, le=64)) -> Respo
     if not items:
         raise HTTPException(404, "playlist resolves to no works with local images")
     idx = _eink.rotation_index(len(items), pl.interval, offset=offset)
-    return _render_feed_image(pl, items[idx]["work_id"])
+    return _render_feed_image(pl, items[idx]["work_id"], request)
 
 
 @app.get("/feed/{playlist_id}/image/{index}")
-def feed_image(playlist_id: str, index: int) -> Response:
+def feed_image(playlist_id: str, index: int, request: Request) -> Response:
     pl = _get_playlist_or_404(playlist_id)
     items = _resolve_playlist(pl)
     if not items:
         raise HTTPException(404, "playlist resolves to no works with local images")
     if not 0 <= index < len(items):
         raise HTTPException(404, f"index {index} out of range (0..{len(items) - 1})")
-    return _render_feed_image(pl, items[index]["work_id"])
+    return _render_feed_image(pl, items[index]["work_id"], request)
 
 
 @app.get("/feed/{playlist_id}/next")
@@ -1142,8 +1192,12 @@ def feed_next(playlist_id: str, request: Request, after: str | None = None) -> d
     base = str(request.base_url).rstrip("/")
     it = items[nxt]
     return {
-        "playlist_id": pl.id, "index": nxt, "count": len(items),
-        "work_id": it["work_id"], "title": it["title"], "artist": it["artist"],
+        "playlist_id": pl.id,
+        "index": nxt,
+        "count": len(items),
+        "work_id": it["work_id"],
+        "title": it["title"],
+        "artist": it["artist"],
         "year": it["year"],
         "image_url": f"{base}/feed/{pl.id}/image/{nxt}",
         "next_after": it["work_id"],
@@ -1416,7 +1470,7 @@ def _dz_container(work_id: str, layer: str) -> zipfile.ZipFile | None:
         zf = zipfile.ZipFile(path)
     except (OSError, zipfile.BadZipFile):
         return None
-    if len(_dz_zip_cache) > 24:            # bound the open-handle set
+    if len(_dz_zip_cache) > 24:  # bound the open-handle set
         _dz_zip_cache.clear()
     _dz_zip_cache[key] = (mtime, zf)
     return zf
@@ -1441,8 +1495,9 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> Response:
     zf = _dz_container(work_id, layer)
     if zf is not None:
         try:
-            return Response(zf.read(f"{level}/{col}_{row}.jpg"),
-                            media_type="image/jpeg", headers=_TILE_HEADERS)
+            return Response(
+                zf.read(f"{level}/{col}_{row}.jpg"), media_type="image/jpeg", headers=_TILE_HEADERS
+            )
         except KeyError:
             # Absent from the container. A handful of tiles genuinely do not
             # exist upstream, so fall through rather than 404 outright.

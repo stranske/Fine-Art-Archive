@@ -631,6 +631,7 @@
       "sources": [{"url": "https://goodereader.com/blog/electronic-readers/here-are-the-best-e-ink-picture-frames-worth-buying", "what_it_supports": "Jane 50x40 cm EUR 1,350; Linn 100x70 cm EUR 3,250; portal + apps; $12.99/month artwork subscription"}]
     }
   ],
+  "research_reference_only": "diy_controllers documents controller/reference material, not independently selectable e-paper display targets; it is intentionally excluded from config/eink_targets.json.",
   "diy_controllers": [
     {
       "name": "MpicoSys TCM2 / TCM3 timing controllers",
