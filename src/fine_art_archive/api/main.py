@@ -1019,9 +1019,7 @@ class SavePlaylistIn(BaseModel):
     id: str | None = None  # present = update in place
 
 
-def _resolve_playlist(
-    pl, sidecars: list[tuple[str, dict]] | None = None
-) -> list[dict]:
+def _resolve_playlist(pl, sidecars: list[tuple[str, dict]] | None = None) -> list[dict]:
     """Run a saved playlist's query against the archive as it is right now."""
     try:
         spec = _eink.PlaylistSpec.from_dict(pl.spec)

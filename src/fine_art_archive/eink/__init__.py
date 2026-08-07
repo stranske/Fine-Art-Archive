@@ -12,6 +12,7 @@ Dithering stays on our side of that boundary. It is the largest single
 determinant of how a reproduction looks, and every vendor except BLOOMIN8
 performs it internally with an undocumented pipeline. See palette.py.
 """
+
 from .feed import (  # noqa: F401
     INTERVALS,
     PlaylistStore,
@@ -59,11 +60,38 @@ from .targets import (  # noqa: F401
 # avoids spelling the suppression directive literally -- ruff parses it as a
 # real directive even inside prose and warns that it is malformed.)
 __all__ = [
-    "KALEIDO3", "MONO1BIT", "MOODS", "PALETTES", "PERIODS", "SPECTRA6",
-    "TARGETS", "ExportItem", "FitMode", "coerce_fit", "ExportReport", "Palette", "PlaylistResult",
-    "PlaylistSpec", "RenderTarget", "INTERVALS", "PlaylistStore", "SavedPlaylist", "build", "build_manifest",
-    "discover_facets", "dither_error", "export", "item_etag",
-    "rotation_index", "slugify",
-    "fit_to_target", "get_palette", "get_target", "load_ratings",
-    "map_to_panel_range", "parse_year", "quantize", "render_for_target",
+    "KALEIDO3",
+    "MONO1BIT",
+    "MOODS",
+    "PALETTES",
+    "PERIODS",
+    "SPECTRA6",
+    "TARGETS",
+    "ExportItem",
+    "FitMode",
+    "coerce_fit",
+    "ExportReport",
+    "Palette",
+    "PlaylistResult",
+    "PlaylistSpec",
+    "RenderTarget",
+    "INTERVALS",
+    "PlaylistStore",
+    "SavedPlaylist",
+    "build",
+    "build_manifest",
+    "discover_facets",
+    "dither_error",
+    "export",
+    "item_etag",
+    "rotation_index",
+    "slugify",
+    "fit_to_target",
+    "get_palette",
+    "get_target",
+    "load_ratings",
+    "map_to_panel_range",
+    "parse_year",
+    "quantize",
+    "render_for_target",
 ]

@@ -15,6 +15,7 @@ match the paper instead of glowing against it.
 Sizes come from the survey (docs/EINK_DEVICE_SURVEY.md) and are the vendors'
 published figures. Palettes are estimates — see palette.py.
 """
+
 from __future__ import annotations
 
 import json
@@ -54,11 +55,15 @@ class RenderTarget:
 
     def as_dict(self) -> dict:
         return {
-            "key": self.key, "label": self.label,
-            "width": self.width, "height": self.height,
+            "key": self.key,
+            "label": self.label,
+            "width": self.width,
+            "height": self.height,
             "palette": self.palette_name,
             "palette_measured": self.palette.measured,
-            "fit": self.fit, "rotate": self.rotate, "note": self.note,
+            "fit": self.fit,
+            "rotate": self.rotate,
+            "note": self.note,
         }
 
 
@@ -66,48 +71,75 @@ TARGETS: dict[str, RenderTarget] = {
     t.key: t
     for t in (
         RenderTarget(
-            "samsung-em32dx", 'Samsung Color E-Paper EM32DX 31.5"',
-            1440, 2560, "spectra6", rotate=0,
+            "samsung-em32dx",
+            'Samsung Color E-Paper EM32DX 31.5"',
+            1440,
+            2560,
+            "spectra6",
+            rotate=0,
             note="Native portrait 1440x2560. Push over MDC on TCP 1515.",
         ),
         RenderTarget(
-            "bloomin8-285", 'BLOOMIN8 EinkCanvas 28.5"',
-            2160, 3060, "spectra6",
+            "bloomin8-285",
+            'BLOOMIN8 EinkCanvas 28.5"',
+            2160,
+            3060,
+            "spectra6",
             note="Portrait 3:4, 131 ppi. Accepts PRE-DITHERED data via "
-                 "/image/dataUpload — the only device that does.",
+            "/image/dataUpload — the only device that does.",
         ),
         RenderTarget(
-            "inkposter-tela-285", 'InkPoster Tela 28.5"',
-            2160, 3060, "spectra6",
+            "inkposter-tela-285",
+            'InkPoster Tela 28.5"',
+            2160,
+            3060,
+            "spectra6",
             note="Best pixel density above 15in (132 ppi, portrait 3:4). "
-                 "Cloud-only ingest, so SD export does not apply.",
+            "Cloud-only ingest, so SD export does not apply.",
         ),
         RenderTarget(
-            "fraimic-large-315", 'Fraimic Large Canvas 31.5"',
-            2560, 1440, "spectra6", fit="contain",
+            "fraimic-large-315",
+            'Fraimic Large Canvas 31.5"',
+            2560,
+            1440,
+            "spectra6",
+            fit="contain",
             note="Landscape 16:9. Local mode advertised, endpoints undocumented.",
         ),
         RenderTarget(
-            "gooddisplay-315-diy", 'Good Display GDEP315C01 31.5" (DIY, QSPI)',
-            2560, 1440, "spectra6",
+            "gooddisplay-315-diy",
+            'Good Display GDEP315C01 31.5" (DIY, QSPI)',
+            2560,
+            1440,
+            "spectra6",
             note="Self-built route: DEAM-315E1 ESP32-S3 kit, SD-card first boot. "
-                 "31.5in is QSPI so an MCU can drive it; 25.3in is Mini-LVDS "
-                 "and cannot be driven this way.",
+            "31.5in is QSPI so an MCU can drive it; 25.3in is Mini-LVDS "
+            "and cannot be driven this way.",
         ),
         RenderTarget(
-            "boox-mira-pro-253", 'BOOX Mira Pro Color 25.3" (as a monitor)',
-            3200, 1800, "kaleido3", fit="contain",
+            "boox-mira-pro-253",
+            'BOOX Mira Pro Color 25.3" (as a monitor)',
+            3200,
+            1800,
+            "kaleido3",
+            fit="contain",
             note="Driven as an ordinary display over HDMI/DP — no API needed. "
-                 "Kaleido 3, so markedly less saturated than Spectra 6.",
+            "Kaleido 3, so markedly less saturated than Spectra 6.",
         ),
         RenderTarget(
-            "visionect-32-mono", 'Visionect Place & Play 32" (mono)',
-            1920, 1080, "gray16",
+            "visionect-32-mono",
+            'Visionect Place & Play 32" (mono)',
+            1920,
+            1080,
+            "gray16",
             note="Monochrome. Full REST API but licence-gated per device.",
         ),
         RenderTarget(
-            "generic-mono-1bit", "Generic bilevel panel (test target)",
-            1200, 825, "mono1bit",
+            "generic-mono-1bit",
+            "Generic bilevel panel (test target)",
+            1200,
+            825,
+            "mono1bit",
             note="For checking how a work survives the harshest case.",
         ),
     )
@@ -118,9 +150,7 @@ def get_target(key: str) -> RenderTarget:
     try:
         return TARGETS[key]
     except KeyError:
-        raise KeyError(
-            f"unknown render target {key!r}; have {sorted(TARGETS)}"
-        ) from None
+        raise KeyError(f"unknown render target {key!r}; have {sorted(TARGETS)}") from None
 
 
 _FIT_MODES: tuple[FitMode, ...] = ("contain", "cover", "stretch")
@@ -143,8 +173,9 @@ def coerce_fit(value: str | None) -> FitMode | None:
     raise ValueError(f"unknown fit mode {value!r}; expected one of {_FIT_MODES}")
 
 
-def fit_to_target(img: Image.Image, target: RenderTarget,
-                  fit: FitMode | None = None) -> Image.Image:
+def fit_to_target(
+    img: Image.Image, target: RenderTarget, fit: FitMode | None = None
+) -> Image.Image:
     """Resize/crop `img` to the target's pixel dimensions."""
     mode = fit or target.fit
     src = img.convert("RGB")
@@ -197,11 +228,13 @@ def render_for_target(
 def write_targets_json(path: Path) -> None:
     """Emit the target list so the UI and any external tool share one source."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(
-        {
-            "_note": "Generated by fine_art_archive.eink.targets. Palette values "
-                     "are ESTIMATES pending measurement on real hardware.",
-            "targets": [t.as_dict() for t in TARGETS.values()],
-        },
-        indent=2,
-    ))
+    path.write_text(
+        json.dumps(
+            {
+                "_note": "Generated by fine_art_archive.eink.targets. Palette values "
+                "are ESTIMATES pending measurement on real hardware.",
+                "targets": [t.as_dict() for t in TARGETS.values()],
+            },
+            indent=2,
+        )
+    )
