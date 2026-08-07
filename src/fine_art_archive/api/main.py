@@ -619,10 +619,9 @@ def _append_subject_tag_event(event: dict) -> None:
 # protect existing Wikidata/reviewer data -- see that function and its gate at
 # Claude Project/scripts/test_vision_tag_merge.py.
 # --------------------------------------------------------------------------
-DEFAULT_TAGGER_SCRIPT = (
-    Path.home() / "Library" / "CloudStorage" / "Dropbox" / "Pictures"
-    / "Claude Project" / "scripts" / "vision_tag_works.py"
-)
+# The tagger implementation and policy are versioned with this API.  The
+# operational corpus remains separately mounted through FAA_WORKSPACE.
+DEFAULT_TAGGER_SCRIPT = REPO_ROOT / "scripts" / "vision_tag_works.py"
 TAGGER_SCRIPT = env_path("FAA_TAGGER_SCRIPT", DEFAULT_TAGGER_SCRIPT)
 TAGGER_PYTHON = os.environ.get("FAA_TAGGER_PYTHON") or sys.executable
 # Cold start is model load (~10-25 s) plus one gigapixel decode; a warm
@@ -643,14 +642,13 @@ def propose_tags(work_id: str) -> dict:
             f"tagger not available: {TAGGER_SCRIPT} not found. Set "
             f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
         )
-    cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id,
-           "--json", "--apply"]
+    cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True,
-                              timeout=TAGGER_TIMEOUT_S, check=False)
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+        )
     except subprocess.TimeoutExpired:
-        raise HTTPException(
-            504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
     if proc.returncode != 0:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger failed: " + " / ".join(tail))
@@ -658,8 +656,7 @@ def propose_tags(work_id: str) -> dict:
         payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
     except (ValueError, IndexError):
         tail = (proc.stderr or "").strip().splitlines()[-4:]
-        raise HTTPException(
-            500, "tagger produced no JSON: " + " / ".join(tail)) from None
+        raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
 
     works = payload.get("works") or []
     w = works[0] if works else {}
@@ -948,7 +945,7 @@ def _dz_container(work_id: str, layer: str) -> zipfile.ZipFile | None:
         zf = zipfile.ZipFile(path)
     except (OSError, zipfile.BadZipFile):
         return None
-    if len(_dz_zip_cache) > 24:            # bound the open-handle set
+    if len(_dz_zip_cache) > 24:  # bound the open-handle set
         _dz_zip_cache.clear()
     _dz_zip_cache[key] = (mtime, zf)
     return zf
@@ -973,8 +970,9 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> Response:
     zf = _dz_container(work_id, layer)
     if zf is not None:
         try:
-            return Response(zf.read(f"{level}/{col}_{row}.jpg"),
-                            media_type="image/jpeg", headers=_TILE_HEADERS)
+            return Response(
+                zf.read(f"{level}/{col}_{row}.jpg"), media_type="image/jpeg", headers=_TILE_HEADERS
+            )
         except KeyError:
             # Absent from the container. A handful of tiles genuinely do not
             # exist upstream, so fall through rather than 404 outright.
