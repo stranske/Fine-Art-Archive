@@ -102,6 +102,17 @@ def test_heading_aliases_are_honoured() -> None:
     assert validate(body).ok
 
 
+def test_gh_run_command_is_a_qualifying_gate() -> None:
+    body = """
+## Tasks
+- [ ] Inspect the failed run
+
+## Acceptance Criteria
+- `gh run view 12345 --log-failed` reports no failing jobs
+"""
+    assert validate(body).ok
+
+
 def test_heading_with_trailing_qualifier_still_matches() -> None:
     body = """
 ## Tasks (in order)
