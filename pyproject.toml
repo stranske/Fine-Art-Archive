@@ -43,6 +43,10 @@ dev = [
 app = [
     "uvicorn>=0.30",
 ]
+tagger = [
+    "torch>=2.5",
+    "transformers>=4.45",
+]
 
 [project.urls]
 Homepage = "https://github.com/stranske/Fine-Art-Archive"

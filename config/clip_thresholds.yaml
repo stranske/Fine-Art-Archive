@@ -1,21 +1,70 @@
-# Vision-tagging policy. Threshold tags need calibrated ground truth; contrastive
-# tags deliberately do not. Their score is meaningful only relative to the
-# configured negative prompts, so they remain explicitly reviewable.
-thresholds: {}
+# Versioned Tier-3 policy. Operational artwork stays in FAA_WORKSPACE.
+thresholds:
+  genre:painting/portrait: {threshold: 0.2011, f1: 0.6981, basis: curated}
+  genre:painting/landscape: {threshold: 0.1960, f1: 0.5875, basis: curated}
+  genre:painting/seascape: {threshold: 0.2436, f1: 0.4091, basis: curated}
+  genre:painting/cityscape: {threshold: 0.2366, f1: 0.25, basis: provisional-mixed}
+  genre:painting/still-life: {threshold: 0.1984, f1: 0.7042, basis: curated}
+  genre:painting/genre-scene: {threshold: 0.2188, f1: 0.3933, basis: curated}
+  genre:painting/religious: {threshold: 0.2, f1: 0.6015, basis: curated}
+  genre:painting/mythological: {threshold: 0.2268, f1: 0.1928, basis: provisional-mixed}
+  genre:painting/allegory: {threshold: 0.2696, f1: 0.2, basis: provisional-mixed}
+  filter:religious: {threshold: 0.2157, f1: 0.6667, basis: curated}
+  filter:nudity-partial: {threshold: 0.2201, f1: 0.2609, basis: provisional-mixed}
+  filter:violence: {threshold: 0.184, f1: 0.2482, basis: provisional-mixed}
+  filter:blood: {threshold: 0.1848, f1: 0.5, basis: provisional-mixed}
+  filter:death: {threshold: 0.2268, f1: 0.4412, basis: provisional-mixed}
+  filter:disturbing: {threshold: 0.2178, f1: 0.32, basis: provisional-mixed}
+  subject:single-figure: {threshold: 0.1701, f1: 0.134, basis: curated}
+  subject:group: {threshold: 0.2183, f1: 0.1304, basis: provisional-mixed}
+  subject:male: {threshold: 0.1614, f1: 0.2144, basis: curated}
+  subject:female: {threshold: 0.1765, f1: 0.2722, basis: curated}
+  subject:child: {threshold: 0.2548, f1: 0.125, basis: curated}
+  subject:mother-and-child: {threshold: 0.1836, f1: 0.2977, basis: provisional-mixed}
+  subject:horse: {threshold: 0.1911, f1: 0.5, basis: provisional-mixed}
+  subject:ship: {threshold: 0.1855, f1: 0.3636, basis: provisional-mixed}
+  subject:tree: {threshold: 0.19, f1: 0.2963, basis: curated}
+  setting:outdoor: {threshold: 0.1913, f1: 0.4491, basis: provisional-mixed}
+  setting:landscape-natural: {threshold: 0.1681, f1: 0.623, basis: provisional-mixed}
+  setting:urban: {threshold: 0.1893, f1: 0.4, basis: provisional-mixed}
+  setting:rural: {threshold: 0.2326, f1: 0.0952, basis: provisional-mixed}
+  setting:night: {threshold: 0.2253, f1: 0.4096, basis: provisional-mixed}
+  setting:winter: {threshold: 0.2172, f1: 0.8095, basis: provisional-mixed}
+  palette:cool-toned: {threshold: 0.0866, f1: 0.0626, basis: provisional-mixed}
+  subject:dog: {threshold: 0.183, f1: 0.2105, basis: curated}
+  subject:bird: {threshold: 0.1562, f1: 0.0606, basis: curated}
+  subject:train: {threshold: 0.194, f1: 0.5455, basis: provisional-mixed}
+  subject:industrial-machinery: {threshold: 0.1499, f1: 0.129, basis: provisional-mixed}
+  genre:painting/history: {threshold: 0.2237, f1: 0.3902, basis: provisional-mixed}
+  setting:water: {threshold: 0.1843, f1: 0.0671, basis: provisional-mixed}
+  setting:autumn: {threshold: 0.2127, f1: 0.1558, basis: provisional-mixed}
+  setting:summer: {threshold: 0.1902, f1: 0.06, basis: provisional-mixed}
+  era-depicted:industrial-era: {threshold: 0.2188, f1: 0.303, basis: provisional-mixed}
+  theme:religious-narrative: {threshold: 0.1854, f1: 0.5433, basis: provisional-mixed}
+  theme:mythological: {threshold: 0.219, f1: 0.3478, basis: provisional-mixed}
+  theme:war: {threshold: 0.2184, f1: 0.3171, basis: provisional-mixed}
+  theme:labor: {threshold: 0.176, f1: 0.1379, basis: provisional-mixed}
+  theme:leisure: {threshold: 0.2067, f1: 0.1163, basis: provisional-mixed}
+  theme:celebration: {threshold: 0.2156, f1: 0.1852, basis: provisional-mixed}
+  theme:motherhood: {threshold: 0.2238, f1: 0.1053, basis: provisional-mixed}
 contrastive_pairs:
   filter:nudity-full:
-    positive: nude figure
-    negatives: [clothed figure]
+    positive: fully nude figure as the subject of the work
+    negatives: [fully clothed figure]
     margin: 0.0
   filter:nudity-partial:
-    positive: partially nude figure
+    positive: figure with partial nudity, exposed chest or buttocks
     negatives: [fully clothed figure]
     margin: 0.0
   filter:weapon-prominent:
-    positive: a weapon held or prominently displayed
+    positive: weapon held or prominently displayed
     negatives: [no weapon present]
     margin: 0.0
   filter:occult:
     positive: occult symbol or ritual imagery
     negatives: [no occult symbol or ritual imagery]
+    margin: 0.0
+  palette:monochrome:
+    positive: monochromatic or grayscale
+    negatives: [predominantly colorful artwork]
     margin: 0.0
