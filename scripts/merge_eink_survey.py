@@ -334,6 +334,19 @@ def dev_key(d: dict) -> str:
 DISTINCT_MARKERS = ("kit", "bare", "devkit", "evaluation", "reference")
 
 
+def _colours_compatible(a: str, b: str) -> bool:
+    """Treat generic `colour?` as compatible with a specific colour family.
+
+    Researchers sometimes record only "colour" while another stream names the
+    panel family (Spectra 6, Kaleido, …). Those are the same SKU, not rivals.
+    Conflicting specifics (mono vs spectra6, kaleido vs gallery) still diverge.
+    """
+    if a == b:
+        return True
+    specific = {"spectra6", "kaleido", "gallery", "acep"}
+    return (a == "colour?" and b in specific) or (b == "colour?" and a in specific)
+
+
 def same_product(a: dict, b: dict) -> bool:
     """True when two records describe one product under different spellings.
 
@@ -346,7 +359,7 @@ def same_product(a: dict, b: dict) -> bool:
     """
     if brand_of(a) != brand_of(b):
         return False
-    if colour_class(a) != colour_class(b):
+    if not _colours_compatible(colour_class(a), colour_class(b)):
         return False
     try:
         if round(float(a.get("diagonal_in") or 0), 1) != round(float(b.get("diagonal_in") or 0), 1):

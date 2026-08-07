@@ -575,3 +575,71 @@ def test_empty_manifest_has_no_current_url_to_poll():
     pl = SavedPlaylist.new("Empty", {})
     m = build_manifest(pl, [], base_url="http://h")
     assert m["count"] == 0 and m["current_url"] is None
+
+
+# ---- API error mapping (direct handler calls; no TestClient/httpx) ---------
+def test_checked_export_dir_rejects_paths_outside_roots(tmp_path, monkeypatch):
+    from fastapi import HTTPException
+
+    from fine_art_archive.api import main as api_main
+
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path / "allowed"])
+    with pytest.raises(HTTPException) as ei:
+        api_main._checked_export_dir(str(tmp_path / "outside" / "card"))
+    assert ei.value.status_code == 400
+    assert "export path must be under" in ei.value.detail
+
+
+def test_feed_current_404_when_playlist_resolves_empty(tmp_path, monkeypatch):
+    from fastapi import HTTPException
+    from starlette.requests import Request
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.eink import PlaylistStore, SavedPlaylist
+
+    store_path = tmp_path / "pl.json"
+    pl_store = PlaylistStore(store_path)
+    empty = SavedPlaylist.new("Empty feed", {"all_tags": ["theme:__no_such__"]})
+    pl_store.save(empty)
+    monkeypatch.setattr(api_main, "_playlists", pl_store)
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: [])
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": f"/feed/{empty.id}/current",
+        "headers": [],
+        "query_string": b"",
+        "server": ("test", 80),
+        "scheme": "http",
+    }
+    request = Request(scope)
+    with pytest.raises(HTTPException) as ei:
+        api_main.feed_current(empty.id, request)
+    assert ei.value.status_code == 404
+    assert "no works" in ei.value.detail
+
+
+def test_export_maps_file_exists_to_409(tmp_path, monkeypatch):
+    from fastapi import HTTPException
+
+    from fine_art_archive.api import main as api_main
+
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [allowed])
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: [])
+
+    def _boom(*_a, **_k):
+        raise FileExistsError("card already has files; pass overwrite=true")
+
+    monkeypatch.setattr(api_main._eink, "export", _boom)
+    monkeypatch.setattr(
+        api_main._eink,
+        "build",
+        lambda *a, **k: type("R", (), {"work_ids": []})(),
+    )
+    body = api_main.ExportIn(path=str(allowed / "card"), spec={}, write=True, overwrite=False)
+    with pytest.raises(HTTPException) as ei:
+        api_main.eink_playlist_export(body)
+    assert ei.value.status_code == 409
+    assert "overwrite" in ei.value.detail

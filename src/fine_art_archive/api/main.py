@@ -914,16 +914,9 @@ def _append_subject_tag_event(event: dict) -> None:
 # protect existing Wikidata/reviewer data -- see that function and its gate at
 # Claude Project/scripts/test_vision_tag_merge.py.
 # --------------------------------------------------------------------------
-DEFAULT_TAGGER_SCRIPT = (
-    Path.home()
-    / "Library"
-    / "CloudStorage"
-    / "Dropbox"
-    / "Pictures"
-    / "Claude Project"
-    / "scripts"
-    / "vision_tag_works.py"
-)
+# The tagger implementation and policy are versioned with this API.  The
+# operational corpus remains separately mounted through FAA_WORKSPACE.
+DEFAULT_TAGGER_SCRIPT = REPO_ROOT / "scripts" / "vision_tag_works.py"
 TAGGER_SCRIPT = env_path("FAA_TAGGER_SCRIPT", DEFAULT_TAGGER_SCRIPT)
 TAGGER_PYTHON = os.environ.get("FAA_TAGGER_PYTHON") or sys.executable
 # Cold start is model load (~10-25 s) plus one gigapixel decode; a warm
@@ -1004,13 +997,15 @@ class SavePlaylistIn(BaseModel):
     id: str | None = None  # present = update in place
 
 
-def _resolve_playlist(pl) -> list[dict]:
+def _resolve_playlist(
+    pl, sidecars: list[tuple[str, dict]] | None = None
+) -> list[dict]:
     """Run a saved playlist's query against the archive as it is right now."""
     try:
         spec = _eink.PlaylistSpec.from_dict(pl.spec)
     except (ValueError, TypeError) as exc:
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
-    sidecars = _all_sidecars()
+    sidecars = _all_sidecars() if sidecars is None else sidecars
     try:
         res = _eink.build(
             sidecars,
@@ -1083,10 +1078,12 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
 @app.get("/eink/playlists")
 def eink_playlists() -> dict:
     out = []
+    # One corpus scan for the whole list — not one scan per saved playlist.
+    sidecars = _all_sidecars()
     for pl in _playlists.list():
         d = pl.as_dict()
         try:
-            d["resolved_count"] = len(_resolve_playlist(pl))
+            d["resolved_count"] = len(_resolve_playlist(pl, sidecars))
         except HTTPException as exc:
             d["resolved_count"] = None
             d["error"] = exc.detail
