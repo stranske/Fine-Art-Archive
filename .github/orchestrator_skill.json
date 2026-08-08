@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "repo": "stranske/Workflows",
+  "ref": "main",
+  "paths": ["docs/exports/orchestrator-skill/SKILL.md"]
+}
