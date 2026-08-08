@@ -22,7 +22,7 @@ import zipfile
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
@@ -359,7 +359,9 @@ class ExportIn(BaseModel):
     path: str
     dither: str = "floyd-steinberg"
     fit: str | None = None
-    fmt: str = "png"
+    # Constrained, not free-form: an unvalidated string let `?fmt=jpeg`
+    # through and produced a card whose dither had been destroyed.
+    fmt: Literal["png", "bmp"] = "png"
     write: bool = False
     overwrite: bool = False
 
