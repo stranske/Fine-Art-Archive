@@ -176,6 +176,26 @@ def decide_repair(meta: Mapping[str, Any], qtype: QidType) -> Repair | None:
             ),
         )
 
+    # Absence of evidence is not evidence of absence. `_row_to_type` derives
+    # every flag from OPTIONAL clauses, so a QID we learned NOTHING about —
+    # deleted, redirected, or simply lagging in WDQS — returns a row with no
+    # label and every flag False, which is byte-identical to "positively not an
+    # artwork". Clearing on that erases a correct, hard-won identifier on a
+    # transient condition, and the superseded value is not recorded anywhere
+    # (`field_provenance.prior_value` is declared in the schema but not yet
+    # implementable). A genuine non-artwork essentially always carries an
+    # English label, so "no label AND no facts at all" is the signal that the
+    # query answered nothing.
+    if qtype.label is None and not (qtype.is_artwork or qtype.is_human or qtype.is_artist):
+        return Repair(
+            action="unverifiable",
+            note=(
+                "Query returned no facts for this QID (no label, no type) — "
+                "cannot distinguish 'wrong QID' from 'WDQS did not answer', so "
+                "the identifier is left untouched."
+            ),
+        )
+
     kind = "person" if qtype.is_human else "place/other"
     return Repair(
         action="clear",
