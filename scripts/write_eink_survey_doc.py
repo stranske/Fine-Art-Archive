@@ -445,6 +445,31 @@ this document.
 - **DASUNG's 25.3"** blanks after ~5s without a USB heartbeat — it needs a
   daemon just to hold a picture.
 - **Philips Tableaux' "60,000 colours"** is ~8 with device-side dithering.
+- **Brands that reach you through ADVERTISING rather than search** were checked
+  on 2026-08-07 after the owner reported seeing them promoted. Recorded so they
+  are not re-investigated: **Muse** (museframe.io) is a backlit LCD frame for
+  digital-art collectors — 4K, 1200:1 contrast, video playback; **Atmoph** is a
+  27" FHD backlit LCD video-window with speakers and an ~$11/mo view
+  subscription, confirmed by its CEO ("the LCD panel is FHD"); **Displate**
+  sells physical steel prints, and even its powered "Lumino" line is fixed
+  licensed art with OLED strips laminated in and no image input. All three are
+  out of scope on technology, not on merit.
+  **Inkanva** and **Jitrainno** ARE genuine Spectra 6, and both are unlaunched:
+  each has a "Launching soon" Kickstarter that has never run and a creator
+  profile reading "First created / 0 backed". Inkanva is anonymous — no legal
+  entity, names or address — while already collecting $20 pre-launch deposits,
+  and its headline perovskite self-charging covers only the 7.09" and 13.3"
+  models, not the 28.5" flagship. Jitrainno is more substantial (named Hong Kong
+  entity, four named leads, a published iOS app, a documented offline
+  Bluetooth+hotspot binding mode with no vendor cloud) but is phone-app-only:
+  no API, no SD card, no LAN endpoint.
+  **The methodological point matters more than the five verdicts.** Advertising
+  is not surfacing a class of vendor that search misses. It is surfacing
+  pre-revenue crowdfunding entities that buy attention *because* organic search
+  cannot rank them — no press, no retail, no live campaign. The two genuinely
+  shipping large-format options reachable today rank on page one of a plain
+  query. Treat an ad-sourced name as a pre-launch risk signal, not as a lead the
+  research missed.
 - **Dead ends:** Waveshare caps at 13.3", Pervasive Displays at 3.4". The real
   bare-panel counterparties are Good Display, E Ink's own shopkit store, and
   **Digital View** (founder-owned since 1995, TCON boards 13.3"–75").

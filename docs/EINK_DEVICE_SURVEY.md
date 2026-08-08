@@ -19,7 +19,7 @@ push, and to stay readable during development. Two criteria dominate:
 
 **Coverage:** 179 device records (136 above 15"),
 131 vendors, 122 recorded
-leads, from six researcher streams across two rounds.
+leads, from 10 researcher streams across three rounds.
 
 ---
 
@@ -78,7 +78,7 @@ tuned for the muted, real-world colours of Spectra 6" rather than naive RGB.
 Eight public repos exist including two Home Assistant integrations and a
 third-party ESP32-S3 reimplementation. Caveat: the converter targets the 13.3"
 panel; whether the 31.5" uses the same path is unconfirmed. Against it: the list
-price rose ~50% from the announced $999;
+price rose ~30% from the announced $999;
 both SKUs currently show sold out; and delivery ran ~3 months late.
 
 **BLOOMIN8 EinkCanvas 28.5" — the best-documented local control surface in the
@@ -131,7 +131,7 @@ Sorted by openness, then vendor durability, then size.
 | 31.5" | E Ink Holdings (KNOWN… | E Ink shopkit bare panels: 13.3in… | shipping | $449 | **open** | unknown |
 | 28.0" | E Ink Holdings (KNOWN… | Colour ePaper signage 13.3 / 25.3 /… | shipping | — | **open** | unknown |
 | 32.0" | Samsung Electronics | Color E-Paper EM32DX (EMDX series) | shipping | $780 | **partly-open** | high |
-| 32.0" | Samsung | Color E-Paper EM32DX / EM32DX-A (32… | shipping | $799 | **partly-open** | high |
+| 32.0" | Samsung | Color E-Paper EM32DX / EM32DX-A (32… | shipping | GBP 799 | **partly-open** | high |
 | 28.6" | Advantech | 28.6-inch Spectra 6 ePaper (open-frame) | shipping | — | **partly-open** | high |
 | 25.3" | Onyx International Inc… | Boox Mira Pro Color 25.3 (and Mira Pro… | shipping | $1,899 | **partly-open** | high |
 | 75.0" | Agile Display Solutions | 75" DigiPoster Cassette / 75"… | shipping | — | **partly-open** | medium-high |
@@ -140,7 +140,7 @@ Sorted by openness, then vendor durability, then size.
 | 32.0" | Visionect (KNOWN vendor) | Visionect Place & Play 32" / 13" | shipping | — | **partly-open** | medium-high |
 | 31.5" | SEEKINK (Jiangxi Xingtai… | S315E6 Spectra 6 wall-mounted billboard | shipping | — | **partly-open** | medium-high |
 | 31.5" | Geniatech (brand: MyGica) | EPC3200 31.5in / EPC2850 28.5in /… | shipping | — | **partly-open** | medium-high |
-| 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | $2,300 | **partly-open** | medium-high |
+| 31.2" | Visionect d.o.o. | Place & Play 32" (31.2" monochrome) | shipping | EUR 2,300 | **partly-open** | medium-high |
 | 25.3" | Geniatech | EPC2530 (25.3") / EPC2850 (28.5") /… | shipping | — | **partly-open** | medium-high |
 | 25.3" | Sharp | ePoster EP-C251 | shipping | — | **partly-open** | medium-high |
 | 25.3" | Sharp | ePoster EP-C251 | shipping | — | **partly-open** | medium-high |
@@ -150,7 +150,7 @@ Sorted by openness, then vendor durability, then size.
 | 32.0" | PPDS (TP Vision Europe… | Philips Tableaux 5150I 32in (and 25in… | shipping | — | **partly-open** | medium |
 | 32.0" | Artec Design | Artec Design 32-inch museum ePaper… | deployed (Estonian National Museum, 20 units at 32 inch) | — | **partly-open** | medium |
 | 32.0" | CREA Co., Ltd. | EPS (C07-EPS32-3) 32 inch monochrome… | shipping | — | **partly-open** | medium |
-| 32.0" | PPDS / Philips | Philips Tableaux 32BDL5150I/00 (32… | shipping | $3,782 | **partly-open** | medium |
+| 32.0" | PPDS / Philips | Philips Tableaux 32BDL5150I/00 (32… | shipping | GBP 3,782 | **partly-open** | medium |
 | 31.5" | PPDS / TP Vision / MMD… | Philips Tableaux 5150I — 32BDL5150I/00… | shipping | — | **partly-open** | medium |
 | 31.5" | Dalian Good Display Co… | DMPH315E62 — 31.5" Spectra 6 finished… | shipping | $1,636 | **partly-open** | medium |
 | 31.5" | Fraimic | Large Canvas 31.5" (Smart Canvas line) | preorder | $1,299 | **partly-open** | medium |
@@ -168,7 +168,7 @@ Sorted by openness, then vendor durability, then size.
 | 25.3" | Dalian Good Display | DMPH253E61 (25.3") and DMPH315E61… | shipping | $1,636 | **partly-open** | medium |
 | 25.3" | PPDS / Philips | Philips Tableaux 25BDL4150I /… | shipping | — | **partly-open** | medium |
 | 75.0" | E Ink Holdings | 75in tiled Spectra 6; 75in Kaleido 3… | announced / demo | — | **partly-open** | unknown |
-| 32.0" | TintTech | Wired ePaper Digital Signage (13.3in… | shipping | $555 | **partly-open** | unknown |
+| 32.0" | TintTech | Wired ePaper Digital Signage (13.3in… | shipping | EUR 555 | **partly-open** | unknown |
 | 31.5" | MEiNK (sold by media mea) | MEiNK 32" E Ink Spectra 6 ePaper Signage | shipping | $1,850 | **partly-open** | unknown |
 | 31.2" | Digital View | Digital View 32in Outdoor E Paper… | shipping | — | **partly-open** | unknown |
 | 31.2" | E-Paper Innovation Ltd | 31.2 inch monochrome EPD panel | mass production | $915 | **partly-open** | unknown |
@@ -196,9 +196,9 @@ Sorted by openness, then vendor durability, then size.
 | 28.6" | Sharp | ePoster A2 (self-manufactured, June… | shipping | — | **unknown** | medium-high |
 | 28.6" | StellarLink Inc. | J-Poster (A2 ePaper signage) | announced (partnership announced 30 Oct 2025) | — | **unknown** | medium-high |
 | 28.5" | MyGica / Geniatech | EPC2850 (28.5") / EPC2530 (25.3") /… | shipping | — | **unknown** | medium-high |
-| 28.0" | DynaScan | NAVO A2 / A2 Plus (28 inch) and NAVO 13… | shipping | $2,280 | **unknown** | medium-high |
+| 28.0" | DynaScan | NAVO A2 / A2 Plus (28 inch) and NAVO 13… | shipping | GBP 2,280 | **unknown** | medium-high |
 | 25.3" | DynaScan | DynaScan 25.3-inch and 13.3-inch ePaper | announced 2024 | — | **unknown** | medium-high |
-| 25.3" | Sharp | Sharp EP-C131 (13.3 inch) and EP-C251… | shipping | $2,279 | **unknown** | medium-high |
+| 25.3" | Sharp | Sharp EP-C131 (13.3 inch) and EP-C251… | shipping | GBP 2,279 | **unknown** | medium-high |
 | 75.0" | Praevar | eLuminex EP75 ePoster | shipping | — | **unknown** | medium |
 | 32.0" | Nanov Display | NIASM-320PC / NZEPD-320PC solar e-paper… | shipping | — | **unknown** | medium |
 | 31.5" | Glory Star | Astro 31.5in E-Paper Display | shipping | — | **unknown** | medium |
@@ -229,7 +229,7 @@ Sorted by openness, then vendor durability, then size.
 | 32.0" | SOLUM Co., Ltd | SOLUM Newton E-Paper 32" (and 25.3"-32"… | unveiled at NRF 2026; award-winning at K-Display 2026 | — | **closed** | high |
 | 32.0" | Samsung (KNOWN vendor) | Samsung Color E-Paper EM13DX (13in)… | shipping | — | **closed** | high |
 | 32.0" | SOLUM | Newton E-Paper 32" | shipping | — | **closed** | high |
-| 32.0" | Samsung Electronics | Samsung Color E-Paper EM32D (EM32DX) /… | shipping | $1,710,000 | **closed** | high |
+| 32.0" | Samsung Electronics | Samsung Color E-Paper EM32D (EM32DX) /… | shipping | KRW 1,710,000 | **closed** | high |
 | 32.0" | LG Electronics | LG E-paper Display (32") | shipping (Korea launch June 2026, then Europe and other markets) | — | **closed** | high |
 | 25.3" | SOLUM | Newton E-Paper 25.3" | shipping | — | **closed** | high |
 | 42.0" | GDS - Global Display… | eTela ePaper 42 inch | shipping | — | **closed** | medium-high |
@@ -238,7 +238,7 @@ Sorted by openness, then vendor durability, then size.
 | 32.0" | GDS - Global Display… | eTela ePaper 32 inch | shipping | — | **closed** | medium-high |
 | 31.5" | InkPoster (brand of… | PocketBook InkPoster Affresco 31.5" | shipping | $1,699 | **closed** | medium-high |
 | 28.5" | PocketBook International… | PocketBook InkPoster Tela 28.5" | shipping | $2,399 | **closed** | medium-high |
-| 48.0" | IONNYK | IONNYK Linn | shipping | $3,250 | **closed** | medium |
+| 48.0" | IONNYK | IONNYK Linn | shipping | EUR 3,250 | **closed** | medium |
 | 42.0" | Connectpoint | Digital Bus Stop (10in, 13in, 22in… | shipping | — | **closed** | medium |
 | 42.0" | Urban Solar | Solar e-paper transit displays (13in to… | shipping | — | **closed** | medium |
 | 42.0" | Soofa | Soofa Sign | deployed across US metros | — | **closed** | medium |
@@ -247,13 +247,13 @@ Sorted by openness, then vendor durability, then size.
 | 31.5" | SwitchBot (Woan… | SwitchBot AI Art Frame 31.5 | shipping | $1,300 | **closed** | medium |
 | 31.5" | StellarLink Inc… | aecoPost 31.5" (StellarLink-badged) | announced for Japan | — | **closed** | medium |
 | 31.5" | TEIDEC Corporation… | e-paper digital signage 13.3in / 31.5in | shipping | — | **closed** | medium |
-| 31.2" | IONNYK (owned by… | Linn (Large Format) | shipping | $3,890 | **closed** | medium |
+| 31.2" | IONNYK (owned by… | Linn (Large Format) | shipping | EUR 3,890 | **closed** | medium |
 | 75.0" | E Ink Corporation / E Ink… | E Ink Spectra 6 75" module (single) and… | demonstration | — | **closed** | unknown |
 | 42.0" | DNP (Dai Nippon Printing) | Electronic poster, 42 inch monochrome… | shipping | — | **closed** | unknown |
 | 32.0" | Papercast | Papercast 32" Indoor E-Paper Display —… | shipping | — | **closed** | unknown |
-| 32.0" | Project E Ink | Project E Ink Art Display 32in | shipping | $2,783 | **closed** | unknown |
-| 27.5" | APHEUM | APHEUM Frame L | pre-order | $2,348 | **closed** | unknown |
-| 28.5" | Oscar Japan (JP… | MAXEVIS Kokonna 28.5" (a.k.a. KoKonna /… | crowdfunded, campaign ended | $288,000 | **closed** | low |
+| 32.0" | Project E Ink | Project E Ink Art Display 32in | shipping | EUR 2,783 | **closed** | unknown |
+| 27.5" | APHEUM | APHEUM Frame L | pre-order | EUR 2,348 | **closed** | unknown |
+| 28.5" | Oscar Japan (JP… | MAXEVIS Kokonna 28.5" (a.k.a. KoKonna /… | crowdfunded, campaign ended | JPY 288,000 | **closed** | low |
 
 ---
 
@@ -304,12 +304,13 @@ the ESL *module* market while buying E Ink film. LG's 32" unit is an E Ink
 Spectra 6 panel. Tianma is at 6.7" prototypes; CLEARink never shipped.
 
 **Correction from round 3:** an earlier version of this document said the AUO
-arrangement was "still only a term sheet". It is not. **AUO Display Plus and
-E Ink formed a joint venture** (ADP 51% / E Ink 49%, Taoyuan) with large-format
-EPD modules **in mass production since Q4 2025** — the first genuine second
-source for large-format modules. It comes with a warning attached: StellarLink's
-31.5" aecoPost is ADP-built, so an unknown number of apparently independent
-31.5" brands are one production line under different logos.
+arrangement was "still only a term sheet". The partnership itself is confirmed —
+E Ink pages name ADP as a partner — but the ownership split, Taoyuan site, and
+"mass production since Q4 2025" claim remain in `unverified_facts` (press
+summaries only; the JV announcement itself was not fetched). Treat those
+figures as reported, not established. It comes with a warning attached:
+StellarLink's 31.5" aecoPost is ADP-built, so an unknown number of apparently
+independent 31.5" brands are one production line under different logos.
 
 **What breaks it — two genuine second sources above 15":**
 
@@ -376,7 +377,7 @@ picture was a sampling artifact rather than a small field.
   vendor, single units, real datasheets.
 - **Sharp ePoster** (EP-C251, 25.3" colour) loads purely from a **USB-C
   thumbdrive** — the cleanest offline path from a tier-1 manufacturer.
-- **ADLAB** (Korea, found only via its Korean-language site) — 31.2" mono and
+- **ADLAB** (Taiwan, found only via its Korean-language site) — 31.2" mono and
   13.3" colour running **stock Linux** with USB-A host, RJ45, IP65 and removable
   micro-SD system storage. Update path undocumented; one email would settle it.
 - **AUO Display Plus AecoPost 31.5" *Mobile*** — Spectra 6, pushed from a phone
@@ -450,6 +451,31 @@ this document.
 - **DASUNG's 25.3"** blanks after ~5s without a USB heartbeat — it needs a
   daemon just to hold a picture.
 - **Philips Tableaux' "60,000 colours"** is ~8 with device-side dithering.
+- **Brands that reach you through ADVERTISING rather than search** were checked
+  on 2026-08-07 after the owner reported seeing them promoted. Recorded so they
+  are not re-investigated: **Muse** (museframe.io) is a backlit LCD frame for
+  digital-art collectors — 4K, 1200:1 contrast, video playback; **Atmoph** is a
+  27" FHD backlit LCD video-window with speakers and an ~$11/mo view
+  subscription, confirmed by its CEO ("the LCD panel is FHD"); **Displate**
+  sells physical steel prints, and even its powered "Lumino" line is fixed
+  licensed art with OLED strips laminated in and no image input. All three are
+  out of scope on technology, not on merit.
+  **Inkanva** and **Jitrainno** ARE genuine Spectra 6, and both are unlaunched:
+  each has a "Launching soon" Kickstarter that has never run and a creator
+  profile reading "First created / 0 backed". Inkanva is anonymous — no legal
+  entity, names or address — while already collecting $20 pre-launch deposits,
+  and its headline perovskite self-charging covers only the 7.09" and 13.3"
+  models, not the 28.5" flagship. Jitrainno is more substantial (named Hong Kong
+  entity, four named leads, a published iOS app, a documented offline
+  Bluetooth+hotspot binding mode with no vendor cloud) but is phone-app-only:
+  no API, no SD card, no LAN endpoint.
+  **The methodological point matters more than the five verdicts.** Advertising
+  is not surfacing a class of vendor that search misses. It is surfacing
+  pre-revenue crowdfunding entities that buy attention *because* organic search
+  cannot rank them — no press, no retail, no live campaign. The two genuinely
+  shipping large-format options reachable today rank on page one of a plain
+  query. Treat an ad-sourced name as a pre-launch risk signal, not as a lead the
+  research missed.
 - **Dead ends:** Waveshare caps at 13.3", Pervasive Displays at 3.4". The real
   bare-panel counterparties are Good Display, E Ink's own shopkit store, and
   **Digital View** (founder-owned since 1995, TCON boards 13.3"–75").

@@ -1,0 +1,409 @@
+{
+  "schema": "eink-advertised-vendor-evidence/v1",
+  "merge_pipeline_input": false,
+  "note": "Evidence-only research for advertised vendors; this file is not a device/vendor stream and must not be consumed by scripts/merge_eink_survey.py.",
+  "brands": [
+    {
+      "name": "Muse Frame",
+      "what_it_actually_is": "DISAMBIGUATION FIRST: no reflective e-paper product called 'Muse' was found anywhere this session. The art-frame 'Muse' being advertised is Muse Frame (museframe.io) — a premium BACKLIT LCD digital art frame aimed at NFT/digital-art collectors. It is emphatically not e-paper: the vendor advertises 4K Ultra HD, 'over 1 billion colours', 1200:1 contrast, 178-degree viewing angle, video/animated-NFT playback, built-in speakers, and app-adjustable brightness — every one of those is an LCD-only capability. Their own Kickstarter copy sells 'LED brightness' control from the app, i.e. a backlight. Other unrelated things named Muse that a searcher will collide with: the InteraXon Muse EEG meditation headband, the defunct Hong Kong magazine Muse, and an unrelated 'Xtra Muse' product. None of these is e-paper either.",
+      "technology": "backlit-lcd",
+      "in_scope_for_reflective_epaper_survey": false,
+      "company": "Muse Frame. Founded 2021 in Adelaide, Australia by a group of NFT collectors/artists; managing director Dylan Blaquiere (named on the 2022 Kickstarter). Production facility near Hong Kong; ships worldwide from the Hong Kong region. Acquired Sedition (digital-art platform) in 2024. No legal entity name, registration number or registered address is published on their About page or FAQ.",
+      "country": "Australia (origin/Adelaide); manufacturing and fulfilment out of Hong Kong",
+      "devices": [
+        {
+          "model": "Muse Frame 10\" (tabletop)",
+          "diagonal_in": 10,
+          "resolution": "Full HD",
+          "panel": "LCD (not stated by vendor; inferred from 4K/contrast/video/backlight-brightness claims)",
+          "colour": "full colour, backlit",
+          "price": {"amount": 399, "currency": "USD", "as_of": "2026-08-07"},
+          "status": "shipping",
+          "us_available": true
+        },
+        {
+          "model": "Muse Frame 32\"",
+          "diagonal_in": 32,
+          "resolution": "4K",
+          "panel": "LCD, anti-glare matte / haze-finish surface, described by vendor as a 'high-quality commercial panel'",
+          "colour": "vendor claims over 1 billion colours, 1200:1 contrast, 178-degree viewing angle",
+          "price": {"amount": 1199, "currency": "USD", "as_of": "2026-08-07"},
+          "status": "shipping",
+          "us_available": true
+        },
+        {
+          "model": "Muse Frame 55\"",
+          "diagonal_in": 55,
+          "resolution": "4K",
+          "panel": "LCD, anti-glare matte / haze-finish",
+          "colour": "over 1 billion colours, 1200:1 contrast, 178-degree viewing angle",
+          "price": {"amount": 2399, "currency": "USD", "as_of": "2026-08-07"},
+          "status": "shipping",
+          "us_available": true
+        },
+        {
+          "model": "Muse Frame 33\" square",
+          "diagonal_in": 33,
+          "resolution": "2K",
+          "panel": "LCD, anti-glare matte",
+          "colour": "full colour, backlit",
+          "price": {"amount": 2499, "currency": "USD", "as_of": "2026-08-07"},
+          "status": "shipping",
+          "us_available": true
+        },
+        {
+          "model": "Muse Frame 21.5\" and 43\" (listed on the size-chart page without price)",
+          "diagonal_in": null,
+          "resolution": "FHD / 2K / 4K depending on model",
+          "panel": "LCD",
+          "colour": "full colour, backlit",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "listed on size chart; availability stated by vendor to change - check shop",
+          "us_available": null
+        }
+      ],
+      "integration": {
+        "openness": "partly-open",
+        "local_push": "USB stick (load your own images and videos directly), plus upload/management through the Muse mobile app. Wi-Fi 2.4/5 GHz and wired Ethernet supported; vendor recommends Ethernet. No documented local HTTP/REST endpoint on the frame.",
+        "sd_card": null,
+        "api": "No public/documented API for pushing images. BUT the frame runs a custom Android build and the vendor's own FAQ states you can install other compatible Android apps - which is the realistic self-hosted path: sideload a client app that pulls from the buyer's own server. That is a workaround, not a supported integration.",
+        "cloud_required": false,
+        "subscription": "None disclosed for basic use; the FAQ does not mention a subscription and the curated 'exhibitions' are described as free. The Sedition streaming catalogue is a separate paid platform.",
+        "evidence": "museframe.io FAQ (USB stick, Muse app, Android, Wi-Fi 2.4/5 GHz + Ethernet, 64/128 GB storage, 8 GB RAM on larger models, 1-year warranty on display and electronics only, ships worldwide from Hong Kong region, 2-4 weeks). 2022 Kickstarter page adds LED brightness control from the app and wallet integrations."
+      },
+      "company_substance": "The most substantial of the five as a hardware business, but out of scope on technology. Real, verifiable shipping history: Kickstarter ran 20 Apr - 20 May 2022, raised AU$34,865 from 123 backers against an AU$20,000 goal, campaign shows 13 updates / 14 comments and was last updated Dec 2022. Vendor claims frames sold into 50+ countries and 1,300+ represented artists. Acquired Sedition in 2024, which is a real acquisition of a real platform and implies capital. Roughly four years of continuous hardware shipping. No funding rounds, headcount, revenue or legal entity are published; the About page is marketing prose with no corporate detail. No evidence of abandoned products found.",
+      "delivery_evidence": "Not applicable as a live crowdfunding risk - the 2022 Kickstarter completed and the company has been selling direct since. Backers did receive units (campaign closed with updates through Dec 2022 and the company scaled to retail thereafter).",
+      "findable_by_search": true,
+      "search_visibility_note": "Fully reachable by ordinary product search - 'digital art frame', 'NFT frame' and 'Muse Frame' all return museframe.io on the first page, and it appears in third-party NFT-frame roundups. It does NOT appear in e-ink/e-paper searches, correctly, because it is not e-paper. Advertising is not surfacing anything hidden here; it is surfacing a well-indexed LCD vendor into an e-paper-shaped query.",
+      "sources": [
+        {"url": "https://www.museframe.io/products/muse-frame", "what_it_supports": "Sizes 10/32/55/33-square, prices $399/$1199/$2399/$2499, 4K Ultra HD anti-glare matte haze-finish display, USB stick + app + NFT wallet + streaming ingest, no subscription mentioned"},
+        {"url": "https://www.museframe.io/pages/faq", "what_it_supports": "Custom Android OS, can install other compatible Android apps, USB stick or Muse app for own content, Wi-Fi 2.4/5 GHz + Ethernet, 64-128 GB storage / 8 GB RAM, 1-year warranty on display and electronics, ships worldwide from Hong Kong region, no DLNA/local API mentioned"},
+        {"url": "https://www.museframe.io/pages/size-chart", "what_it_supports": "Size list includes 10, 21.5, 32, 43 and 55 inch; resolutions FHD/2K/4K; page contains no panel-technology, nits, contrast or power specs"},
+        {"url": "https://www.museframe.io/", "what_it_supports": "Homepage states 4K anti-glare display, lists 55/32/33-square, contains no e-paper or e-ink product and no legal entity info"},
+        {"url": "https://www.museframe.io/pages/about", "what_it_supports": "Founded 2021, sold into 50+ countries, acquired Sedition in 2024, 1,300+ artists; no legal entity, founders, funding, headcount or manufacturing location given"},
+        {"url": "https://www.kickstarter.com/projects/museframe/muse-proper-frames-for-nfts", "what_it_supports": "Adelaide AU origin, funding period 20 Apr - 20 May 2022, AU$34,865 from 123 backers vs AU$20,000 goal, 13 updates / 14 comments, managing director Dylan Blaquiere, 'LED brightness' control from the app (evidence of a backlight), 180-degree viewing angle, MUSE founded 2021"}
+      ]
+    },
+    {
+      "name": "Inkanva",
+      "what_it_actually_is": "A pre-launch, DTC-teaser-plus-Kickstarter colour e-paper art frame. On technology it is genuinely in scope: E Ink Spectra 6, explicitly and correctly described by the vendor as non-emissive electronic paper that reflects ambient light. On availability it is not a product at all yet - the Kickstarter campaign is in 'Launching soon' pre-launch state and has never run. The headline gimmick is a magnetic perovskite panel that harvests indoor light for 'infinite battery life'. Critically, the vendor's own deposit page states perovskite charging is 'Available on 7.09\" and 13.3\" models' - i.e. NOT on the 28.5\" flagship, which is the only size the buyer would care about. The homepage and Kickstarter headline ('The World's First Self-Charging AI E-Ink Canvas', 'No power cable. No maintenance.') do not carry that caveat.",
+      "technology": "reflective-epaper",
+      "in_scope_for_reflective_epaper_survey": true,
+      "company": "Inkanva. No legal entity, registration number, address or named individual is published anywhere on their site - the About page is entirely anonymous marketing prose ('we are materials scientists, engineers, and designers'). Kickstarter lists the creator location as Hong Kong, Hong Kong, and the creator profile reads 'First created / 0 backed' - a first-time creator who has never even backed another project. Copyright notice reads '(c) 2026 Inkanva'.",
+      "country": "Hong Kong (per Kickstarter creator location only)",
+      "devices": [
+        {
+          "model": "Inkanva 28.5\" (GALLERY)",
+          "diagonal_in": 28.5,
+          "resolution": null,
+          "panel": "E Ink Spectra 6 HD colour e-paper (resolution never published; 28.5\" Spectra 6 panels from other vendors run 2160x3060)",
+          "colour": "6-pigment Spectra 6 with an advanced dithering algorithm to widen the perceived palette",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "PRE-LAUNCH. Kickstarter shows 'Launching soon', 650 followers, zero backers, campaign never run. No ship date published. Perovskite self-charging is NOT offered on this size per their own deposit page - it is cabled/battery like any other frame.",
+          "us_available": false
+        },
+        {
+          "model": "Inkanva 13.3\" (WALL)",
+          "diagonal_in": 13.3,
+          "resolution": null,
+          "panel": "E Ink Spectra 6 HD colour e-paper",
+          "colour": "6-colour Spectra 6 + dithering",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "pre-launch; perovskite self-charging offered on this size",
+          "us_available": false
+        },
+        {
+          "model": "Inkanva 7.09\" (DESK)",
+          "diagonal_in": 7.09,
+          "resolution": null,
+          "panel": "E Ink Spectra 6 HD colour e-paper",
+          "colour": "6-colour Spectra 6 + dithering",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "pre-launch; perovskite self-charging offered on this size",
+          "us_available": false
+        }
+      ],
+      "integration": {
+        "openness": "unknown",
+        "local_push": "None described. All content flows through the Inkanva mobile app over Wi-Fi, and the FAQ frames remote control as the point ('Once connected to Wi-Fi, you can upload images and control the frame remotely through the mobile app from anywhere') - which implies a vendor cloud relay, not a LAN push. The Kickstarter copy explicitly rules out removable media: 'No cables. No SD cards. No complicated setup.'",
+        "sd_card": false,
+        "api": "This is the one genuinely interesting claim for a self-hosted buyer, and it is also the least substantiated. Kickstarter copy: 'Inkanva's open API makes it easy to connect with AI agents such as ChatGPT, Claude Code, Gemini, OpenClaw, and other automation tools' with listed use cases including 'Sync artwork across multiple canvases' and 'Automatically upload photos from your albums'. The site FAQ answer is one sentence: 'An AI agent can choose, create, schedule, and display different content through connected OpenAPI workflows.' There is NO API documentation, no endpoint, no auth model, no developer page, and no indication whether it is a local endpoint or a cloud endpoint. Treat as marketing until documented.",
+        "cloud_required": null,
+        "subscription": "None mentioned anywhere on the site or campaign page.",
+        "evidence": "inkanva.com homepage feature list and expanded FAQ items 01-06 (read out of the DOM); inkanva.com/products/inkanva-deposit-reservation; the Kickstarter pre-launch story page."
+      },
+      "company_substance": "Thin to the point of being a red flag for a large purchase. No legal entity, no named founders, no team page, no address, no funding, no prior products, no shipping history. First-time Kickstarter creator with zero backing history. Nothing but a Shopify-style marketing site and social handles. Note also that they are taking money BEFORE the campaign launches: a $20 'VIP Reward Reservation' deposit (stated fully refundable) in exchange for a promised $50 Kickstarter cashback and a bundled lamp. That is legal and increasingly common, but it means cash is being collected by an anonymous entity with no delivery record.",
+      "delivery_evidence": "NO backer has received a unit, and none can have: the Kickstarter campaign has not launched. It sits in 'Launching soon' pre-launch with 650 followers and a creator profile of 'First created / 0 backed'. There is no comment wall to read because there is no live campaign. There is no press coverage, no review unit, no retail listing, and no third-party sighting of hardware of any kind.",
+      "findable_by_search": false,
+      "search_visibility_note": "Effectively advertising-only. A direct name search for 'Inkanva' does return inkanva.com, so it is findable once you already know the word. But it does NOT appear in any generic product query - searches for 'best large e-ink art frame 28 inch buy 2026' return InkPoster, Bloomin8, and e-ink roundups, and never Inkanva. It has no press coverage, no retailer listing, and no live campaign page to rank. The name reached the buyer through paid advertising precisely because organic search cannot surface it."
+      ,
+      "sources": [
+        {"url": "https://inkanva.com/", "what_it_supports": "Spectra 6 HD non-emissive e-paper (FAQ 01), dithering (FAQ 02), perovskite charging claim (FAQ 03), remote app control over Wi-Fi (FAQ 04), one-sentence OpenAPI claim (FAQ 05), snap-on outer frames (FAQ 06), 'Coming Soon on Kickstarter', (c) 2026 Inkanva"},
+        {"url": "https://inkanva.com/products/inkanva-deposit-reservation", "what_it_supports": "THE KEY CAVEAT: perovskite light harvesting 'Available on 7.09\" and 13.3\" models' only, while the display line-up is 7.09\"/13.3\"/28.5\". Also the $20 refundable pre-launch deposit, $50 cashback and lamp offer, and the AI-agent/OpenAPI framing naming OpenClaw, Claude Code and ChatGPT"},
+        {"url": "https://inkanva.com/pages/about", "what_it_supports": "About page is anonymous - no legal entity, no named people, no address, no funding, no manufacturing partner"},
+        {"url": "https://www.kickstarter.com/projects/98798876/inkanva", "what_it_supports": "Campaign status 'Launching soon' (never run), creator 'First created / 0 backed', Hong Kong, 650 followers, size range stated as 7.09-inch to 28.5-inch, 'No cables. No SD cards.', the open-API-with-AI-agents claim, interchangeable frames sold as campaign add-ons"}
+      ]
+    },
+    {
+      "name": "Jitrainno (jtronvision)",
+      "what_it_actually_is": "Genuine reflective colour e-paper, and the most technically credible of the two crowdfunding entrants - but still entirely pre-launch for the sizes that matter. Two lines exist. (1) The advertised Kickstarter product: 'World's First AI-Powered Color E-Ink Art Frame' with Canvas 31 (31.5\" reflective colour e-paper) and Canvas 13 (13.3\"), both explicitly labelled by the vendor as 'Preliminary target specifications for the models we plan to bring to crowdfunding'. Campaign status is 'Launching soon' - it has never run. (2) A separate, apparently real shipping product called AF-13, which has a populated support centre with twelve articles last updated 20 July 2026, a published iOS app, and a documented Wi-Fi binding flow. So this company has hardware in the field at 13 inches, but nothing at 31 inches.",
+      "technology": "reflective-epaper",
+      "in_scope_for_reflective_epaper_survey": true,
+      "company": "HONG KONG JTRONVISION TECHNOLOGY CO., LIMITED - stated verbatim on their own About page and confirmed independently as the Apple App Store seller of record. Founded March 2026. HQ Hong Kong, China. Four named team members with stated backgrounds: Alan Chi (co-founder and product lead, 20+ years hardware R&D), Ethan Zou (lead AI and cloud, ex-Tencent Cloud), Evan He (hardware and embedded lead), Sand Wang (IoT and full-stack, 11 years). Note a naming inconsistency in their own App Store listing, which alternates between 'JTRONVISION' and 'JITRAINNO TECHNOLOGY CO., LIMITED' in the description and copyright line.",
+      "country": "Hong Kong, China",
+      "devices": [
+        {
+          "model": "Canvas 31",
+          "diagonal_in": 31.5,
+          "resolution": null,
+          "panel": "31.5\" reflective colour e-paper, described as a 'Full-color Spectra panel'. Resolution never published. A real 31.5\" Spectra 6 panel does exist (Samsung's EM32DX signage display uses one at 2560x1440), so the size claim is physically plausible rather than vapourware, but Jitrainno has not stated whose panel or what resolution.",
+          "colour": "full-colour Spectra-class e-paper",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "PRE-LAUNCH, specs explicitly 'preliminary engineering targets and may change'. Kickstarter 'Launching soon', 374 followers, zero backers. Frame in solid walnut or anodised aluminium, built-in battery + USB-C, Wi-Fi 2.4 GHz only, voice control, wall mount portrait or landscape. The Kickstarter page says '31-Inch' where the site says 31.5\".",
+          "us_available": false
+        },
+        {
+          "model": "Canvas 13",
+          "diagonal_in": 13.3,
+          "resolution": null,
+          "panel": "13.3\" reflective colour e-paper, 'Full-color Spectra panel'",
+          "colour": "full-colour Spectra-class e-paper",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "pre-launch, preliminary targets. Built-in battery + USB-C, Wi-Fi 2.4 GHz, voice control, wall mount or tabletop stand. Marketing elsewhere cites a 5200 mAh battery lasting about 2 years at one artwork change per day, and a 5:4 gallery ratio with wooden frame and mat board.",
+          "us_available": false
+        },
+        {
+          "model": "AF-13 (existing supported product, not the crowdfunding model)",
+          "diagonal_in": 13,
+          "resolution": null,
+          "panel": "colour e-paper (their help centre confirms e-paper behaviour: screen flashes on image change, image persists after power is disconnected)",
+          "colour": "colour e-paper",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "Appears to be a real, supported, shipping product - twelve support articles updated 20 July 2026 covering setup, Wi-Fi binding, playlists, factory reset and charging. No storefront, price or retail listing for it was found anywhere.",
+          "us_available": null
+        }
+      ],
+      "integration": {
+        "openness": "closed",
+        "local_push": "Two binding modes, documented in their own help centre. CLOUD BINDING: photos are sent through the JITRAINNO cloud; device sharing and voice interaction work. OFFLINE BINDING: direct phone-to-frame - the app wakes the frame over Bluetooth and connects to the frame's own 'JT-' Wi-Fi hotspot; device sharing and voice interaction are unavailable in this mode. The offline mode proves there is no vendor cloud strictly in the path, which is unusual and a genuine positive. But it is phone-app-to-frame only: you select a photo or playlist in the app, preview, confirm, send. There is no LAN HTTP push from a server.",
+          "sd_card": false,
+        "api": "None. No API, no developer documentation, no webhook, no local HTTP endpoint. The marketing site advertises a 'Private Local Mode' to 'upload photos, manage playlists, and delete photos locally', which maps to the offline-binding flow above - a phone-side privacy feature, not a programmable interface.",
+        "cloud_required": false,
+        "subscription": "Explicitly 'Subscription-Free / No Monthly / Hidden Fees' on their marketing site.",
+        "evidence": "jitrainno.com/help/choose-binding-mode (cloud vs offline binding, Bluetooth wake, 'JT-' hotspot, feature loss in offline mode, updated 20 July 2026); jitrainno.com/help/send-photos (app-only send flow, content keeps displaying while frame is offline); jitrainno.com tech-specs block; getjitra.com for the subscription-free and Private Local Mode claims."
+      },
+      "company_substance": "Better documented than Inkanva, still very young. Named legal entity, named team, named HQ - all published voluntarily on their own About page, which Inkanva does not do. A real iOS app is published under the correct corporate seller name (version 1.0.4, updated 6 July, copyright 2026, 53.3 MB, iOS 15.6+, English and Simplified Chinese) and Apple's own privacy panel reports 'Data Not Collected'. But: company founded March 2026, i.e. roughly five months old at time of writing; the App Store listing has too few ratings to show an overview, meaning essentially zero installed base; and the Kickstarter creator profile is 'First created / 0 backed'. Zero hardware shipping history as a company, no funding disclosed, no headcount beyond four named leads, no manufacturing partner named. No history of abandoning products because there is no history at all.",
+      "delivery_evidence": "NO backer has received a Canvas unit and none can have - the Kickstarter is 'Launching soon' with 374 followers and zero backers. The company's own roadmap is explicit and, to their credit, honest about this: 'Now - Working prototypes' / 'Next - Crowdfunding launch' / 'Then - Tooling and reliability' / 'Ship - Production and delivery'. They claim 'Functional Canvas units are running color e-paper and the companion app end to end', but no third party has seen one. The separate AF-13 support centre and published app are the only real-world evidence this company ships anything, and no retail listing, price or review for AF-13 could be found.",
+      "findable_by_search": false,
+      "search_visibility_note": "Advertising-only in practice. Direct name searches for 'Jitrainno' return their two domains, so it is findable if you already have the word. Generic buyer-style queries do not surface it at all. It has zero press coverage, no retail presence, no reviews, and its Kickstarter is unlaunched so it does not rank. Note the brand runs two separate domains - jitrainno.com (full product site, Canvas 31/13, About, help centre) and getjitra.com (a thinner landing page) - and jitrainno.com returns HTTP 403 to automated fetchers while rendering normally in a real browser, which further suppresses it from tooling and aggregators."
+      ,
+      "sources": [
+        {"url": "https://jitrainno.com/", "what_it_supports": "Canvas 31 = 31.5\" reflective colour e-paper, Canvas 13 = 13.3\"; full-colour Spectra panel; walnut or anodised aluminium; built-in battery + USB-C; Wi-Fi 2.4 GHz; voice control; specs stated as preliminary engineering targets; four-stage roadmap placing crowdfunding and shipping in the future"},
+        {"url": "https://jitrainno.com/about", "what_it_supports": "Legal entity HONG KONG JTRONVISION TECHNOLOGY CO., LIMITED; founded March 2026; HQ Hong Kong, China; four named team members and their backgrounds"},
+        {"url": "https://jitrainno.com/help", "what_it_supports": "A real support centre exists for a product model 'AF-13' with twelve articles across Getting Started, Wi-Fi and Binding, Photos and Playlists, App and Account, Power and Display, Privacy and Safety"},
+        {"url": "https://jitrainno.com/help/choose-binding-mode", "what_it_supports": "Cloud binding sends photos through the JITRAINNO cloud; offline binding is direct phone-to-frame via Bluetooth wake plus the frame's 'JT-' Wi-Fi hotspot, with sharing and voice disabled; updated 20 July 2026"},
+        {"url": "https://jitrainno.com/help/send-photos", "what_it_supports": "Content is pushed only by selecting a photo or playlist inside the JITRAINNO app and sending it to the frame; transferred content keeps displaying while the frame is offline"},
+        {"url": "https://jitrainno.com/app-download", "what_it_supports": "Companion app is the sole content path - generate with AI, upload photos, schedule playlists, push over Wi-Fi; links to real App Store and Google Play listings"},
+        {"url": "https://www.getjitra.com/", "what_it_supports": "13-inch and 31-inch sizes, E-Ink Spectra 6 colour display, 'Launching Soon' on Kickstarter, 'Subscription-Free / No Monthly / Hidden Fees', 'Private Local Mode' for local photo upload and playlist management, 5200 mAh battery / ~2-year claim, (c) 2026 JITRAINNO"},
+        {"url": "https://apps.apple.com/us/app/jtronvision/id6761590710", "what_it_supports": "Real published iOS app; seller HONG KONG JTRONVISION TECHNOLOGY CO., LIMITED; version 1.0.4 dated Jul 6; copyright 2026; 53.3 MB; iOS 15.6+; too few ratings to display an overview; described as controlling an AI colour e-paper frame"},
+        {"url": "https://www.kickstarter.com/projects/jitrainno/worlds-first-ai-powered-color-e-ink-art-frame", "what_it_supports": "Campaign status 'Launching soon' (never run), creator 'First created / 0 backed', Hong Kong, 374 followers, 13-inch and 31-inch options, Spectra 6, 5:4 gallery ratio with wooden frame and mat board, 5200 mAh / ~2 years at one update per day"},
+        {"url": "https://www.kickstarter.com/discover/advanced?term=jitrainno&sort=newest", "what_it_supports": "Kickstarter's own search confirms exactly one Jitrainno project and its status is 'Launching soon'"}
+      ]
+    },
+    {
+      "name": "Atmoph (Atmoph Window)",
+      "what_it_actually_is": "PLAINLY OUT OF SCOPE: the Atmoph Window is a BACKLIT LCD, not reflective e-paper, and this is confirmed by the company's own CEO rather than inferred. In an Atmoph AMA the CEO says of the current generation, verbatim, 'You're filming in 6K, but the LCD panel is FHD. I want 4K', and explains that a 4K panel 'would be doubled about $1,000'. The product is a wall-mounted video appliance: it streams 4K/6K-shot landscape VIDEO with sound through built-in speakers, and the newer model adds LEDs that simulate sunlight and track the landscape's brightness. Reflective e-paper can do none of that. It is also a fundamentally different product concept - a moving 'window' onto scenery, not a still-art display - so even the use case does not match a 3,400-painting library.",
+      "technology": "backlit-lcd",
+      "in_scope_for_reflective_epaper_survey": false,
+      "company": "Atmoph Inc. Registered address 75-6 Yanagihachimancho, Nakagyo-ku, LS Kyoto 3F, Kyoto, Japan 604-8101. Founded 14 August 2014. Co-founder and CEO Kyohi Kang. Roughly 16-18 people listed including advisers and auditors.",
+      "country": "Japan",
+      "devices": [
+        {
+          "model": "Atmoph Window Yo (3rd generation)",
+          "diagonal_in": 27,
+          "resolution": "1080x1920 (portrait FHD)",
+          "panel": "LCD, high-contrast with anti-glare coating; CEO confirms FHD LCD",
+          "colour": "full colour, backlit; separate sunlight-simulating LEDs whose brightness tracks the landscape",
+          "price": {"amount": 799, "currency": "USD", "as_of": "2026-08-07"},
+          "status": "shipping. Japanese store lists it at JPY 79,800 (bundle with Atmoph Scope controller JPY 84,800). Accessories include a Sunlight Bar, Charging Sill, Wood Speaker Box and Wall Mount Kit.",
+          "us_available": true
+        },
+        {
+          "model": "Atmoph Window 2 (Basic / Wood)",
+          "diagonal_in": 27,
+          "resolution": "1920x1080",
+          "panel": "LCD, high-contrast, anti-glare",
+          "colour": "full colour, backlit",
+          "price": {"amount": null, "currency": "JPY", "as_of": "2026-08-07"},
+          "status": "DISCONTINUED - the product page states 'No longer available for sale'. Last listed at JPY 44,800 (Basic) and JPY 69,800 (Wood, with a Karimoku timber frame).",
+          "us_available": null
+        }
+      ],
+      "integration": {
+        "openness": "closed",
+        "local_push": "Wi-Fi 802.11 ac/b/g/n (5 GHz/2.4 GHz) with a required companion smartphone or tablet (iOS 13+ / Android 7.0+). The vendor does state you can 'Upload your captured landscape videos from your computer or smartphone' and build custom playlists, but the upload path is not documented as a local endpoint and the device is built around streaming and downloading from Atmoph's servers ('A stable WiFi connection is required for streaming and downloading landscape videos').",
+        "sd_card": null,
+        "api": "None published.",
+        "cloud_required": true,
+        "subscription": "Yes, and it is central to the business model. The Unlimited Monthly Plan is $11/month for the ~2,000-view catalogue, or $7.99 per individual view; the hardware ships with only 3 pre-installed views and one complimentary month. The store also sells 'Edition Passes' and 'Annual Limitless Passes'. The CEO states outright that Atmoph makes little profit on hardware.",
+        "evidence": "atmoph.com product pages aw102 and aw103; store.atmoph.com storefront (yen pricing, JP region, passes and accessories)."
+      },
+      "company_substance": "By far the longest-running hardware operation of the five and a real company - twelve years old, a physical Kyoto address, a named CEO, a listed staff roster, and three shipped generations of the same product (Atmoph Window, Window 2, Window Yo). Financed largely through repeated successful crowdfunding on Kickstarter, Indiegogo and Makuake. No evidence of abandoned product lines - Window 2 was discontinued in the ordinary way, superseded by Window Yo, with the accessory ecosystem carried forward. The commercial risk is not solvency, it is that the value is in the subscription catalogue rather than the hardware.",
+      "delivery_evidence": "Not a delivery risk. Multiple crowdfunding campaigns completed and three product generations reached customers over roughly a decade; the current model is on sale now with a live storefront and accessory line.",
+      "findable_by_search": true,
+      "search_visibility_note": "Completely reachable by ordinary search - 'digital window', 'virtual window', 'Atmoph' all return the vendor site, Amazon listings, Indiegogo, press and forum threads on the first page. Nothing hidden. If this reached the buyer via advertising, the ad was mistargeted: it is an LCD video-window appliance being served against an art-display intent.",
+      "sources": [
+        {"url": "https://adventure.atmoph.com/en/4956/", "what_it_supports": "DEFINITIVE PANEL EVIDENCE - CEO states 'You're filming in 6K, but the LCD panel is FHD. I want 4K' and that 4K 'would be doubled about $1,000'; also the ~$500-or-less target price and that Atmoph makes little profit on hardware"},
+        {"url": "https://atmoph.com/en/products/aw103", "what_it_supports": "Atmoph Window Yo: 27-inch, 1080x1920, high-contrast anti-glare, $799, Wi-Fi required for streaming and downloading landscape videos, Bluetooth 5.2, user video upload from computer or phone, ~2,000 views by subscription or individual purchase"},
+        {"url": "https://atmoph.com/en/products/aw102", "what_it_supports": "Atmoph Window 2: 27-inch LCD 1920x1080 anti-glare, both Basic and Wood marked 'No longer available for sale', JPY 44,800 / 69,800, Wi-Fi 802.11 ac/b/g/n, Bluetooth 4.0, $11/month unlimited plan or $7.99 per view, 3 pre-installed views"},
+        {"url": "https://atmoph.com/en/about_us", "what_it_supports": "Atmoph Inc, founded 14 August 2014, Kyoto address, CEO Kyohi Kang, ~16-18 staff listed, crowdfunding origins via Kickstarter and Makuake"},
+        {"url": "https://store.atmoph.com/en/", "what_it_supports": "Live storefront: Atmoph Window Yo JPY 79,800, Yo+Scope bundle JPY 84,800, Scope JPY 8,800, Edition Passes, Annual Limitless Passes, Sunlight Bar / Charging Sill / Wood Speaker Box / Wall Mount Kit; no e-ink product of any kind"}
+      ]
+    },
+    {
+      "name": "Displate",
+      "what_it_actually_is": "VERIFIED AS SUSPECTED, WITH ONE WRINKLE. Displate sells physical steel prints - magnet-mounted metal posters. Not a display of any kind, no powered image surface, nothing to integrate with. The wrinkle worth knowing: they DO have one powered SKU, 'Lumino', introduced in 2023. Lumino is still a printed metal poster - a front acrylic panel on a metal backplate with a fixed, licensed artwork - into which ultra-thin animated OLED light panels are laminated between the layers to make selected regions of the print glow and animate. It is decorative accent lighting on a fixed print, not an addressable screen: the artwork cannot be changed, there is no image input, and each Lumino is a serial-numbered limited edition sold as a specific licensed design (e.g. a Star Wars 'Order 66' run of 1,111). So the answer is unchanged: physical print, out of scope.",
+      "technology": "physical-print",
+      "in_scope_for_reflective_epaper_survey": false,
+      "company": "Displate. Founded 2013 by Karol Banaszkiewicz, Jacek Swigost and Edward Ruszczyc. Headquarters Warsaw, Poland with a US office in Seattle, Washington. 400+ employees as of 2023. Mid Europa Partners acquired a majority stake in 2020. Manufacturing and shipping out of Poland.",
+      "country": "Poland (with US presence in Seattle)",
+      "devices": [
+        {
+          "model": "Displate metal poster (Medium / Large / X-Large, matte or gloss)",
+          "diagonal_in": null,
+          "resolution": null,
+          "panel": "printed stainless steel, magnet-mounted",
+          "colour": "printed ink on steel",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "shipping; on-demand manufacture. Custom Displates let you upload your own image, but the output is a one-off print, not a re-displayable surface.",
+          "us_available": true
+        },
+        {
+          "model": "Displate Textra",
+          "diagonal_in": null,
+          "resolution": null,
+          "panel": "metal poster with embossed detail and 3D-printed tactile contours, selective gloss/matte",
+          "colour": "printed",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "shipping",
+          "us_available": true
+        },
+        {
+          "model": "Displate Lumino",
+          "diagonal_in": null,
+          "resolution": null,
+          "panel": "Front acrylic panel on a metal backplate with ultra-thin animated OLED light panels laminated between the layers. Size M only. Fixed licensed artwork; the image cannot be changed. Powered by an included cable or power bank, ~20 hours of battery per charge. Serial-numbered, signed, limited editions.",
+          "colour": "printed artwork with OLED-lit accent regions and motion effects",
+          "price": {"amount": null, "currency": null, "as_of": "2026-08-07"},
+          "status": "shipping as periodic limited drops - Displate stated new artworks would be unveiled every two weeks, each on sale for a limited time",
+          "us_available": true
+        }
+      ],
+      "integration": {
+        "openness": "closed",
+        "local_push": "Not applicable - there is no display to push to. The only 'image ingest' is the Custom Displate service, where you upload an image and Displate prints it once onto steel and ships it.",
+        "sd_card": false,
+        "api": "None, and none possible - no addressable display exists.",
+        "cloud_required": null,
+        "subscription": "No subscription required for products. 'Displate Club' is an optional membership offering early access to limited drops, not a device subscription.",
+        "evidence": "displate.com/about-faq product catalogue (standard, Textra, Limited/Ultra Limited, Custom, accessories, gift cards - all stainless steel, shipped from Poland, with no electronic product listed at all); blog.displate.com Lumino posts describing OLED lighting laminated into a poster; displate.com/lumino product page framing it as 'next-gen poster illuminated with OLED'."
+      },
+      "company_substance": "The most substantial company of the five by a wide margin, and the least relevant. Thirteen years old, 400+ staff, private-equity backed (Mid Europa Partners majority stake, 2020), dual HQ Warsaw/Seattle, on-demand manufacturing at scale, a large licensed-IP portfolio (Star Wars, Marvel, Cyberpunk 2077, League of Legends) and an artist marketplace. Zero relevance to a display survey.",
+      "delivery_evidence": "Not crowdfunded. A mature retail operation shipping physical goods at volume for over a decade.",
+      "findable_by_search": true,
+      "search_visibility_note": "Trivially findable - displate.com ranks first for its own name and dominates 'metal poster' queries, with a Wikipedia article, PR coverage and third-party reviews. It advertises extremely heavily, which is almost certainly why it appeared in the buyer's ad stream: the targeting is on 'wall art' intent, not on display technology. Its presence in this list is an artefact of ad targeting, not a discovery."
+      ,
+      "sources": [
+        {"url": "https://displate.com/about-faq", "what_it_supports": "Full product catalogue is metal posters only - standard M/L/XL matte or gloss, Textra, Limited and Ultra Limited editions, Custom Displates, mounting magnets and stand, gift cards; all stainless steel; shipped from Poland; no electronic or display product listed"},
+        {"url": "https://en.wikipedia.org/wiki/Displate", "what_it_supports": "Founded 2013; founders Karol Banaszkiewicz, Jacek Swigost, Edward Ruszczyc; HQ Warsaw with Seattle office; 400+ employees as of 2023; Mid Europa Partners majority stake 2020; LUMINO introduced 2023 as posters with small OLED lights giving a glowing appearance"},
+        {"url": "https://blog.displate.com/displate-lumino/", "what_it_supports": "Lumino described as 'ultra-thin motion light panels and unique 3D print enhancements, these limited OLED posters' with fixed preset designs released every two weeks - i.e. a print, not a user-loadable screen"},
+        {"url": "https://blog.displate.com/turn-on-the-magic-with-lumino/", "what_it_supports": "Lumino is 'a limited next-gen illuminated artwork featuring licensed designs'; new artworks every two weeks, each on sale for a limited time; contains no statement that the line is being discontinued"},
+        {"url": "https://displate.com/lumino/7481360", "what_it_supports": "Product page frames Lumino as a 'next-gen poster illuminated with OLED' - a physical poster with integrated lighting and controllable animations, requiring power, mounted at a set wall distance; no image-input capability"}
+      ]
+    }
+  ],
+  "other_brands_found_while_looking": [
+    {
+      "name": "InkPoster Tela 28.5 (PocketBook International SA)",
+      "why_relevant": "THE STRONGEST ACTUALLY-SHIPPING LEAD FOUND. This is what Inkanva and Jitrainno are promising, except it exists and you can buy it today. 28.5-inch E Ink Spectra 6 with Sharp IGZO backplane, 2160x3060 at 132 DPI, 3:4 portrait, ~60,000 colour gamut volume, 25,000 mAh battery rated up to 12 months per charge, Wi-Fi 2.4/5 GHz, Bluetooth 5.2, USB-C, aluminium frame, 16.5 lb. $2,399 with free FedEx across the USA and 3-10 business day delivery, 30-day returns, 1-year warranty. Made by PocketBook International SA - an established e-reader manufacturer, not a first-time Kickstarter creator. CAVEAT for this buyer: content loading is documented only through the InkPoster app, so a self-hosted push path still needs verifying.",
+      "url": "https://inkposter.com/products/inkposter-tela-28-5"
+    },
+    {
+      "name": "Samsung Color E-Paper EMDX / EM32DX (LH32EMDIAGBXEN, LH32EMDIBGBXZA)",
+      "why_relevant": "The other genuinely-shipping large reflective option, and the most likely to be integrable. 32-inch class / 31.5-inch viewable colour e-paper at 2560x1440 (QHD), up to ~77,000 colours via colour imaging algorithm, 17.9 mm thick, ~2.4 kg, embedded battery with USB-C, Wi-Fi + Bluetooth + 2 USB ports, 200x200 VESA, zero watts on a static image. Sold as commercial digital signage, which matters: it is managed through the Samsung E-Paper app and the Samsung VXT signage platform, and signage stacks generally expose scheduling/content APIs that consumer art frames do not. Reported at roughly $1,200-1,300 through US retailers - about half the InkPoster for a slightly larger panel. This is also the panel class that makes Jitrainno's 31.5\" claim physically plausible.",
+      "url": "https://www.samsung.com/africa_en/business/smart-signage/e-paper/color-e-paper-emdx-a-lh32emdiagbxen/"
+    },
+    {
+      "name": "BLOOMIN8 EinkCanvas (arpobot)",
+      "why_relevant": "Repeatedly surfaced as a direct competitor in the same 28.5\" Spectra 6 + Sharp IGZO / 2160x3060 class, with a live Kickstarter and a smaller size launched at CES 2026. Named in generic 'best large e-ink art frame' results, unlike Inkanva or Jitrainno. Not fetched first-hand this session, so no URL is asserted.",
+      "url": null
+    },
+    {
+      "name": "Aura Ink",
+      "why_relevant": "Aura (an established consumer photo-frame brand) partnered with E Ink on a cordless 13.3-inch Spectra 6 frame. Relevant as a signal that the category now has mainstream, well-capitalised entrants - but 13.3\" is far below the buyer's size target. Not fetched first-hand; no URL asserted.",
+      "url": null
+    },
+    {
+      "name": "SEEKINK",
+      "why_relevant": "Panel-level supplier showing colour AI art frames and digital photo frames from 4\" to 28.5\" with Spectra 6 at Computex 2026. Likely the ODM behind several of the badge-engineered 28.5\" frames in this space, which is worth knowing when comparing 'different' brands that share one panel. Not fetched first-hand; no URL asserted.",
+      "url": null
+    }
+  ],
+  "unverified_facts": [
+    {
+      "claim": "Displate is phasing out / discontinuing the Lumino product line.",
+      "why_unverified": "This appeared in a search-engine summary attributed to a Displate blog post, but neither Displate blog post I actually fetched says it - the Lumino launch post instead describes an ongoing cadence of new artworks every two weeks. I could not source the discontinuation claim first-hand, so I am not repeating it as fact. It does not change the conclusion either way: Lumino is a print, not a display.",
+      "url": null
+    },
+    {
+      "claim": "Inkanva's panel resolution, exact prices, and ship dates.",
+      "why_unverified": "Never published. Neither inkanva.com, the deposit page, nor the Kickstarter pre-launch page states a resolution, a price for any size, or a delivery estimate. The 28.5\" size strongly implies the same Spectra 6 / 2160x3060 panel used by InkPoster and Bloomin8, but Inkanva has not said so and I will not assert it.",
+      "url": null
+    },
+    {
+      "claim": "Inkanva's 'open API' is usable by a self-hosted application.",
+      "why_unverified": "The claim exists only as marketing sentences naming ChatGPT, Claude Code, Gemini and OpenClaw. There is no developer documentation, no endpoint, no authentication model, and no statement of whether it is a local or cloud API. Given the same page says remote control works 'from anywhere', a vendor cloud relay is the more likely architecture. Unverifiable until the campaign ships.",
+      "url": null
+    },
+    {
+      "claim": "Inkanva's perovskite panel delivers 'infinite battery life' / 'never needs charging'.",
+      "why_unverified": "Unproven engineering claim from an anonymous, first-time creator with no prototype seen by any third party. Note their own materials contradict the headline: the deposit page limits perovskite charging to the 7.09\" and 13.3\" models while the homepage and campaign headline present self-charging as the defining product feature. Indoor-light perovskite harvesting at useful power is a hard problem and the largest size - the one this buyer wants - does not claim it.",
+      "url": null
+    },
+    {
+      "claim": "Jitrainno's Canvas 31/13 prices, resolutions, and whose panel they use.",
+      "why_unverified": "Never published. The vendor labels all Canvas specifications 'preliminary engineering targets' that 'may change'. No price appears anywhere, only a '42% OFF' early-signup teaser.",
+      "url": null
+    },
+    {
+      "claim": "The Jitrainno AF-13 is on sale, and at what price.",
+      "why_unverified": "A full support centre and a published app prove the model exists and is supported, but I found no storefront, no retail listing, no price and no review for AF-13 anywhere. It may be a regional or pre-production release.",
+      "url": null
+    },
+    {
+      "claim": "Google Play listing for the JITRAINNO app.",
+      "why_unverified": "The play.google.com URL is linked from Jitrainno's own download page, but my fetch returned only a truncated Play Store header with no listing body, so I could not confirm the listing renders, its install count, or its rating. The iOS listing WAS confirmed first-hand and carries the correct corporate seller name.",
+      "url": null
+    },
+    {
+      "claim": "Atmoph Window is stocked and shipped from Amazon inside the US.",
+      "why_unverified": "An Amazon US listing and a PR release to that effect both surfaced in search, but I did not fetch either (Amazon blocks automated fetches). What I did confirm first-hand: atmoph.com's English product page prices Window Yo at $799, and store.atmoph.com serves a JP-region storefront in yen. So US availability is very likely but the retail channel is not first-hand verified. It is moot for this survey - the product is LCD and out of scope.",
+      "url": null
+    },
+    {
+      "claim": "Muse Frame's panel is explicitly an LCD, and its nits/legal entity.",
+      "why_unverified": "Muse Frame never names the panel technology on any page I fetched - product page, FAQ, size chart, homepage and About page all omit it, and no brightness figure is published. My classification as backlit LCD is a strong inference from the vendor's own claims: 4K at 55\", over 1 billion colours, 1200:1 contrast, 178-degree viewing angle, video and animated-NFT playback, built-in speakers, and 'LED brightness' control from the app on their Kickstarter. E-paper cannot do any of those. No legal entity, registration number or headcount is published anywhere.",
+      "url": null
+    },
+    {
+      "claim": "Samsung EM32DX US street price of roughly $1,200-1,300.",
+      "why_unverified": "Reported by search results citing CDW, Connection, Amazon and Samsung's business store. My direct fetch of the CDW product page timed out, and the Samsung regional page I did fetch shows no price. The specs are first-hand from Samsung; the price is not.",
+      "url": null
+    },
+    {
+      "claim": "Whether any 'Muse' brand exists that is actually e-paper.",
+      "why_unverified": "I searched several ways ('Muse e-paper art frame', 'Muse e-ink frame', 'Muse Spectra 6') and found no such product - only Muse Frame's LCD line, plus unrelated namesakes. I cannot prove a negative, but nothing in search supports an e-paper Muse, and Muse Frame's own site contains no e-ink product.",
+      "url": null
+    }
+  ]
+}
