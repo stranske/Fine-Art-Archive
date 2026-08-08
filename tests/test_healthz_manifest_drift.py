@@ -1,0 +1,114 @@
+"""`/healthz` must not report ok:true while the operator UI is blind.
+
+Audit finding 37 (2026-08-08). `manifest.csv` is the Companion App's only
+navigation path, and nothing regenerates it when a work is promoted. On
+2026-08-05 that left 18 promoted works servable and renderable but unfindable —
+browse showed 3393 against 3411 on disk — while `/healthz` reported `ok: true`
+throughout, because `ok` only ever considered ratings and queues.
+
+That absence is *why* the gap went unnoticed, so the regression these tests
+guard is "health is silent about drift", not "drift exists".
+"""
+
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+from fine_art_archive.api import main as api_main
+from fine_art_archive.api import store as api_store
+from fine_art_archive.api.main import app
+
+
+@pytest.fixture
+def archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """A staging tree and manifest whose row count the test controls."""
+    staging = tmp_path / "staging_sidecars"
+    works = tmp_path / "works"
+    staging.mkdir()
+    works.mkdir()
+    manifest = tmp_path / "manifest.csv"
+
+    def build(sidecars: int, manifest_rows: int) -> None:
+        for i in range(sidecars):
+            (staging / f"wid-{i:03d}").mkdir(exist_ok=True)
+            (works / f"wid-{i:03d}").mkdir(exist_ok=True)
+        with open(manifest, "w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["work_id", "title"])
+            writer.writeheader()
+            for i in range(manifest_rows):
+                writer.writerow({"work_id": f"wid-{i:03d}", "title": f"Work {i}"})
+
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "MANIFEST_CSV", manifest)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    yield build
+
+
+@pytest.fixture
+def client() -> TestClient:
+    return TestClient(app)
+
+
+def test_healthz_reports_manifest_drift(archive, client: TestClient) -> None:
+    """The 2026-08-05 shape: manifest one batch behind the sidecar tree."""
+    archive(sidecars=11, manifest_rows=8)
+    body = client.get("/healthz").json()
+    assert body["manifest_loaded"] == 8
+    assert body["sidecar_works"] == 11
+    assert body["manifest_drift"] == -3
+    assert body["ok"] is False, "drift must not report healthy"
+
+
+def test_healthz_ok_when_manifest_matches(archive, client: TestClient) -> None:
+    archive(sidecars=11, manifest_rows=11)
+    body = client.get("/healthz").json()
+    assert body["manifest_drift"] == 0
+    assert body["ok"] is True
+
+
+def test_healthz_reports_archive_works(archive, client: TestClient) -> None:
+    """`archive_works` exposes the on-disk count the UI never showed."""
+    archive(sidecars=5, manifest_rows=5)
+    assert client.get("/healthz").json()["archive_works"] == 5
+
+
+def test_absent_manifest_is_not_configured_not_drifted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, client: TestClient
+) -> None:
+    """A fresh checkout ships a fixture sidecar and no manifest.
+
+    Failing health there would be a false alarm on every dev machine, so an
+    empty manifest must not be read as drift.
+    """
+    staging = tmp_path / "staging_sidecars"
+    staging.mkdir()
+    (staging / "test-wid").mkdir()
+    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "MANIFEST_CSV", tmp_path / "absent.csv")
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", tmp_path / "works")
+
+    body = client.get("/healthz").json()
+    assert body["manifest_loaded"] == 0
+    assert body["ok"] is True
+
+
+def test_unreadable_tree_is_unknown_not_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, client: TestClient
+) -> None:
+    """A missing staging tree is 'we do not know', never 'the archive is empty'.
+
+    Reporting 0 there would make drift arithmetic read healthy in exactly the
+    case health should fire.
+    """
+    monkeypatch.setattr(api_store, "STAGING", tmp_path / "does-not-exist")
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", tmp_path / "also-absent")
+    monkeypatch.setattr(api_store, "MANIFEST_CSV", tmp_path / "absent.csv")
+
+    body = client.get("/healthz").json()
+    assert body["sidecar_works"] is None
+    assert body["archive_works"] is None
+    assert body["manifest_drift"] is None

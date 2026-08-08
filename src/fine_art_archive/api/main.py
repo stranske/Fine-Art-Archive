@@ -163,13 +163,46 @@ def htmx_vendor() -> FileResponse:
     )
 
 
+def _count_work_dirs(root: Path) -> int | None:
+    """Number of work directories under `root`, or None if it is unreadable.
+
+    None is deliberately distinct from 0: a missing or unreadable tree is "we
+    do not know", and must not be reported as "the archive is empty" — that
+    would make drift detection read healthy in the very case it should fire.
+    """
+    try:
+        return sum(1 for child in root.iterdir() if child.is_dir())
+    except OSError:
+        return None
+
+
 @app.get("/healthz")
 def healthz() -> dict:
     corrupt_line_count = store.ratings_corrupt_line_count()
     queues_invalid_count = _queue_invalid_count()
+    manifest_loaded = len(store.load_manifest())
+    sidecar_works = _count_work_dirs(store.STAGING)
+    archive_works = _count_work_dirs(ART_WORKS_ROOT)
+
+    # The manifest is the operator UI's ONLY navigation path, and nothing
+    # regenerates it on promotion. On 2026-08-05 that left 18 promoted works
+    # servable but unfindable — browse showed 3393 against 3411 on disk — while
+    # this endpoint reported ok:true throughout, because `ok` only ever looked
+    # at ratings and queues. A work the operator cannot find cannot be rated,
+    # so it never enters the curation loop. Drift is therefore a health fact.
+    manifest_drift = None if sidecar_works is None else manifest_loaded - sidecar_works
+    # An ABSENT or empty manifest is "not configured", not "drifted": a fresh
+    # checkout ships one fixture sidecar and no manifest at all, and failing
+    # health there would be a false alarm on every dev machine. Drift only
+    # gates health once a manifest exists and claims content — which is
+    # precisely the state the 2026-08-05 incident occurred in.
+    drift_is_healthy = manifest_loaded == 0 or manifest_drift == 0
     return {
-        "ok": corrupt_line_count == 0 and queues_invalid_count == 0,
-        "manifest_loaded": len(store.load_manifest()),
+        "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
+        "manifest_loaded": manifest_loaded,
+        "sidecar_works": sidecar_works,
+        "archive_works": archive_works,
+        "manifest_drift": manifest_drift,
         "ratings_count": store.count_ratings(),
         "ratings_corrupt_line_count": corrupt_line_count,
         "queues_invalid_count": queues_invalid_count,
