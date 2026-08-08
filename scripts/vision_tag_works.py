@@ -4,8 +4,7 @@
 The implementation and policy belong in this repository.  The large artwork
 corpus remains outside git and is selected with ``FAA_WORKSPACE``; this makes
 the Companion API executable without treating operational data as source code.
-"""
-"""
+
 .. warning::
    **THIS FILE HAS A TWIN, AND THE TWIN IS THE ONE THAT RUNS.**
 
@@ -26,7 +25,6 @@ the Companion API executable without treating operational data as source code.
    import it), **any behaviour change here must be mirrored into the workspace
    copy and verified by counting tags in the archive**, not by running tests.
 """
-
 from __future__ import annotations
 
 import argparse
