@@ -32,6 +32,26 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from fine_art_archive.parsers.dimension_utils import dim_compat, parse_dimension_pair
+
+# Re-exported under their historical private names: the workspace ops script
+# `find_inventory_duplicates.py` imports `_dim_compat` from this module. Keep
+# these aliases until that script is migrated to the `parsers` import.
+_dim_compat = dim_compat
+_parse_dimensions = parse_dimension_pair
+
+__all__ = [
+    "DuplicateMatch",
+    "DuplicateCheckResult",
+    "MatchTier",
+    "check_inventory",
+    "check_inventory_rows",
+    "dim_compat",
+    "format_report",
+    "load_inventory_rows",
+    "parse_dimension_pair",
+]
+
 MatchTier = Literal[
     "exact-title-artist",
     "exact-artist+near-title",
