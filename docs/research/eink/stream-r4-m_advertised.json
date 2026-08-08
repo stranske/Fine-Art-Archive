@@ -1,4 +1,7 @@
 {
+  "schema": "eink-advertised-vendor-evidence/v1",
+  "merge_pipeline_input": false,
+  "note": "Evidence-only research for advertised vendors; this file is not a device/vendor stream and must not be consumed by scripts/merge_eink_survey.py.",
   "brands": [
     {
       "name": "Muse Frame",
