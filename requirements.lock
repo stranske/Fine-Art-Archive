@@ -214,7 +214,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.1
+ruff==0.16.2
     # via fine-art-archive (pyproject.toml)
 safetensors==0.8.0
     # via transformers
