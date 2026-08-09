@@ -265,8 +265,11 @@ def backfill(
             if stats.attempted >= limit:
                 break
             continue
-        already = [w for w in holders.get(match.work_qid, [])
-                   if w != str(meta.get("work_id") or path.parent.name)]
+        already = [
+            work_id
+            for work_id in holders.get(match.work_qid, [])
+            if work_id != str(meta.get("work_id") or path.parent.name)
+        ]
         if already:
             reasons["already-held-by-another-work"] += 1
             stats.collisions.append(
