@@ -26,8 +26,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "backfill_work_qids_by_creator", ROOT / "scripts" / "backfill_work_qids_by_creator.py"
