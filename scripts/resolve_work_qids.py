@@ -6,13 +6,21 @@ each QID-less work, and records the outcome in ``field_provenance.work_qid`` so 
 work is never searched twice needlessly -- yet is automatically re-opened when
 the search itself improves.
 
-Strategies (this build = search-plan v2):
+Strategies (this build = search-plan v3):
   1. **by-creator** -- the guarded match in the creator's Wikidata oeuvre
-     (alias + normalized-title + year-discriminator); needs a creator QID.
+     (alias + normalized-title match), disambiguating a same-title cluster by, in
+     order, the holder (P195), the year, then the work's dimensions (P2048/P2049);
+     needs a creator QID.
   2. **title-search** -- creator-independent Wikidata title search, gated to
      ``P31=artwork`` with a strong title match and year agreement; accepts a work
      by the creator, else a globally-unique artwork match even without a
      confirmed creator (see :mod:`fine_art_archive.enrichment.work_qid_search`).
+
+A third strategy -- cross-referencing ``known_works`` (Wikipedia "List of
+paintings by X" + Met) -- was evaluated and rejected: for a work whose creator's
+Wikidata P170 oeuvre is empty (the only bucket strategy 1 can't cover), the only
+QID-bearing ``known_works`` source is that same empty P170, so it recovered 0 of
+a 9-work probe. Do not re-add it without a source that carries Wikidata QIDs.
 
 Ledger states written for ``work_qid``:
   * ``available`` -- a QID was found (never searched again);
@@ -53,6 +61,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from jsonschema import ValidationError as _ValidationError  # noqa: E402
+
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
@@ -60,7 +70,7 @@ from fine_art_archive.enrichment.work_qid_by_creator import resolve_work_qid, ye
 from fine_art_archive.enrichment.work_qid_search import resolve_by_title_search  # noqa: E402
 
 DEFAULT_LIMIT = 100_000
-SEARCH_PLAN_VERSION = 2  # bump when a strategy is added -> re-opens retired works
+SEARCH_PLAN_VERSION = 3  # bump when a strategy is added -> re-opens retired works
 _PLAN_REF_RE = re.compile(r"faa:work-qid-search/v(\d+)")
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
@@ -293,7 +303,21 @@ def backfill(
         if apply and (qid is not None or retire):
             op = "work_qid_resolved" if qid is not None else "work_qid_retired"
             detail = {"qid": qid, "method": method} if qid else {"tried": tried}
-            sidecar.validate(meta)
+            try:
+                sidecar.validate(meta)
+            except _ValidationError:
+                # The sidecar was already schema-invalid for a reason this pass
+                # did not introduce; skip it rather than abort the whole run, and
+                # undo this work's tallies so the report stays accurate.
+                outcomes["skipped-invalid-sidecar"] += 1
+                if qid is not None:
+                    outcomes[f"resolved:{method}"] -= 1
+                    stats.matches.pop()
+                else:
+                    outcomes[f"retired:{meta['field_provenance']['work_qid']['status']}"] -= 1
+                if stats.attempted >= limit:
+                    break
+                continue
             sidecar.write(path, meta)
             mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
             stats.mirrored += len(mirror_paths)
