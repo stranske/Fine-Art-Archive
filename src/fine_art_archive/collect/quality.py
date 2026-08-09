@@ -25,10 +25,12 @@ that maps the report onto target-device adequacy.
 
 from __future__ import annotations
 
+import math
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TypeGuard
 
 import numpy as np
 from PIL import Image
@@ -138,6 +140,21 @@ class QualityReport:
 # ---------------------------------------------------------------------------
 
 
+def _is_positive_finite(value: float | None) -> TypeGuard[float]:
+    """True only for a real, usable measurement.
+
+    Guards a numeric trust boundary: None and NaN and +/-inf are all "not a
+    dimension we can divide by", and must be rejected together rather than
+    relying on `> 0` alone.
+
+    Returns `TypeGuard[float]` rather than `bool` so the narrowing survives the
+    call. The inline form this replaced (`if h_cm and w_cm and h_cm > 0 ...`)
+    narrowed via truthiness for free; extracting it into a helper loses that
+    unless the guard is declared, and mypy then rejects the division below.
+    """
+    return value is not None and math.isfinite(value) and value > 0
+
+
 def measure_resolution(
     img: Image.Image, h_cm: float | None, w_cm: float | None
 ) -> tuple[int, int, float | None]:
@@ -145,7 +162,11 @@ def measure_resolution(
     long_edge = max(w, h)
     short_edge = min(w, h)
     px_per_cm = None
-    if h_cm and w_cm and (h_cm > 0 and w_cm > 0):
+    # `> 0` alone is not enough at a numeric trust boundary. NaN already fails
+    # it (every NaN comparison is False), but +inf passes and yields
+    # `long_edge / inf == 0.0` — a silent "0 pixels per cm" that looks like a
+    # measurement rather than a missing one. Require finiteness explicitly.
+    if _is_positive_finite(h_cm) and _is_positive_finite(w_cm):
         long_cm = max(h_cm, w_cm)
         px_per_cm = long_edge / long_cm
     return long_edge, short_edge, px_per_cm

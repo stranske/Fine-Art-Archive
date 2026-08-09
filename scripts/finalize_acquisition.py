@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import math
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -41,6 +42,27 @@ from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.collect.quality import quality_report  # noqa: E402
 from fine_art_archive.collect.verify import verify  # noqa: E402
 from fine_art_archive.identity import enrich_sidecar_getty  # noqa: E402
+
+
+def _fmt_measure(value: float | None, *, places: int = 1) -> str:
+    """Render a measurement for the history note, or "unknown"/"invalid".
+
+    `QualityReport.px_per_cm_long` is `float | None` — it is None whenever the
+    work's physical dimensions are absent, which is routine for prints,
+    drawings and Commons-sourced works. Formatting it unconditionally with
+    `:.1f` raised `TypeError: unsupported format string passed to
+    NoneType.__format__` and aborted finalisation for that work. (The note text
+    already said "if known"; only the formatting did not.)
+
+    Non-finite values are rendered by name rather than as `nan`/`inf` digits,
+    so a bad measurement is visible in the history rather than looking like a
+    number someone measured.
+    """
+    if value is None:
+        return "unknown"
+    if not math.isfinite(value):
+        return "invalid"
+    return f"{value:.{places}f}"
 
 
 def update_files_master_from_bytes(meta: dict[str, Any], master_path: Path) -> None:
@@ -135,9 +157,9 @@ def run_finalize(
         "op": f"finalize:verify={vreport.overall},quality_assessed",
         "notes": (
             f"verify={vreport.overall}; "
-            f"px/cm={qreport.px_per_cm_long:.1f} if known; "
+            f"px/cm={_fmt_measure(qreport.px_per_cm_long)}; "
             f"jpeg_q={qreport.jpeg_quality_factor}; "
-            f"fft_hf={qreport.fft_highfreq_ratio:.5f}; "
+            f"fft_hf={_fmt_measure(qreport.fft_highfreq_ratio, places=5)}; "
             f"fit_for={fit_summary or 'none'}"
         ),
     }
