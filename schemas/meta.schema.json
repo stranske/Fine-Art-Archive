@@ -486,6 +486,14 @@
           ],
           "pattern": "^Q[0-9]+$"
         },
+        "part_of_q": {
+          "description": "Wikidata Q-ID of a larger work this one is part of (P361): a panel of a polyptych, a plate in a series, a scene in a cycle.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$"
+        },
         "ulan_for_artist": {
           "type": [
             "string",
