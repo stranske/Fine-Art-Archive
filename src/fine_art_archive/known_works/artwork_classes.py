@@ -36,6 +36,49 @@ ALLOWED_P31: frozenset[str] = frozenset(
     }
 )
 
+# ---------------------------------------------------------------------------
+# Group classes: artwork classes that denote a SET, not a single object.
+#
+# `ALLOWED_P31` answers "is this an artwork class?". That is the wrong question
+# at the point where a Q-ID is written into `stable_identifiers.wikidata_q`,
+# which must denote ONE work and be unique across the archive. A painting
+# series is unambiguously an artwork class and unambiguously not a single work,
+# so it passed a gate that was never asking the right thing — which is how 132
+# work Q-IDs ended up shared across sidecars, the worst of them on 50.
+#
+# Note `Q15727816` (painting series) is a member of ALLOWED_P31 above. That is
+# correct and deliberate: a series IS an artwork class, and known-works queries
+# should still find it. It simply must not be recorded as a single work's
+# identity — it belongs in the sidecar's `series` block instead.
+GROUP_P31: frozenset[str] = frozenset(
+    {
+        "Q15727816",  # painting series
+        "Q15709879",  # group of paintings
+        "Q18573970",  # artwork series
+        "Q17489659",  # group of works of art
+    }
+)
+
+# What may be written to `stable_identifiers.wikidata_q`.
+SINGLE_WORK_P31: frozenset[str] = ALLOWED_P31 - GROUP_P31
+
+
+def is_group_class(qid: str) -> bool:
+    """True when `qid` denotes a SET of works rather than one work."""
+    return qid in GROUP_P31
+
+
+def is_single_work_class(qid: str) -> bool:
+    """True when `qid` may serve as a single work's stable identifier.
+
+    Deliberately NOT `qid in ALLOWED_P31 and not is_group_class(qid)` written
+    inline at each call site — the two questions have drifted apart before, and
+    a named predicate is what stops a future caller from asking the looser one
+    by accident.
+    """
+    return qid in SINGLE_WORK_P31
+
+
 # Historical junk that must never re-enter the allowlist.
 FORBIDDEN_P31: frozenset[str] = frozenset(
     {
