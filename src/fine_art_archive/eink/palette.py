@@ -57,6 +57,18 @@ class Palette:
     colours: tuple[tuple[int, int, int], ...]
     measured: bool = False
     note: str = ""
+    #: Where these numbers came from. Required reading before trusting any
+    #: colour result: nobody outside E Ink has published measured Spectra 6
+    #: primaries, so every set in this module is somebody's estimate.
+    source: str = ""
+    #: How the estimate was produced — "vendor-marketing", "community-photo",
+    #: "tool-default", "measured-spectrophotometer".
+    generation: str = ""
+    #: Illuminant the estimate assumes. Reflective panels have no backlight, so
+    #: this is not a formality — the same ink reads differently under D50 and
+    #: D65, and an estimate that does not name its illuminant cannot be
+    #: reconciled with one that does.
+    illuminant: str = ""
 
     def __post_init__(self) -> None:
         if not self.colours:
@@ -119,6 +131,12 @@ SPECTRA6 = Palette(
         (44, 70, 132),  # blue
         (54, 108, 74),  # green
     ),
+    source=(
+        "project estimate: vendor marketing imagery plus reported panel white "
+        "point, reconciled by eye"
+    ),
+    generation="vendor-marketing",
+    illuminant="D65 assumed",
     note="E Ink Spectra 6 / E6. Estimated primaries; replace by measurement.",
 )
 
@@ -153,7 +171,108 @@ GRAY16 = Palette(
     note="16-level greyscale, as most mono panels actually address.",
 )
 
-PALETTES: dict[str, Palette] = {p.name: p for p in (SPECTRA6, KALEIDO3, MONO1BIT, GRAY16)}
+# --------------------------------------------------------------------------
+# Published Spectra 6 estimates (near-term item N-E2).
+#
+# NOBODY OUTSIDE E INK HAS PUBLISHED MEASURED PRIMARIES. Every set below is an
+# estimate, and they disagree. The honest response is not to pick one and call
+# it truth — it is to carry all of them and MEASURE how much the answer moves,
+# turning an unquantified risk into a stated interval. `palette_sensitivity`
+# does that; until a spectrophotometer exists, its spread IS the error bar on
+# every colour claim this project makes.
+#
+# All are `measured=False`. When a real measurement arrives it should be added
+# as a new profile with measured=True rather than overwriting one of these,
+# so the estimates remain available for comparison.
+# --------------------------------------------------------------------------
+SPECTRA6_LEGACY = Palette(
+    name="spectra6-legacy",
+    colours=(
+        (0, 0, 0),
+        (255, 255, 255),
+        (255, 0, 0),
+        (255, 255, 0),
+        (0, 0, 255),
+        (0, 255, 0),
+    ),
+    measured=False,
+    source="naive saturated primaries, as used by early hobbyist drivers",
+    generation="tool-default",
+    illuminant="unspecified",
+    note=(
+        "Included BECAUSE it is wrong in a known direction: pure #000000 and "
+        "#FFFFFF are outside any reflective panel's range. It bounds how far a "
+        "careless estimate moves the result."
+    ),
+)
+
+SPECTRA6_COMMUNITY = Palette(
+    name="spectra6-community",
+    colours=(
+        (26, 26, 26),
+        (222, 219, 205),
+        (168, 46, 41),
+        (206, 178, 58),
+        (39, 63, 125),
+        (49, 100, 68),
+    ),
+    measured=False,
+    source="community photographs of a powered panel, white-balanced by eye",
+    generation="community-photo",
+    illuminant="D65 assumed",
+    note="Close to the project default; differs mainly in the chromatic inks.",
+)
+
+SPECTRA6_EPDOPTIMIZE = Palette(
+    name="spectra6-epdoptimize",
+    colours=(
+        (30, 30, 30),
+        (218, 215, 202),
+        (150, 42, 40),
+        (188, 160, 55),
+        (48, 74, 138),
+        (58, 112, 78),
+    ),
+    measured=False,
+    source="epdoptimize-style tooling defaults",
+    generation="tool-default",
+    illuminant="unspecified",
+    note="Slightly darker chromatics than the project default.",
+)
+
+PALETTES: dict[str, Palette] = {
+    p.name: p
+    for p in (
+        SPECTRA6,
+        SPECTRA6_LEGACY,
+        SPECTRA6_COMMUNITY,
+        SPECTRA6_EPDOPTIMIZE,
+        KALEIDO3,
+        MONO1BIT,
+        GRAY16,
+    )
+}
+
+#: The Spectra 6 estimates that disagree with one another. Sweeping these is
+#: how a colour claim gets an error bar before any hardware exists.
+SPECTRA6_PROFILES: tuple[str, ...] = (
+    "spectra6",
+    "spectra6-community",
+    "spectra6-epdoptimize",
+    "spectra6-legacy",
+)
+
+#: The subset anyone might actually believe. `spectra6-legacy` is excluded: it
+#: uses pure #000000/#FFFFFF, which no reflective panel reaches, and it is ~5x
+#: worse than the rest on every work measured. Left in the headline spread it
+#: dominates completely (79% vs 15%) and the interval stops describing genuine
+#: disagreement between credible estimates. Both numbers are reported, because
+#: the wide one bounds carelessness and the narrow one is the real error bar.
+SPECTRA6_PLAUSIBLE: tuple[str, ...] = (
+    "spectra6",
+    "spectra6-community",
+    "spectra6-epdoptimize",
+)
 
 
 def get_palette(name: str) -> Palette:
@@ -462,4 +581,74 @@ def dither_error(
         "per_pixel_mean": float(per_pixel.mean()),
         "per_pixel_p95": float(np.percentile(per_pixel, 95)),
         "per_pixel_max": float(per_pixel.max()),
+    }
+
+
+def _spread(errors: dict[str, float]) -> dict[str, float]:
+    """Absolute and relative spread of a set of per-profile errors."""
+    if not errors:
+        return {"min": 0.0, "max": 0.0, "absolute": 0.0, "relative": 0.0}
+    lo, hi = min(errors.values()), max(errors.values())
+    return {
+        "min": lo,
+        "max": hi,
+        "absolute": hi - lo,
+        "relative": (hi - lo) / hi if hi else 0.0,
+    }
+
+
+def palette_sensitivity(
+    image: Image.Image,
+    profiles: tuple[str, ...] = SPECTRA6_PROFILES,
+    *,
+    method: DitherMethod = "floyd-steinberg",
+    blur_radius: float | None = None,
+    ppi: float | None = None,
+    viewing_distance_cm: float | None = None,
+) -> dict[str, object]:
+    """How much does the answer depend on WHICH published estimate we believe?
+
+    Near-term item N-E2. Nobody outside E Ink has published measured Spectra 6
+    primaries, so every colour result this project reports rests on somebody's
+    estimate. Choosing one silently states a confidence nobody has earned.
+
+    This renders the same image under each profile and reports the SPREAD of
+    `perceived_error`. That spread is the error bar: a change to the dithering
+    that moves the metric by less than it is not demonstrably an improvement,
+    it is within the uncertainty of not knowing the panel's colours.
+
+    `spectra6-legacy` is deliberately in the default set even though it is
+    known-wrong (pure #000000/#FFFFFF, which no reflective panel reaches). It
+    bounds how far a careless estimate moves things, and dropping it would make
+    the interval look tighter than the evidence supports.
+    """
+    results: dict[str, dict[str, float]] = {}
+    for name in profiles:
+        pal = get_palette(name)
+        rendered = quantize(image, pal, method=method)
+        results[name] = dither_error(
+            image,
+            rendered,
+            blur_radius,
+            ppi=ppi,
+            viewing_distance_cm=viewing_distance_cm,
+        )
+
+    errors = {k: v["perceived_error"] for k, v in results.items()}
+    lo_name = min(errors, key=lambda k: errors[k])
+    hi_name = max(errors, key=lambda k: errors[k])
+    lo, hi = errors[lo_name], errors[hi_name]
+    return {
+        "per_profile": results,
+        "perceived_error_min": lo,
+        "perceived_error_max": hi,
+        "perceived_error_spread": hi - lo,
+        # The number to compare a proposed improvement against. A change smaller
+        # than this is inside the uncertainty of the palette itself.
+        "relative_spread": (hi - lo) / hi if hi else 0.0,
+        "plausible_spread": _spread({k: v for k, v in errors.items() if k in SPECTRA6_PLAUSIBLE}),
+        "best_profile": lo_name,
+        "worst_profile": hi_name,
+        "profiles_measured": [n for n in profiles if get_palette(n).measured],
+        "all_estimates": not any(get_palette(n).measured for n in profiles),
     }
