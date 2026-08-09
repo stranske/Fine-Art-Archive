@@ -14,7 +14,9 @@ from scripts.resolve_creators import _apply_outcome, _eligible  # noqa: E402
 
 from fine_art_archive.enrichment.creator_provenance import (  # noqa: E402
     ARTIST_SEARCH_PLAN_VERSION,
+    REF_IMAGE_PENDING,
     REF_SEARCH,
+    REF_UNATTRIBUTABLE,
     classify,
 )
 
@@ -180,6 +182,24 @@ def test_searched_reopens_only_when_plan_rises() -> None:
     # simulate an older retirement -> re-opens
     entry["source_ref"] = f"{REF_SEARCH}{ARTIST_SEARCH_PLAN_VERSION - 1}"
     assert _eligible(meta) is True
+
+
+def test_null_name_is_image_search_pending_not_final() -> None:
+    # A null/empty name (debris stripped) must NOT be a final verdict: it goes to
+    # the non-terminal image-search-pending state until image search has run.
+    meta = _meta(name="")
+    bucket = _apply_outcome(meta, classify(meta, client=FakeClient({})))
+    assert bucket == "image-search-pending"
+    assert meta["field_provenance"]["artist_qid"]["source_ref"] == REF_IMAGE_PENDING
+    assert _eligible(meta) is False  # text is exhausted; the image process owns it now
+
+
+def test_legacy_unattributable_reopens_for_migration() -> None:
+    meta = _meta(name="_junk_fragment")
+    meta["field_provenance"] = {
+        "artist_qid": {"status": "not_available", "source_ref": REF_UNATTRIBUTABLE}
+    }
+    assert _eligible(meta) is True  # reopened so a re-run migrates it to image-pending
 
 
 def test_resolved_apply_sets_creator_qid() -> None:

@@ -47,6 +47,7 @@ from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.creator_provenance import (  # noqa: E402
     ARTIST_SEARCH_PLAN_VERSION,
     REF_ANONYMOUS,
+    REF_IMAGE_PENDING,
     REF_SEARCH,
     REF_UNATTRIBUTABLE,
     CreatorOutcome,
@@ -79,8 +80,12 @@ def _eligible(meta: dict[str, Any]) -> bool:
     if entry.get("status") == "available":
         return False  # resolved
     ref = str(entry.get("source_ref") or "")
-    if ref in (REF_ANONYMOUS, REF_UNATTRIBUTABLE):
-        return False  # THIS ledger's version-independent terminals
+    if ref == REF_ANONYMOUS:
+        return False  # genuine anonymity (named, era/culture) -- terminal
+    if ref == REF_IMAGE_PENDING:
+        return False  # text is exhausted; the IMAGE-search process owns this now
+    if ref == REF_UNATTRIBUTABLE:
+        return True  # legacy terminal -> reopen to migrate it to image-search pending
     match = _SEARCH_REF_RE.search(ref)
     if match:  # THIS ledger's 'searched' state: re-open when the plan rises
         return int(match.group(1)) < ARTIST_SEARCH_PLAN_VERSION
@@ -140,10 +145,17 @@ def _apply_outcome(meta: dict[str, Any], outcome: CreatorOutcome) -> str:
         )
         return "searched"
 
+    # Corrupt / null-name: NOT final. Text search is exhausted, but image search
+    # still owes this work a look before null/no-attribution is accepted.
     provenance.set(
-        meta, "artist_qid", "not_available", "faa", source_ref=REF_UNATTRIBUTABLE, note=outcome.note
+        meta,
+        "artist_qid",
+        "not_available",
+        "faa",
+        source_ref=REF_IMAGE_PENDING,
+        note=f"{outcome.note} Text exhausted; image search required before this is final.",
     )
-    return "unattributable"
+    return "image-search-pending"
 
 
 def _write_existing_mirrors(

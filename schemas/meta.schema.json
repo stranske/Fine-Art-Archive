@@ -69,9 +69,11 @@
       "additionalProperties": false,
       "properties": {
         "name": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Display string as it appears in the source (e.g., 'Workshop of Rembrandt', 'After Caravaggio', 'Unknown artist'). The structured attribution fields below carry the resolved relationship."
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Display string as it appears in the source (e.g., 'Workshop of Rembrandt', 'After Caravaggio', 'Unknown artist'). MAY be null when a debris-repair pass has stripped an unusable junk name and no attribution is yet known -- a TRANSIENT state, not a final verdict: such works must go through image search (which recovers many) before null is accepted as correct. The structured attribution fields below carry the resolved relationship."
         },
         "given": {
           "type": [
@@ -1105,6 +1107,13 @@
                   "unknown"
                 ],
                 "description": "What display surface this variant is prepared for. 'duplicate-copy' means a bit-identical or near-identical second copy (e.g., '(1)' suffix) with no obvious surface specialization. 'partial-crop' means one of SEVERAL complementary crops of a work too wide or tall for any single panel — each preserves different elements and none is redundant with the others; pair it with crop_position."
+              },
+              "crop_position": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "For a cropped variant, which side/region of the master the crop favors (e.g., 'left', 'right', 'center'). Set by the crop planner."
               },
               "size_bytes": {
                 "type": [
