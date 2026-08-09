@@ -120,3 +120,55 @@ class TestItMintsNegatives:
         comps = [("a", "b")] * 3 + [("b", "c")] * 3 + [("c", "d")] * 3
         neg = fit(comps).negatives(0.5)
         assert "d" in neg and "a" not in neg
+
+
+class TestACompleteRoundRobinConverges:
+    """The shape a real ten-minute session actually produces.
+
+    17 works, every pair compared once: 136 comparisons, and — near-certainly —
+    one work undefeated and one winless. A perfect record puts the
+    maximum-likelihood strength at infinity or zero, so this is not an edge case
+    to be tolerated but the normal outcome to be regularised.
+
+    The first implementation failed exactly here. It added the win prior once
+    per ITEM but the comparison prior once per PAIR, so with 16 opponents each
+    the denominator got 16x more prior than the numerator: strengths collapsed
+    to a 10.9-to-0.000 spread and the fit never converged in 500 iterations.
+    Unit tests on three-item chains had passed throughout.
+    """
+
+    @staticmethod
+    def _round_robin(n: int = 17) -> list[tuple[str, str]]:
+        items = [f"w{i:02d}" for i in range(n)]
+        out = []
+        for i, a in enumerate(items):
+            for b in items[i + 1 :]:
+                out.append((a, b))  # lower index always wins -> strict order
+        return out
+
+    def test_it_converges(self) -> None:
+        r = fit(self._round_robin())
+        assert r.converged is True, (
+            "a complete round-robin with a perfect record is the NORMAL session "
+            "outcome; failing to converge on it makes the ranking unusable"
+        )
+
+    def test_the_undefeated_work_is_finite(self) -> None:
+        r = fit(self._round_robin())
+        best = r.ranked()[0][1]
+        assert 0 < best < 100
+
+    def test_the_winless_work_is_above_zero(self) -> None:
+        r = fit(self._round_robin())
+        worst = r.ranked()[-1][1]
+        assert worst > 0.01, "a winless work must be small, not annihilated"
+
+    def test_the_spread_stays_interpretable(self) -> None:
+        """A 40x spread from a 16-game record is the prior failing, not signal."""
+        r = fit(self._round_robin())
+        best, worst = r.ranked()[0][1], r.ranked()[-1][1]
+        assert best / worst < 25
+
+    def test_the_recovered_order_matches_the_truth(self) -> None:
+        r = fit(self._round_robin())
+        assert [w for w, _ in r.ranked()] == [f"w{i:02d}" for i in range(17)]

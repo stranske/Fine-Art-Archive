@@ -30,9 +30,11 @@ MAX_ITERATIONS = 500
 #: Stop when no strength moves by more than this in an iteration.
 TOLERANCE = 1e-9
 
-#: Added to every item's win and comparison count. Without it an item that lost
-#: every comparison gets strength 0 and one that won every comparison diverges,
-#: which on a ten-minute session is a near-certainty rather than an edge case.
+#: Half-games added to BOTH sides of every pair that was actually compared.
+#: Without it a perfect record puts the maximum-likelihood strength at infinity
+#: (undefeated) or zero (winless) and the fit never converges — not an edge case
+#: but the normal outcome of a complete round-robin, which is exactly what a
+#: ten-minute session over 17 works produces.
 PRIOR_STRENGTH = 0.5
 
 
@@ -114,7 +116,7 @@ def fit(comparisons: list[tuple[str, str]]) -> BradleyTerryResult:
         return BradleyTerryResult({}, [], 0, 0, True, ["no comparisons recorded"])
 
     items = sorted({w for pair in comparisons for w in pair})
-    wins: dict[str, float] = dict.fromkeys(items, PRIOR_STRENGTH)
+    wins: dict[str, float] = dict.fromkeys(items, 0.0)
     n: dict[tuple[str, str], float] = defaultdict(float)
     for winner, loser in comparisons:
         if winner == loser:
@@ -124,10 +126,20 @@ def fit(comparisons: list[tuple[str, str]]) -> BradleyTerryResult:
         key = (winner, loser) if winner < loser else (loser, winner)
         n[key] += 1.0
 
-    # Symmetric prior comparison between every pair that WAS compared, so the
-    # prior does not invent relationships between works never shown together.
-    for key in list(n):
-        n[key] += 2 * PRIOR_STRENGTH
+    # Symmetric prior, applied PER COMPARED PAIR: pretend each pair also played
+    # 2*PRIOR_STRENGTH games split evenly. Only pairs actually shown together
+    # get one, so the prior never invents a relationship.
+    #
+    # It must be added to BOTH sides of the same pair. An earlier version added
+    # the win prior once per ITEM but the count prior once per PAIR, so with 16
+    # opponents each the denominator received 16x more prior than the numerator
+    # and every strength was crushed toward zero. That only showed up on a real
+    # round-robin: 136 comparisons over 17 works, where the undefeated work sat
+    # at 10.9 and the winless one at 0.000, and the fit never converged.
+    for (a, b) in list(n):
+        n[(a, b)] += 2 * PRIOR_STRENGTH
+        wins[a] += PRIOR_STRENGTH
+        wins[b] += PRIOR_STRENGTH
 
     p: dict[str, float] = dict.fromkeys(items, 1.0)
     iterations = 0
