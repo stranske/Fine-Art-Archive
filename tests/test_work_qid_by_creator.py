@@ -280,6 +280,46 @@ def test_dimensions_disambiguate_same_title_cluster() -> None:
     )
 
 
+class _MediumSparql:
+    """FakeSparql that also answers the P31 medium-label query."""
+
+    def __init__(self, bindings: list[dict[str, Any]], media: dict[str, str]) -> None:
+        self._payload = {"results": {"bindings": bindings}}
+        self._media = media
+
+    def query(self, sparql: str) -> dict[str, Any]:
+        if "typeLabel" in sparql:
+            rows = [
+                {"w": {"value": f"http://www.wikidata.org/entity/{q}"}, "typeLabel": {"value": lbl}}
+                for q, lbl in self._media.items()
+            ]
+            return {"results": {"bindings": rows}}
+        return self._payload
+
+
+def test_medium_disambiguates_print_from_painting() -> None:
+    # Benton's "Aaron" exists as both a painting (PAFA) and a lithograph (NGA).
+    client = _MediumSparql(
+        [_binding("Q1", "Aaron"), _binding("Q2", "Aaron")],
+        media={"Q1": "painting", "Q2": "lithograph"},
+    )
+    # no discriminator -> ambiguous
+    assert wqc.resolve_work_qid("Aaron", None, "Q471764", client=client)[1] == "ambiguous"
+    # sidecar is a print -> the lithograph
+    match, reason = wqc.resolve_work_qid("Aaron", None, "Q471764", client=client, category="print")
+    assert reason == "match" and match.work_qid == "Q2"
+    # sidecar is a painting -> the painting
+    match, reason = wqc.resolve_work_qid(
+        "Aaron", None, "Q471764", client=client, category="painting"
+    )
+    assert reason == "match" and match.work_qid == "Q1"
+    # a medium neither candidate has -> still ambiguous
+    assert (
+        wqc.resolve_work_qid("Aaron", None, "Q471764", client=client, category="sculpture")[1]
+        == "ambiguous"
+    )
+
+
 def test_resolve_work_qid_match() -> None:
     client = FakeSparql(
         [

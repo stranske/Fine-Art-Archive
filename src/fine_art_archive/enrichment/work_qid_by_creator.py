@@ -91,6 +91,56 @@ def _dims_match(
     return abs(ch - sh) <= _DIM_TOLERANCE_CM and abs(cw - sw) <= _DIM_TOLERANCE_CM
 
 
+# Coarse medium keywords -> the sidecar ``category`` a P31 class corresponds to.
+# Prints in particular routinely produce a same-title cluster (a painting AND its
+# print edition, both P170=creator, both "Aaron"); the medium tells them apart.
+_MEDIUM_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "print": (
+        "print", "lithograph", "etching", "engraving", "woodcut", "woodblock",
+        "screenprint", "serigraph", "aquatint", "drypoint", "mezzotint", "linocut",
+    ),
+    "painting": ("painting", "fresco", "mural", "tempera", "oil on"),
+    "sculpture": ("sculpture", "statue", "relief", "bronze", "bust", "carving", "statuette"),
+    "drawing": ("drawing", "sketch", "pastel", "watercolor", "watercolour", "gouache", "cartoon"),
+    "photograph": ("photograph", "photo"),
+}
+
+
+def _coarse_medium(text: str) -> str | None:
+    low = text.lower()
+    for medium, keywords in _MEDIUM_KEYWORDS.items():
+        if any(kw in low for kw in keywords):
+            return medium
+    return None
+
+
+def _p31_labels_query(qids: list[str]) -> str:
+    values = " ".join(f"wd:{q}" for q in qids)
+    return (
+        "SELECT ?w ?typeLabel WHERE { "
+        f"VALUES ?w {{ {values} }} "
+        "?w wdt:P31 ?type . "
+        'SERVICE wikibase:label { bd:serviceParam wikibase:language "en". '
+        "?type rdfs:label ?typeLabel } }"
+    )
+
+
+def fetch_media(qids: list[str], *, client: SparqlQuerier) -> dict[str, set[str]]:
+    """Return ``{qid: {coarse-medium, ...}}`` from each work's P31 class labels."""
+    if not qids:
+        return {}
+    payload = client.query(_p31_labels_query(qids))
+    out: dict[str, set[str]] = {}
+    if not isinstance(payload, dict):
+        return out
+    for row in payload.get("results", {}).get("bindings", []):
+        qid = row.get("w", {}).get("value", "").rsplit("/", 1)[-1]
+        medium = _coarse_medium(row.get("typeLabel", {}).get("value", ""))
+        if qid and medium:
+            out.setdefault(qid, set()).add(medium)
+    return out
+
+
 @dataclass(frozen=True)
 class WorkQidMatch:
     work_qid: str
@@ -106,13 +156,17 @@ def resolve_work_qid(
     client: SparqlQuerier,
     holder_qid: str | None = None,
     dimensions: tuple[float | None, float | None] | None = None,
+    category: str | None = None,
 ) -> tuple[WorkQidMatch | None, str]:
     """Resolve one work's QID from its creator's Wikidata works.
 
     Same-title clusters are disambiguated by (in order) the holder (``holder_qid``,
-    the definitive P195 collection), the year, then the **dimensions**
-    (``dimensions`` = the sidecar's ``(height_cm, width_cm)``): if exactly one tied
-    candidate's Wikidata height+width match within tolerance, that is the work.
+    the definitive P195 collection) and the year (both inside ``match_work_entity``),
+    then, on a remaining tie, the **medium** (``category`` = the sidecar's
+    painting/print/sculpture/drawing) and the **dimensions** (``(height_cm,
+    width_cm)``). The medium tie-break is what tells a painting from its own print
+    edition -- a routine same-title collision (e.g. Benton's "Aaron" exists as both
+    a PAFA painting and an NGA lithograph).
 
     Returns ``(WorkQidMatch, "match")`` or ``(None, reason)`` where ``reason`` is
     one of ``no-creator`` / ``no-works`` / ``below-threshold`` / ``ambiguous`` /
@@ -125,12 +179,27 @@ def resolve_work_qid(
     if best is not None:
         return WorkQidMatch(best.work_qid, best.label, score), "match"
 
-    # Stage 2b: dimensions tie-breaker for a still-ambiguous same-title cluster.
-    if reason == "ambiguous" and dimensions and any(v is not None for v in dimensions):
-        tied = tied_candidates(title, works)
-        if tied:
-            dims = fetch_dimensions([w.work_qid for w in tied], client=client)
-            hits = [w for w in tied if _dims_match(dims.get(w.work_qid, (None, None)), dimensions)]
-            if len(hits) == 1:
-                return WorkQidMatch(hits[0].work_qid, hits[0].label, score), "match"
+    if reason != "ambiguous":
+        return None, reason
+    tied = tied_candidates(title, works)
+    if not tied:
+        return None, reason
+
+    # Medium tie-break: keep only candidates whose Wikidata P31 medium matches the
+    # sidecar's category. Resolves the painting-vs-print same-title collision.
+    want_medium = _coarse_medium(category or "")
+    if want_medium:
+        media = fetch_media([w.work_qid for w in tied], client=client)
+        hits = [w for w in tied if want_medium in media.get(w.work_qid, set())]
+        if len(hits) == 1:
+            return WorkQidMatch(hits[0].work_qid, hits[0].label, score), "match"
+        if hits:  # medium narrowed the cluster; disambiguate the remainder below
+            tied = hits
+
+    # Dimensions tie-break for a still-ambiguous same-title cluster.
+    if dimensions and any(v is not None for v in dimensions):
+        dims = fetch_dimensions([w.work_qid for w in tied], client=client)
+        hits = [w for w in tied if _dims_match(dims.get(w.work_qid, (None, None)), dimensions)]
+        if len(hits) == 1:
+            return WorkQidMatch(hits[0].work_qid, hits[0].label, score), "match"
     return None, reason

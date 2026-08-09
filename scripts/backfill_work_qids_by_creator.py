@@ -259,6 +259,7 @@ def backfill(
                 (meta.get("dimensions_original") or {}).get("h_cm"),
                 (meta.get("dimensions_original") or {}).get("w_cm"),
             ),
+            category=meta.get("category"),
         )
         if match is None:
             reasons[reason] += 1

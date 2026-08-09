@@ -6,11 +6,13 @@ each QID-less work, and records the outcome in ``field_provenance.work_qid`` so 
 work is never searched twice needlessly -- yet is automatically re-opened when
 the search itself improves.
 
-Strategies (this build = search-plan v3):
+Strategies (this build = search-plan v4):
   1. **by-creator** -- the guarded match in the creator's Wikidata oeuvre
      (alias + normalized-title match), disambiguating a same-title cluster by, in
-     order, the holder (P195), the year, then the work's dimensions (P2048/P2049);
-     needs a creator QID.
+     order, the holder (P195), the year, the **medium** (P31: a painting vs its
+     own print edition -- a routine collision, e.g. Benton's "Aaron" as both a
+     painting and a lithograph), then the work's dimensions (P2048/P2049); needs
+     a creator QID.
   2. **title-search** -- creator-independent Wikidata title search, gated to
      ``P31=artwork`` with a strong title match and year agreement; accepts a work
      by the creator, else a globally-unique artwork match even without a
@@ -70,7 +72,7 @@ from fine_art_archive.enrichment.work_qid_by_creator import resolve_work_qid, ye
 from fine_art_archive.enrichment.work_qid_search import resolve_by_title_search  # noqa: E402
 
 DEFAULT_LIMIT = 100_000
-SEARCH_PLAN_VERSION = 3  # bump when a strategy is added -> re-opens retired works
+SEARCH_PLAN_VERSION = 4  # bump when a strategy is added -> re-opens retired works
 _PLAN_REF_RE = re.compile(r"faa:work-qid-search/v(\d+)")
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
@@ -186,6 +188,7 @@ def _search(
             client=sparql,
             holder_qid=holder_qid,
             dimensions=(dims.get("h_cm"), dims.get("w_cm")),
+            category=meta.get("category"),
         )
         tried.append(f"by-creator:{reason}")
         if match is not None:
