@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import urllib.parse
 import urllib.request
 import zipfile
 from contextlib import contextmanager, suppress
@@ -1457,6 +1458,35 @@ _FID_RE = re.compile(r"^[A-Za-z0-9_]+$")
 _TILE_RE = re.compile(r"^(\d{1,4})_(\d{1,4})\.jpe?g$")
 
 
+def _tile_source_allowed(tile_base: str) -> tuple[bool, str]:
+    """Is `tile_base` genuinely the pinned tile host? Returns (ok, reason).
+
+    The previous guard was `if _DZ_TILE_HOST not in tile_base` — a substring
+    test over the WHOLE url, so every one of these passed it:
+
+        https://evil.example/khmdata01.universumdigitalis.com/...   (path)
+        https://evil.example/?x=khmdata01.universumdigitalis.com    (query)
+        https://khmdata01.universumdigitalis.com.evil.example/...   (suffix)
+
+    The third is the dangerous one: it needs no hand-edited sidecar, because
+    `tile_base` comes from sidecar data whose provenance is third-party museum
+    APIs. And since the fetched bytes are returned to the caller AND cached,
+    a bypass is a read primitive, not merely an outbound request.
+
+    Compared on the parsed hostname, which also strips the port and any
+    embedded credentials — `netloc` would not.
+    """
+    parsed = urllib.parse.urlparse(tile_base)
+    if parsed.scheme != "https":
+        return False, "tile source must be https"
+    if parsed.username or parsed.password:
+        return False, "tile source must not carry credentials"
+    host = (parsed.hostname or "").lower()
+    if host != _DZ_TILE_HOST:
+        return False, "tile source host not allowed"
+    return True, ""
+
+
 @app.get("/works/{work_id}/deepzoom")
 def deepzoom_manifest(work_id: str) -> dict:
     """Layer descriptors (id, label, full pixel size) for the zoom viewer."""
@@ -1563,8 +1593,11 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> Response:
     if cache_p.exists():
         return FileResponse(cache_p, media_type="image/jpeg", headers=_TILE_HEADERS)
 
-    if _DZ_TILE_HOST not in tile_base:  # SSRF guard: only the known source host
-        raise HTTPException(502, "tile source not allowed")
+    allowed, why = _tile_source_allowed(tile_base)
+    if not allowed:
+        # Raised BEFORE the fetch and before any cache write, so a rejected
+        # source leaves no trace and cannot be served from cache later.
+        raise HTTPException(502, f"tile source not allowed: {why}")
     url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
     req = urllib.request.Request(
         url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"}
