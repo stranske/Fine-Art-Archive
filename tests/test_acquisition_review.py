@@ -19,6 +19,7 @@ Two properties are what make the standing grant safe, and both are tested here:
 
 from __future__ import annotations
 
+import builtins
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -194,3 +195,37 @@ class TestRecordingAReview:
         staged.post("/works/bbb2222-a-new-automated-work/acquisition_review", json={})
         lines = (tmp_path / "events.jsonl").read_text(encoding="utf-8").strip().splitlines()
         assert json.loads(lines[-1])["action"] == "reviewed"
+
+    def test_audit_event_writer_declares_utf8(
+        self, staged: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        events = tmp_path / "events.jsonl"
+        real_open = builtins.open
+        encodings: list[str | None] = []
+
+        def recording_open(*args: object, **kwargs: object):
+            if args and Path(args[0]) == events:
+                encodings.append(kwargs.get("encoding"))
+            return real_open(*args, **kwargs)
+
+        monkeypatch.setattr(builtins, "open", recording_open)
+        response = staged.post(
+            "/works/bbb2222-a-new-automated-work/acquisition_review",
+            json={"note": "café"},
+        )
+
+        assert response.status_code == 200
+        assert encodings == ["utf-8"]
+
+
+def test_acquisition_view_escapes_server_supplied_values() -> None:
+    """Keep the innerHTML acquisition table behind its escaping boundary."""
+    page = (Path(__file__).resolve().parents[1] / "src/fine_art_archive/ui/index.html").read_text(
+        encoding="utf-8"
+    )
+
+    assert "function acqEsc(value)" in page
+    assert "${acqEsc(w.title)}" in page
+    assert "${acqEsc(w.artist_name)}" in page
+    assert "${acqEsc(w.review_note)}" in page
+    assert 'const workIdJs = acqEsc(JSON.stringify(String(w.work_id ?? "")));' in page

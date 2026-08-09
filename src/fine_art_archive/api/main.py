@@ -1011,7 +1011,7 @@ def acquisition_review(work_id: str, body: AcquisitionReviewIn) -> dict:
 
 def _append_acquisition_review_event(event: dict) -> None:
     ACQUISITION_REVIEW_EVENTS.parent.mkdir(parents=True, exist_ok=True)
-    with open(ACQUISITION_REVIEW_EVENTS, "a") as f:
+    with open(ACQUISITION_REVIEW_EVENTS, "a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 
