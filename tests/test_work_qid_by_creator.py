@@ -149,6 +149,42 @@ _SELF_PORTRAITS = [
 ]
 
 
+def test_holder_disambiguates_same_title_cluster() -> None:
+    # two same-title works in different collections; the sidecar's holder picks one
+    works = [
+        _work("Q1", "Saint Jerome", inception="1605"),
+        _work("Q2", "Saint Jerome", inception="1607"),
+    ]
+    works[0] = hbc.CreatorWork(
+        work_qid="Q1",
+        label="Saint Jerome",
+        collection_qid="Q_BORGHESE",
+        collection_label=None,
+        ror=None,
+        url=None,
+        accession=None,
+        inception="1605",
+    )
+    works[1] = hbc.CreatorWork(
+        work_qid="Q2",
+        label="Saint Jerome",
+        collection_qid="Q_VALLETTA",
+        collection_label=None,
+        ror=None,
+        url=None,
+        accession=None,
+        inception="1607",
+    )
+    # no year -> would be ambiguous; holder resolves it
+    assert hbc.match_work_entity("Saint Jerome", None, works)[2] == "ambiguous"
+    best, _s, reason = hbc.match_work_entity("Saint Jerome", None, works, holder_qid="Q_VALLETTA")
+    assert reason == "match" and best.work_qid == "Q2"
+    # a holder matching NEITHER (or both) still declines
+    assert (
+        hbc.match_work_entity("Saint Jerome", None, works, holder_qid="Q_OTHER")[2] == "ambiguous"
+    )
+
+
 def test_year_in_title_disambiguates_same_title_works() -> None:
     best, _s, reason = hbc.match_work_entity("Self-Portrait (1889)", None, _SELF_PORTRAITS)
     assert reason == "match" and best.work_qid == "Q2"

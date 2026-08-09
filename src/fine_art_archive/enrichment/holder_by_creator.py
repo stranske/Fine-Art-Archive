@@ -330,7 +330,11 @@ def _best_title_score(title_norm: str, work: CreatorWork) -> float:
 
 
 def match_work_entity(
-    title: str, sidecar_year: int | None, works: list[CreatorWork]
+    title: str,
+    sidecar_year: int | None,
+    works: list[CreatorWork],
+    *,
+    holder_qid: str | None = None,
 ) -> tuple[CreatorWork | None, float, str]:
     """Identify *which* creator work a title refers to, under the shared guards.
 
@@ -379,7 +383,15 @@ def match_work_entity(
             return None, best_score, "year-mismatch"
         return best, best_score, "match"
 
-    # Same-title cluster: the year is the discriminator, not a sanity check.
+    # Same-title cluster (Stage 2). Try the strongest discriminator first: the
+    # HOLDER -- a work's collection is definitive, so if the sidecar's holder
+    # matches exactly one tied candidate's collection, that is the work.
+    if holder_qid:
+        by_holder = [work for _score, work in tied if work.collection_qid == holder_qid]
+        if len(by_holder) == 1:
+            return by_holder[0], best_score, "match"
+
+    # Then the year discriminator (parenthetical in the title, else sidecar year).
     paren_year = _title_year(title)
     discriminator = paren_year if paren_year is not None else sidecar_year
     if discriminator is None:

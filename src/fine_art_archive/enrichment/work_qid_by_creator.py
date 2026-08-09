@@ -44,9 +44,17 @@ class WorkQidMatch:
 
 
 def resolve_work_qid(
-    title: str, sidecar_year: int | None, creator_qid: str, *, client: SparqlQuerier
+    title: str,
+    sidecar_year: int | None,
+    creator_qid: str,
+    *,
+    client: SparqlQuerier,
+    holder_qid: str | None = None,
 ) -> tuple[WorkQidMatch | None, str]:
     """Resolve one work's QID from its creator's Wikidata works.
+
+    ``holder_qid`` (the sidecar's holding institution, if known) is a Stage-2
+    tie-breaker for same-title clusters: a work's collection is definitive.
 
     Returns ``(WorkQidMatch, "match")`` or ``(None, reason)`` where ``reason`` is
     one of ``no-creator`` / ``no-works`` / ``below-threshold`` / ``ambiguous`` /
@@ -55,7 +63,7 @@ def resolve_work_qid(
     if not creator_qid:
         return None, "no-creator"
     works = works_by_creator(creator_qid, client=client)
-    best, score, reason = match_work_entity(title, sidecar_year, works)
+    best, score, reason = match_work_entity(title, sidecar_year, works, holder_qid=holder_qid)
     if best is None:
         return None, reason
     return WorkQidMatch(best.work_qid, best.label, score), "match"
