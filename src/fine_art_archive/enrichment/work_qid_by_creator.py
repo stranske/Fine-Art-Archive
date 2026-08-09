@@ -86,7 +86,7 @@ def _dims_match(
     candidate: tuple[float | None, float | None], sidecar: tuple[float | None, float | None]
 ) -> bool:
     (ch, cw), (sh, sw) = candidate, sidecar
-    if None in (ch, cw, sh, sw):
+    if ch is None or cw is None or sh is None or sw is None:
         return False
     return abs(ch - sh) <= _DIM_TOLERANCE_CM and abs(cw - sw) <= _DIM_TOLERANCE_CM
 
