@@ -331,7 +331,7 @@ def test_preexisting_invalid_sidecar_is_skipped_not_fatal(tmp_path: Path) -> Non
     # a sidecar already schema-invalid for an unrelated reason (out-of-tree key)
     # must be skipped, not abort the whole pass.
     bad = _uncat_sidecar("1111111-bad", "The Starry Night")
-    bad["stable_identifiers"] = {"part_of_q": "Q999"}  # not in schema
+    bad["stable_identifiers"] = {"not_a_schema_key": "x"}  # out-of-schema -> invalid
     _write(tmp_path, bad)
     good = _uncat_sidecar("2222222-good", "The Starry Night")
     _write(tmp_path, good)
