@@ -487,12 +487,12 @@
           "pattern": "^Q[0-9]+$"
         },
         "part_of_q": {
-          "description": "Wikidata Q-ID of a larger work this one is part of (P361): a panel of a polyptych, a plate in a series, a scene in a cycle.",
           "type": [
             "string",
             "null"
           ],
-          "pattern": "^Q[0-9]+$"
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID of the larger work this item COMPOSES — a fresco cycle, polyptych, altarpiece, or numbered series. Mirrors Wikidata P361 (part of). Unlike `wikidata_q`, this value is SHARED across members by design and sharing it is not a defect: the 22 Giotto scenes of the Scrovegni Christ cycle all carry part_of_q=Q29353420 while each holds its own wikidata_q. Distinct from `site.wikidata_q`, which records where the item physically IS rather than what it composes; an in-situ panel legitimately has both."
         },
         "ulan_for_artist": {
           "type": [
@@ -555,14 +555,6 @@
             "null"
           ],
           "description": "Wikimedia Commons File: name for the work image."
-        },
-        "part_of_q": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^Q[0-9]+$",
-          "description": "Wikidata Q-ID of the larger work this item COMPOSES — a fresco cycle, polyptych, altarpiece, or numbered series. Mirrors Wikidata P361 (part of). Unlike `wikidata_q`, this value is SHARED across members by design and sharing it is not a defect: the 22 Giotto scenes of the Scrovegni Christ cycle all carry part_of_q=Q29353420 while each holds its own wikidata_q. Distinct from `site.wikidata_q`, which records where the item physically IS rather than what it composes; an in-situ panel legitimately has both."
         }
       }
     },
@@ -1105,13 +1097,14 @@
                   "meural-framed",
                   "portrait-crop",
                   "landscape-crop",
+                  "partial-crop",
                   "eink-render",
                   "place-capture",
                   "thumbnail",
                   "duplicate-copy",
                   "unknown"
                 ],
-                "description": "What display surface this variant is prepared for. 'duplicate-copy' means a bit-identical or near-identical second copy (e.g., '(1)' suffix) with no obvious surface specialization."
+                "description": "What display surface this variant is prepared for. 'duplicate-copy' means a bit-identical or near-identical second copy (e.g., '(1)' suffix) with no obvious surface specialization. 'partial-crop' means one of SEVERAL complementary crops of a work too wide or tall for any single panel — each preserves different elements and none is redundant with the others; pair it with crop_position."
               },
               "size_bytes": {
                 "type": [
@@ -1166,6 +1159,22 @@
                   "null"
                 ],
                 "description": "Free-text provenance for this variant, e.g. which duplicate work it was merged from when two records for the same painting were consolidated. Written by the duplicate-merge pass."
+              },
+              "crop_position": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "left",
+                  "centre",
+                  "right",
+                  "top",
+                  "middle",
+                  "bottom",
+                  null
+                ],
+                "description": "Which part of the parent work this variant shows. Meaningful for role='partial-crop', where a wide painting is split into complementary crops. Tintoretto's Miracle of the Loaves and Fishes (Met 13.75) is 154.9 x 407.7 cm — aspect 2.63 — so no 16:9 panel can hold it; a left and a right crop together show what one crop cannot."
               }
             }
           }
