@@ -4,8 +4,27 @@
 The implementation and policy belong in this repository.  The large artwork
 corpus remains outside git and is selected with ``FAA_WORKSPACE``; this makes
 the Companion API executable without treating operational data as source code.
-"""
 
+.. warning::
+   **THIS FILE HAS A TWIN, AND THE TWIN IS THE ONE THAT RUNS.**
+
+   The tagger exists twice:
+
+   * ``<repo>/scripts/vision_tag_works.py`` — this file. Version controlled and
+     covered by ``tests/test_contrastive_scoring.py`` in CI.
+   * ``Claude Project/scripts/vision_tag_works.py`` — wired to ``STAGING`` and
+     the image masters. **This is the copy that actually tags the archive.**
+
+   On 2026-08-07 that split produced a silent failure worth remembering: issue
+   #442 added contrastive scoring HERE, CI went green, the issue was closed —
+   and the archive did not change by a single tag, because the running copy
+   never received it. ``filter:nudity-full`` sat at 3 works while the tests
+   passed. Green CI is not evidence that the data moved.
+
+   Until the logic is consolidated into the installed package (where both can
+   import it), **any behaviour change here must be mirrored into the workspace
+   copy and verified by counting tags in the archive**, not by running tests.
+"""
 from __future__ import annotations
 
 import argparse
