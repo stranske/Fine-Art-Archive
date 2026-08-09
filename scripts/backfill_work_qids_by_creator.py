@@ -39,6 +39,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from jsonschema import ValidationError as _ValidationError  # noqa: E402
+
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.work_qid_by_creator import (  # noqa: E402
@@ -242,7 +244,19 @@ def backfill(
         )
         if apply:
             _apply_match(meta, match)
-            sidecar.validate(meta)
+            try:
+                sidecar.validate(meta)
+            except _ValidationError as exc:
+                # The sidecar was already schema-invalid for a reason this pass
+                # did not introduce (e.g. an out-of-tree field). Skip it rather
+                # than abort the whole run; report so it can be repaired.
+                reasons["skipped-invalid-sidecar"] += 1
+                stats.matches.pop()
+                if "part_of_q" in str(exc):
+                    reasons["skipped-part_of_q"] += 1
+                if stats.attempted >= limit:
+                    break
+                continue
             sidecar.write(path, meta)
             mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
             stats.resolved += 1
