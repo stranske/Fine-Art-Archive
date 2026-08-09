@@ -49,6 +49,14 @@ from fine_art_archive.identity.artist_lookup import resolve_artist_qid
 from fine_art_archive.identity.artist_resolver import fold_name
 
 _WORD_RE = re.compile(r"[^\W\d_]{3,}")
+# An attribution qualifier in the title slot ("Parmigianino (after)", "circle of
+# Rembrandt") means the work is a copy/associate, not by that artist -- un-swapping
+# would wrongly attribute it as an autograph work, so decline.
+_ATTRIBUTION_RE = re.compile(
+    r"\b(after|copy|circle|follower|manner|workshop|studio|school|attributed|imitator|"
+    r"style)\b",
+    re.IGNORECASE,
+)
 
 
 class JsonGetter(Protocol):
@@ -107,6 +115,10 @@ def detect_swap(
         return None
     # The artist field becomes the title -> it must look like a real title.
     if not _WORD_RE.search(artist_field):
+        return None
+    # An attribution qualifier in the title ("... (after)", "circle of ...") means
+    # the work is a copy/associate, not autograph -> don't attribute it as one.
+    if _ATTRIBUTION_RE.search(title):
         return None
     # The title must resolve to a real ARTIST (occupation-gated) to be a swap.
     qid, method = resolve_artist_qid(title, client=json_client)

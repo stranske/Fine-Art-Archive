@@ -137,6 +137,17 @@ def test_resolved_artist_is_never_touched() -> None:
     assert tas.detect_swap(meta, json_client=client, sparql_client=OEUVRE_OK) is None
 
 
+def test_attribution_qualified_title_declines() -> None:
+    # "Parmigianino (after)" is a copy after the artist, not by him -> no swap
+    client = FakeClient(search_qid="Q123", entity=ARTIST)
+    swap = tas.detect_swap(
+        _meta("Parmigianino (after)", "The Circumcision"),
+        json_client=client,
+        sparql_client=OEUVRE_OK,
+    )
+    assert swap is None
+
+
 def test_oeuvre_confirmation_rejects_wrong_same_name_artist() -> None:
     # "Jan Vermeer" resolves to a same-named painter, but "The Glass of Wine" is
     # not in that painter's oeuvre -> self-reject rather than attach the wrong one.
