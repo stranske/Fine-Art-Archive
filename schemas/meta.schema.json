@@ -617,6 +617,13 @@
               "null"
             ],
             "description": "The value this field held before the pass that wrote this provenance record. Set by passes that overwrite an existing value (e.g. the artist-QID triage pass records the superseded QID here) so a correction is reversible."
+          },
+          "prior_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The prior artist.name a repair pass superseded. Analogous to prior_value but specific to the artist-field debris-repair pass, which records the discarded name string here so the correction is reversible."
           }
         }
       }
