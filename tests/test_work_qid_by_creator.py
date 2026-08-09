@@ -228,6 +228,58 @@ def test_year_discriminator_is_tight_not_lenient() -> None:
 # --- resolve_work_qid ---------------------------------------------------------
 
 
+class _DimsSparql:
+    """FakeSparql that also answers the P2048/P2049 dimensions query."""
+
+    def __init__(
+        self, bindings: list[dict[str, Any]], dims: dict[str, tuple[float, float]]
+    ) -> None:
+        self._payload = {"results": {"bindings": bindings}}
+        self._dims = dims
+
+    def query(self, sparql: str) -> dict[str, Any]:
+        if "P2048" in sparql:
+            rows = []
+            for qid, (h, w) in self._dims.items():
+                cm = "http://www.wikidata.org/entity/Q174728"
+                rows.append(
+                    {
+                        "w": {"value": f"http://www.wikidata.org/entity/{qid}"},
+                        "h": {"value": str(h)},
+                        "hu": {"value": cm},
+                        "wd": {"value": str(w)},
+                        "wu": {"value": cm},
+                    }
+                )
+            return {"results": {"bindings": rows}}
+        return self._payload
+
+
+def test_dimensions_disambiguate_same_title_cluster() -> None:
+    # two same-title works, no year/holder to split them; sidecar dims pick one
+    client = _DimsSparql(
+        [
+            _binding("Q1", "Saint Jerome"),
+            _binding("Q2", "Saint Jerome"),
+        ],
+        dims={"Q1": (100.0, 80.0), "Q2": (50.0, 40.0)},
+    )
+    # without dims -> ambiguous
+    assert wqc.resolve_work_qid("Saint Jerome", None, "Q296", client=client)[1] == "ambiguous"
+    # sidecar 50x40 uniquely matches Q2
+    match, reason = wqc.resolve_work_qid(
+        "Saint Jerome", None, "Q296", client=client, dimensions=(50.0, 40.0)
+    )
+    assert reason == "match" and match.work_qid == "Q2"
+    # dims matching neither -> still ambiguous
+    assert (
+        wqc.resolve_work_qid("Saint Jerome", None, "Q296", client=client, dimensions=(200.0, 5.0))[
+            1
+        ]
+        == "ambiguous"
+    )
+
+
 def test_resolve_work_qid_match() -> None:
     client = FakeSparql(
         [

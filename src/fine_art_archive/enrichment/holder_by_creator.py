@@ -329,6 +329,28 @@ def _best_title_score(title_norm: str, work: CreatorWork) -> float:
     )
 
 
+def _ranked_distinct(title: str, works: list[CreatorWork]) -> list[tuple[float, CreatorWork]]:
+    """Best title score per DISTINCT work_qid, highest first."""
+    title_norm = _score_for(title)
+    best_by_qid: dict[str, tuple[float, CreatorWork]] = {}
+    for work in works:
+        score = _best_title_score(title_norm, work)
+        current = best_by_qid.get(work.work_qid)
+        if current is None or score > current[0]:
+            best_by_qid[work.work_qid] = (score, work)
+    return sorted(best_by_qid.values(), key=lambda pair: -pair[0])
+
+
+def tied_candidates(title: str, works: list[CreatorWork]) -> list[CreatorWork]:
+    """The same-title cluster (>1 distinct work tied within the margin), else []."""
+    ranked = _ranked_distinct(title, works)
+    if not ranked or ranked[0][0] < SCORE_THRESHOLD:
+        return []
+    best_score = ranked[0][0]
+    tied = [work for score, work in ranked if score >= best_score - AMBIGUITY_MARGIN]
+    return tied if len(tied) > 1 else []
+
+
 def match_work_entity(
     title: str,
     sidecar_year: int | None,
@@ -357,15 +379,7 @@ def match_work_entity(
     * when exactly one work tops the field, the year is only a lenient
       ``YEAR_TOLERANCE`` sanity check.
     """
-    title_norm = _score_for(title)
-    # Best score per DISTINCT work (max over label + aliases), highest first.
-    best_by_qid: dict[str, tuple[float, CreatorWork]] = {}
-    for work in works:
-        score = _best_title_score(title_norm, work)
-        current = best_by_qid.get(work.work_qid)
-        if current is None or score > current[0]:
-            best_by_qid[work.work_qid] = (score, work)
-    ranked = sorted(best_by_qid.values(), key=lambda pair: -pair[0])
+    ranked = _ranked_distinct(title, works)
     if not ranked:
         return None, 0.0, "no-works"
     best_score, best = ranked[0]

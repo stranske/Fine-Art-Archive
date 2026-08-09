@@ -226,6 +226,10 @@ def backfill(
             creator,
             client=client,
             holder_qid=(meta.get("holder") or {}).get("wikidata_q"),
+            dimensions=(
+                (meta.get("dimensions_original") or {}).get("h_cm"),
+                (meta.get("dimensions_original") or {}).get("w_cm"),
+            ),
         )
         if match is None:
             reasons[reason] += 1
