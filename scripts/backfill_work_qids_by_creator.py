@@ -223,6 +223,7 @@ def backfill(
             year_of(meta.get("year")),
             creator,
             client=client,
+            holder_qid=(meta.get("holder") or {}).get("wikidata_q"),
         )
         if match is None:
             reasons[reason] += 1
