@@ -203,6 +203,10 @@ def backfill(
         work_qid = _work_qid(meta)
         if work_qid is not None:
             loaded.append((path, meta, work_qid))
+    # Bound the network work by `limit` BEFORE classifying: this used to
+    # classify the whole corpus and only then break per-item, so `--limit`
+    # never bounded WDQS spend and a bad query day hit every work.
+    loaded = loaded[:limit]
     type_cache = classify_qids([wq for _, _, wq in loaded], client=client)
     for path, meta, work_qid in loaded:
         stats.attempted += 1
@@ -230,6 +234,13 @@ def backfill(
                 "note": repair.note,
             }
         )
+        if repair.action == "unverifiable":
+            # Counted and reported, never written: the query did not answer, so
+            # there is nothing to act on. Skipping the apply block is the whole
+            # point — a transient WDQS condition must not erase an identifier.
+            if stats.attempted >= limit:
+                break
+            continue
         if apply:
             _apply(meta, repair)
             sidecar.validate(meta)
