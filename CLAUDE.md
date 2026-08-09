@@ -96,3 +96,37 @@ If yes:
 ## Claude-Specific Note
 
 Keep this file materially aligned with `AGENTS.md`. Differences between the two should only be agent-specific execution notes, not different repository rules.
+
+## Display crops are not duplicates — check before you ever say "duplicate"
+
+Tim crops high-resolution originals to display dimensions for his frames. The
+crop and the original are both real, both wanted, and **not** duplicates of one
+another. The schema says so of `files.variants[]`: *"These are NOT duplicates:
+each is fit for a specific device."*
+
+This has gone wrong twice, the same way both times — an analysis compared
+megapixels, file size and JPEG quality, never looked at **aspect ratio**, and
+proposed deleting files in use:
+
+- 2026-08-01 — 13 of 52 duplicate-resolution decisions would have quarantined a
+  file in use as a display copy.
+- 2026-08-09 — all 44 "duplicate-holding" work-Q-ID groups were presented for
+  quarantine. Re-checked, 24 were protected and **every one** of the rest was
+  itself a display crop. There were no duplicate paintings in the set.
+
+**The rule: never call two files duplicates until `classify_pair` has run.**
+
+```python
+from fine_art_archive.display.crops import classify_pair, display_aspect_of
+```
+
+A high visual-similarity score does not settle it — a master and its 16:9 crop
+are *supposed* to look alike. Aspect ratio is the signal that does. Paintings
+are not 16:9 or 9:16; a file sitting exactly on one of those was cut for a
+frame. Crop roles are recorded in `files.variants[].role` as `landscape-crop`
+(~16:9), `portrait-crop` (~9:16) or `meural-framed`, written by
+`link_display_crops.py` in the workspace.
+
+Whenever you list works for a duplicate/dedup judgement, the rows **must**
+carry aspect and display-aspect alongside size. If your table shows MP and MB
+but not aspect, you cannot yet have an opinion about duplication.
