@@ -44,7 +44,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
 
 DitherMethod = Literal["none", "floyd-steinberg", "atkinson"]
 
@@ -269,31 +269,161 @@ def map_to_panel_range(img: Image.Image, palette: Palette) -> Image.Image:
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), mode="RGB")
 
 
-def dither_error(
-    original: Image.Image, dithered: Image.Image, blur_radius: float = 1.5
-) -> dict[str, float]:
-    """Quality of a dither, measured the way an eye actually sees it.
+# --------------------------------------------------------------------------
+# Perceptual machinery for the dither metric (near-term item N-E3).
+#
+# The metric this replaces blurred and differenced 8-bit gamma-encoded sRGB —
+# the SAME space the error diffusion runs in. So a colour error introduced by
+# diffusing in gamma space was invisible to the gate meant to catch it, and the
+# gate reported the pipeline as correct. It also scored Floyd-Steinberg 25.0
+# against Atkinson 25.4: a 1.6% spread between two genuinely different
+# algorithms, which is saturation, not agreement. Nothing downstream (N-E4,
+# N-E5, N-E8, or any optimisation-based halftoning) can be validated until the
+# ruler stops reading the same number for everything.
+# --------------------------------------------------------------------------
 
-    **Per-pixel error is the wrong metric for dithering, and reporting it alone
-    inverts the answer.** Dithering deliberately makes individual pixels *more*
-    wrong so that the local average comes out right. Measured on Ruisdael's
-    "Dunes by the Sea" against the Spectra 6 palette:
+#: Arcminutes per radian. The eye resolves ~1 arcminute, so this converts a
+#: (ppi, viewing distance) pair into "how many pixels fall inside one just-
+#: resolvable angle" — which is the only defensible blur radius. A hardcoded
+#: 1.5 px says a 131-ppi panel at arm's length and a phone at 20 cm are seen
+#: identically, which they are not.
+ARCMINUTES_PER_RADIAN = 3438.0
 
-        method             per-pixel    blurred r=1.5
-        nearest (none)         59.4            48.0
-        floyd-steinberg        85.0            25.0
-        atkinson               78.7            25.4
+#: Fallback used only when a caller supplies no viewing geometry. Preserved
+#: from the original implementation so existing callers keep their numbers.
+DEFAULT_BLUR_RADIUS = 1.5
 
-    So per-pixel says nearest-colour is 30% better; perceived error says
-    dithering is nearly twice as accurate. The blurred figure is the one to
-    trust and the one to regress against, because a low-pass filter is what the
-    eye does at viewing distance.
+#: Band-pass window, in pixels, for the structured-artifact statistic. Dither
+#: worming and banding in a smooth passage (a sky) live at this scale: coarser
+#: than a pixel, finer than composition. Per-pixel error cannot see it and the
+#: acuity blur averages it away, which is why it needs its own number.
+ARTIFACT_BAND_PX = (5.0, 20.0)
 
-    `perceived_rgb_distance` is the headline. The per-pixel numbers are kept
-    because they still catch a genuinely broken palette mapping (both metrics
-    move together when the palette itself is wrong), but they must never be
-    read as a dither-quality score.
+
+def acuity_blur_radius(ppi: float, viewing_distance_cm: float) -> float:
+    """Gaussian radius, in pixels, matching one arcminute of visual angle.
+
+    `ppi * distance_inches / 3438` — the pixel count subtended by the eye's
+    resolution limit at that distance. Below this the eye integrates; above it
+    the eye resolves. That is exactly the boundary a dither metric must model.
     """
+    if ppi <= 0 or viewing_distance_cm <= 0:
+        raise ValueError("ppi and viewing_distance_cm must be positive")
+    distance_inches = viewing_distance_cm / 2.54
+    return (ppi * distance_inches) / ARCMINUTES_PER_RADIAN
+
+
+def srgb_to_linear(a: np.ndarray) -> np.ndarray:
+    """8-bit sRGB -> linear light. Blurring must happen HERE, not in sRGB.
+
+    A blur is an average, and averaging gamma-encoded values does not model
+    what light does when it reaches the eye. This is the step whose absence let
+    a gamma-space diffusion error pass the gate unseen.
+    """
+    x = a.astype(np.float64) / 255.0
+    return np.where(x <= 0.04045, x / 12.92, ((x + 0.055) / 1.055) ** 2.4)
+
+
+def linear_to_oklab(rgb: np.ndarray) -> np.ndarray:
+    """Linear sRGB -> Oklab, so a distance is a PERCEIVED distance.
+
+    Euclidean distance in sRGB is not proportional to perceived difference; in
+    Oklab it approximately is. Differencing in sRGB is what made two dithers
+    with visibly different artifacts score within 1.6% of each other.
+    """
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    lms_l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b
+    lms_m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b
+    lms_s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b
+    l_, m_, s_ = np.cbrt(lms_l), np.cbrt(lms_m), np.cbrt(lms_s)
+    return np.stack(
+        [
+            0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+            1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+            0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
+        ],
+        axis=-1,
+    )
+
+
+def _gaussian_blur_linear(a: np.ndarray, radius: float) -> np.ndarray:
+    """Separable Gaussian over float channels, numpy only.
+
+    PIL's `GaussianBlur` refuses mode "F", and `scipy.ndimage` is installed in
+    this environment but is NOT a declared dependency — using it would pass
+    locally and fail CI. A separable convolution is a dozen lines and keeps the
+    dependency set honest.
+
+    Edges are reflected rather than zero-padded: zero-padding would darken the
+    border in linear light and show up as a fake error along every edge.
+    """
+    if radius <= 0:
+        return a
+    sigma = float(radius)
+    half = max(1, int(math.ceil(3.0 * sigma)))
+    x = np.arange(-half, half + 1, dtype=np.float64)
+    k = np.exp(-(x**2) / (2.0 * sigma**2))
+    k /= k.sum()
+
+    out = a.astype(np.float64, copy=True)
+    for axis in (0, 1):
+        pad = [(0, 0)] * out.ndim
+        pad[axis] = (half, half)
+        padded = np.pad(out, pad, mode="reflect")
+        out = np.apply_along_axis(lambda m: np.convolve(m, k, mode="valid"), axis, padded)
+    return out
+
+
+def dither_error(
+    original: Image.Image,
+    dithered: Image.Image,
+    blur_radius: float | None = None,
+    *,
+    ppi: float | None = None,
+    viewing_distance_cm: float | None = None,
+) -> dict[str, float]:
+    """Quality of a dither, measured where the eye actually integrates it.
+
+    **Per-pixel error is the wrong metric for dithering.** Dithering makes
+    individual pixels *more* wrong so the local average comes out right, so a
+    per-pixel score says nearest-colour beats Floyd-Steinberg. The blurred
+    figure is the one to trust and to regress against.
+
+    What changed here, and why (near-term item N-E3). The previous version was
+    right about blurring and wrong about where:
+
+      * it blurred and differenced **8-bit gamma-encoded sRGB** — the same
+        space the error diffusion runs in. A colour error caused by diffusing
+        in gamma space was therefore invisible to the gate meant to catch it;
+      * a blur is an average, and averaging gamma-encoded values does not model
+        light reaching the eye. Blurring now happens in **linear light**;
+      * Euclidean distance in sRGB is not perceived distance. The difference is
+        now taken in **Oklab**, where it approximately is;
+      * the radius was hardcoded to 1.5 px, which asserts that every panel at
+        every viewing distance is seen identically. Pass `ppi` and
+        `viewing_distance_cm` and it is derived from the one-arcminute acuity
+        limit instead.
+
+    The symptom all of that produced: Floyd-Steinberg scored 25.0 and Atkinson
+    25.4 — a 1.6% spread between two algorithms with visibly different
+    artifacts. A ruler that reads nearly the same number for everything cannot
+    validate a change, which is why N-E4, N-E5, N-E8 and any optimisation-based
+    halftoning were unverifiable before this.
+
+    `structured_artifact_energy` is new and deliberately separate: worming and
+    banding in a smooth passage live at 5-20 px, a scale per-pixel error cannot
+    see and the acuity blur averages away. A dither can score well on
+    `perceived_error` and still visibly worm.
+
+    Returns `perceived_error` (Oklab, the headline), `structured_artifact_energy`,
+    the resolved `blur_radius`, and the per-pixel figures — kept because they
+    still catch a genuinely broken palette mapping, never as a dither score.
+    """
+    if blur_radius is None:
+        if ppi is not None and viewing_distance_cm is not None:
+            blur_radius = acuity_blur_radius(ppi, viewing_distance_cm)
+        else:
+            blur_radius = DEFAULT_BLUR_RADIUS
     if (
         not isinstance(blur_radius, (int, float))
         or isinstance(blur_radius, bool)
@@ -301,28 +431,35 @@ def dither_error(
         or blur_radius < 0
     ):
         raise ValueError("blur_radius must be a finite non-negative number")
+
     a_img = original.convert("RGB")
     b_img = dithered.convert("RGB")
-    a = np.asarray(a_img, dtype=np.float64)
-    b = np.asarray(b_img, dtype=np.float64)
-    if a.shape != b.shape:
-        raise ValueError(f"shape mismatch {a.shape} vs {b.shape}")
-    d = np.sqrt(((a - b) ** 2).sum(axis=2))
+    a8 = np.asarray(a_img, dtype=np.float64)
+    b8 = np.asarray(b_img, dtype=np.float64)
+    if a8.shape != b8.shape:
+        raise ValueError(f"shape mismatch {a8.shape} vs {b8.shape}")
 
-    blurred = np.sqrt(
-        (
-            (
-                np.asarray(a_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
-                - np.asarray(b_img.filter(ImageFilter.GaussianBlur(blur_radius)), dtype=np.float64)
-            )
-            ** 2
-        ).sum(axis=2)
-    )
+    per_pixel = np.sqrt(((a8 - b8) ** 2).sum(axis=2))
+
+    a_lin, b_lin = srgb_to_linear(a8), srgb_to_linear(b8)
+    a_seen = linear_to_oklab(_gaussian_blur_linear(a_lin, float(blur_radius)))
+    b_seen = linear_to_oklab(_gaussian_blur_linear(b_lin, float(blur_radius)))
+    perceived = np.sqrt(((a_seen - b_seen) ** 2).sum(axis=2))
+
+    # Band-pass the LIGHTNESS error: energy the acuity blur removes but which
+    # the eye still reads as texture. Difference of Gaussians over the 5-20 px
+    # window. The +0.5 offset keeps the signal inside the [0,1] clip that the
+    # float-image blur helper applies; it cancels in the subtraction.
+    err_l = linear_to_oklab(a_lin)[..., 0] - linear_to_oklab(b_lin)[..., 0]
+    err3 = np.repeat(err_l[..., None], 3, axis=2) + 0.5
+    lo, hi = ARTIFACT_BAND_PX
+    band = _gaussian_blur_linear(err3, lo)[..., 0] - _gaussian_blur_linear(err3, hi)[..., 0]
 
     return {
-        "perceived_rgb_distance": float(blurred.mean()),
-        "blur_radius": blur_radius,
-        "per_pixel_mean": float(d.mean()),
-        "per_pixel_p95": float(np.percentile(d, 95)),
-        "per_pixel_max": float(d.max()),
+        "perceived_error": float(perceived.mean()),
+        "structured_artifact_energy": float(np.sqrt((band**2).mean())),
+        "blur_radius": float(blur_radius),
+        "per_pixel_mean": float(per_pixel.mean()),
+        "per_pixel_p95": float(np.percentile(per_pixel, 95)),
+        "per_pixel_max": float(per_pixel.max()),
     }
