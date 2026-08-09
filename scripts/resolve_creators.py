@@ -116,7 +116,9 @@ def _apply_outcome(meta: dict[str, Any], outcome: CreatorOutcome) -> str:
         return "resolved"
 
     if outcome.kind == "anonymous":
-        artist.setdefault("relation", "anonymous")
+        # Positively mark anonymity in the primary field, retiring any old
+        # "unknown" catch-all so the verdict is visible, not just in provenance.
+        artist["relation"] = "anonymous"
         provenance.set(
             meta,
             "artist_qid",
