@@ -92,7 +92,7 @@ def test_dithering_beats_nearest_colour_perceptually():
     plain = dither_error(src, quantize(src, pal, method="none"))
     fs = dither_error(src, quantize(src, pal, method="floyd-steinberg"))
     assert (
-        fs["perceived_rgb_distance"] < plain["perceived_rgb_distance"]
+        fs["perceived_error"] < plain["perceived_error"]
     ), "dithering should reduce PERCEIVED error"
     # And the counter-intuitive half, asserted so nobody "fixes" it later:
     assert fs["per_pixel_mean"] > plain["per_pixel_mean"], (
@@ -106,7 +106,10 @@ def test_dither_error_rejects_mismatched_sizes():
         dither_error(gradient(32, 32), gradient(64, 64))
 
 
-@pytest.mark.parametrize("radius", [None, -1, float("nan"), float("inf")])
+# `None` is deliberately NOT in this list any more: since N-E3 it is the valid
+# "derive the radius from the viewing geometry, or fall back to the default"
+# value, not a rejected one. -1/nan/inf are still refused.
+@pytest.mark.parametrize("radius", [-1, float("nan"), float("inf")])
 def test_dither_error_rejects_invalid_blur_radius(radius):
     with pytest.raises(ValueError, match="finite non-negative"):
         dither_error(gradient(32, 32), gradient(32, 32), radius)
