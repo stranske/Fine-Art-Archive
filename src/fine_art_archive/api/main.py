@@ -262,6 +262,7 @@ def list_dossiers() -> dict:
 # it internally with an undocumented pipeline.
 # --------------------------------------------------------------------------
 from fine_art_archive import eink as _eink  # noqa: E402
+from fine_art_archive import sidecar  # noqa: E402
 
 # Writing to a removable volume from an HTTP endpoint deserves a boundary even
 # in a single-user local app: a typo'd path should not be able to scribble into
@@ -905,6 +906,113 @@ def get_queue(name: str) -> dict:
         "total": len(works_out),
         "works": works_out,
     }
+
+
+# --------------------------------------------------------------------------
+# Acquisition review — the condition attached to grant G55.
+#
+# G55 lets Track A promote up to 200 works/month with nobody in the loop. Tim
+# approved that conditionally: he must be able to see what arrived and record
+# that he has looked at it. These two endpoints are that condition.
+#
+# It is a VIEW, not a work queue. Growth never waits on it, nothing expires,
+# and leaving it unread costs nothing — so no backlog can accumulate. That
+# property is the whole reason the standing grant is safe to hold.
+# --------------------------------------------------------------------------
+ACQUISITION_REVIEW_EVENTS = REPO_ROOT / "data" / "acquisition_review_events.jsonl"
+
+
+class AcquisitionReviewIn(BaseModel):
+    reviewer: str = "tim"
+    note: str = ""
+    undo: bool = False
+
+
+@app.get("/acquisitions")
+def list_acquisitions(reviewed: str = "any", limit: int = 500) -> dict:
+    """Works acquired in the autonomous era. `reviewed` = any | yes | no."""
+    if reviewed not in {"any", "yes", "no"}:
+        raise HTTPException(400, "reviewed must be one of: any, yes, no")
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    rows = store.acquisitions_since_epoch()
+    n_total = len(rows)
+    n_unreviewed = sum(1 for r in rows if not r["reviewed"])
+    if reviewed == "yes":
+        rows = [r for r in rows if r["reviewed"]]
+    elif reviewed == "no":
+        rows = [r for r in rows if not r["reviewed"]]
+    return {
+        "epoch": store.AUTOMATION_EPOCH,
+        "total": n_total,
+        "unreviewed": n_unreviewed,
+        "returned": len(rows[:limit]),
+        "works": rows[:limit],
+    }
+
+
+@app.post("/works/{work_id}/acquisition_review")
+def acquisition_review(work_id: str, body: AcquisitionReviewIn) -> dict:
+    """Mark a work reviewed (or un-mark it), recording the fact in history.
+
+    Written as a `history` event rather than a new sidecar field: `history` is
+    already required, already append-only, already the audit trail, and its
+    `op` is already a free-form string — so this needs no schema change and
+    inherits the durability of the record it joins.
+    """
+    try:
+        store.validate_work_id(work_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    sc_path = _sidecar_path_checked(work_id)
+    if not sc_path.exists():
+        raise HTTPException(404, f"no sidecar for {work_id}")
+
+    ts = _now()
+    with _sidecar_file_lock(sc_path):
+        sc = json.loads(sc_path.read_text(encoding="utf-8"))
+        history = sc.setdefault("history", [])
+        if body.undo:
+            kept = [e for e in history if e.get("op") != store.OWNER_REVIEW_OP]
+            if len(kept) == len(history):
+                raise HTTPException(409, f"{work_id} was not marked reviewed")
+            # `history` requires minItems 1; the acquisition event always remains,
+            # so removing review events can never empty it.
+            sc["history"] = kept
+            action = "unreviewed"
+        else:
+            if any(e.get("op") == store.OWNER_REVIEW_OP for e in history):
+                raise HTTPException(409, f"{work_id} is already marked reviewed")
+            history.append(
+                {
+                    "ts": ts,
+                    "actor": body.reviewer,
+                    "op": store.OWNER_REVIEW_OP,
+                    "notes": body.note or None,
+                }
+            )
+            action = "reviewed"
+        if not sidecar.is_valid(sc):
+            raise HTTPException(500, "refusing to write a sidecar that fails validation")
+        _write_sidecar_atomic(sc_path, sc)
+
+    _append_acquisition_review_event(
+        {
+            "ts": ts,
+            "work_id": work_id,
+            "action": action,
+            "reviewer": body.reviewer,
+            "note": body.note or None,
+        }
+    )
+    store.invalidate_acquisitions_cache()
+    return {"work_id": work_id, "action": action, "ts": ts}
+
+
+def _append_acquisition_review_event(event: dict) -> None:
+    ACQUISITION_REVIEW_EVENTS.parent.mkdir(parents=True, exist_ok=True)
+    with open(ACQUISITION_REVIEW_EVENTS, "a") as f:
+        f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 
 # --------------------------------------------------------------------------

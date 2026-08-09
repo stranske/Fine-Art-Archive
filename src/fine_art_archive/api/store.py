@@ -13,6 +13,7 @@ import re
 from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from fine_art_archive.identity import build_alias_table, resolve_artist
 
@@ -237,6 +238,98 @@ def work_ids_with_dossier() -> frozenset[str]:
     _dossier_cache["sig"] = sig
     _dossier_cache["ids"] = frozen
     return frozen
+
+
+# --------------------------------------------------------------------------
+# Acquisition review — the FYI surface behind grant G55.
+#
+# G55 makes Track A growth standing (200 works/month, promoted with no human in
+# the loop). Tim's approval was explicitly conditional: he must be able to see
+# what was acquired and mark it reviewed. This is that list.
+#
+# It is a VIEW, never a queue. Promotion does not wait for review, nothing
+# expires, and an unread list has no consequence — so no backlog can form.
+# --------------------------------------------------------------------------
+OWNER_REVIEW_OP = "owner-review"
+
+# Everything before this was hand-driven and already seen; the surface exists
+# for the autonomous era only. Override for tests or a re-baseline.
+AUTOMATION_EPOCH = os.environ.get("FAA_AUTOMATION_EPOCH", "2026-08-09")
+
+_acq_cache: dict[str, Any] = {"sig": None, "rows": []}
+
+
+def _first_history_ts(meta: dict) -> str:
+    """Timestamp of a work's earliest history event, or "" if it has none."""
+    stamps = [str(e.get("ts") or "") for e in (meta.get("history") or [])]
+    stamps = [s for s in stamps if s]
+    return min(stamps) if stamps else ""
+
+
+def _owner_review_event(meta: dict) -> dict | None:
+    """The most recent owner-review event on a work, if any."""
+    seen = [e for e in (meta.get("history") or []) if e.get("op") == OWNER_REVIEW_OP]
+    return max(seen, key=lambda e: str(e.get("ts") or "")) if seen else None
+
+
+def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
+    """Works acquired in the autonomous era, newest first, with review state.
+
+    Membership is decided by the FIRST history event's timestamp, NOT by
+    matching acquisition op names. That is deliberate. `op` is a free-form
+    string and has already drifted in this archive (`batch-acquire-v3`,
+    `phase3-bulk-move`, `staging-sidecar-build`, ...), so a list defined by
+    op-name matching would silently omit anything acquired by a future writer
+    that spelled its op differently. A review surface that silently omits works
+    is worse than no review surface at all: it reads as "nothing to see" when
+    the truth is "we did not look". Every sidecar has a first history event, so
+    this criterion cannot drift.
+    """
+    cutoff = epoch if epoch is not None else AUTOMATION_EPOCH
+    sig = (_dossier_signature(), cutoff)
+    if _acq_cache["sig"] == sig:
+        return list(_acq_cache["rows"])
+
+    rows: list[dict] = []
+    for meta_path in STAGING.glob("*/meta.json"):
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        acquired_at = _first_history_ts(meta)
+        if not acquired_at or acquired_at < cutoff:
+            continue
+        reviewed = _owner_review_event(meta)
+        rows.append(
+            {
+                "work_id": meta_path.parent.name,
+                "title": meta.get("title", ""),
+                "artist_name": (meta.get("artist") or {}).get("name", ""),
+                "year": meta.get("year", ""),
+                "acquired_at": acquired_at,
+                "acquired_by": next(
+                    (
+                        e.get("actor", "")
+                        for e in (meta.get("history") or [])
+                        if e.get("ts") == acquired_at
+                    ),
+                    "",
+                ),
+                "reviewed": reviewed is not None,
+                "reviewed_at": (reviewed or {}).get("ts"),
+                "reviewed_by": (reviewed or {}).get("actor"),
+                "review_note": (reviewed or {}).get("notes"),
+            }
+        )
+    rows.sort(key=lambda r: str(r["acquired_at"]), reverse=True)
+    _acq_cache["sig"] = sig
+    _acq_cache["rows"] = rows
+    return list(rows)
+
+
+def invalidate_acquisitions_cache() -> None:
+    _acq_cache["sig"] = None
+    _acq_cache["rows"] = []
 
 
 def get_manifest_row(work_id: str) -> dict | None:
