@@ -60,12 +60,15 @@ _ANON_MARKER = re.compile(
     r"style of|imitator of|after)\b",
     re.IGNORECASE,
 )
-# Date / century / dynasty / period fragment -> a cultural-anonymous stand-in.
-_PERIOD = re.compile(
-    r"\b(\d{3,4}\s*[-–/:]\s*\d{0,4}|\d{3,4}s|century|dynasty|period|"
-    r"b\.?c\.?|a\.?d\.?|first quarter|second quarter|third quarter|"
-    r"byzantine|tang|song|ming|qing|edo|meiji|mughal|safavid|gothic|romanesque|"
-    r"medieval|renaissance|hellenistic|ptolemaic|coptic)\b",
+# Era / dynasty / period keyword -> a genuine cultural-anonymous stand-in.
+# NOTE: a bare year ("1783", "1440-43") is deliberately NOT here -- a lost modern
+# date is corruption, not evidence of anonymity, and routes to `unattributable`.
+_ERA = re.compile(
+    r"\b(century|dynasty|period|b\.?c\.?|a\.?d\.?|c\.?e\.?|"
+    r"first quarter|second quarter|third quarter|fourth quarter|"
+    r"byzantine|tang|song|ming|qing|edo|meiji|kamakura|heian|mughal|safavid|"
+    r"gothic|romanesque|medieval|renaissance|hellenistic|ptolemaic|coptic|"
+    r"early christian|old kingdom|new kingdom|middle kingdom)\b",
     re.IGNORECASE,
 )
 # A named non-Western/anthropological culture standing in for an anonymous maker.
@@ -201,25 +204,28 @@ def classify(meta: Mapping[str, Any], *, client: HttpGet) -> CreatorOutcome:
     if resolved is not None:
         return resolved
 
-    # 2) Explicit anonymity: an anonymity marker, or an empty name.
-    if relation == "anonymous" or not name or _ANON_MARKER.search(name):
+    # 2) Explicit anonymity: an anonymity marker, or a name that is only an
+    #    anonymity relation. (An EMPTY name is NOT called anonymous here -- an
+    #    absent name is missing data, so it falls through to `unattributable`;
+    #    `relation == "unknown"` is likewise ignored, being the old catch-all.)
+    if relation == "anonymous" or (name and _ANON_MARKER.search(name)):
         return CreatorOutcome("anonymous", note="Anonymous/unattributed per catalogue.")
 
-    # 3) Period / culture fragment -> cultural-anonymous, UNLESS the title is a
-    #    real artist (half-swap) -- then the record is corrupt, not anonymous.
-    period_or_culture = _PERIOD.search(name) or (
-        _CULTURE.search(name) and not _looks_personal(name)
-    )
-    if period_or_culture:
+    # 3) An era/dynasty or named-culture fragment -> genuine cultural anonymity,
+    #    UNLESS the title is a real artist (half-swap) -- then the record is
+    #    corrupt, not anonymous. A bare lost year is NOT an era signal and falls
+    #    through to `unattributable`.
+    era_or_culture = _ERA.search(name) or (_CULTURE.search(name) and not _looks_personal(name))
+    if era_or_culture:
         if _title_is_artist(title, client=client):
             return CreatorOutcome(
                 "unattributable",
-                note=f"Corrupt record: name {name!r} is a date/culture fragment and the "
+                note=f"Corrupt record: name {name!r} is an era/culture fragment and the "
                 f"title {title!r} names an artist (half-swap); creator not safely recoverable.",
             )
         return CreatorOutcome(
             "anonymous",
-            note=f"Cultural/period attribution only ({name!r}); no individual maker.",
+            note=f"Cultural/era attribution only ({name!r}); no individual maker.",
         )
 
     # 4) A real personal name that did not resolve -> versioned search ledger.

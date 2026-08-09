@@ -29,7 +29,7 @@ class FakeClient:
 
     def __init__(self, known: dict[str, tuple[str, str]]) -> None:
         self.known = known
-        self.by_qid = {qid: label for qid, label in known.values()}
+        self.by_qid = dict(known.values())
 
     def get(self, url: str, *, params: dict[str, str] | None = None) -> dict[str, Any] | None:
         if params is None:  # fetch_identity -> Special:EntityData
@@ -123,11 +123,39 @@ def test_unattributable_junk_fragment() -> None:
     assert out.kind == "unattributable"
 
 
+def test_bare_year_is_unattributable_not_anonymous() -> None:
+    # A lost modern year is corruption, NOT evidence of cultural anonymity.
+    out = classify(_meta(name="1440-43", title="Door of the Apostles"), client=FakeClient({}))
+    assert out.kind == "unattributable"
+
+
+def test_era_keyword_is_anonymous() -> None:
+    out = classify(
+        _meta(name="early 8th century (Tang dynasty)", title="Tomb Guardian"),
+        client=FakeClient({}),
+    )
+    assert out.kind == "anonymous"
+
+
+def test_empty_name_is_unattributable() -> None:
+    out = classify(_meta(name="", title="Untitled"), client=FakeClient({}))
+    assert out.kind == "unattributable"
+
+
 # --- ledger eligibility ---------------------------------------------------
 
 
 def test_eligible_when_never_classified() -> None:
     assert _eligible(_meta(name="Someone New")) is True
+
+
+def test_old_generic_label_is_reclassified() -> None:
+    # An old not_available with no ledger source_ref is not authoritative here.
+    meta = _meta(name="Unknown (Early Christian)")
+    meta["field_provenance"] = {
+        "artist_qid": {"status": "not_available", "source_ref": "", "note": "Checked sources"}
+    }
+    assert _eligible(meta) is True
 
 
 def test_ineligible_when_has_creator_qid() -> None:

@@ -74,13 +74,19 @@ def _eligible(meta: dict[str, Any]) -> bool:
     if _creator_qid(meta) is not None:
         return False  # already has a creator
     entry = _artist_entry(meta)
-    if entry is None or entry.get("status") not in ("not_available", "unverified"):
+    if entry is None:
         return True  # never classified -> classify
+    if entry.get("status") == "available":
+        return False  # resolved
     ref = str(entry.get("source_ref") or "")
+    if ref in (REF_ANONYMOUS, REF_UNATTRIBUTABLE):
+        return False  # THIS ledger's version-independent terminals
     match = _SEARCH_REF_RE.search(ref)
-    if match:  # 'searched' ledger: re-open only when the plan version rises
+    if match:  # THIS ledger's 'searched' state: re-open when the plan rises
         return int(match.group(1)) < ARTIST_SEARCH_PLAN_VERSION
-    return False  # anonymous / unattributable -> version-independent terminal
+    # Any other state -- incl. an OLD generic not_available with no/foreign
+    # source_ref -- was not written by this ledger; reclassify it.
+    return True
 
 
 def _apply_outcome(meta: dict[str, Any], outcome: CreatorOutcome) -> str:
