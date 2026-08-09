@@ -115,6 +115,10 @@ class WorkQidBackfillStats:
     mirrored: int  # canonical mirrors written
     needs_artist: int = 0  # uncategorized + no work QID but no creator QID (reported, skipped)
     matches: list[dict[str, Any]] = field(default_factory=list)  # for dry-run visibility
+    # Matches refused because another sidecar already asserts that work QID.
+    # Reported, never written -- silently dropping them would read as "nothing
+    # to do here" when the truth is "two works claim one identity".
+    collisions: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _sidecar_paths(staging_dir: Path) -> list[Path]:
@@ -196,6 +200,20 @@ def _append_operation(
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _work_qid_holders(staging_dir: Path) -> dict[str, list[str]]:
+    """work Q-ID -> the work_ids already asserting it."""
+    holders: dict[str, list[str]] = {}
+    for path in _sidecar_paths(staging_dir):
+        try:
+            meta = sidecar.load(path)
+        except Exception:  # noqa: BLE001 - an unreadable sidecar cannot own a QID
+            continue
+        qid = _work_qid(meta)
+        if qid:
+            holders.setdefault(qid, []).append(str(meta.get("work_id") or path.parent.name))
+    return holders
+
+
 def backfill(
     staging_dir: Path,
     *,
@@ -210,6 +228,17 @@ def backfill(
         raise ValueError("limit must be at least 1")
     stats = WorkQidBackfillStats(attempted=0, resolved=0, mirrored=0)
     reasons: Counter[str] = Counter()
+    # A work Q-ID denotes ONE work. When an artist painted a subject more than
+    # once -- Cezanne's Card Players, Kinstler's two Reagan portraits, several
+    # Feast of Herod -- every holding matches the same Wikidata label at score
+    # 1.00, so without this guard the pass writes one Q-ID onto two distinct
+    # works. The holder tie-breaker does not separate them: the collisions
+    # observed all carry the SAME institution on both sides.
+    #
+    # Refusing is the conservative direction. A missing work Q-ID leaves the
+    # field open for a better pass; a wrong one propagates into holder
+    # resolution, IIIF and dossiers, and nothing downstream re-checks it.
+    holders = _work_qid_holders(staging_dir)
     for path in _sidecar_paths(staging_dir):
         meta = sidecar.load(path)
         if not _eligible(meta, include_categorized=include_categorized):
@@ -233,6 +262,26 @@ def backfill(
         )
         if match is None:
             reasons[reason] += 1
+            if stats.attempted >= limit:
+                break
+            continue
+        already = [
+            work_id
+            for work_id in holders.get(match.work_qid, [])
+            if work_id != str(meta.get("work_id") or path.parent.name)
+        ]
+        if already:
+            reasons["already-held-by-another-work"] += 1
+            stats.collisions.append(
+                {
+                    "work_id": meta["work_id"],
+                    "title": meta.get("title"),
+                    "work_qid": match.work_qid,
+                    "label": match.label,
+                    "score": round(match.score, 3),
+                    "held_by": already,
+                }
+            )
             if stats.attempted >= limit:
                 break
             continue
@@ -265,6 +314,7 @@ def backfill(
             mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
             stats.resolved += 1
             stats.mirrored += len(mirror_paths)
+            holders.setdefault(match.work_qid, []).append(str(meta["work_id"]))
             if operations_log is not None:
                 _append_operation(operations_log, meta, match, path, mirror_paths)
         if stats.attempted >= limit:
@@ -310,8 +360,15 @@ def main(argv: list[str] | None = None) -> int:
         f"work-qid-by-creator backfill ({mode}): "
         f"eligible={stats.attempted} matched={len(stats.matches)} "
         f"written={stats.resolved} mirrored={stats.mirrored} "
-        f"needs_artist_resolution={stats.needs_artist}"
+        f"needs_artist_resolution={stats.needs_artist} "
+        f"refused_collision={len(stats.collisions)}"
     )
+    for c in stats.collisions:
+        print(
+            f"  REFUSED {c['work_id']}: {c['work_qid']} ({c['label']!r}, "
+            f"score {c['score']}) is already held by {', '.join(c['held_by'])} "
+            f"-- one Q-ID cannot denote two works"
+        )
     if reasons:
         print("outcomes:", dict(reasons.most_common()))
     if args.show_matches or not args.apply:
