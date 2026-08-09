@@ -10,7 +10,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
-from scripts.apply_lens_recovery import _already_lens, apply_finding  # noqa: E402
+from scripts.apply_lens_recovery import (  # noqa: E402
+    REF_IMAGE_CONFIRMED,
+    _already_lens,
+    apply_finding,
+)
 
 
 class FakeSparql:
@@ -73,6 +77,22 @@ def test_resumable_skip_detection() -> None:
     meta = {"work_id": "w", "field_provenance": {"artist_qid": {"source_ref": "faa:google-lens/text"}}}
     assert _already_lens(meta, "artist_qid") is True
     assert _already_lens({"work_id": "w"}, "artist_qid") is False
+
+
+def test_confirmed_no_artist_finalizes_null() -> None:
+    # Image search confirms it's a place / has no individual artist -> null becomes
+    # a searched, terminal outcome (not a silent gap).
+    meta = {"work_id": "w", "title": "Castillo_de_Zafra", "artist": {"name": None}}
+    changes = apply_finding(
+        meta,
+        {"verdict": "site", "category": "architecture", "title": "Castle of Zafra",
+         "source": "Wikipedia"},
+        client=FakeSparql(set()),
+    )
+    assert meta["field_provenance"]["artist_qid"]["source_ref"] == REF_IMAGE_CONFIRMED
+    assert meta["category"] == "architecture"
+    assert meta["title"] == "Castle of Zafra"
+    assert any("confirmed-no-artist" in c for c in changes)
 
 
 def test_no_change_when_already_correct() -> None:
