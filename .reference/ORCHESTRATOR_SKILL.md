@@ -1,5 +1,3 @@
-# Orchestrator Instructions
-
 This section provides **exported Orchestrator instructions** for remote Codex runs.
 It is **not** a live mount of the local Orchestrator Brain, feedback database, worktrees, or credentials.
 
@@ -10,6 +8,5 @@ Use the exported policy for decomposition and judgment only; do not attempt to a
 
 - **Primary entry point:** `docs/exports/orchestrator-skill/SKILL.md`
 
-## Materialized files
-
+### Materialized files
 - `docs/exports/orchestrator-skill/SKILL.md`
