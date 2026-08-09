@@ -30,6 +30,7 @@ import shutil
 import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TypeGuard
 
 import numpy as np
 from PIL import Image
@@ -139,12 +140,17 @@ class QualityReport:
 # ---------------------------------------------------------------------------
 
 
-def _is_positive_finite(value: float | None) -> bool:
+def _is_positive_finite(value: float | None) -> TypeGuard[float]:
     """True only for a real, usable measurement.
 
     Guards a numeric trust boundary: None and NaN and +/-inf are all "not a
     dimension we can divide by", and must be rejected together rather than
     relying on `> 0` alone.
+
+    Returns `TypeGuard[float]` rather than `bool` so the narrowing survives the
+    call. The inline form this replaced (`if h_cm and w_cm and h_cm > 0 ...`)
+    narrowed via truthiness for free; extracting it into a helper loses that
+    unless the guard is declared, and mypy then rejects the division below.
     """
     return value is not None and math.isfinite(value) and value > 0
 
