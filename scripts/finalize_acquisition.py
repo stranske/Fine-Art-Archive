@@ -45,7 +45,7 @@ from fine_art_archive.identity import enrich_sidecar_getty  # noqa: E402
 
 
 def _fmt_measure(value: float | None, *, places: int = 1) -> str:
-    """Render a measurement for the history note, or "unknown".
+    """Render a measurement for the history note, or "unknown"/"invalid".
 
     `QualityReport.px_per_cm_long` is `float | None` — it is None whenever the
     work's physical dimensions are absent, which is routine for prints,
