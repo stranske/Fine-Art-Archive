@@ -39,8 +39,28 @@ class FakeClient:
         return self._entity
 
 
+class FakeOeuvre:
+    """SPARQL fake: the resolved artist's works (one row per work label)."""
+
+    def __init__(self, labels: list[str]) -> None:
+        self._labels = labels
+
+    def query(self, sparql: str) -> dict[str, Any]:
+        rows = [
+            {
+                "w": {"value": f"http://www.wikidata.org/entity/Q90{i}"},
+                "wLabel": {"value": label},
+            }
+            for i, label in enumerate(self._labels)
+        ]
+        return {"results": {"bindings": rows}}
+
+
 ARTIST = _person("Q123", "George Wesley Bellows", occupations=["Q1028181"], birth="1882")
 POLITICIAN = _person("Q456", "Rutherford B. Hayes", occupations=["Q82955"])
+# oeuvre containing "Love of Winter" (confirms the swap) and one that doesn't
+OEUVRE_OK = FakeOeuvre(["Love of Winter", "Cliff Dwellers"])
+OEUVRE_MISS = FakeOeuvre(["Cliff Dwellers", "Stag at Sharkey's"])
 
 
 def _meta(title: str, artist_name: str, **kw) -> dict[str, Any]:
@@ -52,29 +72,48 @@ def _meta(title: str, artist_name: str, **kw) -> dict[str, Any]:
 
 def test_detects_swap_when_title_is_an_artist() -> None:
     client = FakeClient(search_qid="Q123", entity=ARTIST)
-    swap = tas.detect_swap(_meta("George Wesley Bellows", "Love of Winter"), client=client)
+    swap = tas.detect_swap(
+        _meta("George Wesley Bellows", "Love of Winter"),
+        json_client=client,
+        sparql_client=OEUVRE_OK,
+    )
     assert swap is not None
     assert swap.artist_name == "George Wesley Bellows" and swap.artist_qid == "Q123"
     assert swap.new_title == "Love of Winter"
+    assert swap.work_qid == "Q900"  # captured from the oeuvre confirmation
 
 
 def test_no_swap_when_title_is_a_sitter() -> None:
     # title is a person but NOT an artist (politician) -> not a swap
     client = FakeClient(search_qid="Q456", entity=POLITICIAN)
-    assert tas.detect_swap(_meta("Rutherford B. Hayes", "Some Title"), client=client) is None
+    assert (
+        tas.detect_swap(
+            _meta("Rutherford B. Hayes", "Some Title"), json_client=client, sparql_client=OEUVRE_OK
+        )
+        is None
+    )
 
 
 def test_no_swap_when_title_is_a_real_title() -> None:
     # a real work title doesn't resolve to any artist
     client = FakeClient(search_qid=None, entity={})
-    assert tas.detect_swap(_meta("The Great Wave", "Unknown"), client=client) is None
+    assert (
+        tas.detect_swap(
+            _meta("The Great Wave", "Unknown"), json_client=client, sparql_client=OEUVRE_OK
+        )
+        is None
+    )
 
 
 def test_subject_portrait_guard() -> None:
     # artist field (would-be title) names the person -> a portrait OF them, decline
     client = FakeClient(search_qid="Q123", entity=ARTIST)
     assert (
-        tas.detect_swap(_meta("George Wesley Bellows", "Portrait of Bellows"), client=client)
+        tas.detect_swap(
+            _meta("George Wesley Bellows", "Portrait of Bellows"),
+            json_client=client,
+            sparql_client=OEUVRE_OK,
+        )
         is None
     )
 
@@ -82,7 +121,12 @@ def test_subject_portrait_guard() -> None:
 def test_no_swap_when_new_title_is_junk() -> None:
     # artist field is a bare date -> not promotable to a title
     client = FakeClient(search_qid="Q123", entity=ARTIST)
-    assert tas.detect_swap(_meta("George Wesley Bellows", "1914"), client=client) is None
+    assert (
+        tas.detect_swap(
+            _meta("George Wesley Bellows", "1914"), json_client=client, sparql_client=OEUVRE_OK
+        )
+        is None
+    )
 
 
 def test_resolved_artist_is_never_touched() -> None:
@@ -90,7 +134,19 @@ def test_resolved_artist_is_never_touched() -> None:
     meta = _meta(
         "George Wesley Bellows", "Love of Winter", artist={"name": "x", "wikidata_q": "Q9"}
     )
-    assert tas.detect_swap(meta, client=client) is None
+    assert tas.detect_swap(meta, json_client=client, sparql_client=OEUVRE_OK) is None
+
+
+def test_oeuvre_confirmation_rejects_wrong_same_name_artist() -> None:
+    # "Jan Vermeer" resolves to a same-named painter, but "The Glass of Wine" is
+    # not in that painter's oeuvre -> self-reject rather than attach the wrong one.
+    client = FakeClient(search_qid="Q123", entity=ARTIST)
+    swap = tas.detect_swap(
+        _meta("George Wesley Bellows", "Love of Winter"),
+        json_client=client,
+        sparql_client=OEUVRE_MISS,  # oeuvre lacks the recovered title
+    )
+    assert swap is None
 
 
 # --- backfill CLI -------------------------------------------------------------
@@ -120,7 +176,12 @@ def _write(tmp: Path, work_id: str, title: str, artist_name: str) -> Path:
 
 def test_backfill_applies_swap_and_provenance(tmp_path: Path) -> None:
     path = _write(tmp_path, "1111111-bellows", "George Wesley Bellows", "Love of Winter")
-    stats, _ = backfill(tmp_path, client=FakeClient(search_qid="Q123", entity=ARTIST), apply=True)
+    stats, _ = backfill(
+        tmp_path,
+        json_client=FakeClient(search_qid="Q123", entity=ARTIST),
+        sparql_client=OEUVRE_OK,
+        apply=True,
+    )
 
     assert stats.swapped == 1
     m = json.loads(path.read_text())
@@ -130,11 +191,18 @@ def test_backfill_applies_swap_and_provenance(tmp_path: Path) -> None:
     assert m["artist"]["canonical"]["method"] == "title-artist-unswap"
     assert m["field_provenance"]["title"]["status"] == "available"
     assert m["field_provenance"]["artist_qid"]["status"] == "available"
+    assert m["stable_identifiers"]["wikidata_q"] == "Q900"  # work QID captured
+    assert m["field_provenance"]["work_qid"]["status"] == "available"
 
 
 def test_backfill_dry_run_writes_nothing(tmp_path: Path) -> None:
     path = _write(tmp_path, "1111111-bellows", "George Wesley Bellows", "Love of Winter")
-    stats, _ = backfill(tmp_path, client=FakeClient(search_qid="Q123", entity=ARTIST), apply=False)
+    stats, _ = backfill(
+        tmp_path,
+        json_client=FakeClient(search_qid="Q123", entity=ARTIST),
+        sparql_client=OEUVRE_OK,
+        apply=False,
+    )
 
     assert len(stats.matches) == 1 and stats.swapped == 0
     assert json.loads(path.read_text())["title"] == "George Wesley Bellows"  # untouched

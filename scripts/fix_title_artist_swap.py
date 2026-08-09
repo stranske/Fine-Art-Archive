@@ -26,6 +26,10 @@ import argparse
 import json
 import os
 import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -41,6 +45,49 @@ from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
 from fine_art_archive.enrichment.title_artist_swap import Swap, detect_swap  # noqa: E402
 
 DEFAULT_LIMIT = 100_000
+SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
+USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
+
+
+class SparqlClient:
+    """Throttled, retrying WDQS transport (mirrors the by-creator passes)."""
+
+    def __init__(self, *, timeout: float = 45.0, throttle: float = 0.25, max_retries: int = 4):
+        self.timeout = timeout
+        self.throttle = throttle
+        self.max_retries = max_retries
+        self._cache: dict[str, dict[str, Any] | None] = {}
+        self._last = 0.0
+
+    def _wait(self) -> None:
+        gap = self.throttle - (time.monotonic() - self._last)
+        if gap > 0:
+            time.sleep(gap)
+        self._last = time.monotonic()
+
+    def query(self, sparql: str) -> dict[str, Any] | None:
+        if sparql in self._cache:
+            return self._cache[sparql]
+        url = f"{SPARQL_ENDPOINT}?{urllib.parse.urlencode({'query': sparql, 'format': 'json'})}"
+        request = urllib.request.Request(
+            url, headers={"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"}
+        )
+        result: dict[str, Any] | None = None
+        for attempt in range(self.max_retries):
+            self._wait()
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    result = json.loads(response.read())
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code in (429, 503) and attempt < self.max_retries - 1:
+                    time.sleep(min(2.0**attempt, 20.0))
+                    continue
+                break
+            except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError):
+                break
+        self._cache[sparql] = result
+        return result
 
 
 @dataclass
@@ -90,6 +137,16 @@ def _apply(meta: dict[str, Any], swap: Swap) -> None:
         source_ref=f"https://www.wikidata.org/wiki/{swap.artist_qid}",
         note=swap.note,
     )
+    if swap.work_qid:
+        meta.setdefault("stable_identifiers", {})["wikidata_q"] = swap.work_qid
+        provenance.set(
+            meta,
+            "work_qid",
+            "available",
+            "wikidata",
+            source_ref=f"https://www.wikidata.org/wiki/{swap.work_qid}",
+            note=swap.note,
+        )
 
 
 def _write_existing_mirrors(
@@ -133,7 +190,8 @@ def _append_operation(
 def backfill(
     staging_dir: Path,
     *,
-    client: Any,
+    json_client: Any,
+    sparql_client: Any,
     art_works_root: Path | None = None,
     operations_log: Path | None = None,
     limit: int = DEFAULT_LIMIT,
@@ -148,7 +206,7 @@ def backfill(
         if not _needs_artist(meta):
             continue
         stats.attempted += 1
-        swap = detect_swap(meta, client=client)
+        swap = detect_swap(meta, json_client=json_client, sparql_client=sparql_client)
         if swap is None:
             reasons["no-swap"] += 1
             if stats.attempted >= limit:
@@ -199,7 +257,8 @@ def main(argv: list[str] | None = None) -> int:
 
     stats, reasons = backfill(
         args.staging_dir,
-        client=JsonClient(timeout=args.timeout),
+        json_client=JsonClient(timeout=args.timeout),
+        sparql_client=SparqlClient(),
         art_works_root=args.art_works_root,
         operations_log=args.operations_log,
         limit=args.limit,

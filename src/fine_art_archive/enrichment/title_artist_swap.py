@@ -20,9 +20,16 @@ Guards (precision over recall):
     so a junk date/number is never promoted);
   * **subject-portrait guard** -- if the recovered title mentions the resolved
     person (a >=4-letter name token appears in it), the person is the depicted
-    subject, not the maker (a *portrait of* them), so decline.
+    subject, not the maker (a *portrait of* them), so decline;
+  * **oeuvre confirmation** -- the recovered title must match a work in the
+    resolved artist's Wikidata oeuvre (the guarded by-creator matcher). This
+    defeats name ambiguity: "Jan Vermeer" resolves to *Jan Vermeer van Haarlem*,
+    but "The Glass of Wine" is not in his oeuvre, so the swap self-rejects rather
+    than attaching the wrong same-named painter. The confirmed work's QID is
+    captured as a bonus.
 
-Network access is injected (a ``.get(url, params=...)`` client) for offline tests.
+Both transports are injected (a ``.get`` JSON client and a ``.query`` SPARQL
+client) for offline tests.
 """
 
 from __future__ import annotations
@@ -32,6 +39,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from fine_art_archive.enrichment.holder_by_creator import (
+    match_work_entity,
+    works_by_creator,
+    year_of,
+)
 from fine_art_archive.enrichment.wikidata_identity import fetch_identity
 from fine_art_archive.identity.artist_lookup import resolve_artist_qid
 from fine_art_archive.identity.artist_resolver import fold_name
@@ -45,6 +57,10 @@ class JsonGetter(Protocol):
     ) -> dict[str, Any] | None: ...
 
 
+class SparqlQuerier(Protocol):
+    def query(self, sparql: str) -> dict[str, Any] | None: ...
+
+
 @dataclass(frozen=True)
 class Swap:
     artist_name: str  # resolved artist display name (was in the title slot)
@@ -52,6 +68,7 @@ class Swap:
     lifespan: str | None
     new_title: str  # the real title (was in the artist slot)
     old_title: str  # the artist name that was wrongly in the title slot
+    work_qid: str | None  # the confirmed work's QID (oeuvre match), if captured
     method: str
     note: str
 
@@ -77,7 +94,9 @@ def _mentions_person(display_name: str, text: str) -> bool:
     return any(re.search(rf"\b{re.escape(t)}\b", text_folded) for t in tokens)
 
 
-def detect_swap(meta: Mapping[str, Any], *, client: JsonGetter) -> Swap | None:
+def detect_swap(
+    meta: Mapping[str, Any], *, json_client: JsonGetter, sparql_client: SparqlQuerier
+) -> Swap | None:
     """Return the un-swap for a title/artist-reversed work, or ``None``."""
     if _has_valid_artist_qid(meta):
         return None
@@ -90,15 +109,22 @@ def detect_swap(meta: Mapping[str, Any], *, client: JsonGetter) -> Swap | None:
     if not _WORD_RE.search(artist_field):
         return None
     # The title must resolve to a real ARTIST (occupation-gated) to be a swap.
-    qid, method = resolve_artist_qid(title, client=client)
+    qid, method = resolve_artist_qid(title, client=json_client)
     if qid is None:
         return None
-    display, lifespan = fetch_identity(qid, client=client)
+    display, lifespan = fetch_identity(qid, client=json_client)
     if not display:
         return None
     # Subject-portrait guard: if the recovered title names the person, they are
     # the depicted subject (a portrait *of* them), not the maker.
     if _mentions_person(display, artist_field):
+        return None
+    # Oeuvre confirmation: the recovered title must be a work in this artist's
+    # Wikidata oeuvre. Defeats same-name ambiguity (wrong Vermeer) and confirms
+    # the pair is real; the matched work's QID comes along.
+    works = works_by_creator(qid, client=sparql_client)
+    matched, _score, _reason = match_work_entity(artist_field, year_of(meta.get("year")), works)
+    if matched is None:
         return None
     return Swap(
         artist_name=display,
@@ -106,9 +132,11 @@ def detect_swap(meta: Mapping[str, Any], *, client: JsonGetter) -> Swap | None:
         lifespan=lifespan,
         new_title=artist_field,
         old_title=title,
+        work_qid=matched.work_qid,
         method=method or "artist-name-in-title",
         note=(
             f"Un-swapped title/artist (no work QID): title {title!r} is the artist "
-            f"{display!r} ({method}); artist field held the title {artist_field!r}."
+            f"{display!r} ({method}); artist field held the title {artist_field!r}; "
+            f"confirmed in oeuvre as work {matched.work_qid}."
         ),
     )
