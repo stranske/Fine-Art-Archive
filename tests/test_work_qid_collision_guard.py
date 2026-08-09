@@ -6,9 +6,17 @@ the same Wikidata label at score 1.00 — Cezanne's *Card Players*, Kinstler's t
 tie-breaker added in #485 cannot separate those: the collisions observed in the
 archive carry the SAME institution on both sides.
 
-Observed 2026-08-09: seven Q-IDs sitting on two distinct works each, every one
-written by this pass at score >= 0.96, and confirmed distinct by ORB+RANSAC
-registration (inlier ratio 0.015-0.028 against a same-work floor of 0.71).
+Observed 2026-08-09: seven Q-IDs sitting on two works each, every one written by
+this pass at score >= 0.96. Two are provably distinct from metadata alone -- two
+"Feast of Herod" at one gallery dated 1635 and 1425, and two Cezanne "Card
+Player(s)" dated 1890-92 and 1892-95.
+
+The guard deliberately does NOT depend on deciding which case applies. Whether
+the second work is a different painting or another holding of the same one, a
+work Q-ID denotes ONE work, so a second sidecar must not silently take it. The
+refusal is reported so the pair can be judged; it is never resolved here by
+image comparison, because no image statistic tested against this archive
+separates "different work" from "another photograph of the same work".
 """
 
 from __future__ import annotations
