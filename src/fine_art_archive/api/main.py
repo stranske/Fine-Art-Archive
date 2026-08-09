@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import urllib.parse
 import urllib.request
 import zipfile
 from contextlib import contextmanager, suppress
@@ -1455,6 +1456,35 @@ def modality_image(
 # a viewer actually looks at are fetched — polite to the source, and the cache
 # becomes a durable local copy of what's been seen.
 _DZ_TILE_HOST = "khmdata01.universumdigitalis.com"  # SSRF allowlist: the source
+
+
+def _assert_allowed_tile_host(tile_base: str) -> None:
+    """Allow exactly one host, compared after parsing.
+
+    The previous guard was `if _DZ_TILE_HOST not in tile_base` — a substring
+    test over the WHOLE URL, which three shapes defeat:
+
+      * the host in the path      https://evil.example/khmdata01.universumdigitalis.com/
+      * the host in the query     https://evil.example/?x=khmdata01.universumdigitalis.com
+      * a suffix domain           https://khmdata01.universumdigitalis.com.evil.example/
+
+    The third matters most: it needs no hand-edited sidecar, only a hostile or
+    compromised upstream supplying a tile base. And because the fetched bytes
+    are returned to the caller AND cached, this is a read primitive, not merely
+    an outbound request.
+
+    `hostname` (not `netloc`) is the right comparison: it strips the port and
+    any embedded credentials, both of which are separately rejected below.
+    """
+    parsed = urllib.parse.urlparse(tile_base)
+    if parsed.scheme != "https":
+        raise HTTPException(502, "tile source must be https")
+    if parsed.username or parsed.password:
+        raise HTTPException(502, "tile source must not carry credentials")
+    if (parsed.hostname or "").lower() != _DZ_TILE_HOST:
+        raise HTTPException(502, "tile source not allowed")
+
+
 _FID_RE = re.compile(r"^[A-Za-z0-9_]+$")
 _TILE_RE = re.compile(r"^(\d{1,4})_(\d{1,4})\.jpe?g$")
 
@@ -1565,8 +1595,7 @@ def deepzoom_tile(work_id: str, layer: str, level: int, tile: str) -> Response:
     if cache_p.exists():
         return FileResponse(cache_p, media_type="image/jpeg", headers=_TILE_HEADERS)
 
-    if _DZ_TILE_HOST not in tile_base:  # SSRF guard: only the known source host
-        raise HTTPException(502, "tile source not allowed")
+    _assert_allowed_tile_host(tile_base)
     url = f"{tile_base.rstrip('/')}/{fid}/{level}/{col}_{row}.jpg"
     req = urllib.request.Request(
         url, headers={"User-Agent": "Fine-Art-Archive/0.1 (private-archive)"}
