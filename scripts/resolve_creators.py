@@ -82,8 +82,8 @@ def _eligible(meta: dict[str, Any]) -> bool:
     ref = str(entry.get("source_ref") or "")
     if ref == REF_ANONYMOUS:
         return False  # genuine anonymity (named, era/culture) -- terminal
-    if ref == REF_IMAGE_PENDING:
-        return False  # text is exhausted; the IMAGE-search process owns this now
+    if ref.startswith("faa:image-search/"):
+        return False  # pending -> image process owns it; confirmed -> terminal
     if ref == REF_UNATTRIBUTABLE:
         return True  # legacy terminal -> reopen to migrate it to image-search pending
     match = _SEARCH_REF_RE.search(ref)

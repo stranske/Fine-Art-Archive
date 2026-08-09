@@ -45,6 +45,11 @@ from scripts.resolve_work_qids import SparqlClient  # noqa: E402
 from fine_art_archive import provenance, sidecar  # noqa: E402
 
 LENS_REF_PREFIX = "faa:google-lens"
+# Terminal state written when image search CONFIRMS there is no individual artist
+# to recover (a place / architecture photo, or a genuinely anonymous work). This
+# is what lets a null artist become FINAL -- only after image search has looked.
+REF_IMAGE_CONFIRMED = "faa:image-search/confirmed"
+_NO_ARTIST_VERDICTS = {"confirmed-anonymous", "anonymous", "site", "place", "no-artist"}
 
 
 def _find_sidecar(staging: Path, work_id: str) -> Path | None:
@@ -77,6 +82,27 @@ def apply_finding(
     artist_name = (finding.get("artist_name") or "").strip()
     title = (finding.get("title") or "").strip()
     work_qid = (finding.get("wikidata_q") or "").strip()
+    verdict = str(finding.get("verdict") or "").strip().lower()
+
+    # Image search CONFIRMED there is no individual artist to recover (a place /
+    # architecture photo, or a genuinely anonymous work). Finalize the pending
+    # null: null is now a searched, terminal outcome -- not a silent gap.
+    if verdict in _NO_ARTIST_VERDICTS:
+        if title:
+            meta["title"] = title
+        category = (finding.get("category") or "").strip()
+        if category:
+            meta["category"] = category
+        provenance.set(
+            meta,
+            "artist_qid",
+            "not_available",
+            "google-lens",
+            source_ref=REF_IMAGE_CONFIRMED,
+            note=(finding.get("note") or "Image search confirms no individual artist "
+                  f"(verdict={verdict}); null attribution is correct. Source: {source}."),
+        )
+        return [f"confirmed-no-artist ({verdict})"]
 
     if title:
         old = str(meta.get("title") or "")
