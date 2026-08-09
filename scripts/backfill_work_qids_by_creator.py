@@ -48,6 +48,10 @@ from fine_art_archive.enrichment.work_qid_by_creator import (  # noqa: E402
     resolve_work_qid,
     year_of,
 )
+from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
+    WorkQidClaims,
+    collision_note,
+)
 
 DEFAULT_LIMIT = 100_000
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
@@ -200,6 +204,31 @@ def _append_operation(
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _append_collision_operation(
+    log_path: Path,
+    meta: dict[str, Any],
+    match: WorkQidMatch,
+    collided_with: str,
+    staging_path: Path,
+    mirror_paths: list[Path],
+) -> None:
+    entry = {
+        "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "actor": "backfill_work_qids_by_creator",
+        "op": "work_qid_by_creator_collision",
+        "work_id": meta["work_id"],
+        "proposed_work_qid": match.work_qid,
+        "proposed_label": match.label,
+        "score": round(match.score, 3),
+        "collided_with": collided_with,
+        "staging_path": str(staging_path),
+        "mirror_paths": [str(path) for path in mirror_paths],
+    }
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def _work_qid_holders(staging_dir: Path) -> dict[str, list[str]]:
     """work Q-ID -> the work_ids already asserting it."""
     holders: dict[str, list[str]] = {}
@@ -228,18 +257,12 @@ def backfill(
         raise ValueError("limit must be at least 1")
     stats = WorkQidBackfillStats(attempted=0, resolved=0, mirrored=0)
     reasons: Counter[str] = Counter()
-    # A work Q-ID denotes ONE work. When an artist painted a subject more than
-    # once -- Cezanne's Card Players, Kinstler's two Reagan portraits, several
-    # Feast of Herod -- every holding matches the same Wikidata label at score
-    # 1.00, so without this guard the pass writes one Q-ID onto two distinct
-    # works. The holder tie-breaker does not separate them: the collisions
-    # observed all carry the SAME institution on both sides.
-    #
-    # Refusing is the conservative direction. A missing work Q-ID leaves the
-    # field open for a better pass; a wrong one propagates into holder
-    # resolution, IIIF and dossiers, and nothing downstream re-checks it.
-    holders = _work_qid_holders(staging_dir)
-    for path in _sidecar_paths(staging_dir):
+    paths = _sidecar_paths(staging_dir)
+    # A work QID denotes one work: refuse a match already held by another
+    # sidecar rather than asserting the two are the same work. This pass was
+    # the source of 58 of the 60 collisions in the archive's own history.
+    claims = WorkQidClaims.from_sidecars(paths, load=sidecar.load)
+    for path in paths:
         meta = sidecar.load(path)
         if not _eligible(meta, include_categorized=include_categorized):
             continue
@@ -266,13 +289,9 @@ def backfill(
             if stats.attempted >= limit:
                 break
             continue
-        already = [
-            work_id
-            for work_id in holders.get(match.work_qid, [])
-            if work_id != str(meta.get("work_id") or path.parent.name)
-        ]
-        if already:
-            reasons["already-held-by-another-work"] += 1
+        collided_with = claims.collides(match.work_qid, str(meta.get("work_id")))
+        if collided_with is not None:
+            reasons["declined:collision"] += 1
             stats.collisions.append(
                 {
                     "work_id": meta["work_id"],
@@ -280,13 +299,31 @@ def backfill(
                     "work_qid": match.work_qid,
                     "label": match.label,
                     "score": round(match.score, 3),
-                    "held_by": already,
+                    "held_by": [collided_with],
                 }
             )
+            if apply:
+                provenance.set(
+                    meta,
+                    "work_qid",
+                    "unverified",
+                    "wikidata",
+                    source_ref="faa:work-qid-by-creator",
+                    note=collision_note(match.work_qid, collided_with, plan="by-creator backfill"),
+                )
+                sidecar.validate(meta)
+                sidecar.write(path, meta)
+                mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
+                stats.mirrored += len(mirror_paths)
+                if operations_log is not None:
+                    _append_collision_operation(
+                        operations_log, meta, match, collided_with, path, mirror_paths
+                    )
             if stats.attempted >= limit:
                 break
             continue
         reasons["match"] += 1
+        claims.claim(match.work_qid, str(meta.get("work_id") or path.parent.name))
         stats.matches.append(
             {
                 "work_id": meta["work_id"],
