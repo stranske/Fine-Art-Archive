@@ -29,11 +29,66 @@ from dataclasses import dataclass
 from fine_art_archive.enrichment.holder_by_creator import (
     SparqlQuerier,
     match_work_entity,
+    tied_candidates,
     works_by_creator,
     year_of,
 )
 
 __all__ = ["WorkQidMatch", "resolve_work_qid", "year_of"]
+
+# Wikidata length-unit QIDs -> centimetres.
+_UNIT_TO_CM = {"Q174728": 1.0, "Q174789": 0.1, "Q11573": 100.0, "Q218593": 2.54}
+_DIM_TOLERANCE_CM = 2.0
+
+
+def _dimensions_query(qids: list[str]) -> str:
+    values = " ".join(f"wd:{q}" for q in qids)
+    return (
+        "SELECT ?w ?h ?hu ?wd ?wu WHERE { "
+        f"VALUES ?w {{ {values} }} "
+        "OPTIONAL { ?w p:P2048/psv:P2048 [wikibase:quantityAmount ?h; wikibase:quantityUnit ?hu] } "
+        "OPTIONAL { ?w p:P2049/psv:P2049 [wikibase:quantityAmount ?wd; wikibase:quantityUnit ?wu] } "
+        "}"
+    )
+
+
+def _to_cm(amount: str | None, unit_uri: str | None) -> float | None:
+    if amount is None:
+        return None
+    unit = (unit_uri or "").rsplit("/", 1)[-1]
+    try:
+        return float(amount) * _UNIT_TO_CM.get(unit, 1.0)
+    except (TypeError, ValueError):
+        return None
+
+
+def fetch_dimensions(
+    qids: list[str], *, client: SparqlQuerier
+) -> dict[str, tuple[float | None, float | None]]:
+    """Return ``{qid: (height_cm, width_cm)}`` for the given works (P2048/P2049)."""
+    if not qids:
+        return {}
+    payload = client.query(_dimensions_query(qids))
+    out: dict[str, tuple[float | None, float | None]] = {}
+    if not isinstance(payload, dict):
+        return out
+    for row in payload.get("results", {}).get("bindings", []):
+        qid = row.get("w", {}).get("value", "").rsplit("/", 1)[-1]
+        if not qid:
+            continue
+        h = _to_cm(row.get("h", {}).get("value"), row.get("hu", {}).get("value"))
+        w = _to_cm(row.get("wd", {}).get("value"), row.get("wu", {}).get("value"))
+        out[qid] = (h, w)
+    return out
+
+
+def _dims_match(
+    candidate: tuple[float | None, float | None], sidecar: tuple[float | None, float | None]
+) -> bool:
+    (ch, cw), (sh, sw) = candidate, sidecar
+    if ch is None or cw is None or sh is None or sw is None:
+        return False
+    return abs(ch - sh) <= _DIM_TOLERANCE_CM and abs(cw - sw) <= _DIM_TOLERANCE_CM
 
 
 @dataclass(frozen=True)
@@ -50,11 +105,14 @@ def resolve_work_qid(
     *,
     client: SparqlQuerier,
     holder_qid: str | None = None,
+    dimensions: tuple[float | None, float | None] | None = None,
 ) -> tuple[WorkQidMatch | None, str]:
     """Resolve one work's QID from its creator's Wikidata works.
 
-    ``holder_qid`` (the sidecar's holding institution, if known) is a Stage-2
-    tie-breaker for same-title clusters: a work's collection is definitive.
+    Same-title clusters are disambiguated by (in order) the holder (``holder_qid``,
+    the definitive P195 collection), the year, then the **dimensions**
+    (``dimensions`` = the sidecar's ``(height_cm, width_cm)``): if exactly one tied
+    candidate's Wikidata height+width match within tolerance, that is the work.
 
     Returns ``(WorkQidMatch, "match")`` or ``(None, reason)`` where ``reason`` is
     one of ``no-creator`` / ``no-works`` / ``below-threshold`` / ``ambiguous`` /
@@ -64,6 +122,15 @@ def resolve_work_qid(
         return None, "no-creator"
     works = works_by_creator(creator_qid, client=client)
     best, score, reason = match_work_entity(title, sidecar_year, works, holder_qid=holder_qid)
-    if best is None:
-        return None, reason
-    return WorkQidMatch(best.work_qid, best.label, score), "match"
+    if best is not None:
+        return WorkQidMatch(best.work_qid, best.label, score), "match"
+
+    # Stage 2b: dimensions tie-breaker for a still-ambiguous same-title cluster.
+    if reason == "ambiguous" and dimensions and any(v is not None for v in dimensions):
+        tied = tied_candidates(title, works)
+        if tied:
+            dims = fetch_dimensions([w.work_qid for w in tied], client=client)
+            hits = [w for w in tied if _dims_match(dims.get(w.work_qid, (None, None)), dimensions)]
+            if len(hits) == 1:
+                return WorkQidMatch(hits[0].work_qid, hits[0].label, score), "match"
+    return None, reason

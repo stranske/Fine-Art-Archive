@@ -168,7 +168,15 @@ def _search(
 
     if creator:
         holder_qid = (meta.get("holder") or {}).get("wikidata_q")
-        match, reason = resolve_work_qid(title, year, creator, client=sparql, holder_qid=holder_qid)
+        dims = meta.get("dimensions_original") or {}
+        match, reason = resolve_work_qid(
+            title,
+            year,
+            creator,
+            client=sparql,
+            holder_qid=holder_qid,
+            dimensions=(dims.get("h_cm"), dims.get("w_cm")),
+        )
         tried.append(f"by-creator:{reason}")
         if match is not None:
             return match.work_qid, "by-creator", tried
