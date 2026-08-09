@@ -296,7 +296,7 @@ class WikidataProvider:
         entity = self._entity(qid)
         if entity is None:
             return ProviderResult(False, "wikidata")
-        value = self._field_from_entity(entity, field)
+        value = self._field_from_entity(entity, field, sidecar)
         candidate = (
             Candidate(
                 value,
@@ -362,11 +362,70 @@ class WikidataProvider:
             return best[1], f"Wikidata alias/fuzzy match ({best[0]:.2f})"
         return None, None
 
-    def _field_from_entity(self, entity: Mapping[str, Any], field: str) -> Any:
+    #: Same threshold the artist-name lookup below already uses. One number, so
+    #: "close enough to be this artist" cannot mean two different things.
+    ARTIST_NAME_MATCH_MIN = 0.88
+
+    def _verified_artist_qid(
+        self, entity: Mapping[str, Any], sidecar: Mapping[str, Any] | None
+    ) -> str | None:
+        """A work's P170, but only when it demonstrably denotes THIS artist.
+
+        The unguarded version of this — `_first(_qid_claims(entity, "P170"))` —
+        is how the artist-Q-ID corpus was corrupted. It accepts whatever the
+        work item's creator claim points at: a workshop, a school, a place, a
+        year, or simply the wrong person on a same-title work. The G25 repair
+        fixed the resulting DATA; without a check here the very next resolver
+        pass writes it all back.
+
+        Two conditions, both required:
+
+        1. The target is a human (`P31` contains `Q5`). This is what stops a
+           place or a year being written into an artist field — 109 sidecars
+           were found holding exactly that.
+        2. Its label or one of its aliases matches the artist name the sidecar
+           already records, at >= `ARTIST_NAME_MATCH_MIN`.
+
+        Refusing is the conservative direction and is deliberate. A missing
+        artist Q-ID leaves the field open for a better pass; a wrong one
+        propagates into holder resolution, IIIF and dossiers, and nothing
+        downstream re-checks it.
+
+        When the sidecar records no artist name there is nothing to check
+        against, so this returns None rather than guessing — "we could not
+        verify" must never be written as if it were "verified".
+        """
+        qid = _first(_qid_claims(entity, "P170"))
+        if qid is None:
+            return None
+        name = _clean_text((sidecar or {}).get("artist", {}).get("name")) if sidecar else None
+        if not name:
+            return None
+        entities = self._entities([qid])
+        target = entities.get(qid) if isinstance(entities, Mapping) else None
+        if not isinstance(target, dict):
+            return None
+        if "Q5" not in _qid_claims(target, "P31"):
+            return None
+        folded = fold_name(name)
+        for candidate_name in _entity_names(target):
+            if (
+                SequenceMatcher(None, folded, fold_name(candidate_name)).ratio()
+                >= self.ARTIST_NAME_MATCH_MIN
+            ):
+                return qid
+        return None
+
+    def _field_from_entity(
+        self,
+        entity: Mapping[str, Any],
+        field: str,
+        sidecar: Mapping[str, Any] | None = None,
+    ) -> Any:
         if field == "year":
             return _year_from_claims(entity)
         if field == "artist_qid":
-            return _first(_qid_claims(entity, "P170"))
+            return self._verified_artist_qid(entity, sidecar)
         if field == "dimensions_original":
             return _dimensions_from_claims(entity)
         if field == "medium":
@@ -540,7 +599,9 @@ class CommonsSdcProvider:
             if isinstance(entities, dict)
             else None
         )
-        value = self.wikidata._field_from_entity(entity, field) if entity is not None else None
+        value = (
+            self.wikidata._field_from_entity(entity, field, sidecar) if entity is not None else None
+        )
         candidate = (
             Candidate(
                 value,
