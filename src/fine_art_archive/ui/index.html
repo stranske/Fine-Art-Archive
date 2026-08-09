@@ -601,6 +601,8 @@
         <option value="">All works (browse)</option>
       </select>
       <a id="library-toggle" href="#" onclick="toggleGallery(); return false;" style="margin-right: 16px;" title="Toggle gallery / list view">⊞ Gallery</a>
+      <a id="acquisitions-link" href="#" onclick="loadAcquisitions(); return false;" style="margin-right: 16px;"
+         title="Works the growth automation acquired on its own">Newly acquired <span id="acq-badge" class="pill" style="display:none"></span> →</a>
       <a id="upgrades-link" href="#" onclick="loadUpgrades(); return false;" style="margin-right: 16px;">Variant upgrades →</a>
       <a id="summary-link" href="#" onclick="loadSummary(); return false;" style="margin-right: 16px;">Ratings summary →</a>
       <a id="eink-link" href="#" onclick="openEink(); return false;" title="Build an e-paper playlist and prepare an SD card">🖼 E-paper card →</a>
@@ -1363,6 +1365,82 @@
       window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
     }
 
+    // ----- newly-acquired review (grant G55) -----
+    // Track A promotes without asking. This is where those works surface so
+    // they can be looked at afterwards. It is a VIEW, not a work queue:
+    // nothing here blocks growth, expires, or has to be drained.
+    let acqFilter = "no";
+
+    async function refreshAcqBadge() {
+      try {
+        const r = await fetch("/acquisitions?reviewed=no&limit=1");
+        if (!r.ok) return;
+        const d = await r.json();
+        const b = document.getElementById("acq-badge");
+        if (!b) return;
+        if (d.unreviewed > 0) { b.textContent = d.unreviewed; b.style.display = ""; }
+        else { b.style.display = "none"; }
+      } catch (e) { /* badge is decoration; never break the page for it */ }
+    }
+
+    async function loadAcquisitions(filter) {
+      if (filter) acqFilter = filter;
+      const r = await fetch(`/acquisitions?reviewed=${acqFilter}&limit=500`);
+      // showDetailPanel(), not getElementById: `body:not(.detail-mode) #detail`
+      // wins on specificity, so a panel dropped straight into #detail renders
+      // and stays invisible. See the note on showDetailPanel.
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Newly acquired</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const d = await r.json();
+      const tab = (v, label) =>
+        `<button onclick="loadAcquisitions('${v}')" style="${v === acqFilter ? "font-weight:600;border-color:var(--accent)" : ""}">${label}</button>`;
+      let html = `<button onclick="closeDetail()">← Back to list</button>
+        <h2>Newly acquired</h2>
+        <p class="sub">Works the growth automation acquired and promoted on its own,
+        since ${d.epoch}. <strong>${d.unreviewed}</strong> of ${d.total} not yet reviewed.
+        Nothing here is waiting on you — growth does not pause for review, and an
+        unread list has no consequence.</p>
+        <p style="margin:8px 0">${tab("no", "Not yet reviewed")} ${tab("yes", "Reviewed")} ${tab("any", "All")}</p>`;
+      if (!d.works.length) {
+        html += `<p class="sub">Nothing in this view.</p>`;
+        det.innerHTML = html;
+        return;
+      }
+      html += `<table><thead><tr>
+          <th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
+        </tr></thead><tbody>`;
+      for (const w of d.works) {
+        const when = (w.acquired_at || "").slice(0, 16).replace("T", " ");
+        const rev = w.reviewed
+          ? `${(w.reviewed_at || "").slice(0, 10)}${w.review_note ? `<br><span class="sub">${w.review_note}</span>` : ""}`
+          : "—";
+        const btn = w.reviewed
+          ? `<button onclick="acqReview('${w.work_id}', true)">Undo</button>`
+          : `<button onclick="acqReview('${w.work_id}', false)">Mark reviewed</button>`;
+        html += `<tr>
+          <td><a href="#" onclick="openWork('${w.work_id}'); return false;"><strong>${w.title}</strong></a>
+              <span class="sub">(${w.artist_name})</span><br>
+              <span class="qid">${w.work_id}</span></td>
+          <td>${when}</td><td>${w.acquired_by || "—"}</td><td>${rev}</td><td>${btn}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      det.innerHTML = html;
+    }
+
+    async function acqReview(wid, undo) {
+      const r = await fetch(`/works/${wid}/acquisition_review`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({undo: !!undo, note: ""}),
+      });
+      if (!r.ok) { toast("failed: " + r.status); return; }
+      toast(undo ? "marked unreviewed" : "marked reviewed");
+      refreshAcqBadge();
+      loadAcquisitions();
+    }
+
     async function upgradeDecide(wid, decision) {
       const r = await fetch(`/variant_upgrades/${wid}/decision`, {
         method: "POST",
@@ -1746,6 +1824,7 @@
       return m ? decodeURIComponent(m[1]) : null;
     }
     window.addEventListener("DOMContentLoaded", () => {
+      refreshAcqBadge();
       const wid = _widFromHash();
       if (wid) {
         // Wait briefly for the list to load so queueIndex resolves
