@@ -1383,6 +1383,15 @@
       } catch (e) { /* badge is decoration; never break the page for it */ }
     }
 
+    // Acquisition metadata is supplied by sidecars and review events.  This
+    // view uses innerHTML for its small table template, so every server value
+    // must be escaped before it becomes markup.
+    function acqEsc(value) {
+      return String(value ?? "").replace(/[&<>"]|'/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[ch]);
+    }
+
     async function loadAcquisitions(filter) {
       if (filter) acqFilter = filter;
       const r = await fetch(`/acquisitions?reviewed=${acqFilter}&limit=500`);
@@ -1398,7 +1407,7 @@
       let html = `<button onclick="closeDetail()">← Back to list</button>
         <h2>Newly acquired</h2>
         <p class="sub">Works the growth automation acquired and promoted on its own,
-        since ${d.epoch}. <strong>${d.unreviewed}</strong> of ${d.total} not yet reviewed.
+        since ${acqEsc(d.epoch)}. <strong>${d.unreviewed}</strong> of ${d.total} not yet reviewed.
         Nothing here is waiting on you — growth does not pause for review, and an
         unread list has no consequence.</p>
         <p style="margin:8px 0">${tab("no", "Not yet reviewed")} ${tab("yes", "Reviewed")} ${tab("any", "All")}</p>`;
@@ -1411,18 +1420,20 @@
           <th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
         </tr></thead><tbody>`;
       for (const w of d.works) {
-        const when = (w.acquired_at || "").slice(0, 16).replace("T", " ");
+        const workId = acqEsc(w.work_id);
+        const workIdJs = acqEsc(JSON.stringify(String(w.work_id ?? "")));
+        const when = acqEsc((w.acquired_at || "").slice(0, 16).replace("T", " "));
         const rev = w.reviewed
-          ? `${(w.reviewed_at || "").slice(0, 10)}${w.review_note ? `<br><span class="sub">${w.review_note}</span>` : ""}`
+          ? `${acqEsc((w.reviewed_at || "").slice(0, 10))}${w.review_note ? `<br><span class="sub">${acqEsc(w.review_note)}</span>` : ""}`
           : "—";
         const btn = w.reviewed
-          ? `<button onclick="acqReview('${w.work_id}', true)">Undo</button>`
-          : `<button onclick="acqReview('${w.work_id}', false)">Mark reviewed</button>`;
+          ? `<button onclick="acqReview(${workIdJs}, true)">Undo</button>`
+          : `<button onclick="acqReview(${workIdJs}, false)">Mark reviewed</button>`;
         html += `<tr>
-          <td><a href="#" onclick="openWork('${w.work_id}'); return false;"><strong>${w.title}</strong></a>
-              <span class="sub">(${w.artist_name})</span><br>
-              <span class="qid">${w.work_id}</span></td>
-          <td>${when}</td><td>${w.acquired_by || "—"}</td><td>${rev}</td><td>${btn}</td>
+          <td><a href="#" onclick="openWork(${workIdJs}); return false;"><strong>${acqEsc(w.title)}</strong></a>
+              <span class="sub">(${acqEsc(w.artist_name)})</span><br>
+              <span class="qid">${workId}</span></td>
+          <td>${when}</td><td>${acqEsc(w.acquired_by || "—")}</td><td>${rev}</td><td>${btn}</td>
         </tr>`;
       }
       html += "</tbody></table>";
