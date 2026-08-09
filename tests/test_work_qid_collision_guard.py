@@ -59,7 +59,11 @@ class _Match:
 def _run(tmp_path, monkeypatch, *, apply: bool):
     calls = []
 
-    def fake_resolve(title, year, creator, *, client, holder_qid=None):
+    def fake_resolve(title, year, creator, *, client, **_discriminators):
+        # **_discriminators, not an explicit kwarg list: resolve_work_qid grows
+        # tie-breakers over time (holder_qid in #485, dimensions in #492) and a
+        # stub pinned to today's signature turns each addition into a spurious
+        # CI failure in an unrelated test.
         calls.append(title)
         return _Match("Q17277950", "The Card Players"), "match"
 
