@@ -547,6 +547,14 @@
             "null"
           ],
           "description": "Wikimedia Commons File: name for the work image."
+        },
+        "part_of_q": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID of the larger work this item COMPOSES — a fresco cycle, polyptych, altarpiece, or numbered series. Mirrors Wikidata P361 (part of). Unlike `wikidata_q`, this value is SHARED across members by design and sharing it is not a defect: the 22 Giotto scenes of the Scrovegni Christ cycle all carry part_of_q=Q29353420 while each holds its own wikidata_q. Distinct from `site.wikidata_q`, which records where the item physically IS rather than what it composes; an in-situ panel legitimately has both."
         }
       }
     },
@@ -1369,6 +1377,90 @@
       ],
       "additionalProperties": true,
       "description": "Candidate sources considered + selected; supports re-evaluation when sources change"
+    },
+    "derived_from": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Set when this entry is a SECTION of another work presented in its own right — a detail crop of a fresco, a reconstruction, a distinct state of a print. A detail is genuinely presentable but has no independent identity: it inherits the parent's. This is deliberately NOT `files.variants[]`, which models device fitness (tv-master, meural-framed, thumbnail) rather than curatorial selection.\n\nINVARIANT: a sidecar with `derived_from` set MUST have `stable_identifiers.wikidata_q` null. Giving details work-level identity is how one Q-ID (Q547923, 'The Raising of Lazarus') came to sit on 50 distinct Scrovegni sidecars. Enforced by the `derived_identity` audit check.",
+      "properties": {
+        "work_id": {
+          "type": "string",
+          "description": "work_id of the parent this is a section of."
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Where in the parent, as 'x,y,w,h' in parent pixel coordinates when known, otherwise a human description ('with Hell')."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "detail",
+            "reconstruction",
+            "state",
+            "capture"
+          ],
+          "description": "detail = a section shown separately; capture = another photograph of the same element; reconstruction/state = derived renderings."
+        }
+      },
+      "required": [
+        "work_id",
+        "kind"
+      ]
+    },
+    "existence": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Whether the work still physically exists. Every other class in this archive assumes permanence — a painting in a museum, a fresco in a chapel. Street art does not: a mural dated 2012-2014 may have been painted over, and then the capture in this archive is not a reproduction of a surviving object but the only surviving record of it. Absent for works where permanence is a safe assumption.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "extant",
+            "overpainted",
+            "demolished",
+            "removed",
+            "unknown"
+          ]
+        },
+        "as_of": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "When the status was last established."
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "identity_anchor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "artist",
+        "place",
+        "capture",
+        null
+      ],
+      "description": "Which fact carries this record's identity, recorded because for some classes it is not the usual one. The archive normally identifies a work by its own Wikidata item; where none exists the anchor falls through in precedence order:\n  artist  - a resolvable maker (Q-ID preferred, name accepted)\n  place   - coordinates or a named location; a wall has no Q-ID and\n            that is not a gap to be filled\n  capture - the photograph IS the record, with `existence` saying\n            whether the subject survives\nEach level is used when the one above is unavailable, and the levels combine: recording the anchor does not stop the other fields being populated when they are known."
     }
   }
 }
