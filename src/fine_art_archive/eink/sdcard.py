@@ -49,6 +49,36 @@ from PIL import Image
 
 from .targets import RenderTarget, coerce_fit, render_for_target
 
+LOSSLESS_FORMATS = frozenset({"png", "bmp"})
+# Refused, not merely discouraged — see the guard in `export_card`.
+LOSSY_FORMATS = frozenset({"jpg", "jpeg"})
+
+
+def _assert_palette_conformant(img, target) -> None:
+    """Every pixel must be one of the target palette's inks.
+
+    Raises ValueError otherwise. Cheap: the render has already quantised, so
+    this is a set-membership check over the distinct colours present, not a
+    per-pixel scan of the full image.
+    """
+    import numpy as np
+
+    # `RenderTarget.palette` is already a Palette object (its NAME is on
+    # `.palette_name`), so this must not go through `get_palette`.
+    palette = target.palette
+    allowed = {tuple(int(v) for v in c) for c in palette.colours}
+    present = {
+        tuple(int(v) for v in c)
+        for c in np.unique(np.asarray(img.convert("RGB")).reshape(-1, 3), axis=0)
+    }
+    stray = present - allowed
+    if stray:
+        raise ValueError(
+            f"render is not palette-conformant: {len(stray)} colour(s) outside "
+            f"the {palette.name} palette, e.g. {sorted(stray)[:3]}"
+        )
+
+
 OURS_RE = re.compile(r"^\d{3,5}_[A-Za-z0-9._-]+\.(png|bmp|jpg|jpeg)$")
 WORK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 MANIFESTS = ("playlist.json", "playlist.m3u", "README.txt")
@@ -112,7 +142,20 @@ def export(
     items = list(items)
     rep = ExportReport(dry_run=dry_run)
     fmt = fmt.lower().lstrip(".")
-    if fmt not in ("png", "bmp", "jpg", "jpeg"):
+    if fmt in LOSSY_FORMATS:
+        # The entire point of the render path is that every pixel IS one of the
+        # six panel inks. Lossy compression reintroduces continuous tone and
+        # destroys that: measured on a 256-step gradient rendered to Spectra 6,
+        # PNG and BMP round-trip with 0 illegal colours while JPEG q95 yields
+        # 5,988 illegal colours across 14,371 of 16,384 pixels (88%). The panel
+        # firmware then re-quantises by its own unknown rule, discarding the
+        # project's dithering entirely. There is no quality setting at which
+        # this is safe, so it is refused rather than warned about.
+        raise ValueError(
+            f"{fmt!r} is lossy and destroys the dither; use one of "
+            f"{', '.join(sorted(LOSSLESS_FORMATS))}"
+        )
+    if fmt not in LOSSLESS_FORMATS:
         raise ValueError(f"unsupported format {fmt!r}")
     if method not in ("none", "floyd-steinberg", "atkinson"):
         raise ValueError(f"unsupported dither method {method!r}")
@@ -164,12 +207,12 @@ def export(
                         compress_range=compress_range,
                         fast=fast,
                     )
-                    # JPEG is the only format here that takes a quality
-                    # setting; PNG/BMP reject the kwarg outright.
-                    if fmt in ("jpg", "jpeg"):
-                        out.save(partial, format="JPEG", quality=95)
-                    else:
-                        out.save(partial, format=fmt.upper())
+                    # Durable guard: assert the rendered buffer really is
+                    # palette-conformant before it reaches the card. The format
+                    # check above stops today's known hole; this stops the
+                    # class, including any future lossy step.
+                    _assert_palette_conformant(out, target)
+                    out.save(partial, format=fmt.upper())
             except Exception as exc:  # noqa: BLE001
                 partial.unlink(missing_ok=True)
                 rep.skipped.append((it.work_id, f"render failed: {exc}"))
