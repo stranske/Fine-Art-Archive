@@ -327,6 +327,29 @@ def test_include_categorized_still_skips_already_qided(tmp_path: Path) -> None:
     assert stats.attempted == 0  # a work that already has a QID is never re-touched
 
 
+def test_preexisting_invalid_sidecar_is_skipped_not_fatal(tmp_path: Path) -> None:
+    # a sidecar already schema-invalid for an unrelated reason (out-of-tree key)
+    # must be skipped, not abort the whole pass.
+    bad = _uncat_sidecar("1111111-bad", "The Starry Night")
+    bad["stable_identifiers"] = {"part_of_q": "Q999"}  # not in schema
+    _write(tmp_path, bad)
+    good = _uncat_sidecar("2222222-good", "The Starry Night")
+    _write(tmp_path, good)
+    client = FakeSparql([_binding("Q1", "The Starry Night", inception="1889")])
+
+    stats, reasons = backfill(tmp_path, client=client, apply=True)
+
+    # the good one resolves; the invalid one is skipped, not fatal
+    assert stats.resolved == 1
+    assert reasons["skipped-invalid-sidecar"] == 1
+    assert (
+        "wikidata_q"
+        not in json.loads((tmp_path / "1111111-bad" / "meta.json").read_text())[
+            "stable_identifiers"
+        ]
+    )
+
+
 def test_no_creator_qid_is_reported_not_guessed(tmp_path: Path) -> None:
     _write(tmp_path, _uncat_sidecar("4444444-no-artist", "The Starry Night", artist_qid=None))
     client = FakeSparql([_binding("Q1", "The Starry Night", inception="1889")])
