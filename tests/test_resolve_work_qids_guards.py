@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from scripts.resolve_work_qids import _eligible, _is_derived, backfill, main
 
 
