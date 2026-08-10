@@ -154,7 +154,21 @@ def _retired_plan_version(meta: dict[str, Any]) -> int | None:
     return int(match.group(1)) if match else 0
 
 
+def _is_derived(meta: dict[str, Any]) -> bool:
+    """True for a detail/capture that inherits identity from a parent work."""
+    return bool(meta.get("derived_from"))
+
+
 def _eligible(meta: dict[str, Any]) -> bool:
+    if _is_derived(meta):
+        # A derived item has no identity of its own: the schema invariant is
+        # `derived_from set => stable_identifiers.wikidata_q is null`, and
+        # audit_checks.derived_identity reports any violation as BROKEN.
+        # Resolving one here does not merely add a wrong field, it starts an
+        # OSCILLATION: this pass sets a Q-ID, the invariant repair clears it,
+        # the next run sets it again. Observed flipping five times in 70
+        # minutes on 8d8f6ab-the-birth-of-venus-botticelli (2026-08-09).
+        return False
     if _work_qid(meta) is not None:
         return False  # already resolved
     entry = (meta.get("field_provenance") or {}).get("work_qid")
@@ -288,6 +302,9 @@ def backfill(
     outcomes: Counter[str] = Counter()
     for path in _sidecar_paths(staging_dir):
         meta = sidecar.load(path)
+        if _is_derived(meta):
+            outcomes["skipped:derived-item"] += 1
+            continue
         if not _eligible(meta):
             continue
         stats.attempted += 1
@@ -357,14 +374,36 @@ def main(argv: list[str] | None = None) -> int:
         default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
     )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
+    parser.add_argument(
+        "--no-mirror",
+        action="store_true",
+        help="write staging only, deliberately leaving the canonical archive stale",
+    )
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
     args = parser.parse_args(argv)
+
+    # Refuse to write staging-only by accident. `_write_existing_mirrors`
+    # returns [] when the root is None, so an unset FAA_ART_WORKS_ROOT used to
+    # make every run report success while the canonical archive silently went
+    # stale: 49 of 926 identity ops wrote a mirror without the variable set,
+    # against 760 of 761 with it, leaving 142 works whose two sidecars
+    # disagreed. Silence is the bug; make the caller say which it wants.
+    if args.apply and args.art_works_root is None and not args.no_mirror:
+        parser.error(
+            "refusing to --apply without a canonical archive root: writes would "
+            "land in staging only and the archive would drift silently. Set "
+            "FAA_ART_WORKS_ROOT, pass --art-works-root, or pass --no-mirror to "
+            "say you meant staging only."
+        )
 
     stats, outcomes = backfill(
         args.staging_dir,
         sparql=SparqlClient(),
         json_client=JsonClient(timeout=15.0),
-        art_works_root=args.art_works_root,
+        # --no-mirror means staging-only, so the root must be dropped here and
+        # not merely tolerated by the guard above: otherwise the flag silences
+        # the error while still writing the mirrors it claims to suppress.
+        art_works_root=None if args.no_mirror else args.art_works_root,
         operations_log=args.operations_log,
         limit=args.limit,
         apply=args.apply,
