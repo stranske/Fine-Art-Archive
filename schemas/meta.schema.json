@@ -1113,7 +1113,16 @@
                   "string",
                   "null"
                 ],
-                "description": "For a cropped variant, which side/region of the master the crop favors (e.g., 'left', 'right', 'center'). Set by the crop planner."
+                "enum": [
+                  "left",
+                  "centre",
+                  "right",
+                  "top",
+                  "middle",
+                  "bottom",
+                  null
+                ],
+                "description": "Which part of the parent work this variant shows. Meaningful for role='partial-crop', where a wide painting is split into complementary crops. Tintoretto's Miracle of the Loaves and Fishes (Met 13.75) is 154.9 x 407.7 cm — aspect 2.63 — so no 16:9 panel can hold it; a left and a right crop together show what one crop cannot."
               },
               "size_bytes": {
                 "type": [
@@ -1168,22 +1177,6 @@
                   "null"
                 ],
                 "description": "Free-text provenance for this variant, e.g. which duplicate work it was merged from when two records for the same painting were consolidated. Written by the duplicate-merge pass."
-              },
-              "crop_position": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "enum": [
-                  "left",
-                  "centre",
-                  "right",
-                  "top",
-                  "middle",
-                  "bottom",
-                  null
-                ],
-                "description": "Which part of the parent work this variant shows. Meaningful for role='partial-crop', where a wide painting is split into complementary crops. Tintoretto's Miracle of the Loaves and Fishes (Met 13.75) is 154.9 x 407.7 cm — aspect 2.63 — so no 16:9 panel can hold it; a left and a right crop together show what one crop cannot."
               }
             }
           }
@@ -1495,5 +1488,31 @@
       ],
       "description": "Which fact carries this record's identity, recorded because for some classes it is not the usual one. The archive normally identifies a work by its own Wikidata item; where none exists the anchor falls through in precedence order:\n  artist  - a resolvable maker (Q-ID preferred, name accepted)\n  place   - coordinates or a named location; a wall has no Q-ID and\n            that is not a gap to be filled\n  capture - the photograph IS the record, with `existence` saying\n            whether the subject survives\nEach level is used when the one above is unavailable, and the levels combine: recording the anchor does not stop the other fields being populated when they are known."
     }
-  }
+  },
+  "allOf": [
+    {
+      "$comment": "A derived item inherits identity from its parent, so it must not assert a work Q-ID of its own. Enforced HERE rather than in each writer because sidecar.write() validates on every write, so every pass gets it for free and none can reintroduce it. Prose alone did not hold: the invariant was documented in derived_from's own description while Q547923 spread across 50 Scrovegni sidecars, and on 2026-08-09 a pass rewrote a cleared value back onto the Birth of Venus crop twice in one day.",
+      "if": {
+        "required": [
+          "derived_from"
+        ],
+        "properties": {
+          "derived_from": {
+            "type": "object"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "stable_identifiers": {
+            "properties": {
+              "wikidata_q": {
+                "const": null
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }
