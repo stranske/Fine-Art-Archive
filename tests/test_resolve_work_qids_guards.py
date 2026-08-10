@@ -53,6 +53,30 @@ def _write(tmp: Path, meta: dict[str, Any]) -> Path:
     return p
 
 
+def _valid(work_id: str, **extra: Any) -> dict[str, Any]:
+    """A sidecar that PASSES schemas/meta.schema.json.
+
+    The resolver validates before writing and skips anything invalid
+    (`skipped-invalid-sidecar`), so a fixture missing required fields never
+    reaches the write-and-mirror path — and a test asserting "no mirror was
+    written" over one passes for the wrong reason, whether or not the code is
+    correct. Any test about writing must start from a valid sidecar.
+    """
+    meta: dict[str, Any] = {
+        "work_id": work_id,
+        "schema_version": "1.0",
+        "artist": {"name": "Unknown"},
+        "title": "Obscure",
+        "files": {"master": {"filename": "master.jpeg", "sha256": "0" * 64,
+                             "size_bytes": 1,
+                             "ingested_at": "2026-01-01T00:00:00+00:00"}},
+        "history": [{"actor": "test", "op": "created",
+                     "ts": "2026-01-01T00:00:00+00:00"}],
+    }
+    meta.update(extra)
+    return meta
+
+
 class TestDerivedItemsAreSkipped:
     def test_is_derived_detects_detail_and_capture(self) -> None:
         assert _is_derived({"derived_from": {"work_id": "parent", "kind": "capture"}})
@@ -100,6 +124,20 @@ class TestDerivedItemsAreSkipped:
         assert outcomes["skipped:derived-item"] == 0
 
 
+@pytest.fixture
+def offline(monkeypatch: pytest.MonkeyPatch):
+    """Stop main() from constructing the real network clients.
+
+    `main` builds `SparqlClient()` and `JsonClient(timeout=15.0)` itself, so a
+    test that feeds it real work data would query Wikidata — non-deterministic,
+    and rude. Every other test in this suite injects fakes through `backfill`;
+    the main()-level tests need them patched at the module instead.
+    """
+    import scripts.resolve_work_qids as mod
+    monkeypatch.setattr(mod, "SparqlClient", lambda *a, **k: FakeSparql())
+    monkeypatch.setattr(mod, "JsonClient", lambda *a, **k: FakeJson([]))
+
+
 class TestApplyRefusesToMirrorSilently:
     def test_apply_without_a_root_is_an_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -110,23 +148,52 @@ class TestApplyRefusesToMirrorSilently:
         assert e.value.code != 0
 
     def test_no_mirror_makes_staging_only_explicit(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, offline
     ) -> None:
         """Staging-only stays available — it just has to be asked for."""
         monkeypatch.delenv("FAA_ART_WORKS_ROOT", raising=False)
-        _write(tmp_path, {"work_id": "1111111-x", "artist": {"name": "Unknown"},
-                          "title": "Obscure"})
-        assert main(["--apply", "--no-mirror", "--staging-dir", str(tmp_path)]) == 0
+        staging = tmp_path / "staging"
+        _write(staging, {"work_id": "1111111-x", "artist": {"name": "Unknown"},
+                         "title": "Obscure"})
+        assert main(["--apply", "--no-mirror", "--staging-dir", str(staging)]) == 0
+
+    def test_no_mirror_suppresses_writes_to_a_configured_root(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, offline
+    ) -> None:
+        """The flag must suppress mirroring, not merely silence the guard.
+
+        Bypassing only the missing-root error would leave `--no-mirror` writing
+        the very mirrors its help text promises to skip whenever
+        FAA_ART_WORKS_ROOT happens to be set — the same class of silent
+        mismatch between claim and behaviour this PR exists to remove.
+        """
+        staging = tmp_path / "staging"
+        works = tmp_path / "works"
+        _write(staging, _valid("1111111-x"))
+        mirror = works / "1111111-x" / "meta.json"
+        mirror.parent.mkdir(parents=True)
+        sentinel = _valid("1111111-x", title="UNTOUCHED")
+        mirror.write_text(json.dumps(sentinel), encoding="utf-8")
+        monkeypatch.setenv("FAA_ART_WORKS_ROOT", str(works))
+
+        assert main(["--apply", "--retire", "--no-mirror",
+                     "--staging-dir", str(staging)]) == 0
+
+        # The staging copy MUST have been retired, proving the run reached the
+        # write path; only then does an untouched mirror mean anything.
+        staged = json.loads((staging / "1111111-x" / "meta.json").read_text())
+        assert "work_qid" in (staged.get("field_provenance") or {})
+        assert json.loads(mirror.read_text()) == sentinel
 
     def test_dry_run_needs_no_root(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, offline
     ) -> None:
         """Nothing is written, so nothing can go stale."""
         monkeypatch.delenv("FAA_ART_WORKS_ROOT", raising=False)
         assert main(["--staging-dir", str(tmp_path)]) == 0
 
     def test_explicit_root_is_accepted(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, offline
     ) -> None:
         monkeypatch.delenv("FAA_ART_WORKS_ROOT", raising=False)
         staging = tmp_path / "staging"
