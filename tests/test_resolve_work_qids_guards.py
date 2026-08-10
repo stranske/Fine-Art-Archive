@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import jsonschema
 import pytest
 from scripts.resolve_work_qids import _eligible, _is_derived, backfill, main
 
@@ -90,8 +91,51 @@ class TestDerivedItemsAreSkipped:
         derived["stable_identifiers"] = {}
         assert sidecar.is_valid(derived) is False
 
+        derived["stable_identifiers"] = {"wikidata_q": "Q151047"}
+        assert sidecar.is_valid(derived) is False
+
         derived["stable_identifiers"] = {"wikidata_q": None}
         assert sidecar.is_valid(derived) is True
+
+    @pytest.mark.parametrize("explicit_null", [False, True], ids=["absent", "null"])
+    def test_non_derived_items_may_keep_a_work_qid(self, explicit_null: bool) -> None:
+        meta = _valid(
+            "8d8f6ab-x",
+            stable_identifiers={"wikidata_q": "Q151047"},
+        )
+        if explicit_null:
+            meta["derived_from"] = None
+        assert sidecar.is_valid(meta) is True
+
+    @pytest.mark.parametrize(
+        "stable_identifiers",
+        [None, {}, {"wikidata_q": "Q151047"}],
+        ids=["missing", "empty", "non-null-qid"],
+    )
+    def test_sidecar_write_rejects_invalid_derived_identity(
+        self, tmp_path: Path, stable_identifiers: dict[str, str] | None
+    ) -> None:
+        meta = _valid(
+            "8d8f6ab-x",
+            derived_from={"work_id": "c496d47-x", "kind": "capture"},
+        )
+        if stable_identifiers is not None:
+            meta["stable_identifiers"] = stable_identifiers
+
+        path = tmp_path / "invalid-derived.json"
+        with pytest.raises(jsonschema.ValidationError):
+            sidecar.write(path, meta)
+        assert path.exists() is False
+
+    def test_sidecar_write_accepts_valid_derived_identity(self, tmp_path: Path) -> None:
+        meta = _valid(
+            "8d8f6ab-x",
+            derived_from={"work_id": "c496d47-x", "kind": "capture"},
+            stable_identifiers={"wikidata_q": None},
+        )
+        path = tmp_path / "valid-derived.json"
+        sidecar.write(path, meta)
+        assert sidecar.load(path) == meta
 
     def test_is_derived_detects_detail_and_capture(self) -> None:
         assert _is_derived({"derived_from": {"work_id": "parent", "kind": "capture"}})

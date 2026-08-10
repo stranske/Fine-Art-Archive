@@ -77,7 +77,16 @@ class TestTheVocabularyCanExpressIt:
 
     def test_crop_position_exists_and_is_constrained(self) -> None:
         pos = VARIANT["properties"]["crop_position"]
-        assert set(pos["enum"]) >= {"left", "right", "centre", "center", None}
+        assert set(pos["enum"]) == {
+            "left",
+            "centre",
+            "center",
+            "right",
+            "top",
+            "middle",
+            "bottom",
+            None,
+        }
 
     def test_the_role_description_explains_complementarity(self) -> None:
         """A future reader must not have to guess why two crops are both kept."""
@@ -94,8 +103,11 @@ class TestItValidates:
     def test_a_crop_position_is_optional(self) -> None:
         assert sidecar.is_valid(_meta([_variant("partial-crop")])) is True
 
-    @pytest.mark.parametrize("position", ["centre", "center"])
-    def test_both_common_center_spellings_validate(self, position: str) -> None:
+    @pytest.mark.parametrize(
+        "position",
+        ["left", "centre", "center", "right", "top", "middle", "bottom"],
+    )
+    def test_every_supported_crop_position_validates(self, position: str) -> None:
         assert sidecar.is_valid(_meta([_variant("partial-crop", position)])) is True
 
     def test_an_invented_position_is_refused(self) -> None:
