@@ -29,6 +29,8 @@ from typing import Any
 import pytest
 from scripts.resolve_work_qids import _eligible, _is_derived, backfill, main
 
+from fine_art_archive import sidecar
+
 
 class FakeJson:
     def __init__(self, hits: list[str]) -> None:
@@ -78,6 +80,19 @@ def _valid(work_id: str, **extra: Any) -> dict[str, Any]:
 
 
 class TestDerivedItemsAreSkipped:
+    def test_derived_item_requires_an_explicit_null_work_qid(self) -> None:
+        derived = _valid(
+            "8d8f6ab-x",
+            derived_from={"work_id": "c496d47-x", "kind": "capture"},
+        )
+        assert sidecar.is_valid(derived) is False
+
+        derived["stable_identifiers"] = {}
+        assert sidecar.is_valid(derived) is False
+
+        derived["stable_identifiers"] = {"wikidata_q": None}
+        assert sidecar.is_valid(derived) is True
+
     def test_is_derived_detects_detail_and_capture(self) -> None:
         assert _is_derived({"derived_from": {"work_id": "parent", "kind": "capture"}})
         assert _is_derived({"derived_from": {"work_id": "parent", "kind": "detail"}})

@@ -1116,6 +1116,7 @@
                 "enum": [
                   "left",
                   "centre",
+                  "center",
                   "right",
                   "top",
                   "middle",
@@ -1503,8 +1504,15 @@
         }
       },
       "then": {
+        "required": [
+          "stable_identifiers"
+        ],
         "properties": {
           "stable_identifiers": {
+            "type": "object",
+            "required": [
+              "wikidata_q"
+            ],
             "properties": {
               "wikidata_q": {
                 "const": null
