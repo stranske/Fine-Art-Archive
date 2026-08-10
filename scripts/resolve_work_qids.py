@@ -400,7 +400,10 @@ def main(argv: list[str] | None = None) -> int:
         args.staging_dir,
         sparql=SparqlClient(),
         json_client=JsonClient(timeout=15.0),
-        art_works_root=args.art_works_root,
+        # --no-mirror means staging-only, so the root must be dropped here and
+        # not merely tolerated by the guard above: otherwise the flag silences
+        # the error while still writing the mirrors it claims to suppress.
+        art_works_root=None if args.no_mirror else args.art_works_root,
         operations_log=args.operations_log,
         limit=args.limit,
         apply=args.apply,
