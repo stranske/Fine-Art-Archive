@@ -39,6 +39,7 @@ jobs:
       issues: write
       contents: read
       models: read
+      actions: write
 
     steps:
       - name: Check trigger conditions
@@ -523,7 +524,7 @@ jobs:
               result = json.load(f)
           formatted = result.get('formatted_body', '')
           if not formatted:
-              print('ERROR: No formatted body returned')
+              print('ERROR: ' + (result.get('error') or 'No formatted body returned'))
               import sys
               sys.exit(1)
           with open('/tmp/formatted_body.md', 'w') as f:
@@ -597,3 +598,7 @@ jobs:
           # A guard retry may proceed only after the failed format run releases its lease.
           gh issue edit "$ISSUE_NUMBER" --remove-label "agents:format" \
             || echo "::warning::could not release failed agents:format lease"
+          # GITHUB_TOKEN label edits do not emit issues:unlabeled workflows; dispatch explicitly.
+          gh workflow run agents-issue-format-guard.yml --repo "$GITHUB_REPOSITORY" \
+            -f issue_number="$ISSUE_NUMBER" \
+            || echo "::warning::could not dispatch format guard retry after lease release"
