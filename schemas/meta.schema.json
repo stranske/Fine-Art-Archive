@@ -1243,6 +1243,54 @@
         }
       }
     },
+    "derived_from": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "This work is a rendition of another work rather than an independent piece: a display crop cut for a frame, a detail of a larger surface, or a photographic capture of one. Identity fields (artist, title, year, dimensions, work Q-ID) are inherited from the parent by fine_art_archive.identity.variants, and a parent and its renditions may legitimately share one work Q-ID.",
+      "required": [
+        "work_id",
+        "kind"
+      ],
+      "properties": {
+        "work_id": {
+          "type": "string",
+          "description": "work_id of the parent this rendition derives from."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "display-crop",
+            "detail",
+            "capture"
+          ],
+          "description": "display-crop: the whole work re-cut to a display aspect (16:9 / 9:16) for a frame. detail: a region of a larger surface, such as one scene of a fresco cycle. capture: a photograph of the work or its setting."
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Which part of the parent, when kind is 'detail'."
+        },
+        "detected_by": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "How the link was established, for auditability."
+        },
+        "image_correlation": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Crop-tolerant correlation with the parent master, when detected by image."
+        }
+      }
+    },
     "display_hints": {
       "type": "object",
       "description": "Per-device rendering metadata. Adding a new device key here triggers re-render.",

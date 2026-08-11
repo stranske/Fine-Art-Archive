@@ -70,6 +70,10 @@ from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
 from fine_art_archive.enrichment.work_qid_by_creator import resolve_work_qid, year_of  # noqa: E402
 from fine_art_archive.enrichment.work_qid_search import resolve_by_title_search  # noqa: E402
+from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
+    WorkQidClaims,
+    collision_note,
+)
 
 DEFAULT_LIMIT = 100_000
 SEARCH_PLAN_VERSION = 4  # bump when a strategy is added -> re-opens retired works
@@ -245,6 +249,24 @@ def _apply_retire(meta: dict[str, Any], tried: list[str]) -> str:
     return status
 
 
+def _apply_collision_retire(meta: dict[str, Any], qid: str, holder: str) -> str:
+    """Record a search hit refused because another work already holds that QID.
+
+    Not `_apply_retire`: the search did not come up empty, it came up with an
+    identifier that is already spoken for. See ``work_qid_uniqueness`` for why
+    refusing is the conservative move.
+    """
+    provenance.set(
+        meta,
+        "work_qid",
+        "unverified",
+        "wikidata",
+        source_ref=f"faa:work-qid-search/v{SEARCH_PLAN_VERSION}",
+        note=collision_note(qid, holder, plan=f"search plan v{SEARCH_PLAN_VERSION}"),
+    )
+    return "unverified"
+
+
 def _write_existing_mirrors(
     meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
 ) -> list[Path]:
@@ -300,7 +322,13 @@ def backfill(
         raise ValueError("limit must be at least 1")
     stats = ResolveStats(0, 0, 0, 0, 0)
     outcomes: Counter[str] = Counter()
-    for path in _sidecar_paths(staging_dir):
+    paths = _sidecar_paths(staging_dir)
+    # A work QID denotes one work. Seeded from the archive so an incumbent
+    # blocks a new claimant, and updated as this run resolves so the run cannot
+    # collide with itself — the 2026-08-09 regression was two writes 15 minutes
+    # apart inside ONE pass.
+    claims = WorkQidClaims.from_sidecars(paths, load=sidecar.load)
+    for path in paths:
         meta = sidecar.load(path)
         if _is_derived(meta):
             outcomes["skipped:derived-item"] += 1
@@ -309,9 +337,33 @@ def backfill(
             continue
         stats.attempted += 1
         qid, method, tried = _search(meta, sparql=sparql, json_client=json_client)
+        collided_with = claims.collides(qid, str(meta.get("work_id")))
+        if collided_with is not None:
+            outcomes["declined:collision"] += 1
+            tried.append(f"collision:held-by-{collided_with}")
+            if apply:
+                _apply_collision_retire(meta, str(qid), collided_with)
+                sidecar.validate(meta)
+                sidecar.write(path, meta)
+                mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
+                stats.mirrored += len(mirror_paths)
+                stats.retired_blocked += 1
+                if operations_log is not None:
+                    _append_operation(
+                        operations_log,
+                        meta,
+                        "work_qid_collision_declined",
+                        {"qid": qid, "held_by": collided_with, "method": method},
+                        path,
+                        mirror_paths,
+                    )
+            if stats.attempted >= limit:
+                break
+            continue
         if qid is not None:
             outcomes[f"resolved:{method}"] += 1
             stats.matches.append({"work_id": meta["work_id"], "qid": qid, "method": method})
+            claims.claim(qid, str(meta.get("work_id") or path.parent.name))
             if apply:
                 _apply_found(meta, qid, method)
         elif retire:
