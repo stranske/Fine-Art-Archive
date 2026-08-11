@@ -81,13 +81,13 @@ def test_manifest_work_without_sidecar_returns_handled_placeholder(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     manifest_csv = tmp_path / "manifest.csv"
-    staging = tmp_path / "staging_sidecars"
+    works = tmp_path / "works"
     manifest_csv.write_text(
         "work_id,title,artist_name,artist_wikidata_q,year,medium\n"
         "manifest-only,Manifest Work,Known Artist,Q123,1888,oil\n"
     )
     monkeypatch.setattr(api_store, "MANIFEST_CSV", manifest_csv)
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     api_store.invalidate_manifest_cache()
 
     response = client.get("/works/manifest-only")
@@ -602,22 +602,22 @@ def test_dossiers_lists_only_populated(
 ) -> None:
     import json as _json
 
-    staging = tmp_path / "staging_sidecars"
+    works = tmp_path / "works"
     # one work WITH a dossier, one without, one with an empty dossier
-    (staging / "w-has").mkdir(parents=True)
-    (staging / "w-has" / "meta.json").write_text(
+    (works / "w-has").mkdir(parents=True)
+    (works / "w-has" / "meta.json").write_text(
         _json.dumps({"work_id": "w-has", "dossier": {"viewer_summary": "hi"}}),
         encoding="utf-8",
     )
-    (staging / "w-none").mkdir(parents=True)
-    (staging / "w-none" / "meta.json").write_text(
+    (works / "w-none").mkdir(parents=True)
+    (works / "w-none" / "meta.json").write_text(
         _json.dumps({"work_id": "w-none"}), encoding="utf-8"
     )
-    (staging / "w-empty").mkdir(parents=True)
-    (staging / "w-empty" / "meta.json").write_text(
+    (works / "w-empty").mkdir(parents=True)
+    (works / "w-empty" / "meta.json").write_text(
         _json.dumps({"work_id": "w-empty", "dossier": None}), encoding="utf-8"
     )
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     api_store._dossier_cache["sig"] = None  # bust the mtime cache for the test
 
     r = client.get("/dossiers")
@@ -722,11 +722,11 @@ def test_dossiers_cache_invalidates_on_sidecar_edit(
     """
     import json as _json
 
-    staging = tmp_path / "staging_sidecars"
-    (staging / "w1").mkdir(parents=True)
-    sidecar = staging / "w1" / "meta.json"
+    works = tmp_path / "works"
+    (works / "w1").mkdir(parents=True)
+    sidecar = works / "w1" / "meta.json"
     sidecar.write_text(_json.dumps({"work_id": "w1"}), encoding="utf-8")
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     api_store._dossier_cache["sig"] = None
 
     assert client.get("/dossiers").json()["work_ids"] == []
@@ -751,21 +751,21 @@ def test_dossiers_cache_invalidates_on_work_directory_rename(
     import os
     import time
 
-    staging = tmp_path / "staging_sidecars"
-    (staging / "old-id").mkdir(parents=True)
-    (staging / "old-id" / "meta.json").write_text(
+    works = tmp_path / "works"
+    (works / "old-id").mkdir(parents=True)
+    (works / "old-id" / "meta.json").write_text(
         _json.dumps({"work_id": "old-id", "dossier": {"viewer_summary": "hi"}}),
         encoding="utf-8",
     )
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     api_store._dossier_cache["sig"] = None
 
     assert client.get("/dossiers").json()["work_ids"] == ["old-id"]
 
     # Ensure STAGING mtime moves even on fast filesystems.
     time.sleep(0.01)
-    os.rename(staging / "old-id", staging / "new-id")
-    os.utime(staging, None)
+    os.rename(works / "old-id", works / "new-id")
+    os.utime(works, None)
 
     assert client.get("/dossiers").json()["work_ids"] == ["new-id"]
 

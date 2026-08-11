@@ -21,16 +21,16 @@ def client() -> TestClient:
 
 @pytest.fixture
 def isolated_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    staging = tmp_path / "staging_sidecars"
+    works = tmp_path / "works"
     art_root = tmp_path / "works"
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", art_root)
     monkeypatch.setattr(api_main, "SUBJECT_TAG_EVENTS", tmp_path / "subject_tag_events.jsonl")
     return tmp_path
 
 
 def write_sidecar(root: Path, work_id: str, payload: dict | None = None) -> Path:
-    sidecar = root / "staging_sidecars" / work_id / "meta.json"
+    sidecar = root / "works" / work_id / "meta.json"
     sidecar.parent.mkdir(parents=True, exist_ok=True)
     sidecar.write_text(json.dumps(payload or {"work_id": work_id, "subject": {}}))
     return sidecar
