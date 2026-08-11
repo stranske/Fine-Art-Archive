@@ -789,15 +789,13 @@ def parse_dimensions(value: Any) -> dict[str, float | str | None] | None:
     if text is None:
         return None
     lowered = html.unescape(re.sub(r"<[^>]+>", " ", text)).lower()
-    unit_factor = _unit_factor(lowered)
-
     # A museum record lists the object first and its mount, frame or shadow box
     # on later lines. Take the first line that yields a measurement, so
     # "Shadow box ... H. 63 in." cannot outrank the work's own
     # "Image: ... (74.9 x 83.8 cm)" on the line above it.
     segments = [seg for seg in (s.strip() for s in lowered.splitlines()) if seg]
     for segment in segments or [lowered]:
-        h, w = _parse_dimension_segment(segment, unit_factor)
+        h, w = _parse_dimension_segment(segment, _unit_factor(segment))
         if h is not None or w is not None:
             return {
                 "h_cm": _round_optional_dimension(h),
@@ -811,6 +809,13 @@ def parse_dimensions(value: Any) -> dict[str, float | str | None] | None:
 # bare-decimal form ".98", which turns the run-on full stop in
 # "Oil on canvas.98 x 127 cm" into a decimal point and yields 0.98 cm.
 DIMENSION_NUMBER_RE = r"\d+(?:[.,]\d+)?"
+MIXED_FRACTION_RE = r"\d+\s+\d+/\d+"
+
+
+def _mixed_fraction(value: str) -> float:
+    whole, fraction = value.split()
+    numerator, denominator = fraction.split("/", maxsplit=1)
+    return float(whole) + float(numerator) / float(denominator)
 
 
 def _parse_dimension_segment(
@@ -849,14 +854,25 @@ def _parse_dimension_segment(
         rf"(?:[x×])\s*({DIMENSION_NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
         segment,
     )
-    if pair is None:
+    if pair is not None:
+        factor = _unit_factor(pair.group(3) or segment)
+        h = _number(pair.group(1))
+        w = _number(pair.group(2))
+        return (
+            h * factor if h is not None else None,
+            w * factor if w is not None else None,
+        )
+    mixed_imperial_pair = re.search(
+        rf"(?<![\d/])({MIXED_FRACTION_RE})\s*(?:[x×])\s*({MIXED_FRACTION_RE})\s*"
+        r"(in(?:ches?)?|″|\")",
+        segment,
+    )
+    if mixed_imperial_pair is None:
         return None, None
-    factor = _unit_factor(pair.group(3) or segment)
-    h = _number(pair.group(1))
-    w = _number(pair.group(2))
+    factor = _unit_factor(mixed_imperial_pair.group(3))
     return (
-        h * factor if h is not None else None,
-        w * factor if w is not None else None,
+        _mixed_fraction(mixed_imperial_pair.group(1)) * factor,
+        _mixed_fraction(mixed_imperial_pair.group(2)) * factor,
     )
 
 

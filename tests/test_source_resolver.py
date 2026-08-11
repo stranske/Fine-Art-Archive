@@ -482,6 +482,16 @@ def test_dimension_parser_converts_to_centimetres(raw: str, expected: dict[str, 
             "Overall: 56 1/8 x 24 3/4in. (142.6 x 62.9 cm)",
             {"h_cm": 60.4, "w_cm": 44.5},
         ),
+        # Unitless labeled values belong to their own line, not to a later
+        # framed-imperial line in the same museum record.
+        (
+            "Image: H. 34.9 x W. 23.8\n"
+            "Frame: H. 63 in. x W. 45 in.",
+            {"h_cm": 34.9, "w_cm": 23.8},
+        ),
+        # When a record has no parenthesized metric pair, preserve mixed
+        # imperial fractions instead of falling through to no dimensions.
+        ("13 3/4 x 9 3/8 in.", {"h_cm": 34.925, "w_cm": 23.8125}),
         # Depth must not displace height: "A x B x C" is (A, B), never (B, C).
         ("92.7 x 74.3 x 2.5cm", {"h_cm": 92.7, "w_cm": 74.3}),
         ("68 × 54 × 2 cm", {"h_cm": 68.0, "w_cm": 54.0}),

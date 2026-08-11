@@ -106,6 +106,44 @@ def test_by_creator_backfill_declines_a_qid_another_work_holds(tmp_path: Path) -
     assert _qids(tmp_path) == ["Q24046967"]
 
 
+def test_by_creator_collision_mirrors_and_logs_the_decline(tmp_path: Path) -> None:
+    """A declined collision must preserve the same audit/mirror contract as a match."""
+    from scripts.backfill_work_qids_by_creator import backfill as creator_backfill
+
+    from tests.test_work_qid_by_creator import FakeSparql, _binding, _uncat_sidecar
+    from tests.test_work_qid_by_creator import _write as _write_uncat
+
+    staging_dir = tmp_path / "staging"
+    work_ids = ("0fc5922-field-with-poppies", "3de5029-field-with-poppies")
+    for work_id in work_ids:
+        _write_uncat(staging_dir, _uncat_sidecar(work_id, "Field with Poppies"))
+    mirror_path = tmp_path / "art" / "works" / work_ids[1] / "meta.json"
+    mirror_path.parent.mkdir(parents=True)
+    mirror_path.write_text(
+        (staging_dir / work_ids[1] / "meta.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    log_path = tmp_path / "operations.log"
+    client = FakeSparql([_binding("Q24046967", "Field with Poppies", inception="1890")])
+
+    stats, reasons = creator_backfill(
+        staging_dir,
+        client=client,
+        art_works_root=tmp_path / "art",
+        operations_log=log_path,
+        apply=True,
+    )
+
+    assert reasons["declined:collision"] == 1
+    assert stats.mirrored == 1
+    declined = json.loads((staging_dir / work_ids[1] / "meta.json").read_text(encoding="utf-8"))
+    assert json.loads(mirror_path.read_text(encoding="utf-8")) == declined
+    entries = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    collision = next(entry for entry in entries if entry["op"] == "work_qid_by_creator_collision")
+    assert collision["work_id"] == work_ids[1]
+    assert collision["proposed_work_qid"] == "Q24046967"
+
+
 def test_collision_against_a_qid_already_in_the_archive_is_declined(tmp_path: Path) -> None:
     """A pre-existing holder outside this run's resolutions also blocks the write."""
     _write(

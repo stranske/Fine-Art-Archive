@@ -352,7 +352,6 @@ def backfill(
             mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
             stats.resolved += 1
             stats.mirrored += len(mirror_paths)
-            holders.setdefault(match.work_qid, []).append(str(meta["work_id"]))
             if operations_log is not None:
                 _append_operation(operations_log, meta, match, path, mirror_paths)
         if stats.attempted >= limit:
