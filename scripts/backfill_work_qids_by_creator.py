@@ -311,7 +311,15 @@ def backfill(
                     source_ref="faa:work-qid-by-creator",
                     note=collision_note(match.work_qid, collided_with, plan="by-creator backfill"),
                 )
-                sidecar.validate(meta)
+                try:
+                    sidecar.validate(meta)
+                except _ValidationError:
+                    # A collision must be reported, but an unrelated invalid
+                    # sidecar must not turn that report into a failed batch.
+                    reasons["skipped-invalid-sidecar"] += 1
+                    if stats.attempted >= limit:
+                        break
+                    continue
                 sidecar.write(path, meta)
                 mirror_paths = _write_existing_mirrors(meta, art_works_root, exclude=path)
                 stats.mirrored += len(mirror_paths)
@@ -323,7 +331,6 @@ def backfill(
                 break
             continue
         reasons["match"] += 1
-        claims.claim(match.work_qid, str(meta.get("work_id") or path.parent.name))
         stats.matches.append(
             {
                 "work_id": meta["work_id"],
@@ -354,6 +361,10 @@ def backfill(
             stats.mirrored += len(mirror_paths)
             if operations_log is not None:
                 _append_operation(operations_log, meta, match, path, mirror_paths)
+        # Only a simulated dry-run or a successfully validated assignment may
+        # reserve the Q-ID for later sidecars in this pass.  A rejected write
+        # must not block a valid candidate that follows it.
+        claims.claim(match.work_qid, str(meta.get("work_id") or path.parent.name))
         if stats.attempted >= limit:
             break
     return stats, reasons

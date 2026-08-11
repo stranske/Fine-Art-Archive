@@ -80,7 +80,7 @@ def test_refuses_a_qid_another_sidecar_already_holds(tmp_path, monkeypatch):
     stats, reasons = _run(tmp_path, monkeypatch, apply=True)
 
     assert stats.resolved == 0, "must not write a Q-ID that is already taken"
-    assert reasons["already-held-by-another-work"] == 1
+    assert reasons["declined:collision"] == 1
     assert reasons["match"] == 0
     assert stats.collisions[0]["work_qid"] == "Q17277950"
     assert stats.collisions[0]["held_by"] == ["aaaaaaa-card-players"]
@@ -110,7 +110,7 @@ def test_two_eligible_works_cannot_both_take_the_same_qid(tmp_path, monkeypatch)
     stats, reasons = _run(tmp_path, monkeypatch, apply=True)
 
     assert stats.resolved == 1, "exactly one work may take the Q-ID"
-    assert reasons["already-held-by-another-work"] == 1
+    assert reasons["declined:collision"] == 1
 
 
 def test_a_free_qid_is_still_written(tmp_path, monkeypatch):
