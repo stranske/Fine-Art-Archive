@@ -791,37 +791,73 @@ def parse_dimensions(value: Any) -> dict[str, float | str | None] | None:
     lowered = html.unescape(re.sub(r"<[^>]+>", " ", text)).lower()
     unit_factor = _unit_factor(lowered)
 
+    # A museum record lists the object first and its mount, frame or shadow box
+    # on later lines. Take the first line that yields a measurement, so
+    # "Shadow box ... H. 63 in." cannot outrank the work's own
+    # "Image: ... (74.9 x 83.8 cm)" on the line above it.
+    segments = [seg for seg in (s.strip() for s in lowered.splitlines()) if seg]
+    for segment in segments or [lowered]:
+        h, w = _parse_dimension_segment(segment, unit_factor)
+        if h is not None or w is not None:
+            return {
+                "h_cm": _round_optional_dimension(h),
+                "w_cm": _round_optional_dimension(w),
+                "raw": text,
+            }
+    return None
+
+
+# A dimension is always written with a leading digit. NUMBER_RE also accepts the
+# bare-decimal form ".98", which turns the run-on full stop in
+# "Oil on canvas.98 x 127 cm" into a decimal point and yields 0.98 cm.
+DIMENSION_NUMBER_RE = r"\d+(?:[.,]\d+)?"
+
+
+def _parse_dimension_segment(
+    segment: str, unit_factor: float
+) -> tuple[float | None, float | None]:
+    """Pull an (h, w) pair out of one line of a dimension string."""
+    # ``\b`` keeps the bare-letter forms from matching inside a word ("sketch 45"
+    # would otherwise read as h=45); the optional period admits the common
+    # museum spelling "H. 35 x W. 17.2 cm".
     height_match = re.search(
-        rf"(?:height|h)\s*[:=]?\s*({NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
-        lowered,
+        rf"\b(?:height|h)\b\.?\s*[:=]?\s*({NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
+        segment,
     )
     width_match = re.search(
-        rf"(?:width|w)\s*[:=]?\s*({NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
-        lowered,
+        rf"\b(?:width|w)\b\.?\s*[:=]?\s*({NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
+        segment,
     )
     if height_match or width_match:
-        h = _measurement_match(height_match, unit_factor)
-        w = _measurement_match(width_match, unit_factor)
-    else:
-        pair = re.search(
-            rf"({NUMBER_RE})\s*(?:mm|cm|m|in(?:ches?)?|″|\")?\s*"
-            rf"(?:[x×])\s*({NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
-            lowered,
+        return (
+            _measurement_match(height_match, unit_factor),
+            _measurement_match(width_match, unit_factor),
         )
-        if pair is None:
-            return None
-        factor = _unit_factor(pair.group(3) or lowered)
-        h = _number(pair.group(1))
-        w = _number(pair.group(2))
-        h = h * factor if h is not None else None
-        w = w * factor if w is not None else None
-    if h is None and w is None:
-        return None
-    return {
-        "h_cm": _round_optional_dimension(h),
-        "w_cm": _round_optional_dimension(w),
-        "raw": text,
-    }
+
+    # Museums frequently lead with imperial and put the metric value in
+    # parentheses: "13 3/4 x 9 3/8 in. (34.9 x 23.8 cm)". Scanning left to right
+    # lands inside the fraction -- "3/4 x 9" reads as 4 x 9 -- so an explicit
+    # parenthesised metric pair wins when one is present.
+    metric_pair = re.search(
+        rf"\(\s*({DIMENSION_NUMBER_RE})\s*(?:[x×])\s*({DIMENSION_NUMBER_RE})\s*(mm|cm|m)\s*\)",
+        segment,
+    )
+    # The lookbehind stops a fraction denominator ("3/4") or the tail of a longer
+    # number being read as a dimension in its own right.
+    pair = metric_pair or re.search(
+        rf"(?<![/\d])({DIMENSION_NUMBER_RE})\s*(?:mm|cm|m|in(?:ches?)?|″|\")?\s*"
+        rf"(?:[x×])\s*({DIMENSION_NUMBER_RE})\s*(mm|cm|m|in(?:ches?)?|″|\")?",
+        segment,
+    )
+    if pair is None:
+        return None, None
+    factor = _unit_factor(pair.group(3) or segment)
+    h = _number(pair.group(1))
+    w = _number(pair.group(2))
+    return (
+        h * factor if h is not None else None,
+        w * factor if w is not None else None,
+    )
 
 
 def _authoritative_resolution(existing: Any, candidate: Candidate) -> Resolution:

@@ -461,6 +461,53 @@ def test_dimension_parser_converts_to_centimetres(raw: str, expected: dict[str, 
     assert {key: parsed[key] for key in ("h_cm", "w_cm")} == expected
 
 
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        # Imperial first, metric in parentheses: reading left to right lands
+        # inside the fraction and yields 4 x 9 cm for a 34.9 x 23.8 cm sheet.
+        ("13 3/4 x 9 3/8 in. (34.9 x 23.8 cm)", {"h_cm": 34.9, "w_cm": 23.8}),
+        ("41 3/8  x 33 1/4 in. (105.1 x 84.5 cm)", {"h_cm": 105.1, "w_cm": 84.5}),
+        # "H."/"W." with a trailing period must be recognised as named axes.
+        ("H. 35 x W. 17.2 cm (13 3/4 x 6 3/4 in.)", {"h_cm": 35.0, "w_cm": 17.2}),
+        # The object comes first; a mount or shadow box on a later line must not
+        # outrank it.
+        (
+            "Image: 29 1/2 x 33 in. (74.9 x 83.8 cm)\r\n"
+            "Shadow box, shared with 1977.340: H. 63 in. (160 cm); W. 45 in. (114.3 cm)",
+            {"h_cm": 74.9, "w_cm": 83.8},
+        ),
+        (
+            "Image: 23 3/4 x 17 1/2 in. (60.4 x 44.5 cm)\r\n"
+            "Overall: 56 1/8 x 24 3/4in. (142.6 x 62.9 cm)",
+            {"h_cm": 60.4, "w_cm": 44.5},
+        ),
+        # Depth must not displace height: "A x B x C" is (A, B), never (B, C).
+        ("92.7 x 74.3 x 2.5cm", {"h_cm": 92.7, "w_cm": 74.3}),
+        ("68 × 54 × 2 cm", {"h_cm": 68.0, "w_cm": 54.0}),
+        # A full stop running into the number must not become a decimal point.
+        ("Oil on canvas.98 x 127 cm", {"h_cm": 98.0, "w_cm": 127.0}),
+        # Metric-first strings already parsed correctly and must not regress.
+        ("60.3 × 80.2 cm (23 3/4 × 31 1/2 in.)", {"h_cm": 60.3, "w_cm": 80.2}),
+        ("79.4×89.5 cm", {"h_cm": 79.4, "w_cm": 89.5}),
+    ],
+)
+def test_dimension_parser_handles_museum_strings(raw: str, expected: dict[str, float]) -> None:
+    parsed = parse_dimensions(raw)
+
+    assert parsed is not None
+    assert {key: parsed[key] for key in ("h_cm", "w_cm")} == expected
+
+
+def test_dimension_parser_does_not_read_a_word_as_a_named_axis() -> None:
+    """A bare ``h``/``w`` inside a word is not a height or width marker."""
+    assert parse_dimensions("sketch 45 x 30 cm") == {
+        "h_cm": 45.0,
+        "w_cm": 30.0,
+        "raw": "sketch 45 x 30 cm",
+    }
+
+
 def test_artist_resolves_from_museum_record_and_getty_ulan(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
