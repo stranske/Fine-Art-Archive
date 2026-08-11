@@ -48,12 +48,22 @@ class WorkQidClaims:
     scan limited to the work queue would see no collision at all.
     """
 
-    def __init__(self, holders: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        holders: dict[str, str] | None = None,
+        *,
+        same_object: Callable[[str, str], bool] | None = None,
+    ) -> None:
         self._holders: dict[str, str] = dict(holders or {})
+        self._same_object = same_object
 
     @classmethod
     def from_sidecars(
-        cls, paths: list[Path], *, load: Callable[[Path], dict[str, Any]]
+        cls,
+        paths: list[Path],
+        *,
+        load: Callable[[Path], dict[str, Any]],
+        same_object: Callable[[str, str], bool] | None = None,
     ) -> WorkQidClaims:
         holders: dict[str, str] = {}
         for path in paths:
@@ -66,16 +76,33 @@ class WorkQidClaims:
             qid = work_qid_of(meta)
             if qid:
                 holders.setdefault(qid, str(meta.get("work_id") or path.parent.name))
-        return cls(holders)
+        return cls(holders, same_object=same_object)
 
     def holder(self, qid: str | None) -> str | None:
         """The work_id already holding ``qid``, or None if unclaimed."""
         return self._holders.get(qid) if qid else None
 
     def collides(self, qid: str | None, work_id: str) -> str | None:
-        """The *other* work holding ``qid``, or None when the write is safe."""
+        """The *other* work holding ``qid``, or None when the write is safe.
+
+        Two work_ids sharing a QID is not automatically wrong. The archive keeps
+        a master and its 16:9 / 9:16 display crops as separate works, and those
+        renditions genuinely *are* the same Wikidata work -- 69 of the 79
+        contested QIDs in this archive are that case, not a real clash. When a
+        ``same_object`` predicate is supplied (see
+        :func:`fine_art_archive.identity.variants.same_object`) a shared QID
+        between renditions of one work is allowed through.
+
+        Without that predicate the behaviour is unchanged: any other holder is a
+        collision. The guard is only ever relaxed by evidence of derivation, so
+        two unrelated works still cannot take the same identifier.
+        """
         holder = self.holder(qid)
-        return holder if holder is not None and holder != work_id else None
+        if holder is None or holder == work_id:
+            return None
+        if self._same_object is not None and self._same_object(holder, work_id):
+            return None
+        return holder
 
     def claim(self, qid: str, work_id: str) -> None:
         self._holders[qid] = work_id
