@@ -182,7 +182,7 @@ def healthz() -> dict:
     corrupt_line_count = store.ratings_corrupt_line_count()
     queues_invalid_count = _queue_invalid_count()
     manifest_loaded = len(store.load_manifest())
-    sidecar_works = _count_work_dirs(store.STAGING)
+    sidecar_works = _count_work_dirs(store.WORKS)
     archive_works = _count_work_dirs(ART_WORKS_ROOT)
 
     # The manifest is the operator UI's ONLY navigation path, and nothing
@@ -314,7 +314,7 @@ def _all_sidecars() -> list[tuple[str, dict]]:
     if _sidecars_cache is not None and _sidecars_cache[0] == signature:
         return _sidecars_cache[1]
     out: list[tuple[str, dict]] = []
-    root = store.STAGING
+    root = store.WORKS
     if not root.is_dir():
         _sidecars_cache = (signature, out)
         return out

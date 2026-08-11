@@ -25,16 +25,13 @@ from fine_art_archive.api.main import app
 
 @pytest.fixture
 def archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """A staging tree and manifest whose row count the test controls."""
-    staging = tmp_path / "staging_sidecars"
+    """A works tree and manifest whose row count the test controls."""
     works = tmp_path / "works"
-    staging.mkdir()
     works.mkdir()
     manifest = tmp_path / "manifest.csv"
 
     def build(sidecars: int, manifest_rows: int) -> None:
         for i in range(sidecars):
-            (staging / f"wid-{i:03d}").mkdir(exist_ok=True)
             (works / f"wid-{i:03d}").mkdir(exist_ok=True)
         with open(manifest, "w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=["work_id", "title"])
@@ -42,7 +39,7 @@ def archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             for i in range(manifest_rows):
                 writer.writerow({"work_id": f"wid-{i:03d}", "title": f"Work {i}"})
 
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    monkeypatch.setattr(api_store, "WORKS", works)
     monkeypatch.setattr(api_store, "MANIFEST_CSV", manifest)
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
     yield build
@@ -84,10 +81,10 @@ def test_absent_manifest_is_not_configured_not_drifted(
     Failing health there would be a false alarm on every dev machine, so an
     empty manifest must not be read as drift.
     """
-    staging = tmp_path / "staging_sidecars"
-    staging.mkdir()
-    (staging / "test-wid").mkdir()
-    monkeypatch.setattr(api_store, "STAGING", staging)
+    works = tmp_path / "works"
+    works.mkdir()
+    (works / "test-wid").mkdir()
+    monkeypatch.setattr(api_store, "WORKS", works)
     monkeypatch.setattr(api_store, "MANIFEST_CSV", tmp_path / "absent.csv")
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", tmp_path / "works")
 
@@ -99,12 +96,12 @@ def test_absent_manifest_is_not_configured_not_drifted(
 def test_unreadable_tree_is_unknown_not_empty(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, client: TestClient
 ) -> None:
-    """A missing staging tree is 'we do not know', never 'the archive is empty'.
+    """A missing works tree is 'we do not know', never 'the archive is empty'.
 
     Reporting 0 there would make drift arithmetic read healthy in exactly the
     case health should fire.
     """
-    monkeypatch.setattr(api_store, "STAGING", tmp_path / "does-not-exist")
+    monkeypatch.setattr(api_store, "WORKS", tmp_path / "does-not-exist")
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", tmp_path / "also-absent")
     monkeypatch.setattr(api_store, "MANIFEST_CSV", tmp_path / "absent.csv")
 

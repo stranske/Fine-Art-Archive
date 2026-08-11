@@ -1,4 +1,4 @@
-"""Store backed by staging_sidecars/, manifest.csv, and the ratings event log.
+"""Store backed by the canonical works tree, manifest.csv, and the ratings event log.
 
 This module owns API filesystem access, including manifest/sidecar reads and
 ratings-log appends. The rest of the API consumes it.
@@ -17,9 +17,30 @@ from typing import Any
 
 from fine_art_archive.identity import build_alias_table, resolve_artist
 
-from .config import REPO_ROOT, env_path
+from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 
-STAGING = env_path("FAA_STAGING_DIR", REPO_ROOT / "staging_sidecars")
+
+def _works_dir() -> Path:
+    """Resolve the ONE sidecar tree: `<works>/<wid>/meta.json`.
+
+    The archive used to keep sidecars in two trees — `staging_sidecars/` and
+    `Art/works/` — with the second declared canonical and the first the one
+    this store actually read. They drifted, and because every audit check read
+    staging too, all of them reported clean while the canonical tree held real
+    defects. The workspace collapsed them onto `Art/works` (its DECISIONS.md
+    D020, 2026-08-10) and quarantined the other.
+
+    `FAA_STAGING_DIR` is the retired name. It is still honoured so a deployment
+    that sets it keeps starting — but it now names a tree that no longer exists,
+    so anything still setting it is pointed at an empty directory and should
+    move to `FAA_WORKS_DIR`.
+    """
+    if os.environ.get("FAA_WORKS_DIR"):
+        return env_path("FAA_WORKS_DIR", DEFAULT_ART_WORKS_ROOT)
+    return env_path("FAA_STAGING_DIR", DEFAULT_ART_WORKS_ROOT)
+
+
+WORKS = _works_dir()
 MANIFEST_CSV = env_path("FAA_MANIFEST_CSV", REPO_ROOT / "manifest.csv")
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 _WORK_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -48,7 +69,7 @@ def contained_work_path(root: Path, work_id: str, *parts: str) -> Path:
 
 
 def sidecar_path(work_id: str) -> Path:
-    return contained_work_path(STAGING, work_id, "meta.json")
+    return contained_work_path(WORKS, work_id, "meta.json")
 
 
 # --------------------------------------------------------------------------
@@ -182,12 +203,12 @@ _dossier_cache: dict[str, object] = {"sig": None, "ids": frozenset()}
 def _dossier_signature() -> tuple[int, int, int, int] | None:
     """Cheap change-detector for the staging tree.
 
-    Aggregates the mtime and size of each *meta.json*, plus STAGING's own
+    Aggregates the mtime and size of each *meta.json*, plus WORKS's own
     mtime. Per-work directory mtimes alone are not enough: rewriting an
-    existing staging_sidecars/<wid>/meta.json in place changes neither
-    STAGING's mtime nor the work directory's — only the file's own mtime
+    existing <works>/<wid>/meta.json in place changes neither
+    WORKS's mtime nor the work directory's — only the file's own mtime
     moves, and that is the common case (dossier/subject passes rewrite
-    existing sidecars). STAGING's mtime is still required so directory
+    existing sidecars). WORKS's mtime is still required so directory
     rename/move/add/remove operations invalidate the cache even when the
     individual meta.json mtime+size aggregates would otherwise match.
 
@@ -195,9 +216,9 @@ def _dossier_signature() -> tuple[int, int, int, int] | None:
     re-read them all, so it is cheap enough to run per request.
     """
     try:
-        staging_mtime = STAGING.stat().st_mtime_ns
+        staging_mtime = WORKS.stat().st_mtime_ns
         mtimes = sizes = count = 0
-        for entry in os.scandir(STAGING):
+        for entry in os.scandir(WORKS):
             try:
                 st = os.stat(os.path.join(entry.path, "meta.json"))
             except OSError:
@@ -224,7 +245,7 @@ def work_ids_with_dossier() -> frozenset[str]:
     if _dossier_cache["sig"] == sig:
         return _dossier_cache["ids"]  # type: ignore[return-value]
     ids: set[str] = set()
-    for meta in STAGING.glob("*/meta.json"):
+    for meta in WORKS.glob("*/meta.json"):
         try:
             text = meta.read_text(encoding="utf-8")
         except OSError:
@@ -291,7 +312,7 @@ def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
         return list(_acq_cache["rows"])
 
     rows: list[dict] = []
-    for meta_path in STAGING.glob("*/meta.json"):
+    for meta_path in WORKS.glob("*/meta.json"):
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):

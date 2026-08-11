@@ -52,8 +52,8 @@ def _sidecar(work_id: str, *, title: str, artist: str, history: list[dict]) -> d
 
 @pytest.fixture
 def staged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    staging = tmp_path / "staging_sidecars"
-    staging.mkdir()
+    works_dir = tmp_path / "works"
+    works_dir.mkdir()
 
     works = {
         # Hand-driven era: before the epoch, must never appear.
@@ -81,7 +81,7 @@ def staged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
         ],
     }
     for wid, history in works.items():
-        d = staging / wid
+        d = works_dir / wid
         d.mkdir()
         (d / "meta.json").write_text(
             json.dumps(
@@ -90,7 +90,7 @@ def staged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
             encoding="utf-8",
         )
 
-    monkeypatch.setattr(store, "STAGING", staging)
+    monkeypatch.setattr(store, "WORKS", works_dir)
     monkeypatch.setattr(store, "AUTOMATION_EPOCH", EPOCH)
     monkeypatch.setattr(main, "ACQUISITION_REVIEW_EVENTS", tmp_path / "events.jsonl")
     store.invalidate_acquisitions_cache()

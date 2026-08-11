@@ -225,11 +225,11 @@ def test_extract_signals_real_source_with_signals():
 
 
 def test_aggregate_sidecars_separates_real_vs_legacy(tmp_path: Path) -> None:
-    staging = tmp_path / "staging_sidecars"
-    staging.mkdir()
+    works = tmp_path / "works"
+    works.mkdir()
     # legacy bucket sidecar
-    (staging / "abc1234-foo").mkdir()
-    (staging / "abc1234-foo" / "meta.json").write_text(
+    (works / "abc1234-foo").mkdir()
+    (works / "abc1234-foo" / "meta.json").write_text(
         json.dumps(
             {
                 "work_id": "abc1234-foo",
@@ -240,8 +240,8 @@ def test_aggregate_sidecars_separates_real_vs_legacy(tmp_path: Path) -> None:
         )
     )
     # real source sidecar
-    (staging / "real-1").mkdir()
-    (staging / "real-1" / "meta.json").write_text(
+    (works / "real-1").mkdir()
+    (works / "real-1" / "meta.json").write_text(
         json.dumps(
             {
                 "work_id": "real-1",
@@ -264,7 +264,7 @@ def test_aggregate_sidecars_separates_real_vs_legacy(tmp_path: Path) -> None:
     )
     # Use a host_registry path that doesn't exist — should not crash
     aggs = aggregate_sidecars(
-        staging, host_registry_path=tmp_path / "nope.yaml", seed_priors_from_registry=False
+        works, host_registry_path=tmp_path / "nope.yaml", seed_priors_from_registry=False
     )
     assert "met" in aggs["sources"]
     assert "legacy-landscape" in aggs["archive_composition"]
