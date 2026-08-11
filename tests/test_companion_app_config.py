@@ -105,7 +105,7 @@ class TestOneSidecarTree:
         monkeypatch.delenv("FAA_STAGING_DIR", raising=False)
         try:
             _, api_store = _reload_api_modules()
-            assert api_store.WORKS == DEFAULT_ART_WORKS_ROOT, (
+            assert DEFAULT_ART_WORKS_ROOT == api_store.WORKS, (
                 "the store must default to the canonical archive; a default of "
                 "staging_sidecars/ is the retired tree and no longer exists"
             )
@@ -116,11 +116,12 @@ class TestOneSidecarTree:
 
     def test_works_dir_env_wins_over_the_retired_name(self, tmp_path, monkeypatch) -> None:
         """`FAA_STAGING_DIR` is honoured only as a fallback, never over the new name."""
-        monkeypatch.setenv("FAA_WORKS_DIR", str(tmp_path / "chosen"))
+        chosen = tmp_path / "chosen"
+        monkeypatch.setenv("FAA_WORKS_DIR", str(chosen))
         monkeypatch.setenv("FAA_STAGING_DIR", str(tmp_path / "retired"))
         try:
             _, api_store = _reload_api_modules()
-            assert api_store.WORKS == tmp_path / "chosen"
+            assert chosen == api_store.WORKS
         finally:
             monkeypatch.undo()
             _reload_api_modules()
