@@ -28,7 +28,14 @@ from typing import Any
 
 import jsonschema
 import pytest
-from scripts.resolve_work_qids import _eligible, _is_derived, backfill, main
+from scripts.resolve_work_qids import (
+    SEARCH_PLAN_VERSION,
+    _adjudicated,
+    _eligible,
+    _is_derived,
+    backfill,
+    main,
+)
 
 from fine_art_archive import sidecar
 from tests.test_work_qid_search import FakeJson as SearchJson
@@ -352,3 +359,55 @@ class TestVariantHoldingsAreSkipped:
 
         assert stats.resolved == 1
         assert not [key for key in outcomes if key.startswith("skipped:variant")]
+
+
+class TestAPlanBumpDoesNotOverturnDecisions:
+    """4. A DECISION IS NOT RE-LITIGATED BY A SEARCH.
+
+    `_retired_plan_version` reads a retirement whose `source_ref` carries no
+    plan version as version 0, so raising SEARCH_PLAN_VERSION re-opens it. That
+    is right for a work the search gave up on and wrong for a work some pass
+    DECIDED about. The archive holds 101 of the latter — 72 `faa:identity-anchor`
+    and 29 `duplicate-adjudication`, the second group cleared on evidence that
+    item dimensions and the P18 image put the work on another sidecar. Searching
+    them again proposes the same Q-ID straight back, so without this guard the
+    v5 bump would silently overturn every one of them.
+    """
+
+    def _retired(self, source: str, source_ref: str) -> dict[str, Any]:
+        meta = _valid("aaaaaaa-x", artist={"name": "Cezanne", "wikidata_q": "Q35548"})
+        meta["field_provenance"] = {
+            "work_qid": {
+                "status": "not_available",
+                "source": source,
+                "source_ref": source_ref,
+                "recorded_at": "2026-08-01T00:00:00+00:00",
+            }
+        }
+        return meta
+
+    def test_a_decision_without_a_plan_version_is_not_re_opened(self) -> None:
+        for source in ("faa:identity-anchor", "duplicate-adjudication"):
+            meta = self._retired(source, source)
+            assert _adjudicated(meta) == source
+            assert _eligible(meta) is False, f"{source} must not be re-searched"
+
+    def test_a_search_retirement_at_an_older_plan_is_re_opened(self) -> None:
+        meta = self._retired("wikidata", "faa:work-qid-search/v4")
+        assert _adjudicated(meta) is None
+        assert _eligible(meta) is True
+
+    def test_a_search_retirement_at_the_current_plan_is_left_alone(self) -> None:
+        meta = self._retired("wikidata", f"faa:work-qid-search/v{SEARCH_PLAN_VERSION}")
+        assert _eligible(meta) is False
+
+    def test_backfill_leaves_an_adjudicated_sidecar_untouched(self, tmp_path: Path) -> None:
+        _write(tmp_path, self._retired("faa:identity-anchor", "faa:identity-anchor"))
+        before = json.loads((tmp_path / "aaaaaaa-x" / "meta.json").read_text())
+
+        stats, _ = backfill(
+            tmp_path, sparql=FakeSparql(), json_client=FakeJson(["Q17277950"]),
+            apply=True, retire=True)
+
+        assert json.loads((tmp_path / "aaaaaaa-x" / "meta.json").read_text()) == before
+        assert stats.attempted == 0
