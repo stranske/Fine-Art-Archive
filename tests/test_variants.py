@@ -1,4 +1,4 @@
-"""Renditions of a work inherit its identity and may share its work Q-ID."""
+"""A rendition of a work inherits its identity rather than asserting one."""
 
 from __future__ import annotations
 
@@ -8,10 +8,13 @@ import pytest
 
 from fine_art_archive.identity.variants import (
     Derivation,
+    VariantHolding,
+    VariantLinks,
     derivation_of,
     family_root,
     inherit,
     resolved_work_qid,
+    variant_links,
     violates_identity_invariant,
 )
 from fine_art_archive.identity.work_qid_uniqueness import WorkQidClaims
@@ -212,3 +215,112 @@ class TestUniquenessGuardHasNoRenditionExemption:
     def test_an_unclaimed_q_id_is_free(self) -> None:
         claims = WorkQidClaims({"Q10346982": "bbbbbbb-master"})
         assert claims.collides("Q999999", "aaaaaaa-detail") is None
+
+
+def owner_of(work_id: str, *held: tuple[str, str], **extra: Any) -> dict[str, Any]:
+    """A sidecar declaring ``held`` (work_id, role) pairs to be its variants."""
+    return work(
+        work_id,
+        files={
+            "variants": [
+                {"rel_path": f"works/{wid}/master.jpg", "role": role} for wid, role in held
+            ]
+        },
+        **extra,
+    )
+
+
+class TestVariantLinks:
+    """A sidecar named in another's files.variants[] is a HOLDING of a work, not
+    a work, so no resolver may write it a work Q-ID of its own."""
+
+    def test_a_held_crop_may_not_hold_a_work_q_id(self) -> None:
+        links = variant_links(
+            [
+                owner_of("bbbbbbb-master", ("aaaaaaa-crop", "landscape-crop")),
+                work("aaaaaaa-crop"),
+            ]
+        )
+
+        assert links.holdings["aaaaaaa-crop"] == VariantHolding(
+            work_id="aaaaaaa-crop",
+            owner_work_id="bbbbbbb-master",
+            role="landscape-crop",
+        )
+        assert links.may_hold_work_qid("aaaaaaa-crop") is False
+        assert links.exclusion_reason("aaaaaaa-crop") == "variant-holding"
+
+    def test_the_owner_keeps_the_identity_and_stays_resolvable(self) -> None:
+        links = variant_links(
+            [owner_of("bbbbbbb-master", ("aaaaaaa-crop", "meural-framed")), work("aaaaaaa-crop")]
+        )
+
+        assert links.may_hold_work_qid("bbbbbbb-master") is True
+        assert links.exclusion_reason("bbbbbbb-master") is None
+
+    def test_a_work_nobody_claims_is_untouched(self) -> None:
+        links = variant_links([work("ccccccc-solo")])
+
+        assert links.holdings == {}
+        assert links.may_hold_work_qid("ccccccc-solo") is True
+
+    def test_a_mutual_pair_is_ambiguous_and_neither_side_is_resolved(self) -> None:
+        # The 2026-08-09 pass wrote entries in the opposite direction, so pairs
+        # claim each other. Whoever wrote the entry does not settle which file
+        # is the crop; picking a side would strip the Q-ID from the real work.
+        links = variant_links(
+            [
+                owner_of("aaaaaaa-crop", ("bbbbbbb-master", "landscape-crop")),
+                owner_of("bbbbbbb-master", ("aaaaaaa-crop", "landscape-crop")),
+            ]
+        )
+
+        assert links.holdings == {}
+        assert links.ambiguous == frozenset({"aaaaaaa-crop", "bbbbbbb-master"})
+        assert links.exclusion_reason("aaaaaaa-crop") == "variant-link-ambiguous"
+        assert links.exclusion_reason("bbbbbbb-master") == "variant-link-ambiguous"
+
+    def test_a_sidecar_listing_itself_is_a_broken_link_not_a_holding(self) -> None:
+        links = variant_links([owner_of("aaaaaaa-solo", ("aaaaaaa-solo", "duplicate-copy"))])
+
+        assert links.holdings == {}
+        assert links.self_referential == frozenset({"aaaaaaa-solo"})
+        # Nothing can inherit from itself, so the work stays eligible.
+        assert links.may_hold_work_qid("aaaaaaa-solo") is True
+
+    @pytest.mark.parametrize(
+        "rel_path",
+        ["master.jpg", "renders/eink/aaaaaaa-crop.png", "works/", "works/aaaaaaa-crop"],
+    )
+    def test_a_rel_path_that_names_no_sidecar_is_not_a_holding(self, rel_path: str) -> None:
+        # rel_path is relative to <archive_root>/Art/; only works/<work_id>/<file>
+        # names another sidecar. A file living beside the master is not a holding.
+        links = variant_links(
+            [work("bbbbbbb-master", files={"variants": [{"rel_path": rel_path, "role": "unknown"}]})]
+        )
+
+        assert links.holdings == {}
+        assert links.ambiguous == frozenset()
+
+    def test_malformed_variant_entries_do_not_break_the_scan(self) -> None:
+        links = variant_links(
+            [
+                work("bbbbbbb-master", files={"variants": ["not-a-dict", {}, None]}),
+                work("ccccccc-other", files=None),
+                work("ddddddd-third"),
+                {"schema_version": "1.0"},  # no work_id at all
+            ]
+        )
+
+        assert links.holdings == {}
+
+    def test_from_sidecars_skips_an_unreadable_sidecar(self) -> None:
+        def load(path: str) -> dict[str, Any]:
+            if path == "broken":
+                raise ValueError("not JSON")
+            return owner_of("bbbbbbb-master", ("aaaaaaa-crop", "portrait-crop"))
+
+        links = VariantLinks.from_sidecars(["broken", "ok"], load=load)
+
+        # One parse failure must not disable the guard for everything else.
+        assert links.exclusion_reason("aaaaaaa-crop") == "variant-holding"

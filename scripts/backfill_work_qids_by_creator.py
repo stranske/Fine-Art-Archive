@@ -48,6 +48,7 @@ from fine_art_archive.enrichment.work_qid_by_creator import (  # noqa: E402
     resolve_work_qid,
     year_of,
 )
+from fine_art_archive.identity.variants import VariantLinks  # noqa: E402
 from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
     WorkQidClaims,
     collision_note,
@@ -262,8 +263,18 @@ def backfill(
     # sidecar rather than asserting the two are the same work. This pass was
     # the source of 58 of the 60 collisions in the archive's own history.
     claims = WorkQidClaims.from_sidecars(paths, load=sidecar.load)
+    # A sidecar named in another sidecar's `files.variants[]` is a second
+    # HOLDING of a work, not a work: identity stays on the owner and the holding
+    # reaches it through the entry that names it. Without this the pass keeps
+    # restoring the shared Q-ID that the crop repair clears, because the match
+    # is not wrong -- a crop of a work IS that work.
+    links = VariantLinks.from_sidecars(paths, load=sidecar.load)
     for path in paths:
         meta = sidecar.load(path)
+        held = links.exclusion_reason(str(meta.get("work_id") or path.parent.name))
+        if held is not None:
+            reasons[held] += 1
+            continue
         if not _eligible(meta, include_categorized=include_categorized):
             continue
         creator = _creator_qid(meta)
