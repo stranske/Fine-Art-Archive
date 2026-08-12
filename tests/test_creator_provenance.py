@@ -14,6 +14,7 @@ from scripts.resolve_creators import _apply_outcome, _eligible  # noqa: E402
 
 from fine_art_archive.enrichment.creator_provenance import (  # noqa: E402
     ARTIST_SEARCH_PLAN_VERSION,
+    REF_IMAGE_NAME_RECOVERED,
     REF_IMAGE_PENDING,
     REF_SEARCH,
     REF_UNATTRIBUTABLE,
@@ -192,6 +193,23 @@ def test_null_name_is_image_search_pending_not_final() -> None:
     assert bucket == "image-search-pending"
     assert meta["field_provenance"]["artist_qid"]["source_ref"] == REF_IMAGE_PENDING
     assert _eligible(meta) is False  # text is exhausted; the image process owns it now
+
+
+def test_lens_recovered_names_are_terminal_not_image_search_pending() -> None:
+    """A repeated image search cannot improve a name Lens already recovered."""
+    for name in ("Hunto", "Shiva and Dayal"):
+        meta = _meta(name=name)
+        meta["field_provenance"] = {
+            "artist_qid": {"status": "not_available", "source_ref": "faa:google-lens/text"}
+        }
+
+        bucket = _apply_outcome(meta, classify(meta, client=FakeClient({})))
+
+        entry = meta["field_provenance"]["artist_qid"]
+        assert bucket == "image-search-name-recovered"
+        assert entry["source_ref"] == REF_IMAGE_NAME_RECOVERED
+        assert entry["source_ref"] != REF_IMAGE_PENDING
+        assert _eligible(meta) is False
 
 
 def test_legacy_unattributable_reopens_for_migration() -> None:

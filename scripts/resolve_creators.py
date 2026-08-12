@@ -47,6 +47,7 @@ from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.creator_provenance import (  # noqa: E402
     ARTIST_SEARCH_PLAN_VERSION,
     REF_ANONYMOUS,
+    REF_IMAGE_NAME_RECOVERED,
     REF_IMAGE_PENDING,
     REF_SEARCH,
     REF_UNATTRIBUTABLE,
@@ -133,6 +134,35 @@ def _apply_outcome(meta: dict[str, Any], outcome: CreatorOutcome) -> str:
             note=outcome.note,
         )
         return "anonymous"
+
+    prior_entry = _artist_entry(meta)
+    prior_ref = str((prior_entry or {}).get("source_ref") or "")
+    canonical = artist.get("canonical")
+    recovered_name = (
+        str(artist.get("name") or "").strip()
+        or (
+            str(canonical.get("display_name") or "").strip()
+            if isinstance(canonical, dict)
+            else ""
+        )
+    )
+    if (
+        outcome.kind in {"searched", "unattributable"}
+        and recovered_name
+        and prior_ref.startswith("faa:google-lens/")
+    ):
+        provenance.set(
+            meta,
+            "artist_qid",
+            "not_available",
+            "google-lens",
+            source_ref=REF_IMAGE_NAME_RECOVERED,
+            note=(
+                f"Image search recovered {recovered_name!r}, but no safe single creator QID "
+                f"was resolved. {outcome.note}"
+            ),
+        )
+        return "image-search-name-recovered"
 
     if outcome.kind == "searched":
         provenance.set(
