@@ -56,6 +56,9 @@ REF_UNATTRIBUTABLE = "faa:creator/unattributable"  # legacy terminal; now reopen
 # work). This is a NON-terminal "text exhausted, image search still owed" state --
 # null/unusable name is never accepted as final until image search has run.
 REF_IMAGE_PENDING = "faa:image-search/pending"
+# Image search recovered a usable name but no safe single creator QID.  This is
+# terminal: repeating image search would only rediscover the same name.
+REF_IMAGE_NAME_RECOVERED = "faa:image-search/name-recovered"
 REF_SEARCH = "faa:artist-search/v"  # + version
 
 # Explicit anonymity / non-personal attribution markers in a name field.
