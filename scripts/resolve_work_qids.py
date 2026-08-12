@@ -70,6 +70,7 @@ from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
 from fine_art_archive.enrichment.work_qid_by_creator import resolve_work_qid, year_of  # noqa: E402
 from fine_art_archive.enrichment.work_qid_search import resolve_by_title_search  # noqa: E402
+from fine_art_archive.identity.variants import VariantLinks  # noqa: E402
 from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
     WorkQidClaims,
     collision_note,
@@ -328,10 +329,21 @@ def backfill(
     # collide with itself — the 2026-08-09 regression was two writes 15 minutes
     # apart inside ONE pass.
     claims = WorkQidClaims.from_sidecars(paths, load=sidecar.load)
+    # The same rule one field over: a sidecar named in another sidecar's
+    # `files.variants[]` is a second HOLDING of a work, not a work. The schema
+    # enforces this for `derived_from` and cannot for variants, because the
+    # entry lives in the OWNER's sidecar and says nothing inside the holding's —
+    # so this pass has to keep them out of the queue itself, or it restores the
+    # shared identity the crop repair just cleared.
+    links = VariantLinks.from_sidecars(paths, load=sidecar.load)
     for path in paths:
         meta = sidecar.load(path)
         if _is_derived(meta):
             outcomes["skipped:derived-item"] += 1
+            continue
+        reason = links.exclusion_reason(str(meta.get("work_id") or path.parent.name))
+        if reason is not None:
+            outcomes[f"skipped:{reason}"] += 1
             continue
         if not _eligible(meta):
             continue

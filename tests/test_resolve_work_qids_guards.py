@@ -31,6 +31,9 @@ import pytest
 from scripts.resolve_work_qids import _eligible, _is_derived, backfill, main
 
 from fine_art_archive import sidecar
+from tests.test_work_qid_search import FakeJson as SearchJson
+from tests.test_work_qid_search import FakeSparqlDetails, _detail_row
+from tests.test_work_qid_search import _write as search_write
 
 
 class FakeJson:
@@ -259,3 +262,93 @@ class TestApplyRefusesToMirrorSilently:
         staging.mkdir()
         assert main(["--apply", "--staging-dir", str(staging),
                      "--art-works-root", str(tmp_path / "works")]) == 0
+
+
+class TestVariantHoldingsAreSkipped:
+    """3. A HOLDING OF A WORK IS NOT A WORK.
+
+    The same rule as guard 1, one field over. The schema states the invariant
+    over `derived_from` and enforces it in its own `allOf`; it cannot enforce it
+    over `files.variants[]`, because that entry lives in the OWNER's sidecar and
+    says nothing inside the holding's. So nothing stopped this resolver from
+    filling in a crop, and it kept restoring the identity the crop repair had
+    just cleared — a dry run on 2026-08-11 proposed Q185372, Q1091086 and
+    Q151047 back onto the Girl with a Pearl Earring, Third of May and Birth of
+    Venus crops minutes after they were cleared. The match was not wrong; a crop
+    of a work IS that work. What was missing was the statement that the crop's
+    sidecar is a second holding rather than a second painting.
+    """
+
+    QID = "Q185372"
+
+    def _clients(self) -> tuple[SearchJson, FakeSparqlDetails]:
+        """A search that WOULD resolve either sidecar, so the skip is what stops it."""
+        return SearchJson([self.QID]), FakeSparqlDetails(
+            [_detail_row(self.QID, "Girl with a Pearl Earring", artwork=True,
+                         creators=[], inception="1665")]
+        )
+
+    def _sidecar(self, work_id: str, *, variants: list[str] = ()) -> dict[str, Any]:
+        meta: dict[str, Any] = {
+            "work_id": work_id,
+            "artist": {"name": "Johannes Vermeer"},
+            "title": "Girl with a Pearl Earring",
+            "year": "1665",
+        }
+        if variants:
+            meta["files"] = {
+                "master": {"filename": "m.jpeg", "sha256": "a" * 64, "size_bytes": 1,
+                           "ingested_at": "2026-05-16T21:30:00Z"},
+                "variants": [{"rel_path": f"works/{v}/m.jpeg", "role": "landscape-crop"}
+                             for v in variants],
+            }
+        return meta
+
+    def test_the_holding_gains_no_q_id_and_the_owner_takes_it(self, tmp_path: Path) -> None:
+        """The regression itself: the crop must stay QID-less, the owner resolve."""
+        search_write(tmp_path, self._sidecar("aaaaaaa-crop"))
+        search_write(tmp_path, self._sidecar("bbbbbbb-master", variants=["aaaaaaa-crop"]))
+        json_c, sparql = self._clients()
+
+        stats, outcomes = backfill(
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+
+        crop = json.loads((tmp_path / "aaaaaaa-crop" / "meta.json").read_text())
+        owner = json.loads((tmp_path / "bbbbbbb-master" / "meta.json").read_text())
+        assert (crop.get("stable_identifiers") or {}).get("wikidata_q") is None
+        assert "field_provenance" not in crop, "a holding is not 'retired' either"
+        assert owner["stable_identifiers"]["wikidata_q"] == self.QID
+        assert outcomes["skipped:variant-holding"] == 1
+        assert stats.attempted == 1 and stats.resolved == 1
+
+    def test_neither_side_of_a_mutual_pair_is_resolved(self, tmp_path: Path) -> None:
+        """Whoever wrote the entry does not settle which file is the crop."""
+        search_write(tmp_path, self._sidecar("aaaaaaa-crop", variants=["bbbbbbb-master"]))
+        search_write(tmp_path, self._sidecar("bbbbbbb-master", variants=["aaaaaaa-crop"]))
+        json_c, sparql = self._clients()
+
+        stats, outcomes = backfill(
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+
+        for work_id in ("aaaaaaa-crop", "bbbbbbb-master"):
+            meta = json.loads((tmp_path / work_id / "meta.json").read_text())
+            assert (meta.get("stable_identifiers") or {}).get("wikidata_q") is None
+        assert outcomes["skipped:variant-link-ambiguous"] == 2
+        assert stats.attempted == 0
+
+    def test_a_work_whose_variant_lives_outside_works_is_untouched(self, tmp_path: Path) -> None:
+        """A file beside the master is not another sidecar, so nothing is held."""
+        meta = self._sidecar("bbbbbbb-master")
+        meta["files"] = {
+            "master": {"filename": "m.jpeg", "sha256": "a" * 64, "size_bytes": 1,
+                       "ingested_at": "2026-05-16T21:30:00Z"},
+            "variants": [{"rel_path": "renders/eink/bbbbbbb-master.png", "role": "eink-render"}],
+        }
+        search_write(tmp_path, meta)
+        json_c, sparql = self._clients()
+
+        stats, outcomes = backfill(
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+
+        assert stats.resolved == 1
+        assert not [key for key in outcomes if key.startswith("skipped:variant")]

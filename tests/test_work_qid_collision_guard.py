@@ -134,3 +134,28 @@ def test_rewriting_a_works_own_qid_is_not_a_collision(tmp_path, monkeypatch):
 
     assert stats.attempted == 0, "a work with a Q-ID is not eligible"
     assert not stats.collisions
+
+
+def test_a_variant_holding_is_not_a_second_work_to_resolve(tmp_path, monkeypatch):
+    """A crop listed in another sidecar's files.variants[] holds no identity.
+
+    The match is not wrong -- a crop of a work IS that work, which is why this
+    pass kept writing the Q-ID back onto crops the identity repair had cleared.
+    The rule it was missing is that the crop's sidecar is a second HOLDING, so
+    the owner keeps the identity and the crop reaches it through the entry.
+    """
+    owner = _sidecar(tmp_path, "bbbbbbb-card-players", "The Card Players")
+    meta = json.loads(owner.read_text())
+    meta["files"]["variants"] = [
+        {"rel_path": "works/aaaaaaa-card-players-crop/master.jpg", "role": "landscape-crop"}
+    ]
+    owner.write_text(json.dumps(meta))
+    _sidecar(tmp_path, "aaaaaaa-card-players-crop", "The Card Players")
+    monkeypatch.setattr(bwq.sidecar, "validate", lambda meta: None)
+
+    stats, reasons = _run(tmp_path, monkeypatch, apply=True)
+
+    crop = json.loads((tmp_path / "aaaaaaa-card-players-crop" / "meta.json").read_text())
+    assert (crop.get("stable_identifiers") or {}).get("wikidata_q") is None
+    assert reasons["variant-holding"] == 1
+    assert stats.resolved == 1, "the owner still takes the identity"
