@@ -48,22 +48,12 @@ class WorkQidClaims:
     scan limited to the work queue would see no collision at all.
     """
 
-    def __init__(
-        self,
-        holders: dict[str, str] | None = None,
-        *,
-        same_object: Callable[[str, str], bool] | None = None,
-    ) -> None:
+    def __init__(self, holders: dict[str, str] | None = None) -> None:
         self._holders: dict[str, str] = dict(holders or {})
-        self._same_object = same_object
 
     @classmethod
     def from_sidecars(
-        cls,
-        paths: list[Path],
-        *,
-        load: Callable[[Path], dict[str, Any]],
-        same_object: Callable[[str, str], bool] | None = None,
+        cls, paths: list[Path], *, load: Callable[[Path], dict[str, Any]]
     ) -> WorkQidClaims:
         holders: dict[str, str] = {}
         for path in paths:
@@ -76,7 +66,7 @@ class WorkQidClaims:
             qid = work_qid_of(meta)
             if qid:
                 holders.setdefault(qid, str(meta.get("work_id") or path.parent.name))
-        return cls(holders, same_object=same_object)
+        return cls(holders)
 
     def holder(self, qid: str | None) -> str | None:
         """The work_id already holding ``qid``, or None if unclaimed."""
@@ -85,24 +75,18 @@ class WorkQidClaims:
     def collides(self, qid: str | None, work_id: str) -> str | None:
         """The *other* work holding ``qid``, or None when the write is safe.
 
-        Two work_ids sharing a QID is not automatically wrong. The archive keeps
-        a master and its 16:9 / 9:16 display crops as separate works, and those
-        renditions genuinely *are* the same Wikidata work -- 69 of the 79
-        contested QIDs in this archive are that case, not a real clash. When a
-        ``same_object`` predicate is supplied (see
-        :func:`fine_art_archive.identity.variants.same_object`) a shared QID
-        between renditions of one work is allowed through.
-
-        Without that predicate the behaviour is unchanged: any other holder is a
-        collision. The guard is only ever relaxed by evidence of derivation, so
-        two unrelated works still cannot take the same identifier.
+        There is deliberately no exemption for renditions of one work. It is
+        tempting to add one -- a master and its display crops really are the
+        same Wikidata work -- but a derived item is not supposed to hold a Q-ID
+        at all (see ``derived_from`` in the schema), so it can never reach this
+        check honestly. Exempting it instead lets a resolver write the Q-ID that
+        the invariant repair then clears, and the two fight: five flips in
+        seventy minutes on 8d8f6ab-the-birth-of-venus-botticelli. Renditions
+        that share a work belong in ``files.variants[]``, not in a second
+        sidecar holding a second copy of the identity.
         """
         holder = self.holder(qid)
-        if holder is None or holder == work_id:
-            return None
-        if self._same_object is not None and self._same_object(holder, work_id):
-            return None
-        return holder
+        return holder if holder is not None and holder != work_id else None
 
     def claim(self, qid: str, work_id: str) -> None:
         self._holders[qid] = work_id

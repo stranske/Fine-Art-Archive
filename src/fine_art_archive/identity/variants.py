@@ -1,28 +1,26 @@
-"""Renditions of a work: display crops, details, and captures.
+"""Derived items: a section of a work presented in its own right.
 
-The archive stores a painting more than once on purpose. A master is kept
-alongside 16:9 and 9:16 re-cuts prepared for picture frames, and the schema says
-of file variants: "These are NOT duplicates: each is fit for a specific device."
-When those re-cuts were ingested as their own ``work_id`` rather than as
-``files.variants[]`` entries, three problems follow:
+``derived_from`` marks a sidecar as a detail of a fresco, a reconstruction, or a
+distinct state of a print -- something genuinely presentable that nonetheless
+has no identity of its own. This module reads that link so callers can resolve
+the parent's identity instead of copying it.
 
-* the rendition repeats the parent's identity, and the two copies drift;
-* the rendition and its parent both claim the same work Q-ID, which
-  :mod:`fine_art_archive.identity.work_qid_uniqueness` must read as a collision
-  because it cannot tell a crop sibling from two works fighting over one Q-ID;
-* a rendition that never got the identity at all looks like an unresolved work,
-  and enrichment passes go back out to the network to re-derive what the parent
-  already knows.
+Two boundaries matter, and both are drawn by the schema rather than here.
 
-``derived_from`` names the parent and the kind of rendition. This module reads
-that link: it resolves inheritance so a rendition takes identity from its
-parent, and it answers whether two works are the same object, which is what
-lets the uniqueness guard stop reporting crop siblings as collisions.
+**A derived item never holds its own work Q-ID.** The invariant is
+``derived_from set => stable_identifiers.wikidata_q is null``, and it exists
+because giving details work-level identity is how a single Q-ID came to sit on
+fifty separate Scrovegni sidecars. Writing one is worse than a wrong field: the
+invariant repair clears it, the next resolver run sets it again, and the two
+oscillate. Use :func:`resolved_work_qid` to ask which Wikidata work a detail
+depicts; do not store the answer.
 
-Detection is deliberately not here. A crop is recognised by comparing the image
-file's aspect ratio against the work's own recorded ``dimensions_original`` --
-an image-processing job that belongs to the pass that writes the link, not to
-the model that reads it.
+**A display crop is not a derived item.** A 16:9 re-cut for a picture frame is
+device fitness, which ``files.variants[]`` models -- "These are NOT duplicates:
+each is fit for a specific device" -- not curatorial selection of a section.
+Crops that were ingested as their own ``work_id`` are a modelling problem to be
+fixed by merging them into the parent's variants, not by pointing
+``derived_from`` at the parent and letting both hold the identity.
 """
 
 from __future__ import annotations
@@ -38,10 +36,14 @@ __all__ = [
     "derivation_of",
     "family_root",
     "inherit",
-    "same_object",
+    "resolved_work_qid",
+    "violates_identity_invariant",
 ]
 
-DERIVATION_KINDS = frozenset({"display-crop", "detail", "capture"})
+# Mirrors the ``derived_from.kind`` enum in schemas/meta.schema.json. There is
+# deliberately no display-crop member: a 16:9 re-cut is device fitness, which
+# ``files.variants[]`` models, not curatorial selection of a section.
+DERIVATION_KINDS = frozenset({"detail", "reconstruction", "state", "capture"})
 
 # Identity travels from parent to rendition; per-file facts do not. ``files``,
 # ``display_hints``, ``ratings`` and ``history`` describe *this* image and must
@@ -62,11 +64,15 @@ INHERITABLE_FIELDS: tuple[str, ...] = (
     "stable_identifiers",
 )
 
-# Within ``stable_identifiers``, these denote the *work* and so are shared by
-# every rendition of it. Others (a IIIF manifest, a Commons file) point at a
-# particular image and are not inherited.
+# Within ``stable_identifiers``, these describe the parent work and are safe to
+# copy onto a derived item. ``wikidata_q`` is deliberately absent: the schema
+# invariant is that a sidecar with ``derived_from`` set holds a *null*
+# ``wikidata_q``, and writing one does not merely add a wrong field -- it starts
+# an oscillation, because the invariant repair clears it and the next resolver
+# run sets it again (observed flipping five times in seventy minutes on
+# 8d8f6ab-the-birth-of-venus-botticelli). Read the parent's identity with
+# :func:`resolved_work_qid` instead of storing a copy.
 INHERITABLE_IDENTIFIERS: tuple[str, ...] = (
-    "wikidata_q",
     "part_of_q",
     "museum_accession",
     "museum_institution_ror",
@@ -83,10 +89,6 @@ class Derivation:
     region: str | None = None
     detected_by: str | None = None
     image_correlation: float | None = None
-
-    @property
-    def is_crop(self) -> bool:
-        return self.kind == "display-crop"
 
 
 def derivation_of(meta: dict[str, Any]) -> Derivation | None:
@@ -140,22 +142,43 @@ def family_root(
     return current
 
 
-def same_object(
-    a_work_id: str,
-    b_work_id: str,
+def resolved_work_qid(
+    work_id: str,
     *,
     load: Callable[[str], dict[str, Any] | None],
-) -> bool:
-    """Do these two work_ids depict the same physical work?
+) -> str | None:
+    """The work Q-ID that applies to this sidecar, following ``derived_from``.
 
-    True when one is a rendition of the other, or both are renditions of one
-    parent. This is what makes a shared work Q-ID correct rather than a
-    collision -- and it stays False for two genuinely different works, so the
-    uniqueness guard keeps its teeth.
+    A derived item has no identity of its own -- it inherits the parent's -- but
+    that identity is *resolved*, never stored. Storing it would breach the
+    schema invariant and start the repair/resolver oscillation described on
+    :data:`INHERITABLE_IDENTIFIERS`. Callers that need to know which Wikidata
+    work a detail depicts should ask this rather than read the field.
     """
-    if a_work_id == b_work_id:
-        return True
-    return family_root(a_work_id, load=load) == family_root(b_work_id, load=load)
+    root = family_root(work_id, load=load)
+    meta = load(root)
+    if meta is None:
+        return None
+    stable = meta.get("stable_identifiers")
+    if not isinstance(stable, dict):
+        return None
+    qid = stable.get("wikidata_q")
+    return qid if isinstance(qid, str) and qid else None
+
+
+def violates_identity_invariant(meta: dict[str, Any]) -> bool:
+    """True when a derived item also claims a work Q-ID of its own.
+
+    The pairing the schema forbids, and the shape that put one Q-ID on fifty
+    separate Scrovegni sidecars.
+    """
+    if derivation_of(meta) is None:
+        return False
+    stable = meta.get("stable_identifiers")
+    if not isinstance(stable, dict):
+        return False
+    qid = stable.get("wikidata_q")
+    return isinstance(qid, str) and bool(qid)
 
 
 def _is_empty(value: Any) -> bool:
@@ -171,11 +194,11 @@ def inherit(
     """Fill a rendition's empty identity fields from its parent.
 
     Returns ``(meta, filled, conflicts)``. Existing values are never
-    overwritten: where the rendition already holds something different, the
-    field name is reported in ``conflicts`` and left alone. Silently replacing
-    it would paper over exactly the disagreements worth looking at -- four
-    renditions in this archive hold a *different* work Q-ID from their parent,
-    and one of the two is wrong.
+    overwritten: where the derived item already holds something different, the
+    field name is reported in ``conflicts`` and left alone. Copies drift -- a
+    parent reading "Claude Monet, May 1888" against a detail reading "Monet,
+    1888" -- and picking a winner is a curatorial call, not one this function
+    should make silently.
     """
     filled: list[str] = []
     conflicts: list[str] = []
