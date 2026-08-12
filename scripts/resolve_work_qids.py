@@ -6,7 +6,7 @@ each QID-less work, and records the outcome in ``field_provenance.work_qid`` so 
 work is never searched twice needlessly -- yet is automatically re-opened when
 the search itself improves.
 
-Strategies (this build = search-plan v4):
+Strategies (this build = search-plan v5):
   1. **by-creator** -- the guarded match in the creator's Wikidata oeuvre
      (alias + normalized-title match), disambiguating a same-title cluster by, in
      order, the holder (P195), the year, the **medium** (P31: a painting vs its
@@ -17,8 +17,20 @@ Strategies (this build = search-plan v4):
      ``P31=artwork`` with a strong title match and year agreement; accepts a work
      by the creator, else a globally-unique artwork match even without a
      confirmed creator (see :mod:`fine_art_archive.enrichment.work_qid_search`).
+  3. **title-variants** -- the creator's oeuvre again, but with ALL-language
+     labels and a small set of normalizations (an archive copy number, a label
+     disambiguator, ordered token containment), because 358 of the 466 works v4
+     retired failed as ``by-creator:below-threshold`` -- the oeuvre was there and
+     the two strings differed structurally rather than in which work they meant.
+     Guards are tighter than strategy 1's, never looser (see
+     :mod:`fine_art_archive.enrichment.work_qid_title_variants`).
 
-A third strategy -- cross-referencing ``known_works`` (Wikipedia "List of
+A work whose retirement records a DECISION rather than an exhausted search
+(``faa:identity-anchor``, ``duplicate-adjudication`` -- 101 sidecars) is never
+re-opened by a plan bump. A decision is re-litigated by revisiting the decision,
+not by running the search again.
+
+A further strategy -- cross-referencing ``known_works`` (Wikipedia "List of
 paintings by X" + Met) -- was evaluated and rejected: for a work whose creator's
 Wikidata P170 oeuvre is empty (the only bucket strategy 1 can't cover), the only
 QID-bearing ``known_works`` source is that same empty P170, so it recovered 0 of
@@ -70,6 +82,9 @@ from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
 from fine_art_archive.enrichment.source_resolver import JsonClient  # noqa: E402
 from fine_art_archive.enrichment.work_qid_by_creator import resolve_work_qid, year_of  # noqa: E402
 from fine_art_archive.enrichment.work_qid_search import resolve_by_title_search  # noqa: E402
+from fine_art_archive.enrichment.work_qid_title_variants import (  # noqa: E402
+    resolve_by_title_variants,
+)
 from fine_art_archive.identity.variants import VariantLinks  # noqa: E402
 from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
     WorkQidClaims,
@@ -77,7 +92,7 @@ from fine_art_archive.identity.work_qid_uniqueness import (  # noqa: E402
 )
 
 DEFAULT_LIMIT = 100_000
-SEARCH_PLAN_VERSION = 4  # bump when a strategy is added -> re-opens retired works
+SEARCH_PLAN_VERSION = 5  # bump when a strategy is added -> re-opens retired works
 _PLAN_REF_RE = re.compile(r"faa:work-qid-search/v(\d+)")
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 USER_AGENT = "Fine-Art-Archive/0.1 (https://github.com/stranske/Fine-Art-Archive)"
@@ -164,6 +179,29 @@ def _is_derived(meta: dict[str, Any]) -> bool:
     return bool(meta.get("derived_from"))
 
 
+def _adjudicated(meta: dict[str, Any]) -> str | None:
+    """The source of a deliberate "this work has no Q-ID" decision, if any.
+
+    ``_retired_plan_version`` reads a retirement whose ``source_ref`` carries no
+    plan version as version 0, so raising the plan re-opens it. That is right
+    for a work the SEARCH gave up on and wrong for a work some pass DECIDED
+    about. The archive holds 101 of the latter -- 72 ``faa:identity-anchor`` and
+    29 ``duplicate-adjudication``, the second group cleared on evidence that
+    item dimensions and the P18 image put the work on another sidecar. Searching
+    them again proposes the same Q-ID straight back, so bumping the plan would
+    silently overturn every one of them.
+
+    A decision is not re-litigated by a search. It is re-litigated by revisiting
+    the decision.
+    """
+    entry = (meta.get("field_provenance") or {}).get("work_qid")
+    if not isinstance(entry, dict) or entry.get("status") != "not_available":
+        return None
+    if _PLAN_REF_RE.search(str(entry.get("source_ref") or "")):
+        return None
+    return str(entry.get("source") or "adjudicated")
+
+
 def _eligible(meta: dict[str, Any]) -> bool:
     if _is_derived(meta):
         # A derived item has no identity of its own: the schema invariant is
@@ -176,6 +214,8 @@ def _eligible(meta: dict[str, Any]) -> bool:
         return False
     if _work_qid(meta) is not None:
         return False  # already resolved
+    if _adjudicated(meta) is not None:
+        return False
     entry = (meta.get("field_provenance") or {}).get("work_qid")
     status = entry.get("status") if isinstance(entry, dict) else None
     if status not in ("not_available", "unverified"):
@@ -219,6 +259,12 @@ def _search(
     tried.append(f"title-search:{reason}")
     if qid is not None:
         return qid, "title-search", tried
+
+    if creator:
+        candidate, reason = resolve_by_title_variants(title, year, creator, client=sparql)
+        tried.append(f"title-variants:{reason}")
+        if candidate is not None:
+            return candidate.work_qid, f"title-variants:{candidate.kind}", tried
     return None, "", tried
 
 
