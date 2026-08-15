@@ -53,8 +53,7 @@ _WORD_RE = re.compile(r"[^\W\d_]{3,}")
 # Rembrandt") means the work is a copy/associate, not by that artist -- un-swapping
 # would wrongly attribute it as an autograph work, so decline.
 _ATTRIBUTION_RE = re.compile(
-    r"\b(after|copy|circle|follower|manner|workshop|studio|school|attributed|imitator|"
-    r"style)\b",
+    r"\b(after|copy|circle|follower|manner|workshop|studio|school|attributed|imitator|" r"style)\b",
     re.IGNORECASE,
 )
 

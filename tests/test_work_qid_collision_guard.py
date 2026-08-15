@@ -68,13 +68,16 @@ def _run(tmp_path, monkeypatch, *, apply: bool):
         return _Match("Q17277950", "The Card Players"), "match"
 
     monkeypatch.setattr(bwq, "resolve_work_qid", fake_resolve)
-    return bwq.backfill(tmp_path, client=object(), limit=100,
-                        apply=apply, include_categorized=True)
+    return bwq.backfill(tmp_path, client=object(), limit=100, apply=apply, include_categorized=True)
 
 
 def test_refuses_a_qid_another_sidecar_already_holds(tmp_path, monkeypatch):
-    _sidecar(tmp_path, "aaaaaaa-card-players", "The Card Players",
-             stable_identifiers={"wikidata_q": "Q17277950"})
+    _sidecar(
+        tmp_path,
+        "aaaaaaa-card-players",
+        "The Card Players",
+        stable_identifiers={"wikidata_q": "Q17277950"},
+    )
     _sidecar(tmp_path, "bbbbbbb-card-player", "The Card Player")
 
     stats, reasons = _run(tmp_path, monkeypatch, apply=True)
@@ -88,8 +91,12 @@ def test_refuses_a_qid_another_sidecar_already_holds(tmp_path, monkeypatch):
 
 def test_the_refusal_is_reported_not_silently_dropped(tmp_path, monkeypatch):
     """A dropped match must be visible — silence reads as 'nothing to do'."""
-    _sidecar(tmp_path, "aaaaaaa-card-players", "The Card Players",
-             stable_identifiers={"wikidata_q": "Q17277950"})
+    _sidecar(
+        tmp_path,
+        "aaaaaaa-card-players",
+        "The Card Players",
+        stable_identifiers={"wikidata_q": "Q17277950"},
+    )
     _sidecar(tmp_path, "bbbbbbb-card-player", "The Card Player")
 
     stats, _ = _run(tmp_path, monkeypatch, apply=False)
@@ -127,8 +134,12 @@ def test_a_free_qid_is_still_written(tmp_path, monkeypatch):
 
 def test_rewriting_a_works_own_qid_is_not_a_collision(tmp_path, monkeypatch):
     """A work already holding the Q-ID is ineligible, never self-refused."""
-    _sidecar(tmp_path, "aaaaaaa-card-players", "The Card Players",
-             stable_identifiers={"wikidata_q": "Q17277950"})
+    _sidecar(
+        tmp_path,
+        "aaaaaaa-card-players",
+        "The Card Players",
+        stable_identifiers={"wikidata_q": "Q17277950"},
+    )
 
     stats, reasons = _run(tmp_path, monkeypatch, apply=True)
 

@@ -25,6 +25,7 @@ the Companion API executable without treating operational data as source code.
    import it), **any behaviour change here must be mirrored into the workspace
    copy and verified by counting tags in the archive**, not by running tests.
 """
+
 from __future__ import annotations
 
 import argparse

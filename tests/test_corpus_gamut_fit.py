@@ -106,9 +106,9 @@ class TestTheCorpusSummaryDoesNotHideTheTail:
         s = summarise_corpus(fits)
         assert s["verdicts"]["well-served"] == 9
         assert s["verdicts"]["poorly-served"] == 1
-        assert s["worst_out_of_gamut_fraction"] == pytest.approx(0.9), (
-            "a corpus mean would say the archive is fine while a tenth is unshowable"
-        )
+        assert s["worst_out_of_gamut_fraction"] == pytest.approx(
+            0.9
+        ), "a corpus mean would say the archive is fine while a tenth is unshowable"
 
     def test_an_empty_corpus_is_not_reported_as_healthy(self) -> None:
         assert summarise_corpus([])["works"] == 0

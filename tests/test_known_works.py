@@ -74,6 +74,10 @@ def test_shared_qid_report_is_fully_adjudicated() -> None:
         "series-qid",
         "duplicate-candidate",
     }
+    assert all(
+        set(record) == {"qid", "n_sidecars", "classification", "evidence_p31", "work_ids"}
+        for record in report["records"]
+    )
     series = {
         record["qid"] for record in report["records"] if record["classification"] == "series-qid"
     }
@@ -117,9 +121,10 @@ def test_series_migration_moves_identity_without_touching_other_fields(tmp_path:
         "records": [
             {
                 "qid": "Q2667782",
+                "n_sidecars": len(work_ids),
                 "classification": "series-qid",
+                "evidence_p31": ["Q15727816"],
                 "work_ids": list(work_ids),
-                "evidence": {"p31": ["Q15727816"]},
             }
         ],
         "adjudications": [],

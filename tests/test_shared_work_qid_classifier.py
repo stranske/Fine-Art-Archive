@@ -62,15 +62,17 @@ def test_series_migration_preserves_duplicate_candidates(tmp_path: Path) -> None
         "records": [
             {
                 "qid": "Q2667782",
+                "n_sidecars": 2,
                 "classification": "series-qid",
+                "evidence_p31": ["Q15727816"],
                 "work_ids": ["aaaaaaa-series-a", "bbbbbbb-series-b"],
-                "evidence": {"p31": ["Q15727816"]},
             },
             {
                 "qid": "Q900",
+                "n_sidecars": 2,
                 "classification": "duplicate-candidate",
+                "evidence_p31": ["Q3305213"],
                 "work_ids": ["ccccccc-duplicate-a", "ddddddd-duplicate-b"],
-                "evidence": {"p31": ["Q3305213"]},
             },
         ],
         "adjudications": [],

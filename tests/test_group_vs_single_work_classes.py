@@ -49,6 +49,6 @@ class TestGroupVersusSingleWorkClasses:
 
     def test_no_group_class_can_serve_as_a_work_identity(self) -> None:
         for qid in GROUP_P31:
-            assert is_single_work_class(qid) is False, (
-                f"{qid} is a group class and must never be written to stable_identifiers.wikidata_q"
-            )
+            assert (
+                is_single_work_class(qid) is False
+            ), f"{qid} is a group class and must never be written to stable_identifiers.wikidata_q"

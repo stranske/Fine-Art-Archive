@@ -87,10 +87,27 @@ _MARKER_INDEX_RE = re.compile(r"\s*\d+$")
 #: ``derived_from`` link, not a work Q-ID.
 DERIVATION_MARKERS = frozenset(
     {
-        "detail", "details", "fragment", "crop", "cropped", "section", "panel",
-        "left panel", "right panel", "central panel", "closed", "open", "verso",
-        "recto", "reverse", "predella", "interior", "exterior",
-        "framed", "unframed", "full frame",
+        "detail",
+        "details",
+        "fragment",
+        "crop",
+        "cropped",
+        "section",
+        "panel",
+        "left panel",
+        "right panel",
+        "central panel",
+        "closed",
+        "open",
+        "verso",
+        "recto",
+        "reverse",
+        "predella",
+        "interior",
+        "exterior",
+        "framed",
+        "unframed",
+        "full frame",
     }
 )
 
@@ -216,9 +233,7 @@ def _content_tokens(folded: str) -> list[str]:
     many times passed a threshold set to keep him out. Without it the pass
     proposed Q20189742 for a sidecar already holding Q22337859.
     """
-    return [
-        token for token in folded.split() if len(token) > 1 and token not in _STOPWORDS
-    ]
+    return [token for token in folded.split() if len(token) > 1 and token not in _STOPWORDS]
 
 
 def containment(a: str, b: str) -> float:
@@ -269,9 +284,7 @@ def _rank(title: str, works: list[OeuvreWork]) -> list[TitleCandidate]:
                         score = SCORE_THRESHOLD - (1.0 - contained) * 0.01
                         kind = "containment"
                     if top is None or score > top.score:
-                        top = TitleCandidate(
-                            work.work_qid, label, score, kind, work.inception, how
-                        )
+                        top = TitleCandidate(work.work_qid, label, score, kind, work.inception, how)
         if top is not None:
             current = best.get(top.work_qid)
             if current is None or top.score > current.score:

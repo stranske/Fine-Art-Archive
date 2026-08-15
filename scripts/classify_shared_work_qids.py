@@ -130,15 +130,10 @@ def build_report(root: Path) -> dict[str, object]:
         records.append(
             {
                 "qid": qid,
-                "label": _label(entities.get(qid)),
+                "n_sidecars": len(holders[qid]),
                 "classification": "series-qid" if evidence["is_series"] else "duplicate-candidate",
-                "holder_count": len(holders[qid]),
+                "evidence_p31": evidence["p31"],
                 "work_ids": sorted(holders[qid]),
-                "evidence": {
-                    "p31": evidence["p31"],
-                    "matched_group_classes": evidence["matched_group_classes"],
-                    "source": f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json",
-                },
             }
         )
 
@@ -231,11 +226,22 @@ def check_report(report: dict[str, object], root: Path | None = None) -> None:
     for record in records:
         if not isinstance(record, dict):
             raise ValueError("report contains a non-object record")
+        expected_fields = {
+            "qid",
+            "n_sidecars",
+            "classification",
+            "evidence_p31",
+            "work_ids",
+        }
+        if set(record) != expected_fields:
+            raise ValueError(f"{record.get('qid')}: report fields do not match the contract")
         if record.get("classification") not in {"series-qid", "duplicate-candidate"}:
             raise ValueError(f"{record.get('qid')}: unresolved classification")
-        evidence = record.get("evidence")
-        if not isinstance(evidence, dict) or not isinstance(evidence.get("p31"), list):
+        if not isinstance(record.get("evidence_p31"), list):
             raise ValueError(f"{record.get('qid')}: missing P31 evidence")
+        work_ids = record.get("work_ids")
+        if not isinstance(work_ids, list) or record.get("n_sidecars") != len(work_ids):
+            raise ValueError(f"{record.get('qid')}: sidecar count does not match work_ids")
     if root is None:
         return
 

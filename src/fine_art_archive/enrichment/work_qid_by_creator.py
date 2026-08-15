@@ -96,8 +96,18 @@ def _dims_match(
 # print edition, both P170=creator, both "Aaron"); the medium tells them apart.
 _MEDIUM_KEYWORDS: dict[str, tuple[str, ...]] = {
     "print": (
-        "print", "lithograph", "etching", "engraving", "woodcut", "woodblock",
-        "screenprint", "serigraph", "aquatint", "drypoint", "mezzotint", "linocut",
+        "print",
+        "lithograph",
+        "etching",
+        "engraving",
+        "woodcut",
+        "woodblock",
+        "screenprint",
+        "serigraph",
+        "aquatint",
+        "drypoint",
+        "mezzotint",
+        "linocut",
     ),
     "painting": ("painting", "fresco", "mural", "tempera", "oil on"),
     "sculpture": ("sculpture", "statue", "relief", "bronze", "bust", "carving", "statuette"),
