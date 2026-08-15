@@ -348,6 +348,8 @@ def _cached_ratings() -> dict[str, dict[str, int]]:
 
 class PlaylistIn(BaseModel):
     spec: dict = Field(default_factory=dict)
+    quality_scores: dict[str, float] = Field(default_factory=dict)
+    embeddings: dict[str, list[float]] = Field(default_factory=dict)
     target: str = "gooddisplay-315-diy"
     sample: int = Field(default=24, ge=0, le=200)
 
@@ -409,9 +411,14 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     ratings = _eink.load_ratings(store.RATINGS_LOG)
     try:
         res = _eink.build(
-            sidecars, spec, ratings=ratings, dossier_ids=set(store.work_ids_with_dossier())
+            sidecars,
+            spec,
+            ratings=ratings,
+            dossier_ids=set(store.work_ids_with_dossier()),
+            quality_scores=body.quality_scores,
+            embeddings=body.embeddings,
         )
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
     by_id = dict(sidecars)
@@ -445,6 +452,7 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         "selected": len(res.work_ids),
         "coverage": res.coverage,
         "facets": {k: [list(t) for t in v] for k, v in res.facets.items()},
+        "selection_diagnostics": res.selection_diagnostics,
         "items": items,
         "work_ids": res.work_ids,
     }

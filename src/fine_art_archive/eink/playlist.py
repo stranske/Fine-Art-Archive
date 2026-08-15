@@ -131,6 +131,7 @@ class PlaylistSpec:
     min_fit: int | None = None
     min_quality: int | None = None
     require_dossier: bool = False
+    selection_mode: Literal["ordered", "preference-diverse"] = "ordered"
     limit: int | None = None
     sort: SortKey = "fit"
     seed: int = 42
@@ -146,6 +147,8 @@ class PlaylistSpec:
         sort = d.get("sort", "fit")
         if sort not in _SORT_KEYS:
             raise ValueError(f"unknown playlist sort {sort!r}; expected one of {_SORT_KEYS}")
+        if d.get("selection_mode", "ordered") not in {"ordered", "preference-diverse"}:
+            raise ValueError("selection_mode must be 'ordered' or 'preference-diverse'")
         return cls(**d)
 
 
@@ -157,6 +160,7 @@ class PlaylistResult:
     coverage: dict[str, Any]
     facets: dict[str, list[tuple[str, int]]]
     spec: dict
+    selection_diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -290,6 +294,8 @@ def build(
     *,
     ratings: dict[str, dict[str, int]] | None = None,
     dossier_ids: set[str] | None = None,
+    quality_scores: dict[str, float] | None = None,
+    embeddings: dict[str, list[float]] | None = None,
 ) -> PlaylistResult:
     ratings = ratings or {}
     dossier_ids = dossier_ids or set()
@@ -406,7 +412,25 @@ def build(
         rows.sort(key=sort_value)
 
     matched = len(rows)
-    if spec.limit:
+    selection_diagnostics: list[dict[str, Any]] = []
+    if spec.selection_mode == "preference-diverse":
+        from dataclasses import asdict
+
+        from fine_art_archive.preference.exhibition import select_quality_diverse
+
+        if spec.limit is None:
+            raise ValueError("preference-diverse selection requires limit")
+        selection = select_quality_diverse(
+            [row["work_id"] for row in rows],
+            quality_scores or {},
+            embeddings or {},
+            spec.limit,
+            seed=spec.seed,
+        )
+        by_work_id = {row["work_id"]: row for row in rows}
+        rows = [by_work_id[work_id] for work_id in selection.selected_ids]
+        selection_diagnostics = [asdict(item) for item in selection.diagnostics]
+    elif spec.limit:
         rows = rows[: spec.limit]
 
     return PlaylistResult(
@@ -425,6 +449,7 @@ def build(
             "mood": facet_mood.most_common(),
         },
         spec=spec.__dict__.copy(),
+        selection_diagnostics=selection_diagnostics,
     )
 
 
