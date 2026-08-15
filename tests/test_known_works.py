@@ -118,8 +118,9 @@ def test_series_migration_moves_identity_without_touching_other_fields(tmp_path:
             {
                 "qid": "Q2667782",
                 "classification": "series-qid",
+                "n_sidecars": len(work_ids),
                 "work_ids": list(work_ids),
-                "evidence": {"p31": ["Q15727816"]},
+                "evidence_p31": ["Q15727816"],
             }
         ],
         "adjudications": [],

@@ -63,14 +63,16 @@ def test_series_migration_preserves_duplicate_candidates(tmp_path: Path) -> None
             {
                 "qid": "Q2667782",
                 "classification": "series-qid",
+                "n_sidecars": 2,
                 "work_ids": ["aaaaaaa-series-a", "bbbbbbb-series-b"],
-                "evidence": {"p31": ["Q15727816"]},
+                "evidence_p31": ["Q15727816"],
             },
             {
                 "qid": "Q900",
                 "classification": "duplicate-candidate",
+                "n_sidecars": 2,
                 "work_ids": ["ccccccc-duplicate-a", "ddddddd-duplicate-b"],
-                "evidence": {"p31": ["Q3305213"]},
+                "evidence_p31": ["Q3305213"],
             },
         ],
         "adjudications": [],
@@ -86,3 +88,29 @@ def test_series_migration_preserves_duplicate_candidates(tmp_path: Path) -> None
     for path in duplicate_paths:
         stable = json.loads(path.read_text(encoding="utf-8"))["stable_identifiers"]
         assert stable == {"wikidata_q": "Q900"}
+
+
+def test_report_contract_requires_top_level_sidecar_count_and_p31() -> None:
+    classifier = _load_classifier()
+    report = {
+        "shared_qid_count": 1,
+        "records": [
+            {
+                "qid": "Q2667782",
+                "classification": "series-qid",
+                "n_sidecars": 2,
+                "work_ids": ["one", "two"],
+                "evidence_p31": ["Q15727816"],
+            }
+        ],
+    }
+
+    classifier.check_report(report)
+
+    del report["records"][0]["n_sidecars"]
+    try:
+        classifier.check_report(report)
+    except ValueError as error:
+        assert "invalid sidecar count" in str(error)
+    else:
+        raise AssertionError("legacy-only record unexpectedly passed validation")
