@@ -8,7 +8,6 @@
       "qid": "Q2667782",
       "label": "The Descent from the Cross",
       "classification": "series-qid",
-      "holder_count": 2,
       "work_ids": [
         "c789bab-the-descent-from-the-cross-rubens",
         "e001bcc-the-descent-from-the-cross-rubens"
@@ -27,13 +26,19 @@
           "Q18573970"
         ],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q2667782.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q79218",
+        "Q3305213",
+        "Q15711026",
+        "Q15727816"
+      ]
     },
     {
       "qid": "Q5779800",
       "label": "Militia Company of District XI under the Command of Captain Reynier Reael",
       "classification": "duplicate-candidate",
-      "holder_count": 3,
       "work_ids": [
         "32c96a3-militia-company-of-district-xi-under-codde",
         "a292b4a-militia-company-of-district-xi-under-codde",
@@ -45,13 +50,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q5779800.json"
-      }
+      },
+      "n_sidecars": 3,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q19904859",
       "label": "The Miracle of the Loaves and Fishes",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "0777183-the-miracle-of-the-loaves-and-tintoretto",
         "7c89c9a-the-miracle-of-the-loaves-and-tintoretto"
@@ -62,13 +70,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q19904859.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q24020196",
       "label": "The garden at the asylum at Saint-Rémy",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "569ac23-the-garden-of-the-asylum-at-gogh",
         "8716d0e-the-garden-of-the-asylum-at-gogh"
@@ -79,13 +90,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24020196.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q24022809",
       "label": "Olive Grove",
       "classification": "duplicate-candidate",
-      "holder_count": 3,
       "work_ids": [
         "3936e31-olive-grove-gogh",
         "86e1e26-olive-grove-gogh",
@@ -97,13 +111,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24022809.json"
-      }
+      },
+      "n_sidecars": 3,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q24046967",
       "label": "Poppy field",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "0fc5922-field-with-poppies-1888",
         "7c7a062-field-with-poppies-gogh"
@@ -114,13 +131,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24046967.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q44843793",
       "label": "Portret van jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt (Ubbergen 1848 - 1925 ’s-Hertogenbosch)",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "4f715fe-portrait-of-jonkvrouwe-maria-francisca-louisa-khnopff",
         "6f599de-portrait-of-jonkvrouwe-maria-francisca-louisa-khnopff"
@@ -131,13 +151,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q44843793.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q47512039",
       "label": "Ronald Reagan",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "3042ae4-ronald-reagan-kinstler",
         "4d94189-ronald-reagan-kinstler"
@@ -148,13 +171,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q47512039.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q47512541",
       "label": "Harry S Truman",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "0a134bd-harry-s-truman-kempton",
         "c10bacd-harry-s-truman-kempton"
@@ -165,13 +191,16 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q47512541.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     },
     {
       "qid": "Q50433790",
       "label": "Vétheuil",
       "classification": "duplicate-candidate",
-      "holder_count": 2,
       "work_ids": [
         "43d5126-ve-theuil-monet",
         "78dabb2-ve-theuil-monet"
@@ -182,7 +211,11 @@
         ],
         "matched_group_classes": [],
         "source": "https://www.wikidata.org/wiki/Special:EntityData/Q50433790.json"
-      }
+      },
+      "n_sidecars": 2,
+      "evidence_p31": [
+        "Q3305213"
+      ]
     }
   ],
   "adjudications": [
