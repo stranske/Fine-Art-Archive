@@ -33,7 +33,8 @@ class FakeSparql:
 def test_corrects_title_and_artist() -> None:
     meta = {"work_id": "w", "title": "The harvest of wheat", "artist": {"name": "T H Benton"}}
     changes = apply_finding(
-        meta, {"artist_name": "Thomas Hart Benton", "title": "Cradling Wheat", "source": "SLAM"},
+        meta,
+        {"artist_name": "Thomas Hart Benton", "title": "Cradling Wheat", "source": "SLAM"},
         client=FakeSparql(set()),
     )
     assert meta["title"] == "Cradling Wheat"
@@ -51,7 +52,8 @@ def test_title_correction_reopens_work_qid() -> None:
 def test_sets_verified_work_qid() -> None:
     meta = {"work_id": "w", "title": "Door", "artist": {"name": "Donatello"}}
     apply_finding(
-        meta, {"wikidata_q": "Q3908892", "title": "Door of the Apostles", "source": "Wikidata"},
+        meta,
+        {"wikidata_q": "Q3908892", "title": "Door of the Apostles", "source": "Wikidata"},
         client=FakeSparql({"Q3908892"}),
     )
     assert meta["stable_identifiers"]["wikidata_q"] == "Q3908892"
@@ -60,9 +62,7 @@ def test_sets_verified_work_qid() -> None:
 
 def test_rejects_non_artwork_qid() -> None:
     meta = {"work_id": "w", "title": "t", "artist": {"name": "x"}}
-    changes = apply_finding(
-        meta, {"wikidata_q": "Q5", "source": "x"}, client=FakeSparql(set())
-    )
+    changes = apply_finding(meta, {"wikidata_q": "Q5", "source": "x"}, client=FakeSparql(set()))
     assert (meta.get("stable_identifiers") or {}).get("wikidata_q") is None
     assert any("REJECTED" in c for c in changes)
 
@@ -74,7 +74,10 @@ def test_clears_stale_relation_on_artist_correction() -> None:
 
 
 def test_resumable_skip_detection() -> None:
-    meta = {"work_id": "w", "field_provenance": {"artist_qid": {"source_ref": "faa:google-lens/text"}}}
+    meta = {
+        "work_id": "w",
+        "field_provenance": {"artist_qid": {"source_ref": "faa:google-lens/text"}},
+    }
     assert _already_lens(meta, "artist_qid") is True
     assert _already_lens({"work_id": "w"}, "artist_qid") is False
 
@@ -85,8 +88,12 @@ def test_confirmed_no_artist_finalizes_null() -> None:
     meta = {"work_id": "w", "title": "Castillo_de_Zafra", "artist": {"name": None}}
     changes = apply_finding(
         meta,
-        {"verdict": "site", "category": "architecture", "title": "Castle of Zafra",
-         "source": "Wikipedia"},
+        {
+            "verdict": "site",
+            "category": "architecture",
+            "title": "Castle of Zafra",
+            "source": "Wikipedia",
+        },
         client=FakeSparql(set()),
     )
     assert meta["field_provenance"]["artist_qid"]["source_ref"] == REF_IMAGE_CONFIRMED
@@ -98,7 +105,8 @@ def test_confirmed_no_artist_finalizes_null() -> None:
 def test_no_change_when_already_correct() -> None:
     meta = {"work_id": "w", "title": "Cradling Wheat", "artist": {"name": "Thomas Hart Benton"}}
     changes = apply_finding(
-        meta, {"artist_name": "Thomas Hart Benton", "title": "Cradling Wheat", "source": "x"},
+        meta,
+        {"artist_name": "Thomas Hart Benton", "title": "Cradling Wheat", "source": "x"},
         client=FakeSparql(set()),
     )
     assert changes == []

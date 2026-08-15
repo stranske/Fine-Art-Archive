@@ -99,8 +99,11 @@ def apply_finding(
             "not_available",
             "google-lens",
             source_ref=REF_IMAGE_CONFIRMED,
-            note=(finding.get("note") or "Image search confirms no individual artist "
-                  f"(verdict={verdict}); null attribution is correct. Source: {source}."),
+            note=(
+                finding.get("note")
+                or "Image search confirms no individual artist "
+                f"(verdict={verdict}); null attribution is correct. Source: {source}."
+            ),
         )
         return [f"confirmed-no-artist ({verdict})"]
 

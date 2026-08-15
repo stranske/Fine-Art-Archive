@@ -38,15 +38,17 @@ def resolve(title: str, year: int | None, works: list[OeuvreWork]):
 class TestMatchesTheV4PassCouldNotReach:
     def test_a_non_english_label_is_matched(self) -> None:
         """v4 filters labels to English, so a Dutch-only work scored against ''."""
-        oeuvre = [work(
-            "Q44843793",
-            "Portret van jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt "
-            "(Ubbergen 1848 - 1925 's-Hertogenbosch)",
-            inception="1888",
-        )]
+        oeuvre = [
+            work(
+                "Q44843793",
+                "Portret van jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt "
+                "(Ubbergen 1848 - 1925 's-Hertogenbosch)",
+                inception="1888",
+            )
+        ]
         best, why = resolve(
-            "Portrait of Jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt",
-            1888, oeuvre)
+            "Portrait of Jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt", 1888, oeuvre
+        )
         # The two agree on everything but "Portrait of" / "Portret van" and the
         # label's parenthesised life dates.
         assert why == "match" and best.work_qid == "Q44843793"
@@ -57,7 +59,7 @@ class TestMatchesTheV4PassCouldNotReach:
         assert why == "match" and best.work_qid == "Q19905196"
 
     def test_a_qualifier_prefix_is_contained(self) -> None:
-        """"Portrait with a Bottle of Wine" for "SELF-Portrait With a Bottle of Wine"."""
+        """ "Portrait with a Bottle of Wine" for "SELF-Portrait With a Bottle of Wine"."""
         oeuvre = [work("Q18890813", "Self-Portrait With a Bottle of Wine", inception="1906")]
         best, why = resolve("Portrait with a Bottle of Wine", 1906, oeuvre)
         assert why == "match"
@@ -163,7 +165,7 @@ class TestSectionsAreNotWorks:
         assert best is None and why == "derived-item-candidate"
 
     def test_dropping_a_parenthetical_from_the_sidecar_title_needs_review(self) -> None:
-        """"Isenheim Altarpiece (Crucifixion)" is a panel, not the altarpiece."""
+        """ "Isenheim Altarpiece (Crucifixion)" is a panel, not the altarpiece."""
         oeuvre = [work("Q591762", "Isenheim Altarpiece", inception="1512")]
         best, why = resolve("Isenheim Altarpiece (Crucifixion)", 1512, oeuvre)
         assert best is None and why == "title-parenthetical-needs-review"
@@ -171,15 +173,18 @@ class TestSectionsAreNotWorks:
     def test_a_parenthetical_is_never_scored_as_a_title_of_its_own(self) -> None:
         """It matched a print to the Q-ID of the SERIES it belongs to."""
         series = work("Q243248", "The Fifty-three Stations of the Tokaido", inception="1833")
-        best, why = resolve("Chiryu, Station 40 (The Fifty-Three Stations of the Tokaido)",
-                            1833, [series])
+        best, why = resolve(
+            "Chiryu, Station 40 (The Fifty-Three Stations of the Tokaido)", 1833, [series]
+        )
         assert best is None, "the series is not the print"
         assert why == "no-candidate"
 
 
 class TestPieces:
     def test_title_variants_reports_how_each_form_was_reached(self) -> None:
-        forms = {how: form for form, how in reversed(title_variants("The Marriage of the Virgin 2"))}
+        forms = {
+            how: form for form, how in reversed(title_variants("The Marriage of the Virgin 2"))
+        }
         assert forms["as-written"] == "marriage of the virgin 2"
         assert forms["copy-number"] == "marriage of the virgin"
 

@@ -818,9 +818,7 @@ def _mixed_fraction(value: str) -> float:
     return float(whole) + float(numerator) / float(denominator)
 
 
-def _parse_dimension_segment(
-    segment: str, unit_factor: float
-) -> tuple[float | None, float | None]:
+def _parse_dimension_segment(segment: str, unit_factor: float) -> tuple[float | None, float | None]:
     """Pull an (h, w) pair out of one line of a dimension string."""
     # ``\b`` keeps the bare-letter forms from matching inside a word ("sketch 45"
     # would otherwise read as h=45); the optional period admits the common

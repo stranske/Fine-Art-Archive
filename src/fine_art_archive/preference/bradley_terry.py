@@ -136,7 +136,7 @@ def fit(comparisons: list[tuple[str, str]]) -> BradleyTerryResult:
     # and every strength was crushed toward zero. That only showed up on a real
     # round-robin: 136 comparisons over 17 works, where the undefeated work sat
     # at 10.9 and the winless one at 0.000, and the fit never converged.
-    for (a, b) in list(n):
+    for a, b in list(n):
         n[(a, b)] += 2 * PRIOR_STRENGTH
         wins[a] += PRIOR_STRENGTH
         wins[b] += PRIOR_STRENGTH

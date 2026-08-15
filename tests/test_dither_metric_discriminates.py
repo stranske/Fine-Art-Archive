@@ -78,9 +78,9 @@ class TestItCanTellTwoDithersApart:
         plain = dither_error(src, quantize(src, SPECTRA6, method="none"))
         fs = dither_error(src, quantize(src, SPECTRA6, method="floyd-steinberg"))
         assert fs["perceived_error"] < plain["perceived_error"]
-        assert fs["per_pixel_mean"] > plain["per_pixel_mean"], (
-            "dithering INCREASES per-pixel error; that is the mechanism, not a regression"
-        )
+        assert (
+            fs["per_pixel_mean"] > plain["per_pixel_mean"]
+        ), "dithering INCREASES per-pixel error; that is the mechanism, not a regression"
 
     def test_undithered_flat_quantisation_has_the_most_artifact_energy(self) -> None:
         src = _plate()

@@ -485,8 +485,7 @@ def test_dimension_parser_converts_to_centimetres(raw: str, expected: dict[str, 
         # Unitless labeled values belong to their own line, not to a later
         # framed-imperial line in the same museum record.
         (
-            "Image: H. 34.9 x W. 23.8\n"
-            "Frame: H. 63 in. x W. 45 in.",
+            "Image: H. 34.9 x W. 23.8\n" "Frame: H. 63 in. x W. 45 in.",
             {"h_cm": 34.9, "w_cm": 23.8},
         ),
         # When a record has no parenthesized metric pair, preserve mixed

@@ -50,7 +50,9 @@ ARTIST_SEARCH_PLAN_VERSION = 1  # bump when an artist-search strategy is added
 
 # Ledger source_ref prefixes -- the machine-distinguishable state markers.
 REF_ANONYMOUS = "faa:creator/anonymous"
-REF_UNATTRIBUTABLE = "faa:creator/unattributable"  # legacy terminal; now reopened to REF_IMAGE_PENDING
+REF_UNATTRIBUTABLE = (
+    "faa:creator/unattributable"  # legacy terminal; now reopened to REF_IMAGE_PENDING
+)
 # A corrupt / null-name record is NOT terminally unattributable from text alone:
 # image search recovers many of these (a debris name hides a real, image-findable
 # work). This is a NON-terminal "text exhausted, image search still owed" state --
