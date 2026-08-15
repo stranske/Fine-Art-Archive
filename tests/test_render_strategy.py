@@ -8,12 +8,6 @@ from fine_art_archive.eink.render_strategy import choose_render_strategy
 
 
 def _fit(verdict_fraction: float) -> GamutFit:
-    if verdict_fraction < 0.02:
-        verdict = "well-served"
-    elif verdict_fraction < 0.15:
-        verdict = "compromised"
-    else:
-        verdict = "poorly-served"
     return GamutFit(0.01, 0.02, 0.03, verdict_fraction, "spectra6", 100)
 
 
