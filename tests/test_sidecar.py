@@ -154,6 +154,32 @@ def test_series_qid_accepted_as_part_of_identity():
     sidecar.validate(meta)
 
 
+def test_series_position_requires_part_of_q():
+    meta = dict(MINIMAL_VALID)
+    meta["series"] = {"position": 1, "source": "catalogue raisonne"}
+
+    with pytest.raises(jsonschema.ValidationError, match="requires stable_identifiers.part_of_q"):
+        sidecar.validate(meta)
+
+
+@pytest.mark.parametrize("position", [True, 0, -1, "first"])
+def test_series_position_rejects_non_positive_or_free_form_values(position):
+    meta = dict(MINIMAL_VALID)
+    meta["stable_identifiers"] = {"part_of_q": "Q2667782"}
+    meta["series"] = {"position": position}
+
+    with pytest.raises(jsonschema.ValidationError):
+        sidecar.validate(meta)
+
+
+def test_series_position_accepts_explicit_positive_integer():
+    meta = dict(MINIMAL_VALID)
+    meta["stable_identifiers"] = {"part_of_q": "Q2667782"}
+    meta["series"] = {"position": 4, "position_label": "Plate IV", "source": "catalog"}
+
+    sidecar.validate(meta)
+
+
 def test_invalid_rights_status_enum():
     meta = dict(MINIMAL_VALID)
     meta["rights"] = {"status": "maybe?"}
