@@ -12,7 +12,27 @@ from PIL import Image, ImageCms
 
 from fine_art_archive.eink.gamut import gamut_fit
 from fine_art_archive.eink.palette import GRAY16, MONO1BIT, get_palette
-from fine_art_archive.eink.render_strategy import RenderStrategyChoice, choose_render_strategy
+from fine_art_archive.eink.render_strategy import (
+    RenderStrategyChoice,
+    RenderStrategyName,
+    choose_render_strategy,
+)
+
+_VALID_RENDER_STRATEGIES = frozenset({"color", "grayscale", "duotone"})
+
+
+def _parse_render_strategy(value: object) -> RenderStrategyName:
+    if value not in _VALID_RENDER_STRATEGIES:
+        raise ValueError(f"invalid render strategy: {value!r}")
+    return value  # type: ignore[return-value]
+
+
+def _coerce_strategy_policy(
+    policy: dict[str, str] | None,
+) -> dict[str, RenderStrategyName] | None:
+    if policy is None:
+        return None
+    return {key: _parse_render_strategy(value) for key, value in policy.items()}
 
 SPECTRA6_PALETTE: tuple[tuple[int, int, int], ...] = (
     (0, 0, 0),
@@ -223,7 +243,7 @@ def gamut_render_evidence(
 ) -> RenderEvidence:
     """Compute gamut verdict and chosen render strategy for a master image."""
     fit = gamut_fit(image.convert("RGB"), get_palette("spectra6"))
-    choice = choose_render_strategy(fit, policy=policy)
+    choice = choose_render_strategy(fit, policy=_coerce_strategy_policy(policy))
     return RenderEvidence(
         strategy=choice.strategy,
         reason=choice.reason,
@@ -254,11 +274,13 @@ def render_for_device(
         fit = gamut_fit(rgb_source, get_palette("spectra6"))
         if forced_strategy:
             strategy = RenderStrategyChoice(
-                str(forced_strategy),
+                _parse_render_strategy(forced_strategy),
                 f"forced render_strategy={forced_strategy}",
             )
         else:
-            strategy = choose_render_strategy(fit, policy=policy)
+            strategy = choose_render_strategy(
+                fit, policy=_coerce_strategy_policy(policy)
+            )
         gamut_mapped = _icc_gamut_map(src, device_hints)
         resized = gamut_mapped.resize(native_size, Image.Resampling.LANCZOS)
     rgb = np.asarray(resized, dtype=np.uint8)
