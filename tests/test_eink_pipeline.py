@@ -255,6 +255,67 @@ def test_rating_filter_uses_fit_and_reports_unrated():
     assert res.coverage["excluded_for_missing_metadata"]["unrated (fit)"] == 1
 
 
+def test_preference_diverse_playlist_filters_then_selects():
+    rows = [
+        sidecar("near-a", artist="Included"),
+        sidecar("near-b", artist="Included"),
+        sidecar("diverse", artist="Included"),
+        sidecar("filtered", artist="Excluded"),
+    ]
+    qualities = {"near-a": 1.0, "near-b": 0.99, "diverse": 0.85}
+    embeddings = {
+        "near-a": [1.0, 0.0],
+        "near-b": [0.999, 0.04],
+        "diverse": [0.0, 1.0],
+    }
+
+    result = build(
+        rows,
+        PlaylistSpec(
+            artists=["Included"],
+            selection_mode="preference-diverse",
+            limit=2,
+            seed=17,
+        ),
+        quality_scores=qualities,
+        embeddings=embeddings,
+    )
+
+    assert result.matched == 3
+    assert result.work_ids == ["near-a", "diverse"]
+    assert [item["work_id"] for item in result.selection_diagnostics] == result.work_ids
+
+
+def test_playlist_preview_matches_direct_diverse_selection(tmp_path, monkeypatch):
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.preference.exhibition import select_quality_diverse
+
+    rows = [sidecar(work_id) for work_id in ("near-a", "near-b", "diverse")]
+    qualities = {"near-a": 1.0, "near-b": 0.99, "diverse": 0.85}
+    embeddings = {
+        "near-a": [1.0, 0.0],
+        "near-b": [0.999, 0.04],
+        "diverse": [0.0, 1.0],
+    }
+    direct = select_quality_diverse(
+        [work_id for work_id, _meta in rows], qualities, embeddings, 2, seed=17
+    )
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", tmp_path / "absent.jsonl")
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+
+    response = api_main.eink_playlist_preview(
+        api_main.PlaylistIn(
+            spec={"selection_mode": "preference-diverse", "limit": 2, "seed": 17},
+            quality_scores=qualities,
+            embeddings=embeddings,
+        )
+    )
+
+    assert response["work_ids"] == direct.selected_ids
+    assert [item["work_id"] for item in response["selection_diagnostics"]] == direct.selected_ids
+
+
 def test_random_sort_is_seeded_so_a_card_is_reproducible():
     rows = [sidecar(f"w{i}") for i in range(30)]
     a = build(rows, PlaylistSpec(sort="random", seed=7)).work_ids
