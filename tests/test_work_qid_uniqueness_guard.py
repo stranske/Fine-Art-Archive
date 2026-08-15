@@ -56,9 +56,9 @@ def test_resolver_never_assigns_one_work_qid_to_two_sidecars(tmp_path: Path) -> 
 
     stats, outcomes = backfill(tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
 
-    assert _qids(tmp_path) == [SERIES_QID], (
-        f"resolver assigned one work QID to more than one sidecar: {_qids(tmp_path)}"
-    )
+    assert _qids(tmp_path) == [
+        SERIES_QID
+    ], f"resolver assigned one work QID to more than one sidecar: {_qids(tmp_path)}"
     assert stats.resolved == 1
     assert outcomes["declined:collision"] == 1
 

@@ -113,14 +113,16 @@ class TestResolvedWorkQid:
 class TestIdentityInvariant:
     def test_a_derived_item_holding_a_q_id_is_a_violation(self) -> None:
         detail = detail_of(
-            "aaaaaaa-detail", "bbbbbbb-master",
+            "aaaaaaa-detail",
+            "bbbbbbb-master",
             stable_identifiers={"wikidata_q": "Q10346982"},
         )
         assert violates_identity_invariant(detail)
 
     def test_a_derived_item_with_a_null_q_id_is_fine(self) -> None:
         detail = detail_of(
-            "aaaaaaa-detail", "bbbbbbb-master",
+            "aaaaaaa-detail",
+            "bbbbbbb-master",
             stable_identifiers={"wikidata_q": None},
         )
         assert not violates_identity_invariant(detail)
@@ -296,7 +298,12 @@ class TestVariantLinks:
         # rel_path is relative to <archive_root>/Art/; only works/<work_id>/<file>
         # names another sidecar. A file living beside the master is not a holding.
         links = variant_links(
-            [work("bbbbbbb-master", files={"variants": [{"rel_path": rel_path, "role": "unknown"}]})]
+            [
+                work(
+                    "bbbbbbb-master",
+                    files={"variants": [{"rel_path": rel_path, "role": "unknown"}]},
+                )
+            ]
         )
 
         assert links.holdings == {}

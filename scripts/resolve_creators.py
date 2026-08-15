@@ -138,13 +138,8 @@ def _apply_outcome(meta: dict[str, Any], outcome: CreatorOutcome) -> str:
     prior_entry = _artist_entry(meta)
     prior_ref = str((prior_entry or {}).get("source_ref") or "")
     canonical = artist.get("canonical")
-    recovered_name = (
-        str(artist.get("name") or "").strip()
-        or (
-            str(canonical.get("display_name") or "").strip()
-            if isinstance(canonical, dict)
-            else ""
-        )
+    recovered_name = str(artist.get("name") or "").strip() or (
+        str(canonical.get("display_name") or "").strip() if isinstance(canonical, dict) else ""
     )
     if (
         outcome.kind in {"searched", "unattributable"}

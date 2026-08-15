@@ -80,11 +80,15 @@ def _valid(work_id: str, **extra: Any) -> dict[str, Any]:
         "schema_version": "1.0",
         "artist": {"name": "Unknown"},
         "title": "Obscure",
-        "files": {"master": {"filename": "master.jpeg", "sha256": "0" * 64,
-                             "size_bytes": 1,
-                             "ingested_at": "2026-01-01T00:00:00+00:00"}},
-        "history": [{"actor": "test", "op": "created",
-                     "ts": "2026-01-01T00:00:00+00:00"}],
+        "files": {
+            "master": {
+                "filename": "master.jpeg",
+                "sha256": "0" * 64,
+                "size_bytes": 1,
+                "ingested_at": "2026-01-01T00:00:00+00:00",
+            }
+        },
+        "history": [{"actor": "test", "op": "created", "ts": "2026-01-01T00:00:00+00:00"}],
     }
     meta.update(extra)
     return meta
@@ -165,16 +169,23 @@ class TestDerivedItemsAreSkipped:
 
     def test_backfill_leaves_a_derived_sidecar_untouched(self, tmp_path: Path) -> None:
         """The regression itself: a resolvable derived item must gain no Q-ID."""
-        _write(tmp_path, {
-            "work_id": "8d8f6ab-x",
-            "title": "The birth of Venus",
-            "artist": {"name": "Botticelli", "wikidata_q": "Q5669"},
-            "derived_from": {"work_id": "c496d47-x", "kind": "capture"},
-        })
+        _write(
+            tmp_path,
+            {
+                "work_id": "8d8f6ab-x",
+                "title": "The birth of Venus",
+                "artist": {"name": "Botticelli", "wikidata_q": "Q5669"},
+                "derived_from": {"work_id": "c496d47-x", "kind": "capture"},
+            },
+        )
         # A search that WOULD have matched, so the skip is what stops it.
         stats, outcomes = backfill(
-            tmp_path, sparql=FakeSparql(), json_client=FakeJson(["Q151047"]),
-            apply=True, retire=True)
+            tmp_path,
+            sparql=FakeSparql(),
+            json_client=FakeJson(["Q151047"]),
+            apply=True,
+            retire=True,
+        )
 
         after = json.loads((tmp_path / "8d8f6ab-x" / "meta.json").read_text())
         assert (after.get("stable_identifiers") or {}).get("wikidata_q") is None
@@ -184,11 +195,12 @@ class TestDerivedItemsAreSkipped:
 
     def test_a_normal_work_is_still_processed(self, tmp_path: Path) -> None:
         """The guard must not swallow ordinary works."""
-        _write(tmp_path, {"work_id": "1111111-x", "artist": {"name": "Unknown"},
-                          "title": "Obscure"})
+        _write(
+            tmp_path, {"work_id": "1111111-x", "artist": {"name": "Unknown"}, "title": "Obscure"}
+        )
         stats, outcomes = backfill(
-            tmp_path, sparql=FakeSparql(), json_client=FakeJson([]),
-            apply=True, retire=True)
+            tmp_path, sparql=FakeSparql(), json_client=FakeJson([]), apply=True, retire=True
+        )
         assert stats.attempted == 1
         assert outcomes["skipped:derived-item"] == 0
 
@@ -203,6 +215,7 @@ def offline(monkeypatch: pytest.MonkeyPatch):
     the main()-level tests need them patched at the module instead.
     """
     import scripts.resolve_work_qids as mod
+
     monkeypatch.setattr(mod, "SparqlClient", lambda *a, **k: FakeSparql())
     monkeypatch.setattr(mod, "JsonClient", lambda *a, **k: FakeJson([]))
 
@@ -222,8 +235,7 @@ class TestApplyRefusesToMirrorSilently:
         """Staging-only stays available — it just has to be asked for."""
         monkeypatch.delenv("FAA_ART_WORKS_ROOT", raising=False)
         staging = tmp_path / "staging"
-        _write(staging, {"work_id": "1111111-x", "artist": {"name": "Unknown"},
-                         "title": "Obscure"})
+        _write(staging, {"work_id": "1111111-x", "artist": {"name": "Unknown"}, "title": "Obscure"})
         assert main(["--apply", "--no-mirror", "--staging-dir", str(staging)]) == 0
 
     def test_no_mirror_suppresses_writes_to_a_configured_root(
@@ -245,8 +257,7 @@ class TestApplyRefusesToMirrorSilently:
         mirror.write_text(json.dumps(sentinel), encoding="utf-8")
         monkeypatch.setenv("FAA_ART_WORKS_ROOT", str(works))
 
-        assert main(["--apply", "--retire", "--no-mirror",
-                     "--staging-dir", str(staging)]) == 0
+        assert main(["--apply", "--retire", "--no-mirror", "--staging-dir", str(staging)]) == 0
 
         # The staging copy MUST have been retired, proving the run reached the
         # write path; only then does an untouched mirror mean anything.
@@ -267,8 +278,18 @@ class TestApplyRefusesToMirrorSilently:
         monkeypatch.delenv("FAA_ART_WORKS_ROOT", raising=False)
         staging = tmp_path / "staging"
         staging.mkdir()
-        assert main(["--apply", "--staging-dir", str(staging),
-                     "--art-works-root", str(tmp_path / "works")]) == 0
+        assert (
+            main(
+                [
+                    "--apply",
+                    "--staging-dir",
+                    str(staging),
+                    "--art-works-root",
+                    str(tmp_path / "works"),
+                ]
+            )
+            == 0
+        )
 
 
 class TestVariantHoldingsAreSkipped:
@@ -291,8 +312,15 @@ class TestVariantHoldingsAreSkipped:
     def _clients(self) -> tuple[SearchJson, FakeSparqlDetails]:
         """A search that WOULD resolve either sidecar, so the skip is what stops it."""
         return SearchJson([self.QID]), FakeSparqlDetails(
-            [_detail_row(self.QID, "Girl with a Pearl Earring", artwork=True,
-                         creators=[], inception="1665")]
+            [
+                _detail_row(
+                    self.QID,
+                    "Girl with a Pearl Earring",
+                    artwork=True,
+                    creators=[],
+                    inception="1665",
+                )
+            ]
         )
 
     def _sidecar(self, work_id: str, *, variants: list[str] = ()) -> dict[str, Any]:
@@ -304,10 +332,15 @@ class TestVariantHoldingsAreSkipped:
         }
         if variants:
             meta["files"] = {
-                "master": {"filename": "m.jpeg", "sha256": "a" * 64, "size_bytes": 1,
-                           "ingested_at": "2026-05-16T21:30:00Z"},
-                "variants": [{"rel_path": f"works/{v}/m.jpeg", "role": "landscape-crop"}
-                             for v in variants],
+                "master": {
+                    "filename": "m.jpeg",
+                    "sha256": "a" * 64,
+                    "size_bytes": 1,
+                    "ingested_at": "2026-05-16T21:30:00Z",
+                },
+                "variants": [
+                    {"rel_path": f"works/{v}/m.jpeg", "role": "landscape-crop"} for v in variants
+                ],
             }
         return meta
 
@@ -318,7 +351,8 @@ class TestVariantHoldingsAreSkipped:
         json_c, sparql = self._clients()
 
         stats, outcomes = backfill(
-            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True
+        )
 
         crop = json.loads((tmp_path / "aaaaaaa-crop" / "meta.json").read_text())
         owner = json.loads((tmp_path / "bbbbbbb-master" / "meta.json").read_text())
@@ -335,7 +369,8 @@ class TestVariantHoldingsAreSkipped:
         json_c, sparql = self._clients()
 
         stats, outcomes = backfill(
-            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True
+        )
 
         for work_id in ("aaaaaaa-crop", "bbbbbbb-master"):
             meta = json.loads((tmp_path / work_id / "meta.json").read_text())
@@ -347,15 +382,20 @@ class TestVariantHoldingsAreSkipped:
         """A file beside the master is not another sidecar, so nothing is held."""
         meta = self._sidecar("bbbbbbb-master")
         meta["files"] = {
-            "master": {"filename": "m.jpeg", "sha256": "a" * 64, "size_bytes": 1,
-                       "ingested_at": "2026-05-16T21:30:00Z"},
+            "master": {
+                "filename": "m.jpeg",
+                "sha256": "a" * 64,
+                "size_bytes": 1,
+                "ingested_at": "2026-05-16T21:30:00Z",
+            },
             "variants": [{"rel_path": "renders/eink/bbbbbbb-master.png", "role": "eink-render"}],
         }
         search_write(tmp_path, meta)
         json_c, sparql = self._clients()
 
         stats, outcomes = backfill(
-            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True)
+            tmp_path, sparql=sparql, json_client=json_c, apply=True, retire=True
+        )
 
         assert stats.resolved == 1
         assert not [key for key in outcomes if key.startswith("skipped:variant")]
@@ -406,8 +446,12 @@ class TestAPlanBumpDoesNotOverturnDecisions:
         before = json.loads((tmp_path / "aaaaaaa-x" / "meta.json").read_text())
 
         stats, _ = backfill(
-            tmp_path, sparql=FakeSparql(), json_client=FakeJson(["Q17277950"]),
-            apply=True, retire=True)
+            tmp_path,
+            sparql=FakeSparql(),
+            json_client=FakeJson(["Q17277950"]),
+            apply=True,
+            retire=True,
+        )
 
         assert json.loads((tmp_path / "aaaaaaa-x" / "meta.json").read_text()) == before
         assert stats.attempted == 0
