@@ -13,6 +13,11 @@ determinant of how a reproduction looks, and every vendor except BLOOMIN8
 performs it internally with an undocumented pipeline. See palette.py.
 """
 
+from fine_art_archive.preference.exhibition import (  # noqa: F401
+    ExhibitionSelection,
+    select_quality_diverse,
+)
+
 from .feed import (  # noqa: F401
     INTERVALS,
     PlaylistStore,
@@ -68,6 +73,7 @@ __all__ = [
     "SPECTRA6",
     "TARGETS",
     "ExportItem",
+    "ExhibitionSelection",
     "FitMode",
     "coerce_fit",
     "ExportReport",
@@ -94,4 +100,5 @@ __all__ = [
     "parse_year",
     "quantize",
     "render_for_target",
+    "select_quality_diverse",
 ]

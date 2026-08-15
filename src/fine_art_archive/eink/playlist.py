@@ -34,8 +34,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, get_args
 
+from fine_art_archive.preference.exhibition import select_quality_diverse
+
 SortKey = Literal["fit", "quality", "year", "artist", "title", "random", "as-filtered"]
+SelectionMode = Literal["ordinary", "preference-diverse"]
 _SORT_KEYS = get_args(SortKey)
+_SELECTION_MODES = get_args(SelectionMode)
 
 # A mood is a named query over tags that actually exist. `any_tags` means at
 # least one must be present; `all_tags` means every one must be.
@@ -134,6 +138,9 @@ class PlaylistSpec:
     limit: int | None = None
     sort: SortKey = "fit"
     seed: int = 42
+    selection_mode: SelectionMode = "ordinary"
+    selection_quality: dict[str, float] = field(default_factory=dict)
+    selection_embeddings: dict[str, list[float]] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, d: dict) -> PlaylistSpec:
@@ -146,6 +153,11 @@ class PlaylistSpec:
         sort = d.get("sort", "fit")
         if sort not in _SORT_KEYS:
             raise ValueError(f"unknown playlist sort {sort!r}; expected one of {_SORT_KEYS}")
+        selection_mode = d.get("selection_mode", "ordinary")
+        if selection_mode not in _SELECTION_MODES:
+            raise ValueError(
+                f"unknown playlist selection mode {selection_mode!r}; expected one of {_SELECTION_MODES}"
+            )
         return cls(**d)
 
 
@@ -157,6 +169,7 @@ class PlaylistResult:
     coverage: dict[str, Any]
     facets: dict[str, list[tuple[str, int]]]
     spec: dict
+    selection: dict[str, Any] = field(default_factory=dict)
 
 
 def _tags_of(sc: dict) -> set[str]:
@@ -350,7 +363,31 @@ def build(
             return (row["title"].lower(),)
         return (0,)
 
-    if spec.sort == "random":
+    selection: dict[str, Any] = {"mode": "ordinary"}
+    if spec.selection_mode == "preference-diverse":
+        if spec.limit is None:
+            raise ValueError("preference-diverse selection requires a playlist limit")
+        candidate_ids = [row["work_id"] for row in rows]
+        missing_quality = [wid for wid in candidate_ids if wid not in spec.selection_quality]
+        missing_embeddings = [wid for wid in candidate_ids if wid not in spec.selection_embeddings]
+        if missing_quality or missing_embeddings:
+            missing = []
+            if missing_quality:
+                missing.append(f"quality for {missing_quality}")
+            if missing_embeddings:
+                missing.append(f"embeddings for {missing_embeddings}")
+            raise ValueError("preference-diverse selection is missing " + "; ".join(missing))
+        selected = select_quality_diverse(
+            candidate_ids,
+            [spec.selection_quality[wid] for wid in candidate_ids],
+            [spec.selection_embeddings[wid] for wid in candidate_ids],
+            spec.limit,
+            seed=spec.seed,
+        )
+        by_id = {row["work_id"]: row for row in rows}
+        rows = [by_id[wid] for wid in selected.work_ids]
+        selection = selected.diagnostics
+    elif spec.sort == "random":
         import random
 
         rnd = random.Random(spec.seed)  # seeded so a card is reproducible
@@ -359,7 +396,7 @@ def build(
         rows.sort(key=sort_value)
 
     matched = len(rows)
-    if spec.limit:
+    if spec.limit and spec.selection_mode != "preference-diverse":
         rows = rows[: spec.limit]
 
     return PlaylistResult(
@@ -378,6 +415,7 @@ def build(
             "mood": facet_mood.most_common(),
         },
         spec=spec.__dict__.copy(),
+        selection=selection,
     )
 
 

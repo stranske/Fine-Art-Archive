@@ -411,7 +411,7 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         res = _eink.build(
             sidecars, spec, ratings=ratings, dossier_ids=set(store.work_ids_with_dossier())
         )
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
     by_id = dict(sidecars)
@@ -435,6 +435,7 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         "selected": len(res.work_ids),
         "coverage": res.coverage,
         "facets": {k: [list(t) for t in v] for k, v in res.facets.items()},
+        "selection": res.selection,
         "items": items,
         "work_ids": res.work_ids,
     }
