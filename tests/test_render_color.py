@@ -30,12 +30,13 @@ def test_icc_gamut_mapping_runs_before_quantize_and_dither(monkeypatch, tmp_path
             "icc_profile": "srgb",
             "rendering_intent": "perceptual",
             "black_point_compensation": True,
+            "render_strategy": "color",
         }
     }
 
-    render.render_for_device(master, hints, "spectra6_test", out, native_size=(2, 1))
+    result = render.render_for_device(master, hints, "spectra6_test", out, native_size=(2, 1))
 
-    rendered = np.asarray(Image.open(out).convert("RGB"), dtype=np.uint8)
+    rendered = np.asarray(Image.open(result.path).convert("RGB"), dtype=np.uint8)
     assert rendered.shape[:2] == (1, 2)
     assert {tuple(pixel) for row in rendered for pixel in row} == {(0, 255, 0)}
 
@@ -62,9 +63,9 @@ def test_icc_mapping_normalizes_unprofiled_grayscale_before_transform(
         }
     }
 
-    render.render_for_device(master, hints, "spectra6_test", out, native_size=(2, 1))
+    result = render.render_for_device(master, hints, "spectra6_test", out, native_size=(2, 1))
 
-    rendered = np.asarray(Image.open(out).convert("RGB"), dtype=np.uint8)
+    rendered = np.asarray(Image.open(result.path).convert("RGB"), dtype=np.uint8)
     assert {tuple(pixel) for row in rendered for pixel in row} == {(0, 255, 0)}
 
 

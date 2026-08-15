@@ -420,15 +420,25 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     items = []
     for wid in res.work_ids[: body.sample]:
         sc = by_id.get(wid) or {}
-        items.append(
-            {
-                "work_id": wid,
-                "title": sc.get("title") or "",
-                "artist": _artist_of(sc),
-                "year": parse_year(sc.get("year")),
-                "has_master": _eink_master(wid) is not None,
-            }
-        )
+        item = {
+            "work_id": wid,
+            "title": sc.get("title") or "",
+            "artist": _artist_of(sc),
+            "year": parse_year(sc.get("year")),
+            "has_master": _eink_master(wid) is not None,
+        }
+        master = _eink_master(wid)
+        if master is not None:
+            from PIL import Image
+
+            from fine_art_archive.display.render import gamut_render_evidence
+
+            with Image.open(master) as im:
+                evidence = gamut_render_evidence(im)
+            item["render_strategy"] = evidence.strategy
+            item["render_strategy_reason"] = evidence.reason
+            item["gamut_verdict"] = evidence.gamut_verdict
+        items.append(item)
     return {
         "total_candidates": res.total_candidates,
         "matched": res.matched,
@@ -555,12 +565,32 @@ def eink_playlist_export(body: ExportIn) -> dict:
         raise HTTPException(400, str(exc)) from exc
 
     out = rep.as_dict()
+    render_evidence = []
+    from PIL import Image
+
+    from fine_art_archive.display.render import gamut_render_evidence
+
+    for wid in res.work_ids:
+        master = _eink_master(wid)
+        if master is None:
+            continue
+        with Image.open(master) as im:
+            evidence = gamut_render_evidence(im)
+        render_evidence.append(
+            {
+                "work_id": wid,
+                "render_strategy": evidence.strategy,
+                "render_strategy_reason": evidence.reason,
+                "gamut_verdict": evidence.gamut_verdict,
+            }
+        )
     out.update(
         {
             "path": str(dest),
             "target": tgt.key,
             "selected": len(items),
             "palette_measured": tgt.palette.measured,
+            "render_evidence": render_evidence,
         }
     )
     return out
