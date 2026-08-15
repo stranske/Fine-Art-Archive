@@ -36,8 +36,17 @@ def validate(meta: dict) -> None:
     """Raise jsonschema.ValidationError if meta is invalid; silent if valid."""
     import jsonschema  # imported lazily
 
+    from fine_art_archive.known_works.artwork_classes import KNOWN_SERIES_QIDS
+
     schema = load_schema()
     jsonschema.validate(instance=meta, schema=schema, format_checker=jsonschema.FormatChecker())
+    stable = meta.get("stable_identifiers")
+    work_qid = stable.get("wikidata_q") if isinstance(stable, dict) else None
+    if work_qid in KNOWN_SERIES_QIDS:
+        raise jsonschema.ValidationError(
+            f"{work_qid} denotes a series/group, not one work; "
+            "record it as stable_identifiers.part_of_q"
+        )
 
 
 def is_valid(meta: dict) -> bool:

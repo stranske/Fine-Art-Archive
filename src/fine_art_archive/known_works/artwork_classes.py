@@ -44,12 +44,14 @@ ALLOWED_P31: frozenset[str] = frozenset(
 # which must denote ONE work and be unique across the archive. A painting
 # series is unambiguously an artwork class and unambiguously not a single work,
 # so it passed a gate that was never asking the right thing — which is how 132
-# work Q-IDs ended up shared across sidecars, the worst of them on 50.
+# work Q-IDs were historically shared across sidecars. Current migrations must
+# classify the entity from Wikidata evidence rather than infer "series" from a
+# collision count alone.
 #
 # Note `Q15727816` (painting series) is a member of ALLOWED_P31 above. That is
 # correct and deliberate: a series IS an artwork class, and known-works queries
 # should still find it. It simply must not be recorded as a single work's
-# identity — it belongs in the sidecar's `series` block instead.
+# identity — it belongs in `stable_identifiers.part_of_q` instead.
 GROUP_P31: frozenset[str] = frozenset(
     {
         "Q15727816",  # painting series
@@ -61,6 +63,15 @@ GROUP_P31: frozenset[str] = frozenset(
 
 # What may be written to `stable_identifiers.wikidata_q`.
 SINGLE_WORK_P31: frozenset[str] = ALLOWED_P31 - GROUP_P31
+
+# Entity QIDs adjudicated by the versioned shared-QID report as series/group
+# identities. This small fail-closed registry lets ordinary sidecar validation
+# reject known bad writes without making validation depend on the network.
+KNOWN_SERIES_QIDS: frozenset[str] = frozenset(
+    {
+        "Q2667782",  # Rubens' Descent from the Cross triptych
+    }
+)
 
 
 def is_group_class(qid: str) -> bool:
@@ -120,6 +131,69 @@ def _p279_parents(entity: object) -> list[str]:
         if isinstance(value, dict) and isinstance(value.get("id"), str):
             parents.append(value["id"])
     return parents
+
+
+def _claim_qids(entity: object, property_id: str) -> list[str]:
+    """Extract entity-valued claim targets for ``property_id``."""
+    if not isinstance(entity, dict) or "missing" in entity:
+        return []
+    claims = entity.get("claims")
+    if not isinstance(claims, dict):
+        return []
+    qids: list[str] = []
+    for statement in claims.get(property_id) or []:
+        if not isinstance(statement, dict):
+            continue
+        snak = statement.get("mainsnak")
+        if not isinstance(snak, dict) or snak.get("snaktype") != "value":
+            continue
+        value = (snak.get("datavalue") or {}).get("value")
+        if isinstance(value, dict) and isinstance(value.get("id"), str):
+            qids.append(value["id"])
+    return qids
+
+
+def _reachable_roots(
+    qid: str, roots: frozenset[str], parent_map: dict[str, list[str]]
+) -> frozenset[str]:
+    """Return roots reached from ``qid`` through zero or more P279 edges."""
+    matched: set[str] = set()
+    seen: set[str] = set()
+    stack = [qid]
+    while stack:
+        current = stack.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        if current in roots:
+            matched.add(current)
+        stack.extend(parent_map.get(current, []))
+    return frozenset(matched)
+
+
+def series_qid_evidence(qid: str, entities: dict[str, object]) -> dict[str, object]:
+    """Classify an entity QID from P31/P279 evidence supplied by the caller.
+
+    ``entities`` is a hermetic ``wbgetentities``-shaped mapping containing the
+    candidate, its P31 classes, and any P279 ancestors needed for the decision.
+    The function never performs network I/O.
+    """
+    p31 = _claim_qids(entities.get(qid), "P31")
+    parent_map = {entity_qid: _p279_parents(entity) for entity_qid, entity in entities.items()}
+    matched: set[str] = set()
+    for class_qid in p31:
+        matched.update(_reachable_roots(class_qid, GROUP_P31, parent_map))
+    return {
+        "qid": qid,
+        "is_series": bool(matched),
+        "p31": sorted(set(p31), key=_qid_sort_key),
+        "matched_group_classes": sorted(matched, key=_qid_sort_key),
+    }
+
+
+def is_series_qid(qid: str, entities: dict[str, object]) -> bool:
+    """True when the entity's P31/P279 evidence reaches a group class."""
+    return bool(series_qid_evidence(qid, entities)["is_series"])
 
 
 def is_subclass_of_work_of_art(qid: str, parent_map: dict[str, list[str]]) -> bool:

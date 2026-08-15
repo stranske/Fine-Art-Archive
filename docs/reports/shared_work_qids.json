@@ -1,0 +1,207 @@
+{
+  "format_version": 1,
+  "generated_at": "2026-08-15T12:00:16.666862+00:00",
+  "source": "local operational sidecar corpus",
+  "shared_qid_count": 10,
+  "records": [
+    {
+      "qid": "Q2667782",
+      "label": "The Descent from the Cross",
+      "classification": "series-qid",
+      "holder_count": 2,
+      "work_ids": [
+        "c789bab-the-descent-from-the-cross-rubens",
+        "e001bcc-the-descent-from-the-cross-rubens"
+      ],
+      "evidence": {
+        "p31": [
+          "Q79218",
+          "Q3305213",
+          "Q15711026",
+          "Q15727816"
+        ],
+        "matched_group_classes": [
+          "Q15709879",
+          "Q15727816",
+          "Q17489659",
+          "Q18573970"
+        ],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q2667782.json"
+      }
+    },
+    {
+      "qid": "Q5779800",
+      "label": "Militia Company of District XI under the Command of Captain Reynier Reael",
+      "classification": "duplicate-candidate",
+      "holder_count": 3,
+      "work_ids": [
+        "32c96a3-militia-company-of-district-xi-under-codde",
+        "a292b4a-militia-company-of-district-xi-under-codde",
+        "de5e162-militia-company-of-district-xi-under-codde"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q5779800.json"
+      }
+    },
+    {
+      "qid": "Q19904859",
+      "label": "The Miracle of the Loaves and Fishes",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "0777183-the-miracle-of-the-loaves-and-tintoretto",
+        "7c89c9a-the-miracle-of-the-loaves-and-tintoretto"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q19904859.json"
+      }
+    },
+    {
+      "qid": "Q24020196",
+      "label": "The garden at the asylum at Saint-Rémy",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "569ac23-the-garden-of-the-asylum-at-gogh",
+        "8716d0e-the-garden-of-the-asylum-at-gogh"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24020196.json"
+      }
+    },
+    {
+      "qid": "Q24022809",
+      "label": "Olive Grove",
+      "classification": "duplicate-candidate",
+      "holder_count": 3,
+      "work_ids": [
+        "3936e31-olive-grove-gogh",
+        "86e1e26-olive-grove-gogh",
+        "e49825d-olive-grove-gogh"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24022809.json"
+      }
+    },
+    {
+      "qid": "Q24046967",
+      "label": "Poppy field",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "0fc5922-field-with-poppies-1888",
+        "7c7a062-field-with-poppies-gogh"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q24046967.json"
+      }
+    },
+    {
+      "qid": "Q44843793",
+      "label": "Portret van jonkvrouwe Maria Francisca Louisa Dommer van Poldersveldt (Ubbergen 1848 - 1925 ’s-Hertogenbosch)",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "4f715fe-portrait-of-jonkvrouwe-maria-francisca-louisa-khnopff",
+        "6f599de-portrait-of-jonkvrouwe-maria-francisca-louisa-khnopff"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q44843793.json"
+      }
+    },
+    {
+      "qid": "Q47512039",
+      "label": "Ronald Reagan",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "3042ae4-ronald-reagan-kinstler",
+        "4d94189-ronald-reagan-kinstler"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q47512039.json"
+      }
+    },
+    {
+      "qid": "Q47512541",
+      "label": "Harry S Truman",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "0a134bd-harry-s-truman-kempton",
+        "c10bacd-harry-s-truman-kempton"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q47512541.json"
+      }
+    },
+    {
+      "qid": "Q50433790",
+      "label": "Vétheuil",
+      "classification": "duplicate-candidate",
+      "holder_count": 2,
+      "work_ids": [
+        "43d5126-ve-theuil-monet",
+        "78dabb2-ve-theuil-monet"
+      ],
+      "evidence": {
+        "p31": [
+          "Q3305213"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q50433790.json"
+      }
+    }
+  ],
+  "adjudications": [
+    {
+      "qid": "Q547923",
+      "label": "The Raising of Lazarus",
+      "classification": "single-work",
+      "work_ids": [
+        "2a67e6f-capella-dei-scrovegni-25-raising-of-giotto"
+      ],
+      "part_of_q": "Q29353420",
+      "decision": "preserve wikidata_q; it identifies one fresco, not the cycle",
+      "evidence": {
+        "p31": [
+          "Q22669139"
+        ],
+        "matched_group_classes": [],
+        "source": "https://www.wikidata.org/wiki/Special:EntityData/Q547923.json"
+      }
+    }
+  ]
+}
