@@ -77,11 +77,7 @@ def _nearest_palette_quantize_spectra6(rgb: np.ndarray) -> np.ndarray:
 
 
 def _luminance(rgb: np.ndarray) -> np.ndarray:
-    return (
-        0.2126 * rgb[:, :, 0].astype(np.float32)
-        + 0.7152 * rgb[:, :, 1]
-        + 0.0722 * rgb[:, :, 2]
-    )
+    return 0.2126 * rgb[:, :, 0].astype(np.float32) + 0.7152 * rgb[:, :, 1] + 0.0722 * rgb[:, :, 2]
 
 
 def _apply_grayscale(rgb: np.ndarray) -> np.ndarray:
@@ -222,7 +218,9 @@ def _quantize_for_strategy(
     return _floyd_steinberg_dither(rgb, _PALETTE_ARRAY)
 
 
-def gamut_render_evidence(image: Image.Image, policy: dict[str, str] | None = None) -> RenderEvidence:
+def gamut_render_evidence(
+    image: Image.Image, policy: dict[str, str] | None = None
+) -> RenderEvidence:
     """Compute gamut verdict and chosen render strategy for a master image."""
     fit = gamut_fit(image.convert("RGB"), get_palette("spectra6"))
     choice = choose_render_strategy(fit, policy=policy)
