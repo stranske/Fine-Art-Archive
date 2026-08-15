@@ -47,6 +47,16 @@ def validate(meta: dict) -> None:
             f"{work_qid} denotes a series/group, not one work; "
             "record it as stable_identifiers.part_of_q"
         )
+    series = meta.get("series")
+    if isinstance(series, dict):
+        part_of_q = stable.get("part_of_q") if isinstance(stable, dict) else None
+        if not part_of_q:
+            raise jsonschema.ValidationError(
+                "series.position requires stable_identifiers.part_of_q"
+            )
+        position = series.get("position")
+        if isinstance(position, bool) or not isinstance(position, int) or position < 1:
+            raise jsonschema.ValidationError("series.position must be a positive integer")
 
 
 def is_valid(meta: dict) -> bool:

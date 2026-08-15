@@ -27,6 +27,7 @@ from fine_art_archive.eink import (
     export,
     get_palette,
     get_target,
+    order_series_members,
     quantize,
 )
 from fine_art_archive.eink.palette import Palette
@@ -274,6 +275,22 @@ def test_unknown_mood_and_period_raise():
         build([sidecar("w")], PlaylistSpec(moods=["nope"]))
     with pytest.raises(KeyError):
         build([sidecar("w")], PlaylistSpec(periods=["nope"]))
+
+
+def test_series_order_uses_evidence_and_reports_missing_and_duplicates():
+    rows = [
+        ("third", {"series": {"position": 3}}),
+        ("unknown-a", {}),
+        ("first-a", {"series": {"position": 1}}),
+        ("first-b", {"series": {"position": 1}}),
+        ("unknown-b", {"series": None}),
+    ]
+
+    result = order_series_members(rows)
+
+    assert result.work_ids == ["first-a", "first-b", "third", "unknown-a", "unknown-b"]
+    assert result.missing_positions == ["unknown-a", "unknown-b"]
+    assert result.duplicate_positions == {1: ["first-a", "first-b"]}
 
 
 def test_corrupt_ratings_line_does_not_sink_the_playlist(tmp_path):

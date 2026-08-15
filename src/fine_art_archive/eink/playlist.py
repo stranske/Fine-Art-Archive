@@ -159,6 +159,53 @@ class PlaylistResult:
     spec: dict
 
 
+@dataclass(frozen=True)
+class SeriesOrderResult:
+    """Evidence-preserving order for members of one series."""
+
+    work_ids: list[str]
+    missing_positions: list[str]
+    duplicate_positions: dict[int, list[str]]
+
+
+def order_series_members(sidecars: Iterable[tuple[str, dict]]) -> SeriesOrderResult:
+    """Sort by explicit position; report missing or duplicate evidence."""
+    rows: list[tuple[str, int | None, int]] = []
+    positions: dict[int, list[str]] = {}
+    missing: list[str] = []
+    for index, (work_id, meta) in enumerate(sidecars):
+        series = meta.get("series")
+        raw_position = series.get("position") if isinstance(series, dict) else None
+        position = (
+            raw_position
+            if isinstance(raw_position, int)
+            and not isinstance(raw_position, bool)
+            and raw_position > 0
+            else None
+        )
+        rows.append((work_id, position, index))
+        if position is None:
+            missing.append(work_id)
+        else:
+            positions.setdefault(position, []).append(work_id)
+    rows.sort(
+        key=lambda row: (
+            row[1] is None,
+            row[1] if row[1] is not None else row[2],
+            row[2],
+        )
+    )
+    return SeriesOrderResult(
+        work_ids=[row[0] for row in rows],
+        missing_positions=missing,
+        duplicate_positions={
+            position: work_ids
+            for position, work_ids in sorted(positions.items())
+            if len(work_ids) > 1
+        },
+    )
+
+
 def _tags_of(sc: dict) -> set[str]:
     subj = sc.get("subject") or {}
     out = {

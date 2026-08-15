@@ -561,6 +561,40 @@
         }
       }
     },
+    "series": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "position"
+      ],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "One-based position within stable_identifiers.part_of_q. This is evidence, never an inferred sort order."
+        },
+        "position_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Optional source-facing label such as Plate IV."
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Optional citation or evidence note for the position."
+        }
+      },
+      "description": "Explicit ordering evidence for a member of stable_identifiers.part_of_q."
+    },
     "field_provenance": {
       "type": "object",
       "description": "Per-field research ledger. Values remain in their existing fields; this records whether and how each field was checked.",

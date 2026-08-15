@@ -38,9 +38,11 @@ from .playlist import (  # noqa: F401
     PERIODS,
     PlaylistResult,
     PlaylistSpec,
+    SeriesOrderResult,
     build,
     discover_facets,
     load_ratings,
+    order_series_members,
     parse_year,
 )
 from .sdcard import ExportItem, ExportReport, export  # noqa: F401
@@ -74,6 +76,7 @@ __all__ = [
     "Palette",
     "PlaylistResult",
     "PlaylistSpec",
+    "SeriesOrderResult",
     "RenderTarget",
     "INTERVALS",
     "PlaylistStore",
@@ -90,6 +93,7 @@ __all__ = [
     "get_palette",
     "get_target",
     "load_ratings",
+    "order_series_members",
     "map_to_panel_range",
     "parse_year",
     "quantize",
