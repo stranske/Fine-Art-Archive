@@ -30,8 +30,6 @@ def test_poorly_served_work_uses_deliberate_monochrome() -> None:
 
 
 def test_poorly_served_work_uses_deliberate_monochrome_pixels(tmp_path) -> None:
-    from pathlib import Path
-
     from fine_art_archive.display.render import render_for_device
 
     master = tmp_path / "neon.png"
