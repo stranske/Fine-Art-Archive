@@ -295,7 +295,8 @@
             "string",
             "null"
           ],
-          "pattern": "^Q[0-9]+$"
+          "pattern": "^Q[0-9]+$",
+          "description": "Wikidata Q-ID for this one work. It must not denote a series, cycle, polyptych, altarpiece group, or other multi-work entity; the semantic validator rejects adjudicated group Q-IDs. Record the larger entity in part_of_q instead."
         },
         "ror": {
           "type": [

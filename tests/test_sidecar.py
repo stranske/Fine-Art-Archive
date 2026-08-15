@@ -139,6 +139,21 @@ def test_invalid_wikidata_q_pattern():
     assert not sidecar.is_valid(meta)
 
 
+def test_series_qid_rejected_as_single_work_identity():
+    meta = dict(MINIMAL_VALID)
+    meta["stable_identifiers"] = {"wikidata_q": "Q2667782"}
+
+    with pytest.raises(jsonschema.ValidationError, match="part_of_q"):
+        sidecar.validate(meta)
+
+
+def test_series_qid_accepted_as_part_of_identity():
+    meta = dict(MINIMAL_VALID)
+    meta["stable_identifiers"] = {"part_of_q": "Q2667782"}
+
+    sidecar.validate(meta)
+
+
 def test_invalid_rights_status_enum():
     meta = dict(MINIMAL_VALID)
     meta["rights"] = {"status": "maybe?"}

@@ -4,7 +4,13 @@ Per-artist reference lists of canonical works, fetched from multiple
 independent sources and merged. See `known_works_sources_design.md`.
 """
 
-from .artwork_classes import ALLOWED_P31, WORK_OF_ART_QID
+from .artwork_classes import (
+    ALLOWED_P31,
+    KNOWN_SERIES_QIDS,
+    WORK_OF_ART_QID,
+    is_series_qid,
+    series_qid_evidence,
+)
 from .fetchers import (
     KnownWork,
     fetch_met,
@@ -16,7 +22,10 @@ from .fetchers import (
 
 __all__ = [
     "ALLOWED_P31",
+    "KNOWN_SERIES_QIDS",
     "WORK_OF_ART_QID",
+    "is_series_qid",
+    "series_qid_evidence",
     "KnownWork",
     "fetch_met",
     "fetch_wikipedia_list",
