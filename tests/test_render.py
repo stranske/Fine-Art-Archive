@@ -29,10 +29,11 @@ def test_output_uses_only_palette(tmp_path: Path) -> None:
 
     hints = build_display_hints(w_px=96, h_px=64, tags=["geometric"])
     hints["inkposter_tela_28_5"]["icc_profile"] = "srgb"
+    hints["inkposter_tela_28_5"]["render_strategy"] = "color"
     native_size = (80, 48)
-    render_for_device(master, hints, "inkposter_tela_28_5", out, native_size=native_size)
+    result = render_for_device(master, hints, "inkposter_tela_28_5", out, native_size=native_size)
 
-    rendered = np.asarray(Image.open(out).convert("RGB"), dtype=np.uint8)
+    rendered = np.asarray(Image.open(result.path).convert("RGB"), dtype=np.uint8)
     assert tuple(rendered.shape[1::-1]) == native_size
 
     palette = np.asarray(SPECTRA6_PALETTE, dtype=np.uint8)
@@ -48,6 +49,7 @@ def test_render_is_deterministic(tmp_path: Path) -> None:
 
     hints = build_display_hints(w_px=96, h_px=64, tags=["geometric"])
     hints["inkposter_tela_28_5"]["icc_profile"] = "srgb"
+    hints["inkposter_tela_28_5"]["render_strategy"] = "color"
     native_size = (80, 48)
 
     render_for_device(master, hints, "inkposter_tela_28_5", out1, native_size=native_size)
