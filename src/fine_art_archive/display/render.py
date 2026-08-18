@@ -34,6 +34,7 @@ def _coerce_strategy_policy(
         return None
     return {key: _parse_render_strategy(value) for key, value in policy.items()}
 
+
 SPECTRA6_PALETTE: tuple[tuple[int, int, int], ...] = (
     (0, 0, 0),
     (255, 255, 255),
@@ -278,9 +279,7 @@ def render_for_device(
                 f"forced render_strategy={forced_strategy}",
             )
         else:
-            strategy = choose_render_strategy(
-                fit, policy=_coerce_strategy_policy(policy)
-            )
+            strategy = choose_render_strategy(fit, policy=_coerce_strategy_policy(policy))
         gamut_mapped = _icc_gamut_map(src, device_hints)
         resized = gamut_mapped.resize(native_size, Image.Resampling.LANCZOS)
     rgb = np.asarray(resized, dtype=np.uint8)
