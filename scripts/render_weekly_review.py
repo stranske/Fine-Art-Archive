@@ -8,6 +8,7 @@ weekly_decisions_<date>.json, which the next session reads directly.
 Usage (on the Mac):
     /Users/teacher/.faa-venv/bin/python3 scripts/render_weekly_review.py --date 2026-08-03
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,10 +70,12 @@ def thumb(path: str, label: str, cls: str = "") -> str:
     )
 
 
-def card(cid: str, num: str, title: str, stakes: str, body: str, options: list[tuple[str, str]]) -> str:
+def card(
+    cid: str, num: str, title: str, stakes: str, body: str, options: list[tuple[str, str]]
+) -> str:
     opts = "".join(
         f'<label class="opt"><input type="radio" name="d_{cid}" value="{e(v)}" '
-        f'onchange="setD(\'{cid}\',this.value)"><span><b>{e(v)}</b> — {e(desc)}</span></label>'
+        f"onchange=\"setD('{cid}',this.value)\"><span><b>{e(v)}</b> — {e(desc)}</span></label>"
         for v, desc in options
     )
     return f"""
@@ -111,8 +114,10 @@ def main() -> None:
         THUMBS.update(json.loads(tm.read_text()))
         print(f"using {len(THUMBS)} local thumbnails")
     else:
-        print("no thumbmap found — page will reference full-size masters "
-              "(run scripts/make_review_thumbs.py first)")
+        print(
+            "no thumbmap found — page will reference full-size masters "
+            "(run scripts/make_review_thumbs.py first)"
+        )
 
     dated_rel: dict[str, str] = {}
     for abs_thumb in set(THUMBS.values()):
@@ -152,16 +157,18 @@ def main() -> None:
     for grant in sorted(ung["by_grant"]):
         items = ung["by_grant"][grant]
         rows.append(
-            f'<h4>{e(grant)} — {len(items)} promotions '
+            f"<h4>{e(grant)} — {len(items)} promotions "
             f'<span class="dim">(recorded scope: '
-            + ("8 duplicate pairs; metadata transfer + quarantine" if grant == "G41"
-               else "6 sidecars with wrong artist Q-IDs; modify-in-place only")
+            + (
+                "8 duplicate pairs; metadata transfer + quarantine"
+                if grant == "G41"
+                else "6 sidecars with wrong artist Q-IDs; modify-in-place only"
+            )
             + ")</span></h4>"
         )
         rows.append('<div class="grid">')
         for it in items:
-            rows.append(
-                f"""<figure class="cellw">
+            rows.append(f"""<figure class="cellw">
   {thumb(it['master'], it['title'])}
   <figcaption>
     <b>{e(it['title'])}</b><br>
@@ -170,8 +177,7 @@ def main() -> None:
     <span class="dim">{e(it['size_mb'])} MB · {e(it['batch'])}</span>
     <label class="flag"><input type="checkbox" onchange="flag('{e(it['wid'])}',this.checked)"> flag this one</label>
   </figcaption>
-</figure>"""
-            )
+</figure>""")
         rows.append("</div>")
     grant_counts = {grant: len(items) for grant, items in ung["by_grant"].items()}
     grant_body = f"""
@@ -190,8 +196,7 @@ script. A promotion is shown here only when the current ledger cannot explain it
             if c["held_titles"]
             else "<p class='dim'>none held</p>"
         )
-        ccards.append(
-            f"""<figure class="cand" id="c_{e(c['qid'])}">
+        ccards.append(f"""<figure class="cand" id="c_{e(c['qid'])}">
   <img class="ctn" loading="lazy" src="{e(c['thumb'])}" alt="{e(c['title'])}"
     onerror="this.replaceWith(Object.assign(document.createElement('div'),{{className:'ph',textContent:'thumb unavailable'}}))">
   <figcaption>
@@ -206,8 +211,7 @@ script. A promotion is shown here only when the current ledger cannot explain it
       <button onclick="pick('{e(c['qid'])}','later',this)">later</button>
     </div>
   </figcaption>
-</figure>"""
-        )
+</figure>""")
     artist_counts = Counter(c["artist"] for c in cands["top"] if c.get("artist"))
     concentration = ", ".join(
         f"{count} {artist}" for artist, count in artist_counts.most_common(3) if count > 1
@@ -253,8 +257,7 @@ Ranked by Wikidata sitelinks, the notability proxy. Artist names resolved by liv
 <div class="dim">staged · {e(u['size_mb'])} MB</div></div>
 <div class="ph">no title match in archive</div></div>"""
         )
-        urows.append(
-            f"""<div class="urow">
+        urows.append(f"""<div class="urow">
   <div class="uinfo"><b>{e(u['title'])}</b><br><span class="dim">{e(u['artist'])}</span><br>
     <span class="mono dim">{e(u['wid'])}</span></div>
   {coll_html}
@@ -263,8 +266,7 @@ Ranked by Wikidata sitelinks, the notability proxy. Artist names resolved by liv
     <button onclick="pickU('{e(u['wid'])}','discard',this)">discard staged</button>
     <button onclick="pickU('{e(u['wid'])}','keep',this)">leave staged</button>
   </div>
-</div>"""
-        )
+</div>""")
     unprom_body = f"""
 <p>{len(unprom)} acquired masters sit in <code>staging_acquisitions/</code> with no matching
 <code>Art/works/</code> directory. Several duplicate works you already hold — shown side by side below,
@@ -301,19 +303,14 @@ Discovery and acquisition otherwise read the same canonical set.</p>"""
     # ---------- 6. work Q-ID collisions
     crows = []
     for c in coll["worst"]:
-        ex = "".join(
-            f"""<figure class="cellw">{thumb(x['master'], x['title'])}
+        ex = "".join(f"""<figure class="cellw">{thumb(x['master'], x['title'])}
 <figcaption><span class="dim">{e(x['title'])}</span><br>
-<span class="mono dim">{e(x['wid'])}</span></figcaption></figure>"""
-            for x in c["examples"]
-        )
-        crows.append(
-            f"""<div class="collblk">
+<span class="mono dim">{e(x['wid'])}</span></figcaption></figure>""" for x in c["examples"])
+        crows.append(f"""<div class="collblk">
   <h4><a href="{e(c['wikidata_url'])}" target="_blank" class="mono">{e(c['qid'])}</a>
   — "{e(c['label'])}" on <b>{c['n']}</b> sidecars</h4>
   <div class="grid">{ex}</div>
-</div>"""
-        )
+</div>""")
     coll_body = f"""
 <p>{coll['qids_on_multiple']} work Q-IDs are on more than one sidecar ({coll['extra_assignments']} extra
 assignments). A work Q-ID denotes one work, so every one of these is wrong in one of three ways — and the
@@ -359,18 +356,28 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
     decision_ids: list[str] = []
     nav_items: list[str] = []
 
-    def add_decision(cid: str, num: str, nav_label: str, title: str, stakes: str,
-                     contents: str, options: list[tuple[str, str]]) -> None:
+    def add_decision(
+        cid: str,
+        num: str,
+        nav_label: str,
+        title: str,
+        stakes: str,
+        contents: str,
+        options: list[tuple[str, str]],
+    ) -> None:
         decision_ids.append(cid)
         decision_cards.append(card(cid, num, title, stakes, contents, options))
         nav_items.append(f'<a href="#{cid}" id="nav_{cid}">{num} · {e(nav_label)}</a>')
 
     if ung["total"]:
         add_decision(
-            "grant_attribution", "1", "grant attribution",
+            "grant_attribution",
+            "1",
+            "grant attribution",
             evidence_title(
                 f"{ung['total']} of {len(promotions)} promotions lack current grant authority",
-                ung["total"], len(promotions),
+                ung["total"],
+                len(promotions),
             ),
             "Highest consequence: this is an audit-trail gap that gets harder to reconstruct over time.",
             grant_body,
@@ -383,14 +390,20 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
         )
     if not standing_grants:
         add_decision(
-            "acquisition_grant", "2", "acquisition grant",
+            "acquisition_grant",
+            "2",
+            "acquisition grant",
             evidence_title(
                 f"No standing acquisition grant — review {len(cands['top'])} candidates",
                 len(cands["top"]),
             ),
-            "Without standing authority, each growth batch needs an owner decision.", cand_body,
+            "Without standing authority, each growth batch needs an owner decision.",
+            cand_body,
             [
-                ("standing-100", "standing grant: up to 100 works/month, at most 25 per weekly batch"),
+                (
+                    "standing-100",
+                    "standing grant: up to 100 works/month, at most 25 per weekly batch",
+                ),
                 ("standing-50", "standing grant with a tighter 50/month ceiling"),
                 ("batch-only", "authorize only the individually selected works"),
                 ("hold", "acquire nothing this cycle"),
@@ -398,12 +411,16 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
         )
     if starved_generators:
         add_decision(
-            "generator_cap", "3", "generator cap",
+            "generator_cap",
+            "3",
+            "generator cap",
             evidence_title(
                 f"Frontier cap admitted zero from {len(starved_generators)} of {len(active_generators)} active generators",
-                len(starved_generators), len(active_generators),
+                len(starved_generators),
+                len(active_generators),
             ),
-            "A zero-admission generator changes which kinds of work growth can offer.", gen_body,
+            "A zero-admission generator changes which kinds of work growth can offer.",
+            gen_body,
             [
                 ("round-robin", "allocate the cap per generator with surplus redistribution"),
                 ("raise-cap", "raise the cap and rank when draining the frontier"),
@@ -413,11 +430,12 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
         )
     if unprom:
         add_decision(
-            "unpromoted", "4", "unpromoted",
-            evidence_title(
-                f"{len(unprom)} acquired works remain unpromoted", len(unprom)
-            ),
-            "These staged works keep the acquired-but-not-promoted alarm active.", unprom_body,
+            "unpromoted",
+            "4",
+            "unpromoted",
+            evidence_title(f"{len(unprom)} acquired works remain unpromoted", len(unprom)),
+            "These staged works keep the acquired-but-not-promoted alarm active.",
+            unprom_body,
             [
                 ("per-item", "use the per-item choices above"),
                 ("discard-all", "discard all staged copies"),
@@ -428,11 +446,17 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
     p31_problem = p31["dropped"]["qid"] not in allowed_qids or bool(allowed_qids & junk)
     if p31_problem:
         add_decision(
-            "allowed_p31", "5", "class whitelist",
+            "allowed_p31",
+            "5",
+            "class whitelist",
             "The acquirer's class whitelist needs correction",
-            "The measured whitelist either excludes the dropped class or includes non-artwork classes.", p31_body,
+            "The measured whitelist either excludes the dropped class or includes non-artwork classes.",
+            p31_body,
             [
-                ("add-drawing-clean", "add the dropped drawing class, remove junk entries, and verify each class"),
+                (
+                    "add-drawing-clean",
+                    "add the dropped drawing class, remove junk entries, and verify each class",
+                ),
                 ("add-drawing-only", "add only the dropped drawing class"),
                 ("upstream-first", "fix the canonical source before syncing the operational copy"),
                 ("no-drawings", "leave drawings outside acquisition scope"),
@@ -440,12 +464,15 @@ first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
         )
     if coll["qids_on_multiple"]:
         add_decision(
-            "qid_collisions", "6", "work Q-IDs",
+            "qid_collisions",
+            "6",
+            "work Q-IDs",
             evidence_title(
                 f"{coll['qids_on_multiple']} work Q-IDs are on more than one sidecar",
                 coll["qids_on_multiple"],
             ),
-            "The denominator remains ambiguous until duplicate, series, and subject uses are separated.", coll_body,
+            "The denominator remains ambiguous until duplicate, series, and subject uses are separated.",
+            coll_body,
             [
                 ("triage-3way", "triage duplicate, series, and subject cases before moving files"),
                 ("subject-rule-only", "add the write-time validation rule first"),
@@ -625,8 +652,10 @@ window.addEventListener("DOMContentLoaded",()=>{{
         served_doc = doc.replace(f"thumbs_{d}/", "thumbs/")
         (serve_root / "index.html").write_text(served_doc)
         print(f"wrote {serve_root / 'index.html'} — serve with:")
-        print(f"  cd '{serve_root}' && /Users/teacher/.faa-venv/bin/python3 "
-              f"-m http.server 8792 --bind 127.0.0.1")
+        print(
+            f"  cd '{serve_root}' && /Users/teacher/.faa-venv/bin/python3 "
+            f"-m http.server 8792 --bind 127.0.0.1"
+        )
         print("  open -a 'Google Chrome' http://127.0.0.1:8792/")
 
 
