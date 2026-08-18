@@ -12,6 +12,7 @@ docs/reports/thumbs_<date>/ only. Nothing in Art/ is modified.
 Usage (on the Mac):
     /Users/teacher/.faa-venv/bin/python3 scripts/make_review_thumbs.py --date 2026-08-03
 """
+
 from __future__ import annotations
 
 import argparse
