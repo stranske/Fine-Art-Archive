@@ -417,3 +417,153 @@ def test_derive_work_id():
 def test_derive_work_id_rejects_short_hash():
     with pytest.raises(ValueError):
         sidecar.derive_work_id("abc", "title")
+
+
+# ---------------------------------------------------------------------------
+# source_image: the pre-archive parent an archived master was made from.
+# ---------------------------------------------------------------------------
+
+SOURCE_IMAGE = {
+    "path": "Pictures/Personal Photos/Originals/by-year/2019/"
+    "The_Nobleman_with_his_Hand_on_his_Chest__89466F18__original.jpeg",
+    "content_hash": "a" * 64,
+    "original_filename": "The Nobleman with his Hand on his Chest, El Greco.jpeg",
+    "method": "byte-identical",
+    "confidence": "certain",
+    "linked_at": "2026-08-18T12:00:00Z",
+}
+
+
+def _with_source(**overrides):
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["source_image"] = {**SOURCE_IMAGE, **overrides}
+    return meta
+
+
+def test_source_image_accepted():
+    assert sidecar.is_valid(_with_source())
+
+
+def test_source_image_null_accepted():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["source_image"] = None
+    assert sidecar.is_valid(meta)
+
+
+def test_source_image_absent_accepted():
+    """Additive field: the 3,421 sidecars written before it stay valid."""
+    assert "source_image" not in MINIMAL_VALID
+    assert sidecar.is_valid(MINIMAL_VALID)
+
+
+@pytest.mark.parametrize("missing", ["path", "method", "confidence"])
+def test_source_image_requires_provenance_of_the_link(missing):
+    """A parent pointer with no stated method or confidence is the failure this
+    field exists to prevent: a 2026-08 pass marked 1,811 works linked, 1,425 of
+    them from an embedding threshold that independent evidence corroborated 5.9%
+    of the time, and nothing recorded which were which."""
+    meta = _with_source()
+    del meta["source_image"][missing]
+    assert not sidecar.is_valid(meta)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("method", "vibes"),
+        ("confidence", "pretty-sure"),
+        ("content_hash", "not-hex"),
+        ("sha256", "abc"),
+    ],
+)
+def test_source_image_rejects_out_of_vocabulary_values(field, value):
+    assert not sidecar.is_valid(_with_source(**{field: value}))
+
+
+def test_source_image_rejects_unknown_keys():
+    """additionalProperties is false, so a writer inventing `parent` fails loudly
+    rather than having the value silently ignored by every reader."""
+    assert not sidecar.is_valid(_with_source(parent="somewhere"))
+
+
+def test_source_image_verification_block():
+    meta = _with_source(
+        method="crop-located",
+        confidence="verified",
+        verification={
+            "test": "ncc-crop-location",
+            "score": 0.9312,
+            "checked_at": "2026-08-18T12:00:00Z",
+        },
+        crop_region="120,80,1600,900",
+    )
+    assert sidecar.is_valid(meta)
+
+
+def test_source_image_is_not_derived_from():
+    """The two model different things and must not be conflated: derived_from
+    points at another work IN the archive and forces a null work Q-ID, while
+    source_image points outside the archive and leaves identity untouched."""
+    meta = _with_source()
+    meta["stable_identifiers"] = {"wikidata_q": "Q78663009"}
+    assert sidecar.is_valid(meta), "source_image must not trigger the derived_from invariant"
+
+
+# ---------------------------------------------------------------------------
+# files.variant_of — the in-archive inverse of files.variants[].
+# ---------------------------------------------------------------------------
+
+
+def test_variant_of_accepted():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["files"]["variant_of"] = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "landscape-crop",
+        "direction_evidence": "holding sits on a display aspect and the owner does not",
+    }
+    assert sidecar.is_valid(meta)
+
+
+def test_variant_of_requires_work_id_and_role():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["files"]["variant_of"] = {"role": "landscape-crop"}
+    assert not sidecar.is_valid(meta)
+
+
+def test_field_provenance_decided_by_and_list_prior_value():
+    """An owner decision is provenance too. `prior_value` accepts a list because
+    the value being superseded is sometimes a variants[] array."""
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["field_provenance"] = {
+        "files.variants": {
+            "status": "available",
+            "source": "apply_owner_decisions",
+            "decided_by": "Tim, in chat, 2026-08-18",
+            "prior_value": ["works/c10bacd-harry-s-truman-kempton/master.jpeg"],
+        }
+    }
+    assert sidecar.is_valid(meta)
+
+
+# ---------------------------------------------------------------------------
+# Structural guard on the schema document itself.
+# ---------------------------------------------------------------------------
+
+
+def test_schema_has_no_duplicate_keys():
+    """json.load keeps the LAST of two same-level keys and discards the first
+    without error. `derived_from` was declared twice: a 2026-08-11 commit added
+    a rendition model with a `display-crop` kind above the existing definition,
+    and every parser silently dropped it, so the commit's schema change never
+    took effect while its text sat in the file describing current behaviour.
+    Nothing in JSON or jsonschema catches this; only reading the raw pairs does."""
+    seen: list[str] = []
+
+    def collect(pairs):
+        keys = [k for k, _ in pairs]
+        seen.extend(k for k in set(keys) if keys.count(k) > 1)
+        return dict(pairs)
+
+    raw = sidecar.SCHEMA_PATH.read_text(encoding="utf-8")
+    json.loads(raw, object_pairs_hook=collect)
+    assert seen == [], f"duplicate keys silently override earlier ones: {sorted(set(seen))}"

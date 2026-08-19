@@ -640,11 +640,22 @@
               "null"
             ]
           },
-          "prior_value": {
+          "decided_by": {
             "type": [
               "string",
               "null"
             ],
+            "description": "Who made the call, when a field's status reflects an explicit owner decision rather than a research result. Written by the apply-owner-decisions pass."
+          },
+          "prior_value": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
             "description": "The value this field held before the pass that wrote this provenance record. Set by passes that overwrite an existing value (e.g. the artist-QID triage pass records the superseded QID here) so a correction is reversible."
           },
           "prior_name": {
@@ -1111,6 +1122,35 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "variant_of": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "description": "The inverse of `variants[]`: this work is itself a rendition of another archived work, named here. Written by the pass that decides direction between two holdings of one painting, so the link is navigable from the rendition as well as from the owner. Distinct from `source_image`, which names a parent OUTSIDE the archive.",
+          "required": [
+            "work_id",
+            "role"
+          ],
+          "properties": {
+            "work_id": {
+              "type": "string",
+              "description": "work_id of the owner this is a rendition of."
+            },
+            "role": {
+              "type": "string",
+              "description": "This holding's role relative to the owner, drawn from the same vocabulary as variants[].role."
+            },
+            "direction_evidence": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Why this holding was judged the rendition and the other the owner — typically that this one sits on a display aspect while the owner matches the work's recorded dimensions."
+            }
+          }
+        },
         "variants": {
           "type": "array",
           "description": "Other files representing the same work, prepared for different display surfaces (e.g., a Meural-framed crop or a TV-resolution master). These are NOT duplicates: each is fit for a specific device. The migration planner populates this from variant_groups.csv during Phase 3. The master is excluded; variants reference each other from their own sidecars.",
@@ -1275,54 +1315,6 @@
               ]
             }
           }
-        }
-      }
-    },
-    "derived_from": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "additionalProperties": false,
-      "description": "This work is a rendition of another work rather than an independent piece: a display crop cut for a frame, a detail of a larger surface, or a photographic capture of one. Identity fields (artist, title, year, dimensions, work Q-ID) are inherited from the parent by fine_art_archive.identity.variants, and a parent and its renditions may legitimately share one work Q-ID.",
-      "required": [
-        "work_id",
-        "kind"
-      ],
-      "properties": {
-        "work_id": {
-          "type": "string",
-          "description": "work_id of the parent this rendition derives from."
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "display-crop",
-            "detail",
-            "capture"
-          ],
-          "description": "display-crop: the whole work re-cut to a display aspect (16:9 / 9:16) for a frame. detail: a region of a larger surface, such as one scene of a fresco cycle. capture: a photograph of the work or its setting."
-        },
-        "region": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Which part of the parent, when kind is 'detail'."
-        },
-        "detected_by": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "How the link was established, for auditability."
-        },
-        "image_correlation": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "description": "Crop-tolerant correlation with the parent master, when detected by image."
         }
       }
     },
@@ -1522,6 +1514,120 @@
         "work_id",
         "kind"
       ]
+    },
+    "source_image": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "The pre-archive parent image this master was made from — normally the untouched original that lived in the Photos library and is now archived under Personal Photos/Originals.\n\nThis is a fourth relation, distinct from the three that already exist and none of which names that file: `files.master.ingested_from` is where the ingest pipeline picked the file up (an archive-relative staging path); `files.variants[]` and its inverse `files.variant_of` link renditions of one work INSIDE the archive; `derived_from` marks a section of another archived work.\n\nWhy it exists: masters here are frequently display crops, and the sidecar was attached to the crop rather than the original. With no pointer to the parent, cutting a crop for a new device aspect ratio means re-finding the original by hand and re-attaching the work's metadata, and every automated acquisition inherits the same gap. Recorded once, the crop becomes a derivative of a known original instead of the only surviving link to it.\n\n`method` and `confidence` are required and must not be inflated. A 2026-08 pass marked 1,811 works linked; 1,425 of those came from an embedding-similarity threshold that independent aspect evidence corroborated only 5.9% of the time, and because nothing recorded how each link was made the trustworthy 386 were indistinguishable from the rest.",
+      "required": [
+        "path",
+        "method",
+        "confidence"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the parent lives, relative to the Dropbox account root, e.g. 'Pictures/Personal Photos/Originals/by-year/2019/X__89466F18__original.jpeg'. A path is a locator, not an identity — see content_hash."
+        },
+        "content_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Dropbox content hash of the parent: sha256 over the concatenated sha256 of each 4 MiB block. Held locally by the sync engine even for online-only files, so the parent stays identifiable without downloading it. This is NOT a plain sha256 of the bytes."
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Plain sha256 of the parent's bytes, once they have actually been read."
+        },
+        "photos_uuid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Photos library asset UUID, while the parent still lives in a Photos library."
+        },
+        "original_filename": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The parent's filename before any archive renaming. Frequently the only carrier of the title, artist, year and medium that this sidecar records as filename-parsed."
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "byte-identical",
+            "filename-prefix",
+            "crop-located",
+            "perceptual-hash",
+            "embedding",
+            "manual",
+            "ingest"
+          ],
+          "description": "How the link was established. byte-identical: the two content hashes match, so the parent is the same bytes. filename-prefix: a long shared filename prefix, needed because archived names are truncated mid-string. crop-located: the master was found inside the parent by normalised cross-correlation. embedding: a vision-model similarity — a lead to be checked, never proof on its own."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "certain",
+            "verified",
+            "probable",
+            "unverified"
+          ],
+          "description": "certain: byte identity. verified: an independent test agreed, recorded in `verification`. probable: one signal above threshold, untested. unverified: asserted but never tested — do not promote without running a test."
+        },
+        "verification": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "description": "The independent check that justifies confidence 'verified'.",
+          "properties": {
+            "test": {
+              "type": "string",
+              "description": "Which test was run, e.g. 'ncc-crop-location'."
+            },
+            "score": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "checked_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          }
+        },
+        "crop_region": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Where the master sits inside the parent, as 'x,y,w,h' in parent pixel coordinates, when it was located. This is what lets a crop for a new device be cut from the parent rather than re-derived from an existing crop."
+        },
+        "linked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
     },
     "existence": {
       "type": [
