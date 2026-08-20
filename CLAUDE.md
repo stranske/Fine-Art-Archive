@@ -100,6 +100,17 @@ If yes:
 - `stranske/Workflows/docs/keepalive/Agents.md`
 - `stranske/Travel-Plan-Permission` as a reference consumer
 
+## Project Work In Flight
+
+Carried-forward, cross-session work on parent/crop lineage and file consolidation lives in
+[`docs/PROJECT_TODO.md`](docs/PROJECT_TODO.md). Read it before starting anything touching
+sidecar lineage fields, crop regions, or duplicate-file reduction — it records what was
+already measured and settled, so the same ground is not re-derived or a closed question
+re-opened. It is an FYI surface: nothing in it expires, escalates, or accumulates.
+
+Note that the sidecar corpus and lineage metadata live **outside this repo**, under
+`Dropbox/Pictures/Art/works/` and `Dropbox/Pictures/Personal Photos/Metadata/`.
+
 ## Claude-Specific Note
 
 Keep this file materially aligned with `AGENTS.md`. Differences between the two should only be agent-specific execution notes, not different repository rules.
