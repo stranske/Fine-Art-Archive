@@ -417,3 +417,263 @@ def test_derive_work_id():
 def test_derive_work_id_rejects_short_hash():
     with pytest.raises(ValueError):
         sidecar.derive_work_id("abc", "title")
+
+
+# ---------------------------------------------------------------------------
+# source_image: the pre-archive parent an archived master was made from.
+# ---------------------------------------------------------------------------
+
+SOURCE_IMAGE = {
+    "path": "Pictures/Personal Photos/Originals/by-year/2019/"
+    "The_Nobleman_with_his_Hand_on_his_Chest__89466F18__original.jpeg",
+    "content_hash": "a" * 64,
+    "original_filename": "The Nobleman with his Hand on his Chest, El Greco.jpeg",
+    "method": "byte-identical",
+    "confidence": "certain",
+    "linked_at": "2026-08-18T12:00:00Z",
+}
+
+
+def _with_source(**overrides):
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["source_image"] = {**SOURCE_IMAGE, **overrides}
+    return meta
+
+
+def test_source_image_accepted():
+    assert sidecar.is_valid(_with_source())
+
+
+def test_source_image_null_accepted():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["source_image"] = None
+    assert sidecar.is_valid(meta)
+
+
+def test_source_image_absent_accepted():
+    """Additive field: the 3,421 sidecars written before it stay valid."""
+    assert "source_image" not in MINIMAL_VALID
+    assert sidecar.is_valid(MINIMAL_VALID)
+
+
+@pytest.mark.parametrize("missing", ["path", "method", "confidence"])
+def test_source_image_requires_provenance_of_the_link(missing):
+    """A parent pointer with no stated method or confidence is the failure this
+    field exists to prevent: a 2026-08 pass marked 1,811 works linked, 1,425 of
+    them from an embedding threshold that independent evidence corroborated 5.9%
+    of the time, and nothing recorded which were which."""
+    meta = _with_source()
+    del meta["source_image"][missing]
+    assert not sidecar.is_valid(meta)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("method", "vibes"),
+        ("confidence", "pretty-sure"),
+        ("content_hash", "not-hex"),
+        ("sha256", "abc"),
+    ],
+)
+def test_source_image_rejects_out_of_vocabulary_values(field, value):
+    assert not sidecar.is_valid(_with_source(**{field: value}))
+
+
+def test_source_image_rejects_unknown_keys():
+    """additionalProperties is false, so a writer inventing `parent` fails loudly
+    rather than having the value silently ignored by every reader."""
+    assert not sidecar.is_valid(_with_source(parent="somewhere"))
+
+
+def test_source_image_verification_block():
+    meta = _with_source(
+        method="crop-located",
+        confidence="verified",
+        verification={
+            "test": "ncc-crop-location",
+            "score": 0.9312,
+            "checked_at": "2026-08-18T12:00:00Z",
+        },
+        crop_region="120,80,1600,900",
+    )
+    assert sidecar.is_valid(meta)
+
+
+def test_source_image_is_not_derived_from():
+    """The two model different things and must not be conflated: derived_from
+    points at another work IN the archive and forces a null work Q-ID, while
+    source_image points outside the archive and leaves identity untouched."""
+    meta = _with_source()
+    meta["stable_identifiers"] = {"wikidata_q": "Q78663009"}
+    assert sidecar.is_valid(meta), "source_image must not trigger the derived_from invariant"
+
+
+# ---------------------------------------------------------------------------
+# files.variant_of — the in-archive inverse of files.variants[].
+# ---------------------------------------------------------------------------
+
+
+def test_variant_of_accepted():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["files"]["variant_of"] = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "landscape-crop",
+        "direction_evidence": "holding sits on a display aspect and the owner does not",
+    }
+    assert sidecar.is_valid(meta)
+
+
+@pytest.mark.parametrize("missing", ["work_id", "role"])
+def test_variant_of_requires_work_id_and_role(missing):
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    variant_of = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "landscape-crop",
+    }
+    del variant_of[missing]
+    meta["files"]["variant_of"] = variant_of
+    assert not sidecar.is_valid(meta)
+
+
+def test_field_provenance_decided_by_and_list_prior_value():
+    """An owner decision is provenance too. `prior_value` accepts a list because
+    the value being superseded is sometimes a variants[] array."""
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["field_provenance"] = {
+        "files.variants": {
+            "status": "available",
+            "source": "apply_owner_decisions",
+            "decided_by": "Tim, in chat, 2026-08-18",
+            "prior_value": ["works/c10bacd-harry-s-truman-kempton/master.jpeg"],
+        }
+    }
+    assert sidecar.is_valid(meta)
+
+
+def test_field_provenance_prior_value_list_items_must_be_strings():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["field_provenance"] = {
+        "files.variants": {
+            "status": "available",
+            "prior_value": [{"rel_path": "x"}],
+        }
+    }
+    assert not sidecar.is_valid(meta)
+
+
+def test_source_image_certain_requires_byte_identical_method():
+    assert not sidecar.is_valid(_with_source(method="embedding", confidence="certain"))
+
+
+def test_source_image_verified_requires_verification_block():
+    assert not sidecar.is_valid(
+        _with_source(method="crop-located", confidence="verified", verification=None)
+    )
+
+
+def test_source_image_verification_requires_test():
+    assert not sidecar.is_valid(
+        _with_source(
+            method="crop-located",
+            confidence="verified",
+            verification={},
+        )
+    )
+
+
+def test_source_image_rejects_malformed_crop_region():
+    assert not sidecar.is_valid(_with_source(crop_region="not-coordinates"))
+
+
+def test_variant_of_rejects_unknown_role():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["files"]["variant_of"] = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "not-a-real-role",
+    }
+    assert not sidecar.is_valid(meta)
+
+
+# ---------------------------------------------------------------------------
+# Structural guard on the schema document itself.
+# ---------------------------------------------------------------------------
+
+
+def test_schema_has_no_duplicate_keys():
+    """json.load keeps the LAST of two same-level keys and discards the first
+    without error. `derived_from` was declared twice: a 2026-08-11 commit added
+    a rendition model with a `display-crop` kind above the existing definition,
+    and every parser silently dropped it, so the commit's schema change never
+    took effect while its text sat in the file describing current behaviour.
+    Nothing in JSON or jsonschema catches this; only reading the raw pairs does."""
+    seen: list[str] = []
+
+    def collect(pairs):
+        keys = [k for k, _ in pairs]
+        seen.extend(k for k in set(keys) if keys.count(k) > 1)
+        return dict(pairs)
+
+    raw = sidecar.SCHEMA_PATH.read_text(encoding="utf-8")
+    json.loads(raw, object_pairs_hook=collect)
+    assert seen == [], f"duplicate keys silently override earlier ones: {sorted(set(seen))}"
+
+
+# --------------------------------------------------------------------------------------
+# Undeclared-field regression guard.
+#
+# `additionalProperties: false` means an undeclared field is not merely unvalidated, it is
+# REJECTED -- and by this repo's idiom an undeclared field is also an unread field, because
+# the contract tells every reader it does not exist. Three lineage fields have now shipped
+# undeclared, each populated by an archive-side pass and read by nothing:
+#
+#     derived_from        27 sidecars
+#     files.variant_of    96 sidecars
+#     source_image       898 sidecars
+#
+# CI cannot detect a NEW occurrence: the corpus lives outside the repo (under
+# Dropbox/Pictures/Art/works) and no runner can see it -- use
+# Metadata/tools/check_sidecar_drift.py against the live corpus for that. What CI can do is
+# stop the reverse: a schema edit that silently drops one of these and re-orphans the data.
+# --------------------------------------------------------------------------------------
+
+LINEAGE_FIELDS_IN_USE = [
+    (("source_image",), 898, "the pre-archive parent a master was cut from"),
+    (("source_image", "crop_region"), 46, "where the master sits inside that parent"),
+    (("files", "variant_of"), 96, "this holding is a rendition of another archived work"),
+    (("derived_from",), 27, "this work is a section of another archived work"),
+]
+
+
+def _declared(path):
+    """Walk `properties` down a dotted path; return the subschema or None."""
+    node = sidecar.SCHEMA if hasattr(sidecar, "SCHEMA") else json.loads(
+        sidecar.SCHEMA_PATH.read_text()
+    )
+    for key in path:
+        props = node.get("properties")
+        if not isinstance(props, dict) or key not in props:
+            return None
+        node = props[key]
+    return node
+
+
+@pytest.mark.parametrize("path,populated,why", LINEAGE_FIELDS_IN_USE)
+def test_lineage_field_stays_declared(path, populated, why):
+    """Dropping one of these re-orphans data that is already written."""
+    assert _declared(path) is not None, (
+        f"{'.'.join(path)} is no longer declared in meta.schema.json, but ~{populated} "
+        f"sidecars already carry it ({why}). additionalProperties:false makes those "
+        f"sidecars invalid and the field unreadable. Re-declare it, or migrate the corpus "
+        f"first and update this test in the same change."
+    )
+
+
+def test_lineage_fields_are_reachable_through_closed_objects():
+    """A declared child is useless if an ancestor forbids the branch it hangs from."""
+    for path, populated, _why in LINEAGE_FIELDS_IN_USE:
+        for depth in range(1, len(path) + 1):
+            assert _declared(path[:depth]) is not None, (
+                f"{'.'.join(path)} is unreachable: {'.'.join(path[:depth])} is undeclared "
+                f"while ~{populated} sidecars depend on the full path."
+            )
