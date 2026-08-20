@@ -567,3 +567,63 @@ def test_schema_has_no_duplicate_keys():
     raw = sidecar.SCHEMA_PATH.read_text(encoding="utf-8")
     json.loads(raw, object_pairs_hook=collect)
     assert seen == [], f"duplicate keys silently override earlier ones: {sorted(set(seen))}"
+
+
+# --------------------------------------------------------------------------------------
+# Undeclared-field regression guard.
+#
+# `additionalProperties: false` means an undeclared field is not merely unvalidated, it is
+# REJECTED -- and by this repo's idiom an undeclared field is also an unread field, because
+# the contract tells every reader it does not exist. Three lineage fields have now shipped
+# undeclared, each populated by an archive-side pass and read by nothing:
+#
+#     derived_from        27 sidecars
+#     files.variant_of    96 sidecars
+#     source_image       898 sidecars
+#
+# CI cannot detect a NEW occurrence: the corpus lives outside the repo (under
+# Dropbox/Pictures/Art/works) and no runner can see it -- use
+# Metadata/tools/check_sidecar_drift.py against the live corpus for that. What CI can do is
+# stop the reverse: a schema edit that silently drops one of these and re-orphans the data.
+# --------------------------------------------------------------------------------------
+
+LINEAGE_FIELDS_IN_USE = [
+    (("source_image",), 898, "the pre-archive parent a master was cut from"),
+    (("source_image", "crop_region"), 46, "where the master sits inside that parent"),
+    (("files", "variant_of"), 96, "this holding is a rendition of another archived work"),
+    (("derived_from",), 27, "this work is a section of another archived work"),
+]
+
+
+def _declared(path):
+    """Walk `properties` down a dotted path; return the subschema or None."""
+    node = sidecar.SCHEMA if hasattr(sidecar, "SCHEMA") else json.loads(
+        sidecar.SCHEMA_PATH.read_text()
+    )
+    for key in path:
+        props = node.get("properties")
+        if not isinstance(props, dict) or key not in props:
+            return None
+        node = props[key]
+    return node
+
+
+@pytest.mark.parametrize("path,populated,why", LINEAGE_FIELDS_IN_USE)
+def test_lineage_field_stays_declared(path, populated, why):
+    """Dropping one of these re-orphans data that is already written."""
+    assert _declared(path) is not None, (
+        f"{'.'.join(path)} is no longer declared in meta.schema.json, but ~{populated} "
+        f"sidecars already carry it ({why}). additionalProperties:false makes those "
+        f"sidecars invalid and the field unreadable. Re-declare it, or migrate the corpus "
+        f"first and update this test in the same change."
+    )
+
+
+def test_lineage_fields_are_reachable_through_closed_objects():
+    """A declared child is useless if an ancestor forbids the branch it hangs from."""
+    for path, populated, _why in LINEAGE_FIELDS_IN_USE:
+        for depth in range(1, len(path) + 1):
+            assert _declared(path[:depth]) is not None, (
+                f"{'.'.join(path)} is unreachable: {'.'.join(path[:depth])} is undeclared "
+                f"while ~{populated} sidecars depend on the full path."
+            )

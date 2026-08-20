@@ -53,20 +53,23 @@ The parent and the crop are two different images, so keeping one copy of each al
 satisfies "one version of each file". `crop_region` remains valuable for **re-cutting a new
 aspect ratio** from the parent and for provenance.
 
-## 3. Nothing reads `source_image`, `crop_region`, or `files.variant_of` — **machine**
+## 3. Nothing reads `source_image`, `crop_region`, or `files.variant_of` — **machine (partly done)**
 
-All three are now declared in `schemas/meta.schema.json` and populated (896 / 44 / 96), and
+All three are now declared in `schemas/meta.schema.json` and populated (898 / 46 / 96), and
 no code reads any of them. This project has now shipped an undeclared-and-unread lineage
-field three times (`derived_from` 27, `files.variant_of` 96, `source_image` 896).
+field three times (`derived_from` 27, `files.variant_of` 96, `source_image` 898).
 
 - **Do:** add a consumer for `crop_region` — cut a new device aspect from the parent using
   the recorded region as the starting frame.
-- **Also do (small):** a CI check that validates the whole sidecar corpus against the
-  schema and reports fields present in the data but absent from the schema. That converts
-  the next occurrence from a discovery into a notification. ~20 lines, no recurring
-  attention.
+- **Drift detection: done (2026-08-19), in two halves.** CI cannot scan the corpus — it
+  lives outside the repo and no runner can see it — so the two directions are split:
+  `tests/test_sidecar.py::test_lineage_field_stays_declared` fails in CI if a schema edit
+  drops a field the data already uses (verified by deliberate break: 9 failures, clean
+  revert), and `Metadata/tools/check_sidecar_drift.py` catches the direction CI cannot — a
+  writer emitting a field the schema has never heard of. The scanner reports clean today
+  and correctly reproduces the historic drift when pointed at the pre-fix schema.
 
-## 4. Two verified parent links were never written to their sidecars — **machine**
+## 4. Two verified parent links were never written to their sidecars — **done**
 
 Both have a Dropbox-resident parent, a located region, and evidence stronger than the 858
 `filename-prefix` / `probable` links that *were* written:
@@ -76,8 +79,10 @@ Both have a Dropbox-resident parent, a located region, and evidence stronger tha
 | `603c5f6-vase-with-gladioli-and-chinese-asters-gogh` | 0.9751 | 0.9969 |
 | `a34f673-woman-with-a-book-picasso` | 0.8786 | 0.9159 |
 
-Left undone deliberately: writing them creates a *new* link rather than recording a
-position on an existing one, which was outside the 2026-08-19 request. Two-file change.
+**Done 2026-08-19.** Both written as `method: crop-located` / `confidence: verified` with a
+`verification` block and a `crop_region`, validated against the schema before write; only
+`source_image` was added and no pre-existing key changed. Corpus went 896 -> 898
+`source_image` and 44 -> 46 `crop_region`.
 
 ## 5. Three parents live outside Dropbox — **decision**
 
