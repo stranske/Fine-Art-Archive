@@ -1136,10 +1136,23 @@
           "properties": {
             "work_id": {
               "type": "string",
+              "pattern": "^[0-9a-f]{7}-[a-z0-9-]+$",
               "description": "work_id of the owner this is a rendition of."
             },
             "role": {
               "type": "string",
+              "enum": [
+                "tv-master",
+                "meural-framed",
+                "portrait-crop",
+                "landscape-crop",
+                "partial-crop",
+                "eink-render",
+                "place-capture",
+                "thumbnail",
+                "duplicate-copy",
+                "unknown"
+              ],
               "description": "This holding's role relative to the owner, drawn from the same vocabulary as variants[].role."
             },
             "direction_evidence": {
@@ -1593,6 +1606,9 @@
           ],
           "additionalProperties": false,
           "description": "The independent check that justifies confidence 'verified'.",
+          "required": [
+            "test"
+          ],
           "properties": {
             "test": {
               "type": "string",
@@ -1618,6 +1634,7 @@
             "string",
             "null"
           ],
+          "pattern": "^[0-9]+,[0-9]+,[0-9]+,[0-9]+$",
           "description": "Where the master sits inside the parent, as 'x,y,w,h' in parent pixel coordinates, when it was located. This is what lets a crop for a new device be cut from the parent rather than re-derived from an existing crop."
         },
         "linked_at": {
@@ -1707,6 +1724,68 @@
                 "const": null
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "confidence is a claim about the link, so it must match the evidence recorded beside it. Enforced here rather than in each writer because sidecar.write() validates on every write.",
+      "if": {
+        "required": [
+          "source_image"
+        ],
+        "properties": {
+          "source_image": {
+            "type": "object"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source_image": {
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "confidence": {
+                      "const": "certain"
+                    }
+                  },
+                  "required": [
+                    "confidence"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "method": {
+                      "const": "byte-identical"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "confidence": {
+                      "const": "verified"
+                    }
+                  },
+                  "required": [
+                    "confidence"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "verification"
+                  ],
+                  "properties": {
+                    "verification": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       }

@@ -524,9 +524,15 @@ def test_variant_of_accepted():
     assert sidecar.is_valid(meta)
 
 
-def test_variant_of_requires_work_id_and_role():
+@pytest.mark.parametrize("missing", ["work_id", "role"])
+def test_variant_of_requires_work_id_and_role(missing):
     meta = json.loads(json.dumps(MINIMAL_VALID))
-    meta["files"]["variant_of"] = {"role": "landscape-crop"}
+    variant_of = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "landscape-crop",
+    }
+    del variant_of[missing]
+    meta["files"]["variant_of"] = variant_of
     assert not sidecar.is_valid(meta)
 
 
@@ -543,6 +549,50 @@ def test_field_provenance_decided_by_and_list_prior_value():
         }
     }
     assert sidecar.is_valid(meta)
+
+
+def test_field_provenance_prior_value_list_items_must_be_strings():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["field_provenance"] = {
+        "files.variants": {
+            "status": "available",
+            "prior_value": [{"rel_path": "x"}],
+        }
+    }
+    assert not sidecar.is_valid(meta)
+
+
+def test_source_image_certain_requires_byte_identical_method():
+    assert not sidecar.is_valid(_with_source(method="embedding", confidence="certain"))
+
+
+def test_source_image_verified_requires_verification_block():
+    assert not sidecar.is_valid(
+        _with_source(method="crop-located", confidence="verified", verification=None)
+    )
+
+
+def test_source_image_verification_requires_test():
+    assert not sidecar.is_valid(
+        _with_source(
+            method="crop-located",
+            confidence="verified",
+            verification={},
+        )
+    )
+
+
+def test_source_image_rejects_malformed_crop_region():
+    assert not sidecar.is_valid(_with_source(crop_region="not-coordinates"))
+
+
+def test_variant_of_rejects_unknown_role():
+    meta = json.loads(json.dumps(MINIMAL_VALID))
+    meta["files"]["variant_of"] = {
+        "work_id": "ea60c7c-claude-monet-saintlazare",
+        "role": "not-a-real-role",
+    }
+    assert not sidecar.is_valid(meta)
 
 
 # ---------------------------------------------------------------------------
