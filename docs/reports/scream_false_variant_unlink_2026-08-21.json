@@ -1,0 +1,59 @@
+{
+  "after": {
+    "finding_count": 0,
+    "findings": [],
+    "pair": [
+      "0ba0ac6-the-scream-munch",
+      "94de558-the-scream-munch"
+    ],
+    "qids": {
+      "0ba0ac6-the-scream-munch": "Q18891156",
+      "94de558-the-scream-munch": "Q18891158"
+    },
+    "variant_counts": {
+      "0ba0ac6-the-scream-munch": 0,
+      "94de558-the-scream-munch": 0
+    }
+  },
+  "apply": true,
+  "art_works_root": "/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Art/works",
+  "before": {
+    "finding_count": 0,
+    "findings": [],
+    "pair": [
+      "0ba0ac6-the-scream-munch",
+      "94de558-the-scream-munch"
+    ],
+    "qids": {
+      "0ba0ac6-the-scream-munch": "Q18891156",
+      "94de558-the-scream-munch": "Q18891158"
+    },
+    "variant_counts": {
+      "0ba0ac6-the-scream-munch": 0,
+      "94de558-the-scream-munch": 0
+    }
+  },
+  "grant": "grant=issue-560-scream-false-variant-unlink",
+  "results": [
+    {
+      "qid_after": "Q18891156",
+      "removed_rel_path": null,
+      "variant_count_after": 0,
+      "work_id": "0ba0ac6-the-scream-munch",
+      "wrote": false
+    },
+    {
+      "qid_after": "Q18891158",
+      "removed_rel_path": null,
+      "variant_count_after": 0,
+      "work_id": "94de558-the-scream-munch",
+      "wrote": false
+    }
+  ],
+  "stats": {
+    "planned": 2,
+    "removed": 0,
+    "wrote": 0
+  },
+  "note": "Production corpus already remediated at 2026-08-21T01:08:43Z by remediate_variant_identity; Art/operations.log records unlink_false_variant for issue 560 with preserved Q-IDs Q18891156 and Q18891158."
+}
