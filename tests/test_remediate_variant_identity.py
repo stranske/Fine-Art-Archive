@@ -66,7 +66,9 @@ def test_apply_removes_only_reciprocal_links_and_logs_preimage(tmp_path: Path) -
 
     left, right = json.loads(left_path.read_text()), json.loads(right_path.read_text())
     assert left["stable_identifiers"]["wikidata_q"] == remediation.APPROVED_FALSE_VARIANT_PAIR[0][1]
-    assert right["stable_identifiers"]["wikidata_q"] == remediation.APPROVED_FALSE_VARIANT_PAIR[1][1]
+    assert (
+        right["stable_identifiers"]["wikidata_q"] == remediation.APPROVED_FALSE_VARIANT_PAIR[1][1]
+    )
     assert left["files"]["variants"] == []
     assert right["files"]["variants"] == []
     entry = json.loads(log_path.read_text())

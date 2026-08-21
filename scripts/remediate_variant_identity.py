@@ -61,7 +61,9 @@ def _remove_exact_variant(meta: dict[str, Any], target_id: str) -> dict[str, Any
     if not isinstance(variants, list):
         raise ValueError(f"{meta.get('work_id')} has no variant list")
     expected = f"works/{target_id}/master.jpeg"
-    matched = [item for item in variants if isinstance(item, dict) and item.get("rel_path") == expected]
+    matched = [
+        item for item in variants if isinstance(item, dict) and item.get("rel_path") == expected
+    ]
     if len(matched) != 1:
         raise ValueError(
             f"{meta.get('work_id')} expected exactly one link to {target_id}; found {len(matched)}"
@@ -75,20 +77,28 @@ def build_plan(sidecar_root: Path) -> RemediationPlan | None:
     (left_id, left_qid), (right_id, right_qid) = APPROVED_FALSE_VARIANT_PAIR
     left_path, right_path = _meta_path(sidecar_root, left_id), _meta_path(sidecar_root, right_id)
     left_before, right_before = sidecar.load(left_path), sidecar.load(right_path)
-    for meta, work_id, qid in ((left_before, left_id, left_qid), (right_before, right_id, right_qid)):
+    for meta, work_id, qid in (
+        (left_before, left_id, left_qid),
+        (right_before, right_id, right_qid),
+    ):
         if meta.get("work_id") != work_id or _qid(meta) != qid:
             raise ValueError(f"{work_id} no longer matches the approved identity evidence")
 
     def has_link(meta: dict[str, Any], target: str) -> bool:
         files = meta.get("files")
         variants = files.get("variants") if isinstance(files, dict) else []
-        return any(isinstance(item, dict) and item.get("rel_path") == f"works/{target}/master.jpeg" for item in variants)
+        return any(
+            isinstance(item, dict) and item.get("rel_path") == f"works/{target}/master.jpeg"
+            for item in variants
+        )
 
     left_link, right_link = has_link(left_before, right_id), has_link(right_before, left_id)
     if not left_link and not right_link:
         return None
     if left_link != right_link:
-        raise ValueError("reciprocal variant link is only partially present; refusing asymmetric repair")
+        raise ValueError(
+            "reciprocal variant link is only partially present; refusing asymmetric repair"
+        )
 
     left_after, right_after = copy.deepcopy(left_before), copy.deepcopy(right_before)
     removed_left = _remove_exact_variant(left_after, right_id)
@@ -124,7 +134,9 @@ def _append_operation(log_path: Path, plan: RemediationPlan) -> None:
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def remediate(sidecar_root: Path, *, operations_log: Path, apply: bool = False) -> RemediationPlan | None:
+def remediate(
+    sidecar_root: Path, *, operations_log: Path, apply: bool = False
+) -> RemediationPlan | None:
     """Validate and optionally apply the sole approved false-variant unlink."""
     plan = build_plan(sidecar_root)
     if plan is None or not apply:
@@ -146,7 +158,9 @@ def _default_root() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--apply", action="store_true", help="write the approved unlink (default: dry-run)")
+    parser.add_argument(
+        "--apply", action="store_true", help="write the approved unlink (default: dry-run)"
+    )
     parser.add_argument("--sidecar-root", type=Path, default=_default_root())
     parser.add_argument("--operations-log", type=Path)
     args = parser.parse_args(argv)
