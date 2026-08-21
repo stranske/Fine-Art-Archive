@@ -73,7 +73,8 @@
             "string",
             "null"
           ],
-          "description": "Display string as it appears in the source (e.g., 'Workshop of Rembrandt', 'After Caravaggio', 'Unknown artist'). MAY be null when a debris-repair pass has stripped an unusable junk name and no attribution is yet known -- a TRANSIENT state, not a final verdict: such works must go through image search (which recovers many) before null is accepted as correct. The structured attribution fields below carry the resolved relationship."
+          "description": "Display string as it appears in the source (e.g., 'Workshop of Rembrandt', 'After Caravaggio', 'Unknown artist'). MAY be null when a debris-repair pass has stripped an unusable junk name and no attribution is yet known -- a TRANSIENT state, not a final verdict: such works must go through image search (which recovers many) before null is accepted as correct. The structured attribution fields below carry the resolved relationship.",
+          "minLength": 1
         },
         "given": {
           "type": [
@@ -1786,6 +1787,37 @@
                 }
               }
             ]
+          }
+        }
+      }
+    },
+    {
+      "$comment": "The files.variants[] twin of the derived_from clause above. Same invariant, same reason for living in the schema rather than in each writer: sidecar.write() validates on every write, so every pass gets it for free and none can reintroduce it. Added 2026-08-17 after the variant_identity check reported the same violations across successive audits — the repairs were correct each time and the resolvers simply wrote the values back.",
+      "if": {
+        "required": [
+          "files"
+        ],
+        "properties": {
+          "files": {
+            "required": [
+              "variant_of"
+            ],
+            "properties": {
+              "variant_of": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "stable_identifiers": {
+            "properties": {
+              "wikidata_q": {
+                "const": null
+              }
+            }
           }
         }
       }
