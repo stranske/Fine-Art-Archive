@@ -10,10 +10,6 @@ verifier-context.md
 autofix_report_enriched.json
 langsmith-fleet-worker-attempt.json
 
-# Root-anchored only: bare `node_modules/` would also ignore the vendored
-# `.github/scripts/node_modules/` tree required by auto-pilot and agents-guard.
-/node_modules/
-
 # Python bytecode
 __pycache__/
 *.pyc
@@ -35,3 +31,7 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 automation_logs/
+
+# Root-anchored only: bare `node_modules/` would also ignore the vendored
+# `.github/scripts/node_modules/` tree required by auto-pilot and agents-guard.
+/node_modules/

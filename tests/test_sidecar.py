@@ -647,8 +647,10 @@ LINEAGE_FIELDS_IN_USE = [
 
 def _declared(path):
     """Walk `properties` down a dotted path; return the subschema or None."""
-    node = sidecar.SCHEMA if hasattr(sidecar, "SCHEMA") else json.loads(
-        sidecar.SCHEMA_PATH.read_text()
+    node = (
+        sidecar.SCHEMA
+        if hasattr(sidecar, "SCHEMA")
+        else json.loads(sidecar.SCHEMA_PATH.read_text())
     )
     for key in path:
         props = node.get("properties")
