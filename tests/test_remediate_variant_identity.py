@@ -4,14 +4,10 @@ from __future__ import annotations
 
 import copy
 import json
-import sys
 from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-
-import remediate_variant_identity as remediation  # noqa: E402
+from scripts import remediate_variant_identity as remediation
 
 
 def _meta(work_id: str, qid: str, target: str) -> dict:
