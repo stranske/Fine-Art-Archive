@@ -33,5 +33,5 @@ def test_generated_dirs_untracked_and_vendored_preserved() -> None:
     assert vendored, ".github/scripts/node_modules/ must remain tracked."
 
     root_rule = _git_ignore_rule("node_modules/probe.js")
-    assert root_rule and root_rule.startswith(".gitignore:") and "/node_modules/\t" in root_rule
     assert not _git_ignore_rule(".github/scripts/node_modules/minimatch/package.json")
+    assert root_rule and root_rule.startswith(".gitignore:") and "/node_modules/\t" in root_rule
