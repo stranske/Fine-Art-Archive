@@ -121,14 +121,18 @@ carries no such inherited error, which is exactly why it should be consulted fir
 3. Take the identification to the **holding institution's own record**, then to Wikidata.
    Do not stop at an aggregator, a print shop, or Commons — see the archive's standing rule
    that the host museum outranks Commons for both identity and image quality.
-4. Record `field_provenance` naming reverse image search as the method, and cite the
-   museum record and the Wikidata item.
+4. Record the result in `field_provenance.work_qid` using only schema-supported
+   fields. Set `source` to `reverse_image_search`, put the search-result URL in
+   `source_ref`, stamp `checked_at`, and cite the holding institution's record and
+   the Wikidata item in `note`. Use `status: available` only for a confirmed match.
 
 ### When it does not settle the question
 
-A reverse image search that returns only print shops and stock-photo resellers has not
-identified anything. Say so, and record the work as unidentified with that stated — but
-only after actually running the search.
+Run the search before retaining an unidentified result. No results, unrelated results,
+or results limited to print shops and stock-photo resellers have not identified the work;
+record `status: not_available` and describe the outcome in `note`. When plausible matches
+conflict, retain the work as unidentified, record `status: conflicting`, and cite each
+candidate there. Do not promote any of these outcomes to an identification.
 
 ## Useful References
 
