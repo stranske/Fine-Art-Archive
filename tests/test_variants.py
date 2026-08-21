@@ -392,4 +392,5 @@ class TestSelfReferenceIsNotBarred:
         """The claim this class of bug lived in."""
         doc = VariantLinks.__doc__ or ""
         assert "Both are still barred" not in doc
-        assert "NOT barred" in doc
+        assert "``ambiguous`` IS barred by" in doc
+        assert "``self_referential`` is NOT barred." in doc
