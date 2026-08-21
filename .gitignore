@@ -35,3 +35,8 @@ automation_logs/
 # Root-anchored only: bare `node_modules/` would also ignore the vendored
 # `.github/scripts/node_modules/` tree required by auto-pilot and agents-guard.
 /node_modules/
+
+# Derived image cache (regenerated on demand by _serve_resized;
+# filenames embed the source mtime, so entries self-invalidate).
+# Source masters live outside the repo under FAA_ART_WORKS_ROOT.
+/data/image_cache/
