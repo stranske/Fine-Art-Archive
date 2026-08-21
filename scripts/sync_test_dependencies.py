@@ -135,6 +135,7 @@ TEST_FRAMEWORK_MODULES = {
 }
 
 # Base project modules (installed via ``pip install -e .``)
+# Retired package names must stay absent from this canonical consumer set.
 # Additional modules are detected dynamically from src/ directory
 _BASE_PROJECT_MODULES = {
     "analysis",
