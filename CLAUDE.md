@@ -90,6 +90,46 @@ If yes:
 - Treat `.gitnexus/` as local derived cache. Do not commit it, require it in CI, or make correctness depend on it.
 - If GitNexus is unavailable or stale, continue with normal `rg`, git, and repository tests.
 
+## Identifying a Work: Reverse Image Search Is the Next Step
+
+**When you are stuck on a work's identity and you have its image, do a reverse image
+search before concluding anything.** This is not a last resort. It is the next step, and
+it comes BEFORE writing "unidentified", before an adjudicated `not_available`, and before
+reporting the work as a hard case.
+
+The archive holds a picture of every work. That picture is the strongest identifying
+evidence available, and catalogue-metadata searches routinely fail on works the image
+finds in seconds.
+
+Worked example, 2026-08-21. `e7bc13e-estuary-at-day-s-end-vlieger` sat unidentified for
+twelve days. A Wikidata oeuvre search over its artist returned nothing, and it was
+reported as "still unidentified" twice. One reverse image search returned the answer as
+the top visual match: Simon de Vlieger, *Beach View* (*Strandgezicht*), 1643, Mauritshuis
+inv. 558, 60.6 x 83.5 cm, Q17275980 — with the museum's own description matching the
+picture element for element.
+
+**Why the metadata search could not have found it.** The by-creator strategy discriminates
+on dimensions, and this sidecar was carrying 36.8 x 58.4 cm — the dimensions of a
+*different* painting, left behind by an identification that had already been rejected. No
+amount of oeuvre searching can match a work against another work's measurements. The image
+carries no such inherited error, which is exactly why it should be consulted first.
+
+### How
+
+1. Downscale the master to ~2000 px (upload caps are ~10 MB).
+2. Upload it to a reverse image service. Read the top *visual* matches, not the web results.
+3. Take the identification to the **holding institution's own record**, then to Wikidata.
+   Do not stop at an aggregator, a print shop, or Commons — see the archive's standing rule
+   that the host museum outranks Commons for both identity and image quality.
+4. Record `field_provenance` naming reverse image search as the method, and cite the
+   museum record and the Wikidata item.
+
+### When it does not settle the question
+
+A reverse image search that returns only print shops and stock-photo resellers has not
+identified anything. Say so, and record the work as unidentified with that stated — but
+only after actually running the search.
+
 ## Useful References
 
 - `stranske/Workflows/README.md`
