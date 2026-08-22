@@ -331,3 +331,66 @@ class TestVariantLinks:
 
         # One parse failure must not disable the guard for everything else.
         assert links.exclusion_reason("aaaaaaa-crop") == "variant-holding"
+
+
+class TestSelfReferenceIsNotBarred:
+    """Pin the behaviour, because the docstring once claimed the opposite.
+
+    Until 2026-08-21 `VariantLinks`'s class docstring said self-referential ids
+    were "still barred ... by may_hold_work_qid". `exclusion_reason` has never
+    consulted `self_referential`, so a future reader could reasonably have
+    "fixed" the code to match the prose. These tests exist to stop that.
+
+    Barring a self-reference protects nothing: the rule keeps a holding out of a
+    queue because identity belongs on the OTHER side of the relationship, and a
+    self-reference has no other side. It would also be harmful — a sidecar kept
+    out of every resolver queue cannot be identified at all.
+    """
+
+    @staticmethod
+    def _selfref(work_id: str = "aaaaaaa-solo") -> dict:
+        return {
+            "work_id": work_id,
+            "files": {
+                "variants": [{"rel_path": f"works/{work_id}/master.jpeg", "role": "landscape-crop"}]
+            },
+        }
+
+    def test_it_is_recorded_as_self_referential(self) -> None:
+        links = variant_links([self._selfref()])
+        assert links.self_referential == frozenset({"aaaaaaa-solo"})
+
+    def test_it_is_not_excluded_from_a_work_qid_queue(self) -> None:
+        """NOT excluded: this is the assertion the old docstring contradicted."""
+        links = variant_links([self._selfref()])
+        assert links.exclusion_reason("aaaaaaa-solo") is None
+        assert links.may_hold_work_qid("aaaaaaa-solo") is True
+
+    def test_it_is_not_counted_as_a_holding(self) -> None:
+        """A self-reference names no owner, so there is nothing to inherit from."""
+        links = variant_links([self._selfref()])
+        assert "aaaaaaa-solo" not in links.holdings
+
+    def test_a_mutual_pair_is_still_excluded(self) -> None:
+        """The contrast that makes the distinction real, not an oversight.
+
+        A mutual pair IS barred, and must stay barred.
+        """
+        a = {
+            "work_id": "aaaaaaa-one",
+            "files": {"variants": [{"rel_path": "works/bbbbbbb-two/master.jpeg"}]},
+        }
+        b = {
+            "work_id": "bbbbbbb-two",
+            "files": {"variants": [{"rel_path": "works/aaaaaaa-one/master.jpeg"}]},
+        }
+        links = variant_links([a, b])
+        assert links.exclusion_reason("aaaaaaa-one") == "variant-link-ambiguous"
+        assert links.may_hold_work_qid("bbbbbbb-two") is False
+
+    def test_the_docstring_no_longer_claims_both_are_barred(self) -> None:
+        """The claim this class of bug lived in."""
+        doc = VariantLinks.__doc__ or ""
+        assert "Both are still barred" not in doc
+        assert "``ambiguous`` IS barred by" in doc
+        assert "``self_referential`` is NOT barred." in doc

@@ -225,9 +225,36 @@ class VariantLinks:
         Whoever wrote the entry does not settle which file is the crop, and
         guessing would strip the Q-ID from the authoritative capture.
 
-    Both are still barred from a resolver queue by :meth:`may_hold_work_qid`:
-    declining to write is recoverable, writing the identity onto the wrong side
-    of the relationship is what this whole rule exists to prevent.
+    They are NOT barred alike, and the difference is deliberate.
+
+    ``ambiguous`` IS barred by :meth:`may_hold_work_qid`. There really are two
+    sides, nothing on record says which is the crop, and writing the Q-ID onto
+    the wrong one strips it from the authoritative capture. Declining is
+    recoverable; guessing is not.
+
+    ``self_referential`` is NOT barred. The reason to keep a holding out of a
+    queue is that identity belongs on the OTHER side of the relationship, and a
+    self-reference has no other side — so barring it withholds identity from a
+    work with nowhere else to put it, which protects nothing. This is the same
+    conclusion the entry above already reaches: a self-reference is a defect in
+    the LINK, not in the identity.
+
+    Barring it would also be actively harmful, because a sidecar kept out of
+    every resolver queue cannot be identified at all. That is not theoretical:
+    ``e7bc13e-estuary-at-day-s-end-vlieger`` sat unidentifiable for twelve days
+    behind a variant link that turned out to be false.
+
+    Measured blast radius, 2026-08-21 — this changes no current outcome either
+    way, so it is decided on the principle above. The archive holds 6
+    self-referential entries: 4 already carry a work Q-ID, and the 2 Chartres
+    rose windows are adjudicated ``faa:identity-anchor``, a deliberate no-Q-ID
+    decision that eligibility honours independently. Barring them would alter
+    nothing today and only lay a trap for later.
+
+    (This paragraph previously claimed both shapes were barred by
+    :meth:`may_hold_work_qid`. :meth:`exclusion_reason` has never consulted
+    ``self_referential``; the CODE was right and the claim was wrong. Corrected
+    rather than "fixed" in the code, for the reasons above.)
     """
 
     holdings: Mapping[str, VariantHolding]
