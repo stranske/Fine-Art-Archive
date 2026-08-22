@@ -98,33 +98,71 @@ Options: move them into Dropbox (consistent with the one-copy-backed-up-online g
 widen `source_image.path` to admit an account-external locator. The first is simpler and
 matches the stated end state.
 
-## 6. The 1,053 `candidate` rows — **do not work them as a queue**
+## 6. The `candidate` rows — content-hash pass DONE, the rest still not a queue
 
-`ART_LINEAGE.csv` holds 1,053 rows at `status=candidate` with an empty `superseded_by`.
-They are DINOv2 cosine ≥ 0.90 guesses at ~6% precision, so ~990 of them are wrong by
-construction. Testing them one by one is testing a bad hypothesis.
+**Done 2026-08-21: 39 byte-identical parents written**, `method: byte-identical` /
+`confidence: certain`. `source_image` coverage 898 -> 937.
 
-Measured options:
+The "8 links" estimate previously recorded here **did not reproduce, in both directions**, and
+the reasons are worth keeping:
 
-| approach | cost | expected yield |
-|---|---|---|
-| content-hash self-join against Dropbox's index | ~25 s, no I/O | **8 links** (`certain`) |
-| targeted NCC on rows whose named parent is already local (72) | ~25 min | ~4 confirmations |
-| same for the 981 online-only rows | **18.8 GiB** hydration + hours | ~59 confirmations |
+* Restricted to ART_LINEAGE's own pairings, the join finds only **3**. ART_LINEAGE's guesses
+  are not where the free links live.
+* The real self-join — every master against every non-Art file in the account — finds **39**.
+  It can pair a work with a parent that has no candidate row at all, which is the whole point.
+* Its prerequisite was **missing**: `tools/catalogue.sqlite` and `tools/nucleus_index.sqlite`
+  did not exist, so the "~25 s, no I/O" claim was unrunnable. Rebuild with
+  `tools/build_nucleus_index.py` — it reads Dropbox's own metadata store and indexed
+  1,139,609 files in **38 s** with no downloads. Do this first.
+* Skip twins under `_RETIRED-Photos-Library-*` and `staging_acquisitions/quarantine_*`: same
+  bytes, but paths expected to disappear, so they are not provenance parents.
 
-**Recommendation:** take the 8 free ones, and otherwise leave the rows alone. Let coverage
-grow from the *good* methods as the pinning migration makes originals local, and the rows
-will retire themselves — `superseded_by` already flips to `sidecar:source_image:*` whenever
-a real parent link appears for that work. Their standing value is the artist-level
-narrowing hint, which the ART_LINEAGE README already records.
+The remaining `candidate` rows are still **not** a queue, for the reason already recorded: at
+~6% precision, testing them one by one is testing a bad hypothesis. What changed is that the
+NCC crop-location test is now wired and measured (item 7), so the honest next step is to
+extend THAT over the works, not to adjudicate rows.
 
-## 7. 22 ART_LINEAGE ↔ `source_image` conflicts — **decision, bounded**
+## 7. ART_LINEAGE ↔ `source_image` conflicts — **RESOLVED 2026-08-21, by testing**
 
-Listed in full in `Metadata/ART_LINEAGE.README.md`. Cases where the two sources name
-different parent files for one `work_id`. Not necessarily contradictions: ART_LINEAGE maps
-*photo → work* while `source_image` maps *work → the file its master was cut from*, and
-several works legitimately have more than one photo in the archive. Resolve by testing,
-never by preferring a source.
+Not a decision after all. `Metadata/tools/test_lineage_conflicts.py` locates the master inside
+BOTH candidates (`verify_art_links.locate_precise`, then re-cuts the located region and
+re-correlates it independently). Full detail in `Metadata/ART_LINEAGE.README.md`; per-row
+output in `Metadata/lineage_conflict_tests.json`.
+
+**34 conflicts, not 22** — 12 more appeared once the byte-identical pass gave 39 works a
+`certain` parent, putting a proven parent opposite an ART_LINEAGE claim.
+
+| verdict | rows |
+|---|---|
+| `both-valid` — both contain the master; the work has two photographs | 23 |
+| `sidecar-wins` — ART_LINEAGE's photo does NOT contain it; `superseded_by` set | 7 |
+| `neither-located` — both claims unproven | 3 |
+| `one-side-untestable` — a candidate would not materialise | 1 |
+
+**Zero rows resolved against the sidecar.** And the README's hypothesis — that the
+accession-named ART_LINEAGE photos "may well depict the same painting" — was **wrong for all
+7 refutations**, in the predicted right-artist-wrong-painting way: three Giotto Scrovegni rows
+named the wrong panel of the same cycle (*12. Wedding Procession* matched to *10. The Suitors
+Praying*; *25. Raising of Lazarus* to a detail of itself), at NCC 0.17-0.31 against the
+sidecar's 0.86-0.98.
+
+**Net yield: 19 links moved `probable` -> `verified`** with a `crop_region` and an independent
+self-check; 3 moved `probable` -> `unverified` (refuted, not merely untested).
+
+**The rule the tester exists to enforce — untested is not refuted.** Its first version scored
+"could not read the file" as "failed the test" and produced two false wins where the other
+candidate was merely online-only; a `byte-identical` link needs no locating at all, since hash
+equality holds for evicted files. Acting on those verdicts would have moved two parent links
+off files whose identity was never contested.
+
+Cost, measured: 2.05 GiB hydrated (57 files) then 2,127 s of locating. **Fetch concurrently** —
+serial reads through the Dropbox File Provider managed one 15 MiB file in 15 minutes.
+
+### What is left: 826 `probable` links whose parent is online-only
+
+The same test would verify or refute every remaining `filename-prefix` link, with no human
+input. It needs **24.4 GiB** hydrated (~24 h wall clock at the measured concurrent rate). Disk
+is not the constraint. This is a cost decision, not a research problem.
 
 ## 8. `UPSCALE_LINEAGE.csv` has the same position gap — **machine, but unowned**
 
