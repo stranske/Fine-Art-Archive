@@ -116,8 +116,19 @@ carries no such inherited error, which is exactly why it should be consulted fir
 
 ### How
 
-1. Downscale the master to ~2000 px (upload caps are ~10 MB).
-2. Upload it to a reverse image service. Read the top *visual* matches, not the web results.
+### Privacy and rights gate
+
+This repository does not approve any external reverse-image service on its own. Before any
+upload, confirm that the particular service and image are approved for this corpus and that
+the uploader has authority to share it. Do **not** upload restricted, private, rights-limited,
+or institution-provided images to an unapproved third party. Use a local visual-matching tool
+or the holding institution's approved research path instead; record the reason when that keeps
+the work unresolved.
+
+1. For an approved upload, create a review copy scaled to ~2000 px (upload caps are ~10 MB);
+   never upload the master or unnecessary embedded metadata.
+2. Upload only that approved review copy to the specifically approved reverse-image service.
+   Read the top *visual* matches, not the web results.
 3. Take the identification to the **holding institution's own record**, then to Wikidata.
    Do not stop at an aggregator, a print shop, or Commons — see the archive's standing rule
    that the host museum outranks Commons for both identity and image quality.
@@ -128,11 +139,16 @@ carries no such inherited error, which is exactly why it should be consulted fir
 
 ### When it does not settle the question
 
-Run the search before retaining an unidentified result. No results, unrelated results,
-or results limited to print shops and stock-photo resellers have not identified the work;
+Run the search before retaining a QID-less work as unidentified. No results, unrelated results,
+or results limited to print shops and stock-photo resellers have not identified that work;
 record `status: not_available` and describe the outcome in `note`. When plausible matches
-conflict, retain the work as unidentified, record `status: conflicting`, and cite each
+conflict, retain the QID-less work as unidentified, record `status: conflicting`, and cite each
 candidate there. Do not promote any of these outcomes to an identification.
+
+An inconclusive or conflicting new search does **not** on its own disprove an already confirmed
+`stable_identifiers.wikidata_q`; preserve that identifier and its provenance. Clear an existing
+Q-ID only when evidence shows it is wrong, using the repository's re-resolution flow so the
+prior value and corrective evidence remain recoverable.
 
 ## Useful References
 
