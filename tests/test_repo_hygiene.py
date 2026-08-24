@@ -21,7 +21,16 @@ def _git_ignore_rule(path: str) -> str | None:
         capture_output=True,
         text=True,
     )
-    return result.stdout.strip() or None
+    if result.returncode == 1:
+        return None
+    result.check_returncode()
+    match = result.stdout.strip()
+    if not match:
+        return None
+    # With --no-index Git reports success for both ignore and negation matches.
+    # The rule field is therefore authoritative for an explicitly unignored path.
+    rule = match.split("\t", 1)[0].rsplit(":", 1)[-1]
+    return None if rule.startswith("!") else match
 
 
 def test_generated_dirs_untracked_and_vendored_preserved() -> None:
@@ -34,4 +43,6 @@ def test_generated_dirs_untracked_and_vendored_preserved() -> None:
 
     root_rule = _git_ignore_rule("node_modules/probe.js")
     assert not _git_ignore_rule(".github/scripts/node_modules/minimatch/package.json")
-    assert root_rule and root_rule.startswith(".gitignore:") and "/node_modules/\t" in root_rule
+    assert root_rule and root_rule.startswith(".gitignore:")
+    root_pattern = root_rule.split("\t", 1)[0].rsplit(":", 1)[-1]
+    assert root_pattern in {"node_modules/", "/node_modules/"}
