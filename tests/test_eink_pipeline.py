@@ -920,6 +920,47 @@ def test_ui_shaped_spec_reaches_preference_diverse_selection(tmp_path, monkeypat
     assert ordered.json()["selection_diagnostics"] == []
 
 
+def test_ui_shaped_request_without_evidence_returns_a_selection(tmp_path, monkeypatch):
+    """The browser payload derives local, non-degenerate visual evidence."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+
+    work_ids = ("near-a", "near-b", "diverse")
+    rows = [sidecar(work_id, artist="Included") for work_id in work_ids]
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text(
+        "\n".join(json.dumps({"work_id": work_id, "fit": 9, "quality": 9}) for work_id in work_ids)
+    )
+    masters = tmp_path / "works"
+    for work_id, colour in zip(
+        work_ids, ((220, 40, 40), (210, 50, 50), (40, 70, 220)), strict=True
+    ):
+        work_dir = masters / work_id
+        work_dir.mkdir(parents=True)
+        Image.new("RGB", (32, 24), colour).save(work_dir / "master.png")
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", masters)
+
+    response = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["selection_diagnostics"]
+    derived = api_main._derived_preference_evidence(
+        list(work_ids), api_main._eink.load_ratings(ratings)
+    )[1]
+    assert derived["near-a"] != derived["diverse"], "visual embeddings must not be constant"
+
+
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
     from fine_art_archive.api.main import UI_FILE
