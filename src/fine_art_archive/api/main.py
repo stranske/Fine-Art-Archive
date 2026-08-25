@@ -48,6 +48,12 @@ IMAGE_CACHE_DIR = env_path("FAA_IMAGE_CACHE_DIR", REPO_ROOT / "data" / "image_ca
 # of tiny tile files must not hit cloud-sync. Override with FAA_TILES_CACHE_DIR.
 TILES_CACHE_DIR = env_path("FAA_TILES_CACHE_DIR", Path.home() / ".faa-tiles")
 
+# A fresh checkout ships exactly this many fixture sidecars and no manifest.csv.
+# That, and only that, is the "manifest not configured yet" state /healthz is
+# allowed to call healthy. Defined once and consumed by both the endpoint and
+# the test that pins the allowance, so the two cannot drift apart.
+FRESH_CHECKOUT_SIDECAR_WORKS = 1
+
 app = FastAPI(
     title="Fine Art Archive — Companion API",
     description="Browse + rate the canonical Fine Art Archive.",
@@ -192,12 +198,20 @@ def healthz() -> dict:
     # at ratings and queues. A work the operator cannot find cannot be rated,
     # so it never enters the curation loop. Drift is therefore a health fact.
     manifest_drift = None if sidecar_works is None else manifest_loaded - sidecar_works
-    # An ABSENT or empty manifest is "not configured", not "drifted": a fresh
-    # checkout ships one fixture sidecar and no manifest at all, and failing
-    # health there would be a false alarm on every dev machine. Drift only
-    # gates health once a manifest exists and claims content — which is
-    # precisely the state the 2026-08-05 incident occurred in.
-    drift_is_healthy = manifest_loaded == 0 or manifest_drift == 0
+    # An ABSENT or empty manifest is "not configured" ONLY when there is
+    # nothing to navigate: a fresh checkout ships one fixture sidecar and no
+    # manifest at all, and failing health there would be a false alarm on every
+    # dev machine. An empty manifest over a POPULATED tree is the opposite —
+    # it is total navigation loss, every work on disk unfindable, which is
+    # strictly worse than the partial drift this endpoint already fires on.
+    # Until 2026-08-25 the `manifest_loaded == 0` arm short-circuited without
+    # consulting `sidecar_works`, computed four lines above, so `ok` was
+    # non-monotonic in the severity of the very condition it exists to detect:
+    # 0 rows over 3411 sidecars reported healthy while 1 row over 3411 did not.
+    # Nothing in this repository writes manifest.csv, so that was the default
+    # state of every fresh deployment against a real works tree.
+    nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
+    drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "manifest_loaded": manifest_loaded,
