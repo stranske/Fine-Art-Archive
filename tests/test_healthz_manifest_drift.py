@@ -93,6 +93,26 @@ def test_absent_manifest_is_not_configured_not_drifted(
     assert body["ok"] is True
 
 
+def test_empty_manifest_over_populated_archive_is_not_healthy(archive, client: TestClient) -> None:
+    """Total navigation loss must not be quieter than partial drift.
+
+    The empty-manifest allowance exists for the fresh checkout above. Applied
+    to a populated tree it admitted the *worst* state: 0 manifest rows over
+    3411 sidecars reported ``ok: true``, while 1 row over 3411 reported
+    ``ok: false``. Health was non-monotonic in the severity of the condition
+    it exists to detect, and the total-loss case was the silent one.
+
+    Nothing in this repository writes ``manifest.csv``, so this is the state a
+    fresh deployment against a real works tree starts in — not a hypothetical.
+    """
+    archive(sidecars=3411, manifest_rows=0)
+    body = client.get("/healthz").json()
+    assert body["manifest_loaded"] == 0
+    assert body["sidecar_works"] == 3411
+    assert body["manifest_drift"] == -3411
+    assert body["ok"] is False, "an empty manifest over a populated tree is total navigation loss"
+
+
 def test_unreadable_tree_is_unknown_not_empty(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, client: TestClient
 ) -> None:
