@@ -33,6 +33,18 @@ def e(s) -> str:
     return html.escape(str(s if s is not None else ""))
 
 
+# Rendered when the payload records no scope for a grant id. An explicit
+# absence; never another grant's scope.
+SCOPE_NOT_RECORDED = "scope not recorded"
+
+ISSUE_URL_BASE = "https://github.com/stranske/Fine-Art-Archive/issues"
+
+
+def numerals(text: str) -> set[int]:
+    """Every integer stated in a string. One definition, so the two callers cannot drift."""
+    return {int(token.replace(",", "")) for token in re.findall(r"\d[\d,]*", text)}
+
+
 def evidence_title(title: str, *measured_values: int) -> str:
     """Refuse a heading whose numeric claims are absent from its evidence.
 
@@ -40,7 +52,7 @@ def evidence_title(title: str, *measured_values: int) -> str:
     name a supplied measurement prevents a copied count from surviving after
     the payload changes (the historical 138-vs-88 failure).
     """
-    stated = {int(token.replace(",", "")) for token in re.findall(r"\d[\d,]*", title)}
+    stated = numerals(title)
     measured = {int(value) for value in measured_values}
     unsupported = stated - measured
     if unsupported:
@@ -154,18 +166,24 @@ def main() -> None:
 
     # ---------- 1. grant attribution
     rows = []
+    # The recorded scope of a grant is EVIDENCE, so it comes from the payload.
+    # Until 2026-08-25 this was `if grant == "G41" ... else`, which handed every
+    # third grant id G47's scope verbatim. The page then asserted a "recorded
+    # scope" for an authorization it had never seen — and since the paragraph
+    # above tells the owner that operations.log plus the authorizing grant IS
+    # the undo script, a fabricated scope is a fabricated undo plan.
+    grant_scopes = grants.get("scopes") or {}
     for grant in sorted(ung["by_grant"]):
         items = ung["by_grant"][grant]
-        rows.append(
-            f"<h4>{e(grant)} — {len(items)} promotions "
-            f'<span class="dim">(recorded scope: '
-            + (
-                "8 duplicate pairs; metadata transfer + quarantine"
-                if grant == "G41"
-                else "6 sidecars with wrong artist Q-IDs; modify-in-place only"
-            )
-            + ")</span></h4>"
+        scope = grant_scopes.get(grant) or SCOPE_NOT_RECORDED
+        # evidence_title() guards the numerals this renderer composes: the
+        # promotion count, plus whatever digits the grant id itself carries
+        # (payload-supplied, hence measured). The scope span is payload prose
+        # and is appended after, so it is never a renderer claim.
+        heading = evidence_title(
+            f"{e(grant)} — {len(items)} promotions", len(items), *numerals(grant)
         )
+        rows.append(f'<h4>{heading} <span class="dim">(recorded scope: {e(scope)})</span></h4>')
         rows.append('<div class="grid">')
         for it in items:
             rows.append(f"""<figure class="cellw">
@@ -267,6 +285,18 @@ Ranked by Wikidata sitelinks, the notability proxy. Artist names resolved by liv
     <button onclick="pickU('{e(u['wid'])}','keep',this)">leave staged</button>
   </div>
 </div>""")
+    # The count of already-duplicated staging directories was the literal 78
+    # until 2026-08-25 — nothing in the payload produced it, and the page
+    # presented it as a measurement. It now renders only when the payload
+    # supplies it, and disappears entirely when it does not: an absent sentence
+    # is honest, a frozen one is not.
+    clearable = (data.get("staging") or {}).get("duplicate_of_archive")
+    clearable_note = (
+        f'<p class="dim">A further {int(clearable):,} staging directories duplicate works already '
+        f"in the archive and are safe to clear on any verdict here.</p>"
+        if isinstance(clearable, int)
+        else ""
+    )
     unprom_body = f"""
 <p>{len(unprom)} acquired masters sit in <code>staging_acquisitions/</code> with no matching
 <code>Art/works/</code> directory. Several duplicate works you already hold — shown side by side below,
@@ -276,8 +306,7 @@ as its own alarm, so leaving them ambiguous keeps that alarm ringing.</p>
 <p class="warn">Where a held copy exists, read the first hard rule before choosing: the lower-resolution
 side is often your Meural display crop, and the pair may be master + crop rather than duplicate.</p>
 {''.join(urows)}
-<p class="dim">A further 78 staging directories duplicate works already in the archive and are safe to
-clear on any verdict here.</p>"""
+{clearable_note}"""
 
     # ---------- 5. ALLOWED_P31
     cls_rows = []
@@ -326,30 +355,42 @@ three want opposite remedies, which is why this is a decision and not a fix:</p>
 "adoration of the Magi", in the same field.</p>
 {''.join(crows)}
 <p class="warn">Any dedup arising from this must run <code>scripts/audit_duplicate_decisions.py</code>
-first. On 2026-08-01, 26 of 34 proposed quarantines were display copies.</p>"""
+first.</p>"""
 
     # ---------- completeness sidebar
-    issues = f"""
+    # Four literal rows lived here until 2026-08-25, under the heading "filed,
+    # no decision needed today" and the body text "Listed so you know what is
+    # tracked". All four were CLOSED on the remote before this renderer merged.
+    # Row 408 was the worst shape: its count was interpolated live from the
+    # payload while its status cell was the frozen string "= current collision
+    # evidence", and a live number beside a frozen status reads as measured, so
+    # the staleness was undetectable from the page. Every cell, including the
+    # state, now comes from the payload; when the payload carries no filed
+    # issues the section is omitted rather than invented.
+    filed = data.get("filed_issues") or {}
+    filed_rows = filed.get("rows") or []
+    issues = ""
+    if filed_rows:
+        trs = "".join(
+            f'<tr><td><a href="{ISSUE_URL_BASE}/{e(row["number"])}" target="_blank">'
+            f'{e(row["number"])}</a></td>'
+            f'<td>{e(row.get("finding", ""))}</td>'
+            f'<td class="{e(row.get("state_class", ""))}">{e(row.get("state", ""))}</td></tr>'
+            for row in filed_rows
+        )
+        note = filed.get("note")
+        issues = f"""
 <section class="card" id="issues">
-  <div class="chead"><span class="num">FYI</span><h2>The four completeness issues — filed, no decision needed today</h2></div>
+  <div class="chead"><span class="num">FYI</span><h2>{evidence_title(
+      f"The {len(filed_rows)} completeness issues — filed, no decision needed today",
+      len(filed_rows))}</h2></div>
   <p class="stakes">These are on GitHub with full evidence. Listed so you know what is tracked, not to
   action now.</p>
   <table>
   <tr><th>#</th><th>finding</th><th>state</th></tr>
-  <tr><td><a href="https://github.com/stranske/Fine-Art-Archive/issues/406" target="_blank">406</a></td>
-      <td>34 artist Q-IDs do not denote the named artist</td><td class="warn">count is stale — see below</td></tr>
-  <tr><td><a href="https://github.com/stranske/Fine-Art-Archive/issues/407" target="_blank">407</a></td>
-      <td>canonical/mirror disagree: 69 mirror-only, 1 conflicting</td><td>down from 76 to 1</td></tr>
-  <tr><td><a href="https://github.com/stranske/Fine-Art-Archive/issues/408" target="_blank">408</a></td>
-      <td>{coll['qids_on_multiple']} work Q-IDs on multiple sidecars</td><td>= current collision evidence</td></tr>
-  <tr><td><a href="https://github.com/stranske/Fine-Art-Archive/issues/409" target="_blank">409</a></td>
-      <td>steps 9/10/12 falsely marked completed</td><td>reopen proposed</td></tr>
+  {trs}
   </table>
-  <p class="warn"><b>#406's number does not hold up.</b> The audit reported
-  <code>verified_this_run: 0</code> with 818 cached verdicts, so it re-reported an old measurement. I
-  re-checked all 10 Q-IDs it names against live Wikidata: <b>17 of 17 carrier sidecars now match, 0
-  mismatch.</b> Your G47 resplit fixed them and the cache never noticed. The remaining ~17 of the 34 are
-  not named in the report, so I cannot clear those. The real bug is the cache having no TTL.</p>
+  {f'<p class="warn">{e(note)}</p>' if note else ""}
 </section>"""
 
     decision_cards: list[str] = []
