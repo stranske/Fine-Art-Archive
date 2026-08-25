@@ -821,3 +821,111 @@ def test_merge_survey_stream_keys_known_vs_unknown(tmp_path, monkeypatch, capsys
     models = {d.get("model") for d in payload["devices"]}
     assert "Panel A" in models
     assert "ShouldNotMerge" not in models
+
+
+# ------------------------------------------------- UI reaches the selector ----
+# #549's quality x diversity selector shipped behind `selection_mode`, and the
+# operator UI never emitted that key: einkSpec() built ten spec keys and none of
+# them was it, so every previewed, saved and exported playlist used "ordered".
+# Its SelectionDiagnostic records were computed, returned by the API, and
+# rendered by nothing. These two tests pin the wire and the default.
+
+UI_SPEC_KEYS = {
+    "sort",
+    "artists",
+    "periods",
+    "all_tags",
+    "moods",
+    "min_fit",
+    "limit",
+    "exclude_filters",
+    "require_dossier",
+}
+
+
+def _ui_shaped_spec() -> dict:
+    """Exactly the keys `einkSpec()` can emit, at their maximal extent."""
+    return {
+        "sort": "fit",
+        "artists": ["Included"],
+        "periods": ["golden-age"],
+        "all_tags": ["setting:outdoor"],
+        "moods": ["open-air"],
+        "min_fit": 8,
+        "limit": 2,
+        "exclude_filters": ["nudity-full", "violence", "disturbing"],
+        "require_dossier": False,
+    }
+
+
+def _diverse_fixture(tmp_path, monkeypatch):
+    from fine_art_archive.api import main as api_main
+
+    work_ids = ("near-a", "near-b", "diverse")
+    rows = [
+        sidecar(
+            wid,
+            artist="Included",
+            year=1650,
+            genre="painting/landscape",
+            tags=("setting:outdoor",),
+        )
+        for wid in work_ids
+    ]
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text(
+        "\n".join(json.dumps({"work_id": wid, "fit": 9, "quality": 9}) for wid in work_ids)
+    )
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+    return {
+        "quality_scores": {"near-a": 1.0, "near-b": 0.99, "diverse": 0.85},
+        "embeddings": {"near-a": [1.0, 0.0], "near-b": [0.999, 0.04], "diverse": [0.0, 1.0]},
+    }
+
+
+def test_ui_shaped_spec_reaches_preference_diverse_selection(tmp_path, monkeypatch):
+    """The exact spec the browser builds must be able to request the selector."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api.main import UI_FILE, app
+
+    evidence = _diverse_fixture(tmp_path, monkeypatch)
+    client = TestClient(app)
+
+    # The browser's single spec builder must actually emit the key. Without
+    # this the rest of the test would pass against a UI that can never ask for
+    # the mode, which is exactly the defect: the selector was reachable from a
+    # hand-written spec and from nowhere an operator can click.
+    assert (
+        "spec.selection_mode" in UI_FILE.read_text()
+    ), "einkSpec() does not emit selection_mode — the selector is unreachable from the UI"
+
+    spec = {**_ui_shaped_spec(), "selection_mode": "preference-diverse"}
+    assert set(spec) == UI_SPEC_KEYS | {"selection_mode"}
+
+    response = client.post("/eink/playlist/preview", json={"spec": spec, "sample": 24, **evidence})
+    assert response.status_code == 200, response.text
+    diagnostics = response.json()["selection_diagnostics"]
+    assert diagnostics, "preference-diverse must return the reason each work was chosen"
+    assert [item["work_id"] for item in diagnostics] == response.json()["work_ids"]
+
+    # the default is pinned in the same test: drop the one key and the selector
+    # must not run, so "ordered" stays the behaviour of every saved playlist.
+    ordered = client.post(
+        "/eink/playlist/preview", json={"spec": _ui_shaped_spec(), "sample": 24, **evidence}
+    )
+    assert ordered.status_code == 200, ordered.text
+    assert ordered.json()["selection_diagnostics"] == []
+
+
+def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
+    """The key and the diagnostics must both exist in the one screen that builds specs."""
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "selection_mode" in ui, "einkSpec() cannot request the selector"
+    assert 'id="ek-selmode"' in ui, "no control emits it"
+    assert "preference-diverse" in ui
+    assert "selection_diagnostics" in ui, "the explanations are returned and rendered by nothing"
