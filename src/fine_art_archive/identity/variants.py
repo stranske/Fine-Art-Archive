@@ -310,7 +310,7 @@ def _held_work_id(rel_path: Any) -> str | None:
     return parts[1] if len(parts) > 2 and parts[1] else None
 
 
-def variant_links(metas: Iterable[dict[str, Any]]) -> VariantLinks:
+def variant_links(metas: Iterable[Mapping[str, Any]]) -> VariantLinks:
     """Read every sidecar's ``files.variants[]`` into one holding relation.
 
     A resolver calls this once per run and skips anything

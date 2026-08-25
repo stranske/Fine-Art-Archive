@@ -19,14 +19,18 @@ from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
     worst_offenders,
 )
 
+REPORT_SCHEMA_VERSION = 1
+
 
 def load_sidecars(root: Path) -> list[dict[str, Any]]:
     metas: list[dict[str, Any]] = []
     for path in sorted(root.glob("*/meta.json")):
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        except json.JSONDecodeError:
             continue
+        except OSError as exc:
+            raise RuntimeError(f"cannot read sidecar {path}") from exc
         if isinstance(value, dict):
             metas.append(value)
     return metas
@@ -37,6 +41,7 @@ def report(root: Path) -> dict[str, Any]:
     measures = measure_work_qid_collisions(metas)
     return {
         "read_only": True,
+        "report_schema_version": REPORT_SCHEMA_VERSION,
         "generated_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "sidecar_root": str(root),
         "measures": measures_as_dict(measures),
