@@ -360,6 +360,66 @@ def _cached_ratings() -> dict[str, dict[str, int]]:
     return _ratings_cache[1]
 
 
+def _request_supplies(body: BaseModel, field: str) -> bool:
+    """Work with either supported Pydantic field-set spelling."""
+    fields_set = getattr(body, "model_fields_set", None)
+    if fields_set is None:
+        fields_set = getattr(body, "__fields_set__", set())
+    return fields_set is not None and field in fields_set
+
+
+def _local_visual_embedding(work_id: str) -> list[float]:
+    """Return a deterministic, local pixel descriptor for one archive master.
+
+    This is deliberately not a network model call.  The diversity selector only
+    needs a stable representation whose distances reflect image content; a small
+    RGB thumbnail does that while keeping preview requests bounded and making the
+    evidence source explicit: the locally stored archive master.
+    """
+    master = _eink_master(work_id)
+    if master is None:
+        raise ValueError(
+            f"local master image evidence is missing for {work_id}; "
+            "cannot derive a preference-diverse embedding"
+        )
+    try:
+        from PIL import Image
+
+        with Image.open(master) as image:
+            image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+            return [channel / 255.0 for pixel in image.getdata() for channel in pixel]
+    except OSError as exc:
+        raise ValueError(
+            f"local master image evidence for {work_id} cannot be read; "
+            "cannot derive a preference-diverse embedding"
+        ) from exc
+
+
+def _derived_preference_evidence(
+    work_ids: list[str],
+    ratings: dict[str, dict[str, int]],
+    *,
+    include_quality: bool = True,
+    include_embeddings: bool = True,
+) -> tuple[dict[str, float], dict[str, list[float]]]:
+    """Derive the server-owned evidence required by preference-diverse mode."""
+    quality_scores = (
+        {
+            work_id: float(ratings[work_id]["quality"])
+            for work_id in work_ids
+            if "quality" in ratings.get(work_id, {})
+        }
+        if include_quality
+        else {}
+    )
+    embeddings = (
+        {work_id: _local_visual_embedding(work_id) for work_id in work_ids}
+        if include_embeddings
+        else {}
+    )
+    return quality_scores, embeddings
+
+
 class PlaylistIn(BaseModel):
     spec: dict = Field(default_factory=dict)
     quality_scores: dict[str, float] = Field(default_factory=dict)
@@ -423,14 +483,43 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         raise HTTPException(400, str(exc)) from exc
     sidecars = _all_sidecars()
     ratings = _eink.load_ratings(store.RATINGS_LOG)
+    quality_scores = body.quality_scores
+    embeddings = body.embeddings
+    needs_quality = not _request_supplies(body, "quality_scores")
+    needs_embeddings = not _request_supplies(body, "embeddings")
+    if spec.selection_mode == "preference-diverse" and (needs_quality or needs_embeddings):
+        # Apply the exact requested filters before touching masters: a missing
+        # master outside the selected candidate set must not make this preview
+        # fail.  The second build below retains the requested selection mode.
+        candidates = _eink.build(
+            sidecars,
+            _eink.PlaylistSpec.from_dict(
+                {**spec.__dict__, "selection_mode": "ordered", "limit": None}
+            ),
+            ratings=ratings,
+            dossier_ids=set(store.work_ids_with_dossier()),
+        )
+        try:
+            derived_quality, derived_embeddings = _derived_preference_evidence(
+                candidates.work_ids,
+                ratings,
+                include_quality=needs_quality,
+                include_embeddings=needs_embeddings,
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        if needs_quality:
+            quality_scores = derived_quality
+        if needs_embeddings:
+            embeddings = derived_embeddings
     try:
         res = _eink.build(
             sidecars,
             spec,
             ratings=ratings,
             dossier_ids=set(store.work_ids_with_dossier()),
-            quality_scores=body.quality_scores,
-            embeddings=body.embeddings,
+            quality_scores=quality_scores,
+            embeddings=embeddings,
         )
     except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc

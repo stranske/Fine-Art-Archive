@@ -920,6 +920,107 @@ def test_ui_shaped_spec_reaches_preference_diverse_selection(tmp_path, monkeypat
     assert ordered.json()["selection_diagnostics"] == []
 
 
+def test_ui_shaped_request_without_evidence_returns_a_selection(tmp_path, monkeypatch):
+    """The browser payload derives local, non-degenerate visual evidence."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+
+    work_ids = ("near-a", "near-b", "diverse")
+    rows = [sidecar(work_id, artist="Included") for work_id in work_ids]
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text(
+        "\n".join(json.dumps({"work_id": work_id, "fit": 9, "quality": 9}) for work_id in work_ids)
+    )
+    masters = tmp_path / "works"
+    for work_id, colour in zip(
+        work_ids, ((220, 40, 40), (210, 50, 50), (40, 70, 220)), strict=True
+    ):
+        work_dir = masters / work_id
+        work_dir.mkdir(parents=True)
+        Image.new("RGB", (32, 24), colour).save(work_dir / "master.png")
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", masters)
+
+    response = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["selection_diagnostics"]
+    derived = api_main._derived_preference_evidence(
+        list(work_ids), api_main._eink.load_ratings(ratings)
+    )[1]
+    assert derived["near-a"] != derived["diverse"], "visual embeddings must not be constant"
+
+    rows_with_missing = [*rows, sidecar("missing", artist="Included")]
+    ratings.write_text(
+        "\n".join(
+            json.dumps({"work_id": work_id, "fit": 9, "quality": 9})
+            for work_id in (*work_ids, "missing")
+        )
+    )
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows_with_missing)
+    missing = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+    assert missing.status_code == 400, missing.text
+    assert "local master image evidence is missing for missing" in missing.json()["detail"]
+
+    unreadable_dir = masters / "unreadable"
+    unreadable_dir.mkdir()
+    (unreadable_dir / "master.png").write_text("not an image")
+    monkeypatch.setattr(
+        api_main, "_all_sidecars", lambda: [sidecar("unreadable", artist="Included")]
+    )
+    ratings.write_text(json.dumps({"work_id": "unreadable", "fit": 9, "quality": 9}))
+    unreadable = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+    assert unreadable.status_code == 400, unreadable.text
+    assert (
+        "local master image evidence for unreadable cannot be read" in unreadable.json()["detail"]
+    )
+
+
+def test_supplied_embeddings_do_not_require_local_masters(tmp_path, monkeypatch):
+    """Omitting quality alone must not trigger unnecessary master-image reads."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+
+    evidence = _diverse_fixture(tmp_path, monkeypatch)
+    response = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+            "embeddings": evidence["embeddings"],
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["selection_diagnostics"]
+
+
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
     from fine_art_archive.api.main import UI_FILE
