@@ -365,7 +365,7 @@ def _request_supplies(body: BaseModel, field: str) -> bool:
     fields_set = getattr(body, "model_fields_set", None)
     if fields_set is None:
         fields_set = getattr(body, "__fields_set__", set())
-    return field in fields_set
+    return fields_set is not None and field in fields_set
 
 
 def _local_visual_embedding(work_id: str) -> list[float]:
