@@ -1000,6 +1000,27 @@ def test_ui_shaped_request_without_evidence_returns_a_selection(tmp_path, monkey
     )
 
 
+def test_supplied_embeddings_do_not_require_local_masters(tmp_path, monkeypatch):
+    """Omitting quality alone must not trigger unnecessary master-image reads."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+
+    evidence = _diverse_fixture(tmp_path, monkeypatch)
+    response = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+            "embeddings": evidence["embeddings"],
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["selection_diagnostics"]
+
+
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
     from fine_art_archive.api.main import UI_FILE

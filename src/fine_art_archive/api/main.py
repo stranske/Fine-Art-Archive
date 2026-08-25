@@ -396,15 +396,27 @@ def _local_visual_embedding(work_id: str) -> list[float]:
 
 
 def _derived_preference_evidence(
-    work_ids: list[str], ratings: dict[str, dict[str, int]]
+    work_ids: list[str],
+    ratings: dict[str, dict[str, int]],
+    *,
+    include_quality: bool = True,
+    include_embeddings: bool = True,
 ) -> tuple[dict[str, float], dict[str, list[float]]]:
     """Derive the server-owned evidence required by preference-diverse mode."""
-    quality_scores = {
-        work_id: float(ratings[work_id]["quality"])
-        for work_id in work_ids
-        if "quality" in ratings.get(work_id, {})
-    }
-    embeddings = {work_id: _local_visual_embedding(work_id) for work_id in work_ids}
+    quality_scores = (
+        {
+            work_id: float(ratings[work_id]["quality"])
+            for work_id in work_ids
+            if "quality" in ratings.get(work_id, {})
+        }
+        if include_quality
+        else {}
+    )
+    embeddings = (
+        {work_id: _local_visual_embedding(work_id) for work_id in work_ids}
+        if include_embeddings
+        else {}
+    )
     return quality_scores, embeddings
 
 
@@ -473,9 +485,9 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     ratings = _eink.load_ratings(store.RATINGS_LOG)
     quality_scores = body.quality_scores
     embeddings = body.embeddings
-    if spec.selection_mode == "preference-diverse" and (
-        not _request_supplies(body, "quality_scores") or not _request_supplies(body, "embeddings")
-    ):
+    needs_quality = not _request_supplies(body, "quality_scores")
+    needs_embeddings = not _request_supplies(body, "embeddings")
+    if spec.selection_mode == "preference-diverse" and (needs_quality or needs_embeddings):
         # Apply the exact requested filters before touching masters: a missing
         # master outside the selected candidate set must not make this preview
         # fail.  The second build below retains the requested selection mode.
@@ -489,13 +501,16 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         )
         try:
             derived_quality, derived_embeddings = _derived_preference_evidence(
-                candidates.work_ids, ratings
+                candidates.work_ids,
+                ratings,
+                include_quality=needs_quality,
+                include_embeddings=needs_embeddings,
             )
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
-        if not _request_supplies(body, "quality_scores"):
+        if needs_quality:
             quality_scores = derived_quality
-        if not _request_supplies(body, "embeddings"):
+        if needs_embeddings:
             embeddings = derived_embeddings
     try:
         res = _eink.build(
