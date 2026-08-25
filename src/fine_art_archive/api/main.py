@@ -387,7 +387,7 @@ def _local_visual_embedding(work_id: str) -> list[float]:
 
         with Image.open(master) as image:
             image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
-            return [channel / 255.0 for pixel in image.get_flattened_data() for channel in pixel]
+            return [channel / 255.0 for pixel in image.getdata() for channel in pixel]
     except OSError as exc:
         raise ValueError(
             f"local master image evidence for {work_id} cannot be read; "
@@ -487,9 +487,12 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
             ratings=ratings,
             dossier_ids=set(store.work_ids_with_dossier()),
         )
-        derived_quality, derived_embeddings = _derived_preference_evidence(
-            candidates.work_ids, ratings
-        )
+        try:
+            derived_quality, derived_embeddings = _derived_preference_evidence(
+                candidates.work_ids, ratings
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
         if not _request_supplies(body, "quality_scores"):
             quality_scores = derived_quality
         if not _request_supplies(body, "embeddings"):

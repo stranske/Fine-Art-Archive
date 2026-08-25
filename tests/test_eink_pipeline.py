@@ -960,6 +960,45 @@ def test_ui_shaped_request_without_evidence_returns_a_selection(tmp_path, monkey
     )[1]
     assert derived["near-a"] != derived["diverse"], "visual embeddings must not be constant"
 
+    rows_with_missing = [*rows, sidecar("missing", artist="Included")]
+    ratings.write_text(
+        "\n".join(
+            json.dumps({"work_id": work_id, "fit": 9, "quality": 9})
+            for work_id in (*work_ids, "missing")
+        )
+    )
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows_with_missing)
+    missing = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+    assert missing.status_code == 400, missing.text
+    assert "local master image evidence is missing for missing" in missing.json()["detail"]
+
+    unreadable_dir = masters / "unreadable"
+    unreadable_dir.mkdir()
+    (unreadable_dir / "master.png").write_text("not an image")
+    monkeypatch.setattr(
+        api_main, "_all_sidecars", lambda: [sidecar("unreadable", artist="Included")]
+    )
+    ratings.write_text(json.dumps({"work_id": "unreadable", "fit": 9, "quality": 9}))
+    unreadable = TestClient(api_main.app).post(
+        "/eink/playlist/preview",
+        json={
+            "spec": {"selection_mode": "preference-diverse", "limit": 2},
+            "target": "gooddisplay-315-diy",
+            "sample": 24,
+        },
+    )
+    assert unreadable.status_code == 400, unreadable.text
+    assert (
+        "local master image evidence for unreadable cannot be read" in unreadable.json()["detail"]
+    )
+
 
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
