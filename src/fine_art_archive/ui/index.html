@@ -2026,7 +2026,13 @@
               <select id="ek-sort" style="width:100%">
                 ${["fit","year","artist","title","quality","random"].map(x => opt(x, x)).join("")}</select></label>
             <label class="sub">Limit<br>
-              <input id="ek-limit" type="number" min="1" max="500" value="30" style="width:100%"></label>
+              <input id="ek-limit" type="number" min="1" max="500" value="30" style="width:100%"
+                     oninput="einkSyncSelectionMode()"></label>
+            <label class="sub">Selection<br>
+              <select id="ek-selmode" style="width:100%" onchange="einkSyncSelectionMode()">
+                <option value="ordered">ordered — take the first N by Order</option>
+                <option value="preference-diverse">preference-diverse — quality × visual diversity</option>
+              </select></label>
             <label class="sub">Rotate every<br>
               <select id="ek-interval" style="width:100%">
                 ${(T.intervals || ["hourly","6h","12h","daily","weekly"]).map(x => opt(x, x)).join("")}</select></label>
@@ -2040,6 +2046,8 @@
               <select id="ek-fitmode" style="width:100%">
                 ${["","contain","cover","stretch"].map(x => opt(x, x || "panel default")).join("")}</select></label>
           </div>
+
+          <div class="sub" id="ek-selnote" style="margin-top:6px;opacity:.8"></div>
 
           <label class="sub" style="display:block;margin-top:10px">
             <input type="checkbox" id="ek-excl" checked> Exclude works tagged
@@ -2080,7 +2088,28 @@
           <div id="ek-out" style="margin-top:16px"></div>
         </div>`;
       window.scrollTo({ top: host.offsetTop - 20, behavior: "smooth" });
+      einkSyncSelectionMode();
       einkLoadPlaylists();
+    }
+
+    // preference-diverse selection requires a limit — the backend raises
+    // "preference-diverse selection requires limit" (eink/playlist.py:419).
+    // Enforce it here so the mode cannot be REQUESTED without one, rather than
+    // letting the request 400 or silently falling back to ordered: the option
+    // is disabled and the note says why.
+    function einkSyncSelectionMode() {
+      const sel = document.getElementById("ek-selmode");
+      if (!sel) return;
+      const hasLimit = !!String((document.getElementById("ek-limit") || {}).value || "").trim();
+      const opt = sel.querySelector('option[value="preference-diverse"]');
+      if (opt) opt.disabled = !hasLimit;
+      if (!hasLimit && sel.value === "preference-diverse") sel.value = "ordered";
+      const note = document.getElementById("ek-selnote");
+      if (note) {
+        note.textContent = hasLimit
+          ? ""
+          : "preference-diverse needs a Limit — set one to enable it.";
+      }
     }
 
     function einkSpec() {
@@ -2099,6 +2128,13 @@
       if (v("ek-limit")) spec.limit = parseInt(v("ek-limit"), 10);
       if (on("ek-excl")) spec.exclude_filters = ["nudity-full", "violence", "disturbing"];
       if (on("ek-dossier")) spec.require_dossier = true;
+      // #549's quality × diversity selector runs only when the spec asks for
+      // it. The default stays "ordered" so saved playlists keep their
+      // ordering; the key is emitted only for the other mode, and only with a
+      // limit, matching the backend guard.
+      if (v("ek-selmode") === "preference-diverse" && spec.limit) {
+        spec.selection_mode = "preference-diverse";
+      }
       return spec;
     }
 
@@ -2213,10 +2249,37 @@
       const fitMode = (document.getElementById("ek-fitmode") || {}).value || "";
       const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";
 
+      // select_quality_diverse explains every pick, and until now the API
+      // returned those records to a screen that rendered none of them — the
+      // reason for the choice was computed and discarded on the one screen
+      // where the choice is made.
+      const num = x => (x === null || x === undefined ? "—" : Number(x).toFixed(3));
+      const diags = d.selection_diagnostics || [];
+      const diagTxt = diags.length ? `
+        <details open style="margin-top:12px">
+          <summary class="sub">Why these ${diags.length} were chosen — quality × visual diversity</summary>
+          <table class="sub" style="border-collapse:collapse;margin-top:6px;font-size:11px">
+            <tr><th align="left" style="padding-right:10px">#</th>
+                <th align="left" style="padding-right:10px">work</th>
+                <th align="right" style="padding-right:10px">quality</th>
+                <th align="right" style="padding-right:10px">nearest selected</th>
+                <th align="right">marginal gain</th></tr>
+            ${diags.map((g, n) => `<tr>
+              <td style="padding-right:10px">${String(n + 1).padStart(3, "0")}</td>
+              <td style="padding-right:10px">${einkEsc(g.work_id)}</td>
+              <td align="right" style="padding-right:10px">${num(g.quality_contribution)}</td>
+              <td align="right" style="padding-right:10px">${num(g.nearest_selected_similarity)}</td>
+              <td align="right">${num(g.marginal_determinant)}</td></tr>`).join("")}
+          </table>
+          <div class="sub" style="margin-top:4px;opacity:.75">Lower "nearest selected" means the work
+            adds something the rest of the set does not.</div>
+        </details>` : "";
+
       out.innerHTML = `
         <div><strong>${d.selected}</strong> selected of ${d.matched} matching
           (${d.total_candidates} in archive)${noMaster ? ` — ${noMaster} shown have no local image` : ""}</div>
         ${covTxt}
+        ${diagTxt}
         <div class="sub" style="margin-top:10px">Rendered as the panel would show it —
           same fit, range compression and dither as the card:</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:8px">
