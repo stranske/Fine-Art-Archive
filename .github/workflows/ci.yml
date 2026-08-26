@@ -37,5 +37,14 @@ jobs:
       typecheck: true
       coverage: true
       # Post-port baseline; ratchet toward 80 as issues #3/#4/#5 add module tests.
-      coverage-min: '25'
+      # RAISED 25 -> 81 on 2026-08-26. Measured coverage is 81.45%, so 25 sat 56 points below
+      # reality: a floor that cannot fail reports a pass on any input and tells you nothing.
+      # Matches config/coverage-baseline.json, set at the same measured current in #610, so
+      # the soft gate's Status line and the guard's baseline comparison agree about this repo
+      # instead of disagreeing by 56 points.
+      #
+      # Deliberately NOT rounded up to the measured 81.45: a floor exactly at current has no
+      # room for run-to-run jitter, and the guard's own warn_drop of 1.0 is the tolerance.
+      # This is a ratchet -- raise it as coverage rises, never lower it to make a run pass.
+      coverage-min: '81'
     secrets: inherit
