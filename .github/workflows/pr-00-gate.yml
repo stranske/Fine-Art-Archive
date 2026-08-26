@@ -69,7 +69,11 @@ jobs:
     with:
       python-versions: '["3.12", "3.13"]'
       # PR Gate is optimized for fast feedback. Full coverage enforcement runs on main.
-      coverage: false
+      # The Gate measured no coverage while ci.yml has had `coverage: true` all along, and
+      # this repo's own ci.yml payload measures 81.45% over 8,639 statements. The Gate's
+      # `false` traces to the initial library-port commit, so it is scaffolding default
+      # rather than judgement.
+      coverage: true
       format_check: false  # Using ruff for formatting
       # Keep PR feedback fast by skipping heavy integration suites here.
       # Full test coverage remains enforced on main branch CI.
@@ -77,7 +81,17 @@ jobs:
       pytest_args: "-n auto --dist load --ignore=tests/integration --ignore=tests/integrations"
       working-directory: "."
       artifact-prefix: "gate-"
-      enable-soft-gate: false
+      # Report-only: coverage_trend.py runs with --soft and always exits 0, so this cannot
+      # fail a PR. Sequenced after the repaired reporter reached this repo (main's
+      # tools/coverage_trend.py carries BASELINE_KEYS and _resolve_baseline).
+      #
+      # NO coverage-min IS SET HERE ON PURPOSE, so the Gate uses the reusable workflow's
+      # default of 70. ci.yml carries 25, which against a measured 81.45% sits 56 points below
+      # reality and cannot fail -- drift, not a judgement about this repo. Neither number is
+      # corrected in this change: setting a floor is a GATE change, and shipping one in the
+      # same PR that first turns reporting on would create a red before anyone has seen a
+      # single green report. Both belong with the baseline work, set at measured current.
+      enable-soft-gate: true
     secrets: inherit
 
   summary:
