@@ -251,14 +251,14 @@ def allocate(
             out[n] = max(1, out[n])
         while sum(out.values()) > batch_cap:
             # Trim the most over-served lens relative to its exact entitlement.
-            n = max(
-                (n for n in available if out[n] > 1),
-                key=lambda n: out[n] - exact[n],
+            over = max(
+                (name for name in available if out[name] > 1),
+                key=lambda name: out[name] - exact[name],
                 default=None,
             )
-            if n is None:
+            if over is None:
                 break
-            out[n] -= 1
+            out[over] -= 1
 
     remainder = batch_cap - sum(out.values())
     if remainder > 0:
