@@ -383,7 +383,11 @@ def known_artist_qids() -> frozenset[str]:
         canonical = artist.get("canonical")
         canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
         raw_qid = artist.get("wikidata_q")
-        qid = canonical_qid if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid) else raw_qid
+        qid = (
+            canonical_qid
+            if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
+            else raw_qid
+        )
         if isinstance(qid, str) and _QID_RE.fullmatch(qid):
             qids.add(qid)
     frozen = frozenset(qids)

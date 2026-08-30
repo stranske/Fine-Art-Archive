@@ -180,6 +180,8 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "id": cand.get("qid", ""),
         "title": cand.get("title", ""),
         "artist_qid": cand.get("artist_qid", ""),
+        "artist_label": cand.get("artist_label", ""),
+        "artist_description": cand.get("artist_description", ""),
         "holder_qid": cand.get("collection_qid", ""),
         "image_url": cand.get("image_url", ""),
         "sitelinks": cand.get("sitelinks"),

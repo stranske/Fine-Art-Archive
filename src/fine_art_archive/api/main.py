@@ -1283,11 +1283,7 @@ def _variant_upgrade_gate() -> gates.Gate:
             clears_by="accepting or rejecting the upgrade",
             note="no candidate file present, so nothing could be counted",
         )
-    pending = [
-        c
-        for c in variant_upgrades().get("candidates", [])
-        if not c.get("decision")
-    ]
+    pending = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
     return gates.Gate(
         name="variant_upgrades",
         label="Better copies of works already held",
@@ -1324,13 +1320,86 @@ def review_summary() -> dict:
     return {
         "gates": summaries,
         "total_blocking": sum(s["blocking"] for s in summaries),
-        "total_drainable": sum(
-            s["drainable"] for s in summaries if s["drainable_measured"]
-        ),
-        "unmeasured_gates": [
-            s["name"] for s in summaries if not s["drainable_measured"]
-        ],
+        "total_drainable": sum(s["drainable"] for s in summaries if s["drainable_measured"]),
+        "unmeasured_gates": [s["name"] for s in summaries if not s["drainable_measured"]],
         "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
+    }
+
+
+@app.get("/review/artists")
+def review_artists(limit: int = 500) -> dict:
+    """Artists awaiting a decision, one row per ARTIST rather than per work.
+
+    The per-work view is the wrong unit for this gate. Approving an artist
+    releases every work by them, so 219 held works are really 116 decisions —
+    and asking someone to click 219 times for 116 outcomes is how a review
+    surface becomes the backlog it was built to avoid.
+
+    Ordered by how many works each decision releases, so the same number of
+    clicks buys the most.
+    """
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    by_artist: dict[str, dict] = {}
+    for gate in _all_gates():
+        if gate.name not in {"new_artist", "routed_to_review"}:
+            continue
+        for item in gate.items:
+            qid = item.get("artist_qid")
+            if not qid:
+                continue
+            entry = by_artist.setdefault(
+                qid,
+                {
+                    "artist_qid": qid,
+                    "artist_label": item.get("artist_label") or "",
+                    "artist_description": item.get("artist_description") or "",
+                    "works": [],
+                    "gates": set(),
+                },
+            )
+            entry["gates"].add(gate.name)
+            if not entry["artist_label"] and item.get("artist_label"):
+                entry["artist_label"] = item["artist_label"]
+            entry["works"].append(
+                {
+                    "id": item.get("id"),
+                    "title": item.get("title"),
+                    "image_url": item.get("image_url"),
+                    "sitelinks": item.get("sitelinks"),
+                    "ready": item.get("would_pass_now", True),
+                    "gate": gate.name,
+                }
+            )
+
+    rows = []
+    for entry in by_artist.values():
+        gate_names = entry["gates"]
+        entry["gates"] = sorted(gate_names)
+        entry["n_works"] = len(entry["works"])
+        # Split what this decision RELEASES from what it does not. Approving an
+        # artist clears the new-artist gate only; a work the screener sent to
+        # review for a different reason -- a flagged subject, say -- stays held
+        # and needs its own call. Reporting one total for both would promise a
+        # release the decision cannot deliver, which is the same mistake as a
+        # gate counting one population and draining another.
+        entry["n_released"] = sum(1 for w in entry["works"] if w.get("gate") == "new_artist")
+        entry["n_held_elsewhere"] = entry["n_works"] - entry["n_released"]
+        # Most-informative work first: the one with the widest coverage is the
+        # one most likely to show what this painter actually looks like.
+        entry["works"].sort(key=lambda w: -(w.get("sitelinks") or 0))
+        rows.append(entry)
+    # Sort by what a decision actually RELEASES, so the clicks that buy the
+    # most come first -- not by works held, which includes ones it cannot free.
+    rows.sort(key=lambda e: (-e["n_released"], -e["n_works"], e["artist_label"] or e["artist_qid"]))
+
+    decided = gates.load_allowlisted_artists()
+    return {
+        "total_artists": len(rows),
+        "total_works": sum(r["n_works"] for r in rows),
+        "already_decided": len(decided),
+        "returned": len(rows[:limit]),
+        "artists": rows[:limit],
     }
 
 
