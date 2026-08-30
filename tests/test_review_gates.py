@@ -172,6 +172,28 @@ def test_known_artist_qids_ignores_non_object_sidecars(monkeypatch, tmp_path: Pa
     assert store.known_artist_qids() == frozenset({"Q123", "Q456"})
 
 
+def test_known_artist_qid_cache_invalidates(monkeypatch, tmp_path: Path) -> None:
+    works = tmp_path / "works"
+    meta = works / "one" / "meta.json"
+    meta.parent.mkdir(parents=True)
+    meta.write_text(json.dumps({"artist": {"wikidata_q": "Q100"}}), encoding="utf-8")
+    monkeypatch.setattr(store, "WORKS", works)
+
+    stable_sig = object()
+    monkeypatch.setattr(store, "_dossier_signature", lambda: stable_sig)
+
+    store.invalidate_artist_qid_cache()
+    first = store.known_artist_qids()
+    second = store.known_artist_qids()
+    assert first == second == frozenset({"Q100"})
+
+    meta.write_text(json.dumps({"artist": {"wikidata_q": "Q200"}}), encoding="utf-8")
+    assert store.known_artist_qids() == frozenset({"Q100"})
+
+    store.invalidate_artist_qid_cache()
+    assert store.known_artist_qids() == frozenset({"Q200"})
+
+
 def test_auto_clearing_gate_is_not_reported_as_deadlocked(frontier: Path) -> None:
     """Deferrals drain on their own, so a zero human-drain is not an alarm."""
     g = _by_name(gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set()))
