@@ -144,7 +144,9 @@ def test_a_lens_never_double_counts_a_candidate() -> None:
 
 def test_exhausted_lens_releases_slots_to_rankable_lenses() -> None:
     shared = cand("shared", sitelinks=100, country_share_in_archive=0.1)
-    regional_only = [cand(f"regional-{i}", country_share_in_archive=0.2 + i / 100) for i in range(3)]
+    regional_only = [
+        cand(f"regional-{i}", country_share_in_archive=0.2 + i / 100) for i in range(3)
+    ]
     chosen, _ = lenses.select([shared, *regional_only], batch_cap=4)
     assert {item["qid"] for item in chosen} == {"shared", "regional-0", "regional-1", "regional-2"}
 
@@ -192,3 +194,93 @@ def test_bucket_with_no_recorded_share_is_uncapped_not_blocked() -> None:
     )
     assert len(kept) == 5
     assert report.held == {}
+
+
+# --------------------------------------------------------------------------
+# Monthly allocation — what makes the shares actually bind
+# --------------------------------------------------------------------------
+def test_monthly_allocation_gives_slots_to_whoever_is_behind_pace() -> None:
+    got, notes = lenses.allocate_monthly(
+        7,
+        ["canon", "regional"],
+        {"canon": 0.5, "regional": 0.5},
+        monthly_cap=200,
+        spent={"canon": 90, "regional": 10},
+    )
+    assert sum(got.values()) == 7
+    # regional is 90 behind its 100 entitlement, canon only 10 behind.
+    assert got["regional"] > got["canon"]
+
+
+def test_a_lens_at_its_monthly_share_yields_and_says_why() -> None:
+    """A zero here must never look like a lens that broke."""
+    got, notes = lenses.allocate_monthly(
+        7,
+        ["canon", "regional"],
+        {"canon": 0.5, "regional": 0.5},
+        monthly_cap=200,
+        spent={"canon": 100, "regional": 0},
+    )
+    assert got["canon"] == 0
+    assert got["regional"] == 7
+    assert "canon" in notes and "monthly share" in notes["canon"]
+
+
+def test_all_lenses_at_share_still_fills_the_batch() -> None:
+    """An accounting artefact must not stall acquisition."""
+    got, notes = lenses.allocate_monthly(
+        7,
+        ["canon", "regional"],
+        {"canon": 0.5, "regional": 0.5},
+        monthly_cap=10,
+        spent={"canon": 99, "regional": 99},
+    )
+    assert sum(got.values()) == 7
+    assert "_all" in notes
+
+
+def test_shares_land_over_a_month_even_at_a_small_batch() -> None:
+    """The whole point: at a batch of 7 the per-batch split cannot honour the
+    declared shares, and the monthly one can.
+
+    Simulates a 200-work month in batches of 7 and checks the realised split
+    tracks the declared shares far more closely than `allocate` manages.
+    """
+    names = list(lenses.LENS_SHARES)
+    monthly_cap = 200
+
+    spent = dict.fromkeys(names, 0)
+    while sum(spent.values()) < monthly_cap:
+        cap = min(7, monthly_cap - sum(spent.values()))
+        got, _ = lenses.allocate_monthly(
+            cap, names, lenses.LENS_SHARES, monthly_cap=monthly_cap, spent=spent
+        )
+        for n, k in got.items():
+            spent[n] += k
+
+    per_batch = lenses.allocate(7, names, lenses.LENS_SHARES)
+    total = sum(spent.values())
+    for name, share in lenses.LENS_SHARES.items():
+        monthly_err = abs(spent[name] / total - share)
+        batch_err = abs(per_batch[name] / 7 - share)
+        assert monthly_err <= batch_err + 1e-9, (
+            f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
+        )
+    # And the worst lens must land close, not merely closer.
+    worst = max(abs(spent[n] / total - lenses.LENS_SHARES[n]) for n in names)
+    assert worst < 0.02, f"realised shares drift by {worst:.3f}"
+
+
+def test_select_reports_a_quota_met_lens_as_available_with_a_reason() -> None:
+    pool = [
+        cand("Q1", sitelinks=9, country_share_in_archive=0.1),
+        cand("Q2", sitelinks=8, country_share_in_archive=0.1),
+    ]
+    _, reports = lenses.select(
+        pool, batch_cap=2, monthly_cap=100, spent={"canon": 100, "regional": 0}
+    )
+    canon = next(r for r in reports if r.name == "canon")
+    # Still AVAILABLE — it has data. It simply yielded its slots this batch.
+    assert canon.available is True
+    assert canon.allotted == 0
+    assert "monthly share" in canon.reason
