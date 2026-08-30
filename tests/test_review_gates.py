@@ -141,25 +141,35 @@ def test_corrupt_frontier_is_treated_as_unreadable(tmp_path: Path) -> None:
 def test_non_object_frontier_is_treated_as_unreadable(tmp_path: Path, payload: object) -> None:
     path = tmp_path / "frontier.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
-    for gate in gates.frontier_gates({"Q1"}, frontier_path=path, allowlist=set()):
+    found = gates.frontier_gates({"Q1"}, frontier_path=path, allowlist=set())
+    assert {gate.name for gate in found} == {
+        "rights_unclear",
+        "new_artist",
+        "routed_to_review",
+        "deferred_transfer",
+    }
+    for gate in found:
         assert gate.drainable is gates.UNMEASURED
 
 
 def test_known_artist_qids_ignores_non_object_sidecars(monkeypatch, tmp_path: Path) -> None:
     works = tmp_path / "works"
     fixtures = {
-        "valid": {"artist": {"canonical": {"wikidata_q": "QVALID"}}},
+        "valid": {"artist": {"canonical": {"wikidata_q": "Q123"}}},
         "array": [],
         "artist-list": {"artist": []},
         "canonical-string": {"artist": {"canonical": "QBAD"}},
+        "invalid-canonical": {"artist": {"wikidata_q": "Q456", "canonical": {"wikidata_q": "not-a-qid"}}},
+        "non-string-qids": {"artist": {"wikidata_q": ["QBAD"], "canonical": {"wikidata_q": 123}}},
     }
     for name, payload in fixtures.items():
         path = works / name / "meta.json"
         path.parent.mkdir(parents=True)
         path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setattr(store, "WORKS", works)
+    monkeypatch.setattr(store, "_dossier_signature", lambda: object())
     store.invalidate_artist_qid_cache()
-    assert store.known_artist_qids() == frozenset({"QVALID"})
+    assert store.known_artist_qids() == frozenset({"Q123", "Q456"})
 
 
 def test_auto_clearing_gate_is_not_reported_as_deadlocked(frontier: Path) -> None:

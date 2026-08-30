@@ -44,6 +44,7 @@ WORKS = _works_dir()
 MANIFEST_CSV = env_path("FAA_MANIFEST_CSV", REPO_ROOT / "manifest.csv")
 RATINGS_LOG = env_path("FAA_RATINGS_LOG", REPO_ROOT / "data" / "ratings_log.jsonl")
 _WORK_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+_QID_RE = re.compile(r"^Q[0-9]+$")
 _FileSignature = tuple[int, int]
 
 
@@ -381,9 +382,10 @@ def known_artist_qids() -> frozenset[str]:
             continue
         canonical = artist.get("canonical")
         canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
-        qid = canonical_qid or artist.get("wikidata_q")
-        if qid:
-            qids.add(str(qid))
+        raw_qid = artist.get("wikidata_q")
+        qid = canonical_qid if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid) else raw_qid
+        if isinstance(qid, str) and _QID_RE.fullmatch(qid):
+            qids.add(qid)
     frozen = frozenset(qids)
     _artist_qid_cache["sig"] = sig
     _artist_qid_cache["qids"] = frozen
