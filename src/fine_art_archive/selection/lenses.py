@@ -33,6 +33,7 @@ AND how much headroom remains, so "nothing selected" can never be mistaken for
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -159,9 +160,9 @@ def _series(cand: Mapping[str, Any]) -> float | None:
 def _regional(cand: Mapping[str, Any]) -> float | None:
     """Under-representation of this work's country in the archive."""
     share = _f(cand, "country_share_in_archive")
-    if share is None:
+    if share is None or not math.isfinite(share) or not 0 <= share <= 1:
         return None
-    return 1.0 - float(share)
+    return 1.0 - share
 
 
 def _standing(cand: Mapping[str, Any]) -> float | None:

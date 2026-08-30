@@ -14,6 +14,7 @@ over the single `-sitelinks` sort it replaces:
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from fine_art_archive.selection import lenses
@@ -60,6 +61,13 @@ def test_zero_genre_share_is_rejected_rather_than_scoring_perfect() -> None:
     assert lenses._atypicality(cand("Q1", genre_share_in_oeuvre=0)) is None
     assert lenses._atypicality(cand("Q2", genre_share_in_oeuvre=1.5)) is None
     assert lenses._atypicality(cand("Q3", genre_share_in_oeuvre=0.036)) == 0.964
+
+
+def test_regional_share_must_be_finite_and_within_the_unit_interval() -> None:
+    """Malformed country shares must not produce impossible or unordered scores."""
+    for share in (math.nan, -0.01, 1.01):
+        assert lenses._regional(cand("bad", country_share_in_archive=share)) is None
+    assert lenses._regional(cand("valid", country_share_in_archive=0.25)) == 0.75
 
 
 def test_completed_series_stops_scoring() -> None:
