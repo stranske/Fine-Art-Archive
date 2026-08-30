@@ -273,6 +273,74 @@ def allocate(
     return out
 
 
+def allocate_monthly(
+    batch_cap: int,
+    available: Sequence[str],
+    shares: Mapping[str, float],
+    *,
+    monthly_cap: int,
+    spent: Mapping[str, int],
+) -> tuple[dict[str, int], dict[str, str]]:
+    """Allocate today's slots against the MONTH's entitlement, not the day's.
+
+    `allocate()` splits each batch by share, which sounds equivalent and is not.
+    The batch cap exists only to keep growth steady; the budget that the shares
+    are meant to divide is monthly. At a batch of 7 across 5 lenses the
+    "everyone gets at least one" floor swamps the shares completely — measured
+    2026-08-30, a declared 35/20/15/20/10 came out as 29/14/14/14/29, handing
+    the weakest lens three times its intended weight. The shares only landed
+    exactly at a batch of 20.
+
+    Allocating monthly fixes that without removing the floor: a lens that is
+    ahead of its monthly pace simply yields today and catches up later, and
+    over a month the shares land wherever the batch size happens to sit.
+
+    Returns (allocation, notes). A lens present in `notes` got fewer slots than
+    its share implies, WITH THE REASON — a lens at zero must always be
+    distinguishable from a lens that silently stopped working.
+    """
+    if batch_cap <= 0 or not available:
+        return {}, {}
+
+    weights = {n: float(shares.get(n, 0.0)) for n in available}
+    total = sum(weights.values())
+    if total <= 0:
+        weights = dict.fromkeys(available, 1.0)
+        total = float(len(available))
+
+    entitlement = {n: monthly_cap * w / total for n, w in weights.items()}
+    left = {n: entitlement[n] - float(spent.get(n, 0)) for n in available}
+
+    notes: dict[str, str] = {}
+    hungry = [n for n in available if left[n] > 0]
+    for n in available:
+        if left[n] <= 0:
+            notes[n] = (
+                f"at its monthly share already ({spent.get(n, 0)} of "
+                f"{entitlement[n]:.0f}) — yielding this batch"
+            )
+
+    # Everyone is ahead of pace (or the month is over-spent). Fall back to the
+    # per-batch split so the tick still fills its batch rather than stalling on
+    # an accounting artefact.
+    if not hungry:
+        notes["_all"] = "every lens is at or past its monthly share; splitting by share"
+        return allocate(batch_cap, available, shares), notes
+
+    need = sum(left[n] for n in hungry)
+    exact = {n: batch_cap * left[n] / need for n in hungry}
+    out: dict[str, int] = dict.fromkeys(available, 0)
+    for n in hungry:
+        out[n] = int(exact[n])
+
+    remainder = batch_cap - sum(out.values())
+    if remainder > 0:
+        order = sorted(hungry, key=lambda n: (-(exact[n] - int(exact[n])), n))
+        for i in range(remainder):
+            out[order[i % len(order)]] += 1
+    return out, notes
+
+
 def select(
     pool: Sequence[Mapping[str, Any]],
     *,
@@ -280,11 +348,18 @@ def select(
     shares: Mapping[str, float] | None = None,
     lenses: Iterable[Lens] = LENSES,
     id_of: Callable[[Mapping[str, Any]], str] = lambda c: str(c.get("qid", "")),
+    monthly_cap: int | None = None,
+    spent: Mapping[str, int] | None = None,
 ) -> tuple[list[Mapping[str, Any]], list[LensReport]]:
     """Pick up to `batch_cap` candidates, drawing from each available lens.
 
     Round-robins across lenses so that a lens late in the ordering still gets
     its picks when several lenses want the same candidate.
+
+    Pass `monthly_cap` and `spent` to divide the MONTH's budget by share rather
+    than each batch, which is the only way the shares actually bind at a small
+    batch size — see `allocate_monthly`. Without them the per-batch split is
+    used, which is correct but coarse.
     """
     shares = shares or LENS_SHARES
     lenses = list(lenses)
@@ -302,7 +377,18 @@ def select(
         )
 
     available = [ln.name for ln in lenses if reports[ln.name].available]
-    allotment = allocate(batch_cap, available, shares)
+    if monthly_cap:
+        allotment, notes = allocate_monthly(
+            batch_cap, available, shares, monthly_cap=monthly_cap, spent=spent or {}
+        )
+        # A lens allotted zero because it is ahead of its monthly pace must say
+        # so. Otherwise it is indistinguishable from a lens that broke, which
+        # is the one confusion this module exists to prevent.
+        for name, why in notes.items():
+            if name in reports:
+                reports[name].reason = why
+    else:
+        allotment = allocate(batch_cap, available, shares)
     for name, n in allotment.items():
         reports[name].allotted = n
 
