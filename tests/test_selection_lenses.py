@@ -284,3 +284,28 @@ def test_select_reports_a_quota_met_lens_as_available_with_a_reason() -> None:
     assert canon.available is True
     assert canon.allotted == 0
     assert "monthly share" in canon.reason
+
+
+# --------------------------------------------------------------------------
+# Standing: institutional judgement about the work, not the building
+# --------------------------------------------------------------------------
+def test_curated_work_outranks_a_more_famous_building() -> None:
+    """The White House case that forced a holder cap.
+
+    A modest museum that chose to publish a work must outrank a landmark that
+    is merely famous — this lens is about a judgement made on the work.
+    """
+    white_house = cand("famous-building", holder_sitelinks=142)
+    small_museum = cand("curated", holder_sitelinks=11, gac_curated=True)
+    assert lenses._standing(small_museum) > lenses._standing(white_house)
+
+
+def test_renown_still_ranks_and_still_breaks_ties() -> None:
+    """An institution GA&C never partnered with is not silently excluded."""
+    assert lenses._standing(cand("a", holder_sitelinks=40)) > lenses._standing(
+        cand("b", holder_sitelinks=11)
+    )
+    both = lenses._standing(cand("c", holder_sitelinks=40, gac_curated=True))
+    one = lenses._standing(cand("d", holder_sitelinks=11, gac_curated=True))
+    assert both > one, "renown breaks ties inside the curated band"
+    assert lenses._standing(cand("e")) is None, "no signal at all is unscorable"
