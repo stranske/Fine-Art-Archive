@@ -31,7 +31,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
-from . import store
+from . import gates, store
 from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
@@ -1229,6 +1229,156 @@ TAGGER_PYTHON = os.environ.get("FAA_TAGGER_PYTHON") or sys.executable
 # Cold start is model load (~10-25 s) plus one gigapixel decode; a warm
 # encoding cache makes repeats fast. Generous, but bounded.
 TAGGER_TIMEOUT_S = int(os.environ.get("FAA_TAGGER_TIMEOUT_S", "300"))
+
+
+# --------------------------------------------------------------------------
+# Review — every place progress waits on a person, in one list.
+#
+# Each gate reports what it is BLOCKING and what is DRAINABLE in the same
+# response. That pairing is the point: "128 blocking" reads as "be patient",
+# "128 blocking, 0 drainable" is instantly a deadlock. A gate that cannot
+# measure its drain reports `drainable: null`, never 0 — "we could not check"
+# and "we checked, it is empty" are opposite findings.
+#
+# Nothing here is a work queue. Growth does not wait on it, no row expires,
+# and an unread list has no consequence.
+# --------------------------------------------------------------------------
+
+
+def _acquisition_gate() -> gates.Gate:
+    """Works acquired autonomously that nobody has looked at yet."""
+    rows = store.acquisitions_since_epoch()
+    unreviewed = [r for r in rows if not r["reviewed"]]
+    return gates.Gate(
+        name="unreviewed_acquisitions",
+        label="Acquired but not yet looked at",
+        blocking=len(unreviewed),
+        drainable=len(unreviewed),
+        clears_by="marking a work reviewed (or simply looking)",
+        note=(
+            "Purely informational — grant G55 does not wait on this. Nothing "
+            "acquires more slowly because this list is long."
+        ),
+        items=[
+            {
+                "id": r["work_id"],
+                "title": r["title"],
+                "artist_name": r["artist_name"],
+                "acquired_at": r["acquired_at"],
+                "why": "acquired autonomously, not yet reviewed",
+            }
+            for r in unreviewed
+        ],
+    )
+
+
+def _variant_upgrade_gate() -> gates.Gate:
+    """Better copies of works already held, awaiting an accept/reject."""
+    if not VARIANT_UPGRADE_CSV.exists():
+        return gates.Gate(
+            name="variant_upgrades",
+            label="Better copies of works already held",
+            blocking=0,
+            drainable=gates.UNMEASURED,
+            clears_by="accepting or rejecting the upgrade",
+            note="no candidate file present, so nothing could be counted",
+        )
+    pending = [
+        c
+        for c in variant_upgrades().get("candidates", [])
+        if not c.get("decision")
+    ]
+    return gates.Gate(
+        name="variant_upgrades",
+        label="Better copies of works already held",
+        blocking=len(pending),
+        drainable=len(pending),
+        clears_by="accepting or rejecting the upgrade",
+        items=[
+            {
+                "id": c.get("existing_wid", ""),
+                "title": c.get("title", ""),
+                "artist_name": c.get("artist_name", ""),
+                "why": "a higher-quality copy of a work already held",
+            }
+            for c in pending
+        ],
+    )
+
+
+def _all_gates() -> list[gates.Gate]:
+    out = [_acquisition_gate(), _variant_upgrade_gate()]
+    out.extend(gates.frontier_gates(store.known_artist_qids()))
+    return out
+
+
+@app.get("/review")
+def review_summary() -> dict:
+    """Every gate, with its blocking count beside its drainable count."""
+    found = _all_gates()
+    # One definition of "deadlocked" and "unmeasured", computed by Gate.summary()
+    # and consumed here. A second copy of the rule in this endpoint would drift
+    # from the first the moment either changed — and drifted silently, since
+    # both would keep returning plausible numbers.
+    summaries = [g.summary() for g in found]
+    return {
+        "gates": summaries,
+        "total_blocking": sum(s["blocking"] for s in summaries),
+        "total_drainable": sum(
+            s["drainable"] for s in summaries if s["drainable_measured"]
+        ),
+        "unmeasured_gates": [
+            s["name"] for s in summaries if not s["drainable_measured"]
+        ],
+        "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
+    }
+
+
+@app.get("/review/{gate_name}")
+def review_gate(gate_name: str, limit: int = 200) -> dict:
+    """The items one gate is holding."""
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    for g in _all_gates():
+        if g.name == gate_name:
+            payload = g.summary()
+            payload["returned"] = len(g.items[:limit])
+            payload["items"] = g.items[:limit]
+            return payload
+    raise HTTPException(404, f"no gate named {gate_name!r}")
+
+
+class ArtistDecisionIn(BaseModel):
+    decision: Literal["approve", "reject"]
+    artist_name: str = Field(default="", max_length=200)
+    note: str = Field(default="", max_length=500)
+    reviewer: str = Field(default="tim", max_length=80)
+
+
+@app.post("/review/artists/{artist_qid}/decision")
+def artist_decision(artist_qid: str, body: ArtistDecisionIn) -> dict:
+    """Approve (or reject) an artist the archive does not yet hold.
+
+    This is the drain for the new-artist gate. Without it that gate has no exit
+    at all: auto-accept refuses unrepresented artists and routes them to a view
+    that nothing reads back, so the archive can only ever get deeper.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", artist_qid):
+        raise HTTPException(400, "artist_qid must look like Q12345")
+    gates.append_allowlist(
+        artist_qid,
+        decision=body.decision,
+        artist_name=body.artist_name,
+        note=body.note,
+        reviewer=body.reviewer,
+        ts=datetime.now(UTC).isoformat(),
+    )
+    allow = gates.load_allowlisted_artists()
+    return {
+        "artist_qid": artist_qid,
+        "decision": body.decision,
+        "approved_artists": len(allow),
+    }
 
 
 @app.post("/works/{work_id}/propose_tags")

@@ -353,6 +353,44 @@ def invalidate_acquisitions_cache() -> None:
     _acq_cache["rows"] = []
 
 
+_artist_qid_cache: dict[str, Any] = {"sig": None, "qids": frozenset()}
+
+
+def known_artist_qids() -> frozenset[str]:
+    """Artist Q-IDs the archive already holds at least one work by.
+
+    Read from sidecars rather than the manifest because this set decides what
+    the acquisition screener treats as "already represented", and the screener
+    reads sidecars. Prefers the resolver's canonical Q-ID, falling back to the
+    raw one, so an artist whose name is spelled two ways still counts once.
+    """
+    sig = _dossier_signature()
+    if _artist_qid_cache["sig"] == sig:
+        return _artist_qid_cache["qids"]
+
+    qids: set[str] = set()
+    for meta_path in WORKS.glob("*/meta.json"):
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        artist = meta.get("artist") or {}
+        qid = (artist.get("canonical") or {}).get("wikidata_q") or artist.get(
+            "wikidata_q"
+        )
+        if qid:
+            qids.add(str(qid))
+    frozen = frozenset(qids)
+    _artist_qid_cache["sig"] = sig
+    _artist_qid_cache["qids"] = frozen
+    return frozen
+
+
+def invalidate_artist_qid_cache() -> None:
+    _artist_qid_cache["sig"] = None
+    _artist_qid_cache["qids"] = frozenset()
+
+
 def get_manifest_row(work_id: str) -> dict | None:
     """Return a manifest row, or None when unknown.
 

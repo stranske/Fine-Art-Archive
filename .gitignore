@@ -118,3 +118,4 @@ node_modules/
 !/.github/scripts/node_modules/**
 
 # END WORKFLOWS STATUS FILES
+.gitnexus

@@ -601,6 +601,8 @@
         <option value="">All works (browse)</option>
       </select>
       <a id="library-toggle" href="#" onclick="toggleGallery(); return false;" style="margin-right: 16px;" title="Toggle gallery / list view">⊞ Gallery</a>
+      <a id="review-link" href="#" onclick="loadReview(); return false;" style="margin-right: 16px;"
+         title="Everywhere progress is waiting on a person">Review <span id="review-badge" class="pill" style="display:none"></span> →</a>
       <a id="acquisitions-link" href="#" onclick="loadAcquisitions(); return false;" style="margin-right: 16px;"
          title="Works the growth automation acquired on its own">Newly acquired <span id="acq-badge" class="pill" style="display:none"></span> →</a>
       <a id="upgrades-link" href="#" onclick="loadUpgrades(); return false;" style="margin-right: 16px;">Variant upgrades →</a>
@@ -1365,6 +1367,121 @@
       window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
     }
 
+    // ----- review: every gate, with its drain beside it -----
+    // Each row shows what a gate is holding AND what could clear it. A gate
+    // showing "0 drainable" with items held is stuck and says so; a gate that
+    // could not measure itself shows "not measured" and never a reassuring 0.
+    // Acting on any row is optional — nothing in the archive waits on it.
+
+    async function refreshReviewBadge() {
+      try {
+        const r = await fetch("/review");
+        if (!r.ok) return;
+        const d = await r.json();
+        const b = document.getElementById("review-badge");
+        if (!b) return;
+        // The badge counts what a person could actually clear, not what is
+        // held — a number nobody can act on is not worth a badge.
+        if (d.total_drainable > 0) { b.textContent = d.total_drainable; b.style.display = ""; }
+        else { b.style.display = "none"; }
+      } catch (e) { /* badge is decoration; never break the page for it */ }
+    }
+
+    async function loadReview() {
+      const r = await fetch("/review");
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Review</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const d = await r.json();
+      let html = `<button onclick="closeDetail()">← Back to list</button>
+        <h2>Review</h2>
+        <p class="sub">Everywhere progress is waiting on a person.
+        <strong>${d.total_drainable}</strong> of ${d.total_blocking} held items could be
+        cleared today. Nothing here is a queue: growth never pauses for it and no row expires.</p>
+        <table><thead><tr>
+          <th>Gate</th><th>Holding</th><th>You can clear</th><th>What clears it</th><th></th>
+        </tr></thead><tbody>`;
+      for (const g of d.gates) {
+        const drain = g.drainable_measured
+          ? `${g.drainable}`
+          : `<span class="sub">not measured</span>`;
+        let flag = "";
+        if (g.deadlocked) flag = ` <span class="pill" title="held items, nothing can clear them">stuck</span>`;
+        else if (!g.drainable_measured) flag = ` <span class="pill" title="this gate could not measure its own drain">unknown</span>`;
+        else if (g.auto_clears) flag = ` <span class="sub">(clears itself)</span>`;
+        const open = g.blocking > 0
+          ? `<button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})">Open</button>` : "";
+        html += `<tr>
+          <td><strong>${acqEsc(g.label)}</strong>${flag}
+              ${g.note ? `<br><span class="sub">${acqEsc(g.note)}</span>` : ""}</td>
+          <td>${g.blocking}</td><td>${drain}</td>
+          <td><span class="sub">${acqEsc(g.clears_by)}</span></td>
+          <td>${open}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      if (d.unmeasured_gates.length) {
+        html += `<p class="sub" style="margin-top:12px">Could not measure:
+          <strong>${acqEsc(d.unmeasured_gates.join(", "))}</strong>. That is a defect
+          report, not an all-clear — a gate that cannot say what would clear it is
+          already broken.</p>`;
+      }
+      det.innerHTML = html;
+      window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
+    }
+
+    async function loadReviewGate(name) {
+      const r = await fetch(`/review/${encodeURIComponent(name)}?limit=200`);
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Review</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const g = await r.json();
+      let html = `<button onclick="loadReview()">← All gates</button>
+        <h2>${acqEsc(g.label)}</h2>
+        <p class="sub">Holding ${g.blocking}; ${g.drainable_measured ? g.drainable : "an unmeasured number"}
+        clearable now. Clears by: ${acqEsc(g.clears_by)}.</p>`;
+      if (g.note) html += `<p class="sub">${acqEsc(g.note)}</p>`;
+      if (!g.items.length) { html += `<p class="sub">Nothing held.</p>`; det.innerHTML = html; return; }
+
+      const isArtistGate = g.name === "new_artist" || g.name === "routed_to_review";
+      html += `<table><thead><tr>
+        <th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
+      </tr></thead><tbody>`;
+      for (const it of g.items) {
+        const ready = it.would_pass_now === false
+          ? ` <span class="sub" title="a screening gate is unevaluated, so this is not ready even if the artist is approved">not ready</span>` : "";
+        let action = "";
+        if (isArtistGate && it.artist_qid) {
+          const aq = acqEsc(JSON.stringify(it.artist_qid));
+          action = `<td>
+            <button onclick="artistDecide(${aq}, 'approve')">Approve artist</button>
+            <button onclick="artistDecide(${aq}, 'reject')">Never</button></td>`;
+        } else if (isArtistGate) {
+          action = `<td><span class="sub">no artist Q-ID</span></td>`;
+        }
+        html += `<tr>
+          <td><strong>${acqEsc(it.title || it.id)}</strong>${ready}<br>
+              <span class="qid">${acqEsc(it.id)}</span></td>
+          <td><span class="sub">${acqEsc(it.why || "")}</span></td>
+          ${isArtistGate ? `<td><span class="qid">${acqEsc(it.artist_qid || "—")}</span></td>` : ""}
+          ${action}
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      det.innerHTML = html;
+    }
+
+    async function artistDecide(artistQid, decision) {
+      const r = await fetch(`/review/artists/${encodeURIComponent(artistQid)}/decision`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision: decision})
+      });
+      if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
+      await loadReview();
+      refreshReviewBadge();
+    }
+
     // ----- newly-acquired review (grant G55) -----
     // Track A promotes without asking. This is where those works surface so
     // they can be looked at afterwards. It is a VIEW, not a work queue:
@@ -1836,6 +1953,7 @@
     }
     window.addEventListener("DOMContentLoaded", () => {
       refreshAcqBadge();
+      refreshReviewBadge();
       const wid = _widFromHash();
       if (wid) {
         // Wait briefly for the list to load so queueIndex resolves
