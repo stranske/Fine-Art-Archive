@@ -1412,6 +1412,8 @@
         <p class="sub">Everywhere progress is waiting on a person.
         <strong>${d.total_drainable}</strong> of ${d.total_blocking} held items could be
         cleared today. Nothing here is a queue: growth never pauses for it and no row expires.</p>
+        <p style="margin:10px 0"><button onclick="loadApproval()"><strong>Approve artists →</strong></button>
+        <span class="sub">one decision per artist, keyboard-driven — clears the two artist gates together</span></p>
         <table><thead><tr>
           <th>Gate</th><th>Holding</th><th>You can clear</th><th>What clears it</th><th></th>
         </tr></thead><tbody>`;
@@ -1501,6 +1503,123 @@
       if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
       await loadReview();
       refreshReviewBadge();
+    }
+
+    // ----- artist approval: one decision per ARTIST, not per work -----
+    // Approving an artist releases every work by them, so 218 held works are
+    // 116 decisions. Clicking 218 times for 116 outcomes is how a review
+    // surface turns into the backlog it exists to prevent.
+    //
+    // Keyboard-first (A / R / S, arrows to move, Esc to leave) because the
+    // whole point is that this can be cleared in one sitting and abandoned
+    // half-done without consequence: nothing here expires and growth never
+    // waits on it.
+    let approveQueue = [];
+    let approveIdx = 0;
+    let approveDone = 0;
+
+    async function loadApproval() {
+      const r = await fetch("/review/artists?limit=500");
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Approve artists</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const d = await r.json();
+      approveQueue = d.artists || [];
+      approveIdx = 0;
+      approveDone = 0;
+      if (!approveQueue.length) {
+        det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>Approve artists</h2>
+          <p class="sub">Nothing waiting. Every artist in the frontier has been decided.</p>`;
+        return;
+      }
+      renderApproval();
+      if (!window._approveKeys) {
+        window._approveKeys = true;
+        document.addEventListener("keydown", approveKey);
+      }
+    }
+
+    function approveKey(ev) {
+      if (!approveQueue.length) return;
+      const panel = document.getElementById("approve-card");
+      if (!panel) return;                       // only while the view is open
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      const k = ev.key.toLowerCase();
+      if (k === "a") { ev.preventDefault(); approveAct("approve"); }
+      else if (k === "r") { ev.preventDefault(); approveAct("reject"); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); approveSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); approveSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); loadReview(); }
+    }
+
+    function approveSkip(delta) {
+      if (!approveQueue.length) return;
+      approveIdx = (approveIdx + delta + approveQueue.length) % approveQueue.length;
+      renderApproval();
+    }
+
+    async function approveAct(decision) {
+      const cur = approveQueue[approveIdx];
+      if (!cur) return;
+      const r = await fetch(`/review/artists/${encodeURIComponent(cur.artist_qid)}/decision`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision: decision, artist_name: cur.artist_label || ""})
+      });
+      if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
+      approveQueue.splice(approveIdx, 1);
+      approveDone += 1;
+      if (approveIdx >= approveQueue.length) approveIdx = 0;
+      refreshReviewBadge();
+      if (!approveQueue.length) {
+        const det = showDetailPanel();
+        if (det) det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>All done</h2>
+          <p class="sub">${approveDone} artist${approveDone === 1 ? "" : "s"} decided.
+          Their works become acquirable on the next growth tick.</p>`;
+        return;
+      }
+      renderApproval();
+    }
+
+    function renderApproval() {
+      const cur = approveQueue[approveIdx];
+      const det = showDetailPanel();
+      if (!det || !cur) return;
+      const name = cur.artist_label
+        ? acqEsc(cur.artist_label)
+        : `<a href="https://www.wikidata.org/wiki/${acqEsc(cur.artist_qid)}" target="_blank" rel="noopener">${acqEsc(cur.artist_qid)}</a>`;
+      const shots = (cur.works || []).slice(0, 6).map(w =>
+        w.image_url
+          ? `<figure style="margin:0;width:150px">
+               <img src="${acqEsc(w.image_url)}" alt="${acqEsc(w.title || "")}" loading="lazy"
+                    style="width:150px;height:150px;object-fit:cover;border-radius:4px;background:#eee">
+               <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
+             </figure>`
+          : `<figure style="margin:0;width:150px"><div style="width:150px;height:150px;border-radius:4px;background:#eee;display:grid;place-items:center" class="sub">no image</div>
+             <figcaption class="sub" style="font-size:11px;margin-top:4px">${acqEsc(w.title || "")}</figcaption></figure>`
+      ).join("");
+      const more = cur.n_works > 6 ? `<p class="sub">…and ${cur.n_works - 6} more.</p>` : "";
+      det.innerHTML = `<div id="approve-card">
+        <button onclick="loadReview()">← All gates</button>
+        <h2>${name}</h2>
+        <p class="sub">${acqEsc(cur.artist_description || "")}</p>
+        <p><strong>${cur.n_released}</strong> work${cur.n_released === 1 ? "" : "s"} released by this decision.
+           ${cur.n_held_elsewhere ? `<span class="sub">${cur.n_held_elsewhere} more stay held for a
+           separate reason — a flagged subject, usually — and need their own call.</span>` : ""}
+           <span class="sub">· ${approveDone} decided · ${approveQueue.length} left</span></p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0">${shots}</div>
+        ${more}
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button onclick="approveAct('approve')"><strong>Approve</strong> (A)</button>
+          <button onclick="approveAct('reject')">Never (R)</button>
+          <button onclick="approveSkip(1)">Skip (S)</button>
+        </div>
+        <p class="sub" style="margin-top:12px">Approving lets the growth tick acquire this artist's
+        works; it does not acquire anything now. Nothing here expires — close it whenever you like
+        and the rest keeps waiting without consequence.</p>
+      </div>`;
     }
 
     // ----- newly-acquired review (grant G55) -----

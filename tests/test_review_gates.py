@@ -159,7 +159,9 @@ def test_known_artist_qids_ignores_non_object_sidecars(monkeypatch, tmp_path: Pa
         "array": [],
         "artist-list": {"artist": []},
         "canonical-string": {"artist": {"canonical": "QBAD"}},
-        "invalid-canonical": {"artist": {"wikidata_q": "Q456", "canonical": {"wikidata_q": "not-a-qid"}}},
+        "invalid-canonical": {
+            "artist": {"wikidata_q": "Q456", "canonical": {"wikidata_q": "not-a-qid"}}
+        },
         "non-string-qids": {"artist": {"wikidata_q": ["QBAD"], "canonical": {"wikidata_q": 123}}},
     }
     for name, payload in fixtures.items():
@@ -308,3 +310,67 @@ def test_rights_gate_counts_only_undetermined_candidates(tmp_path: Path) -> None
     assert rights.blocking == 1, "only the un-acquired `unclear` candidate counts"
     assert rights.drainable == 1
     assert [i["id"] for i in rights.items] == ["Q3"]
+
+
+def _artist_frontier(tmp_path: Path) -> Path:
+    """One artist with works in BOTH artist gates, plus a held-artist control."""
+    p = tmp_path / "frontier.json"
+    rows = {}
+    for i in range(3):
+        rows[f"N{i}"] = _cand(f"N{i}", "QNEW", title=f"released {i}")
+    for i in range(2):
+        rows[f"R{i}"] = _cand(f"R{i}", "QNEW", status="review", title=f"subject-held {i}")
+    rows["H1"] = _cand("H1", "QHELD")
+    for row in rows.values():
+        row["artist_label"] = "Test Painter" if row["artist_qid"] == "QNEW" else "Held Painter"
+    p.write_text(json.dumps({"candidates": rows}), encoding="utf-8")
+    return p
+
+
+def test_artist_view_separates_what_a_decision_releases(monkeypatch, tmp_path: Path) -> None:
+    """The count must promise only what approving actually delivers.
+
+    Approving an artist clears the new-artist gate. A work the screener sent to
+    review for another reason — a flagged subject — stays held. Reporting one
+    combined total would promise a release the decision cannot make.
+    """
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    frontier = _artist_frontier(tmp_path)
+    monkeypatch.setattr(
+        main,
+        "_all_gates",
+        lambda: gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set()),
+    )
+    body = TestClient(main.app).get("/review/artists").json()
+    row = next(a for a in body["artists"] if a["artist_qid"] == "QNEW")
+
+    assert row["n_released"] == 3, "the three screened works are what approval frees"
+    assert row["n_held_elsewhere"] == 2, "the review-status works are not freed by this"
+    assert row["n_works"] == 5
+    assert row["artist_label"] == "Test Painter"
+    # The already-held artist is not a decision at all.
+    assert all(a["artist_qid"] != "QHELD" for a in body["artists"])
+
+
+def test_artist_view_orders_by_what_is_released(monkeypatch, tmp_path: Path) -> None:
+    """Biggest unlock first — the same clicks should buy the most."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    p = tmp_path / "frontier.json"
+    rows = {}
+    for i in range(4):
+        rows[f"BIG{i}"] = _cand(f"BIG{i}", "QBIG")
+    rows["SMALL0"] = _cand("SMALL0", "QSMALL")
+    p.write_text(json.dumps({"candidates": rows}), encoding="utf-8")
+    monkeypatch.setattr(
+        main,
+        "_all_gates",
+        lambda: gates.frontier_gates({"QHELD"}, frontier_path=p, allowlist=set()),
+    )
+    body = TestClient(main.app).get("/review/artists").json()
+    assert [a["artist_qid"] for a in body["artists"]] == ["QBIG", "QSMALL"]
