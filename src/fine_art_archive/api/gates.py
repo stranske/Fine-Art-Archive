@@ -96,9 +96,10 @@ def _read_json(path: Path) -> dict | None:
     than being flattened into an empty result.
     """
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        decoded = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError, ValueError):
         return None
+    return decoded if isinstance(decoded, dict) else None
 
 
 def load_allowlisted_artists(path: Path | None = None) -> set[str]:

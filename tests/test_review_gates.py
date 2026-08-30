@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from fine_art_archive.api import gates
+from fine_art_archive.api import gates, store
 
 
 def _cand(
@@ -135,6 +135,31 @@ def test_corrupt_frontier_is_treated_as_unreadable(tmp_path: Path) -> None:
     bad.write_text("{not json", encoding="utf-8")
     for g in gates.frontier_gates({"Q1"}, frontier_path=bad, allowlist=set()):
         assert g.drainable is gates.UNMEASURED
+
+
+@pytest.mark.parametrize("payload", [[], "not a frontier", 17])
+def test_non_object_frontier_is_treated_as_unreadable(tmp_path: Path, payload: object) -> None:
+    path = tmp_path / "frontier.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    for gate in gates.frontier_gates({"Q1"}, frontier_path=path, allowlist=set()):
+        assert gate.drainable is gates.UNMEASURED
+
+
+def test_known_artist_qids_ignores_non_object_sidecars(monkeypatch, tmp_path: Path) -> None:
+    works = tmp_path / "works"
+    fixtures = {
+        "valid": {"artist": {"canonical": {"wikidata_q": "QVALID"}}},
+        "array": [],
+        "artist-list": {"artist": []},
+        "canonical-string": {"artist": {"canonical": "QBAD"}},
+    }
+    for name, payload in fixtures.items():
+        path = works / name / "meta.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(store, "WORKS", works)
+    store.invalidate_artist_qid_cache()
+    assert store.known_artist_qids() == frozenset({"QVALID"})
 
 
 def test_auto_clearing_gate_is_not_reported_as_deadlocked(frontier: Path) -> None:

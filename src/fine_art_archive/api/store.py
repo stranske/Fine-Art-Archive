@@ -374,10 +374,14 @@ def known_artist_qids() -> frozenset[str]:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        artist = meta.get("artist") or {}
-        qid = (artist.get("canonical") or {}).get("wikidata_q") or artist.get(
-            "wikidata_q"
-        )
+        if not isinstance(meta, dict):
+            continue
+        artist = meta.get("artist")
+        if not isinstance(artist, dict):
+            continue
+        canonical = artist.get("canonical")
+        canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
+        qid = canonical_qid or artist.get("wikidata_q")
         if qid:
             qids.add(str(qid))
     frozen = frozenset(qids)

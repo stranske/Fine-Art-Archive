@@ -1384,15 +1384,29 @@
         // held — a number nobody can act on is not worth a badge.
         if (d.total_drainable > 0) { b.textContent = d.total_drainable; b.style.display = ""; }
         else { b.style.display = "none"; }
-      } catch (e) { /* badge is decoration; never break the page for it */ }
+      } catch (e) {
+        // The badge is optional, but an outage should remain diagnosable.
+        console.warn("Could not refresh review badge", e);
+      }
+    }
+
+    function showReviewLoadError(det, detail = "") {
+      det.innerHTML = `<h2>Review</h2><p class="sub">Could not load${detail}.</p>`;
     }
 
     async function loadReview() {
-      const r = await fetch("/review");
       const det = showDetailPanel();
       if (!det) return;
-      if (!r.ok) { det.innerHTML = `<h2>Review</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
-      const d = await r.json();
+      let d;
+      try {
+        const r = await fetch("/review");
+        if (!r.ok) { showReviewLoadError(det, ` (${r.status})`); return; }
+        d = await r.json();
+      } catch (e) {
+        console.warn("Could not load review", e);
+        showReviewLoadError(det);
+        return;
+      }
       let html = `<button onclick="closeDetail()">← Back to list</button>
         <h2>Review</h2>
         <p class="sub">Everywhere progress is waiting on a person.
@@ -1431,11 +1445,18 @@
     }
 
     async function loadReviewGate(name) {
-      const r = await fetch(`/review/${encodeURIComponent(name)}?limit=200`);
       const det = showDetailPanel();
       if (!det) return;
-      if (!r.ok) { det.innerHTML = `<h2>Review</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
-      const g = await r.json();
+      let g;
+      try {
+        const r = await fetch(`/review/${encodeURIComponent(name)}?limit=200`);
+        if (!r.ok) { showReviewLoadError(det, ` (${r.status})`); return; }
+        g = await r.json();
+      } catch (e) {
+        console.warn("Could not load review gate", e);
+        showReviewLoadError(det);
+        return;
+      }
       let html = `<button onclick="loadReview()">← All gates</button>
         <h2>${acqEsc(g.label)}</h2>
         <p class="sub">Holding ${g.blocking}; ${g.drainable_measured ? g.drainable : "an unmeasured number"}
