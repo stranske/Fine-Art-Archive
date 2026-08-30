@@ -90,6 +90,66 @@ If yes:
 - Treat `.gitnexus/` as local derived cache. Do not commit it, require it in CI, or make correctness depend on it.
 - If GitNexus is unavailable or stale, continue with normal `rg`, git, and repository tests.
 
+## Identifying a Work: Reverse Image Search Is the Next Step
+
+**When you are stuck on a work's identity and you have its image, do a reverse image
+search before concluding anything.** This is not a last resort. It is the next step, and
+it comes BEFORE writing "unidentified", before an adjudicated `not_available`, and before
+reporting the work as a hard case.
+
+The archive holds a picture of every work. That picture is the strongest identifying
+evidence available, and catalogue-metadata searches routinely fail on works the image
+finds in seconds.
+
+Worked example, 2026-08-21. `e7bc13e-estuary-at-day-s-end-vlieger` sat unidentified for
+twelve days. A Wikidata oeuvre search over its artist returned nothing, and it was
+reported as "still unidentified" twice. One reverse image search returned the answer as
+the top visual match: Simon de Vlieger, *Beach View* (*Strandgezicht*), 1643, Mauritshuis
+inv. 558, 60.6 x 83.5 cm, Q17275980 — with the museum's own description matching the
+picture element for element.
+
+**Why the metadata search could not have found it.** The by-creator strategy discriminates
+on dimensions, and this sidecar was carrying 36.8 x 58.4 cm — the dimensions of a
+*different* painting, left behind by an identification that had already been rejected. No
+amount of oeuvre searching can match a work against another work's measurements. The image
+carries no such inherited error, which is exactly why it should be consulted first.
+
+### How
+
+### Privacy and rights gate
+
+This repository does not approve any external reverse-image service on its own. Before any
+upload, confirm that the particular service and image are approved for this corpus and that
+the uploader has authority to share it. Do **not** upload restricted, private, rights-limited,
+or institution-provided images to an unapproved third party. Use a local visual-matching tool
+or the holding institution's approved research path instead; record the reason when that keeps
+the work unresolved.
+
+1. For an approved upload, create a review copy scaled to ~2000 px (upload caps are ~10 MB);
+   never upload the master or unnecessary embedded metadata.
+2. Upload only that approved review copy to the specifically approved reverse-image service.
+   Read the top *visual* matches, not the web results.
+3. Take the identification to the **holding institution's own record**, then to Wikidata.
+   Do not stop at an aggregator, a print shop, or Commons — see the archive's standing rule
+   that the host museum outranks Commons for both identity and image quality.
+4. Record the result in `field_provenance.work_qid` using only schema-supported
+   fields. Set `source` to `reverse_image_search`, put the search-result URL in
+   `source_ref`, stamp `checked_at`, and cite the holding institution's record and
+   the Wikidata item in `note`. Use `status: available` only for a confirmed match.
+
+### When it does not settle the question
+
+Run the search before retaining a QID-less work as unidentified. No results, unrelated results,
+or results limited to print shops and stock-photo resellers have not identified that work;
+record `status: not_available` and describe the outcome in `note`. When plausible matches
+conflict, retain the QID-less work as unidentified, record `status: conflicting`, and cite each
+candidate there. Do not promote any of these outcomes to an identification.
+
+An inconclusive or conflicting new search does **not** on its own disprove an already confirmed
+`stable_identifiers.wikidata_q`; preserve that identifier and its provenance. Clear an existing
+Q-ID only when evidence shows it is wrong, using the repository's re-resolution flow so the
+prior value and corrective evidence remain recoverable.
+
 ## Useful References
 
 - `stranske/Workflows/README.md`
