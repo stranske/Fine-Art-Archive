@@ -169,9 +169,31 @@ def _regional(cand: Mapping[str, Any]) -> float | None:
     return 1.0 - share
 
 
+#: Curated works rank above every uncurated one. The gap is wider than any
+#: plausible sitelink count so the two bands cannot interleave.
+_CURATED_BAND = 10_000.0
+
+
 def _standing(cand: Mapping[str, Any]) -> float | None:
-    """The holding institution's own renown, for thin catalogues."""
+    """Institutional judgement — about the WORK first, the building second.
+
+    This lens began as "how renowned is the holding museum", which has an
+    obvious failure: the White House carries 142 sitelinks, more than any
+    actual museum in the candidate pool, so it won every slot this lens had
+    (measured 2026-08-30, 2 of 7 places in one batch) on the strength of being
+    a famous building rather than a serious collection.
+
+    A holder choosing to publish a work on Google Arts & Culture is a judgement
+    about that work, made by the people who own it — which is what this lens
+    was always reaching for. 24.8% of screened candidates carry the marker, so
+    it discriminates rather than admitting everything. Renown still breaks ties
+    inside each band, and still ranks works with no marker at all, so an
+    institution GA&C has never partnered with is not silently excluded.
+    """
+    curated = _f(cand, "gac_curated")
     sl = _f(cand, "holder_sitelinks")
+    if curated:
+        return _CURATED_BAND + float(sl or 0)
     return None if sl is None else float(sl)
 
 
@@ -180,7 +202,7 @@ LENSES: tuple[Lens, ...] = (
     Lens("atypicality", "rare for this painter", _atypicality),
     Lens("series", "completes a set already part-held", _series),
     Lens("regional", "under-represented country", _regional),
-    Lens("standing", "the holding museum's own renown", _standing),
+    Lens("standing", "the holder chose to publish this work", _standing),
 )
 
 
