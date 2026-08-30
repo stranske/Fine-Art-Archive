@@ -65,9 +65,10 @@ def test_zero_genre_share_is_rejected_rather_than_scoring_perfect() -> None:
 
 def test_regional_share_must_be_finite_and_within_the_unit_interval() -> None:
     """Malformed country shares must not produce impossible or unordered scores."""
-    for share in (math.nan, -0.01, 1.01):
+    for share in (math.nan, -0.01, 1.01, "not-a-number"):
         assert lenses._regional(cand("bad", country_share_in_archive=share)) is None
     assert lenses._regional(cand("valid", country_share_in_archive=0.25)) == 0.75
+    assert lenses._regional(cand("string", country_share_in_archive="0.25")) == 0.75
 
 
 def test_completed_series_stops_scoring() -> None:
@@ -139,6 +140,13 @@ def test_a_lens_never_double_counts_a_candidate() -> None:
     assert len(ids) == len(set(ids))
     picked = [cid for r in reports for cid in r.chosen]
     assert len(picked) == len(set(picked)), "one candidate credited to two lenses"
+
+
+def test_exhausted_lens_releases_slots_to_rankable_lenses() -> None:
+    shared = cand("shared", sitelinks=100, country_share_in_archive=0.1)
+    regional_only = [cand(f"regional-{i}", country_share_in_archive=0.2 + i / 100) for i in range(3)]
+    chosen, _ = lenses.select([shared, *regional_only], batch_cap=4)
+    assert {item["qid"] for item in chosen} == {"shared", "regional-0", "regional-1", "regional-2"}
 
 
 # --------------------------------------------------------------------------

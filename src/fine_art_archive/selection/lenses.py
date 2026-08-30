@@ -160,7 +160,11 @@ def _series(cand: Mapping[str, Any]) -> float | None:
 def _regional(cand: Mapping[str, Any]) -> float | None:
     """Under-representation of this work's country in the archive."""
     share = _f(cand, "country_share_in_archive")
-    if share is None or not math.isfinite(share) or not 0 <= share <= 1:
+    try:
+        share = float(share)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(share) or not 0 <= share <= 1:
         return None
     return 1.0 - share
 
@@ -330,6 +334,29 @@ def select(
             else:
                 # This lens is exhausted; release its unused slots.
                 remaining[name] = 0
+        if not progressed:
+            break
+
+    # A lens can exhaust its unique candidates after its original allocation.
+    # Reassign those unused slots to another lens with an unseen candidate so
+    # the batch cap remains a cap, not an accidental shortage.
+    while len(chosen) < batch_cap:
+        progressed = False
+        for name in available:
+            order = ranked[name]
+            while cursor[name] < len(order):
+                cand = order[cursor[name]]
+                cursor[name] += 1
+                cid = id_of(cand)
+                if cid in seen:
+                    continue
+                seen.add(cid)
+                chosen.append(cand)
+                reports[name].chosen.append(cid)
+                progressed = True
+                break
+            if len(chosen) >= batch_cap:
+                break
         if not progressed:
             break
 
