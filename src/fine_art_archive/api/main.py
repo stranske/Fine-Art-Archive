@@ -7,6 +7,7 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import math
@@ -1324,6 +1325,73 @@ def review_summary() -> dict:
         "unmeasured_gates": [s["name"] for s in summaries if not s["drainable_measured"]],
         "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
     }
+
+
+CANDIDATE_IMAGE_MAX = 1400
+
+
+@app.get("/review/candidate/{qid}/image")
+def review_candidate_image(qid: str, width: int = 700) -> Response:
+    """A cached, downscaled rendition of a frontier candidate's image.
+
+    The approval card used to point `<img src>` straight at the candidate's
+    Commons URL, which is the FULL ORIGINAL — Rufino Tamayo's arrived as
+    3296x1694 and 1.7 MB, six per card, to be painted into a 150 px box. The
+    card looked empty on arrival because it was still downloading megabytes it
+    was about to throw away, and judging an unfamiliar painter from a blank
+    grey square is not a judgement anyone can make.
+
+    Held works have gone through `_serve_resized` for exactly this reason since
+    the gallery was built. Candidates are not in the archive and have no
+    sidecar, so they never got it. This is that same treatment for the
+    pre-acquisition case.
+
+    The URL is looked up from the frontier by Q-ID rather than accepted from
+    the caller: an endpoint that fetches whatever URL it is handed is an SSRF,
+    and this one can only ever fetch an image the discovery pipeline already
+    chose.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", qid):
+        raise HTTPException(400, "qid must look like Q12345")
+    width = max(120, min(int(width), CANDIDATE_IMAGE_MAX))
+
+    src_url = gates.candidate_image_url(qid)
+    if not src_url:
+        raise HTTPException(404, f"no candidate image for {qid}")
+
+    IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = hashlib.sha256(f"{qid}|{src_url}|{width}".encode()).hexdigest()[:24]
+    cache_p = IMAGE_CACHE_DIR / f"cand_{key}.jpg"
+    if not cache_p.exists():
+        # Ask the source for a scaled rendition where it can make one. Commons
+        # honours ?width= and returns ~127 KB instead of 1.7 MB, which is the
+        # difference between a card that paints and one that does not.
+        fetch_url = src_url
+        if "commons.wikimedia.org" in src_url and "width=" not in src_url:
+            fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
+        try:
+            req = urllib.request.Request(
+                fetch_url, headers={"User-Agent": "FineArtArchive/0.3 (companion-app)"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read(24 * 1024 * 1024)
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
+        try:
+            from PIL import Image
+
+            Image.MAX_IMAGE_PIXELS = None
+            with Image.open(io.BytesIO(raw)) as im:
+                im.thumbnail((width, width), Image.Resampling.LANCZOS)
+                if im.mode not in ("RGB", "L"):
+                    im = im.convert("RGB")  # type: ignore[assignment]
+                im.save(cache_p, "JPEG", quality=85, optimize=True)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(502, f"could not decode candidate image: {exc}") from exc
+    return FileResponse(
+        cache_p, media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/review/artists")

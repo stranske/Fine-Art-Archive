@@ -1590,28 +1590,47 @@
       const name = cur.artist_label
         ? acqEsc(cur.artist_label)
         : `<a href="https://www.wikidata.org/wiki/${acqEsc(cur.artist_qid)}" target="_blank" rel="noopener">${acqEsc(cur.artist_qid)}</a>`;
-      const shots = (cur.works || []).slice(0, 6).map(w =>
-        w.image_url
-          ? `<figure style="margin:0;width:150px">
-               <img src="${acqEsc(w.image_url)}" alt="${acqEsc(w.title || "")}" loading="lazy"
-                    style="width:150px;height:150px;object-fit:cover;border-radius:4px;background:#eee">
-               <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
-             </figure>`
-          : `<figure style="margin:0;width:150px"><div style="width:150px;height:150px;border-radius:4px;background:#eee;display:grid;place-items:center" class="sub">no image</div>
-             <figcaption class="sub" style="font-size:11px;margin-top:4px">${acqEsc(w.title || "")}</figcaption></figure>`
-      ).join("");
-      const more = cur.n_works > 6 ? `<p class="sub">…and ${cur.n_works - 6} more.</p>` : "";
+      const works = cur.works || [];
+      const hero = works[0];
+      // Images come through /review/candidate/{qid}/image, which downscales and
+      // caches server-side. Pointing at the Commons original meant a 1.7 MB,
+      // 3296 px file per thumbnail and a card that showed grey boxes.
+      const src = (w, px) => `/review/candidate/${encodeURIComponent(w.id)}/image?width=${px}`;
+      const meta = (w) => [
+        w.sitelinks ? `${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : null,
+        `<a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>`
+      ].filter(Boolean).join(" · ");
+
+      const heroBlock = hero ? `
+        <figure style="margin:0 0 16px 0">
+          <img src="${src(hero, 900)}" alt="${acqEsc(hero.title || "")}"
+               style="max-width:100%;max-height:52vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
+          <figcaption class="sub" style="margin-top:6px">
+            <strong>${acqEsc(hero.title || "untitled")}</strong> — ${meta(hero)}
+          </figcaption>
+        </figure>` : `<p class="sub">No image available for this artist's candidates.</p>`;
+
+      const strip = works.slice(1, 7).map(w => `
+        <figure style="margin:0;width:132px">
+          <img src="${src(w, 260)}" alt="${acqEsc(w.title || "")}" loading="lazy"
+               style="width:132px;height:132px;object-fit:cover;border-radius:4px;background:var(--card,#f3f3f3)">
+          <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
+        </figure>`).join("");
+      const more = works.length > 7 ? `<p class="sub">…and ${works.length - 7} more.</p>` : "";
+
       det.innerHTML = `<div id="approve-card">
         <button onclick="loadReview()">← All gates</button>
-        <h2>${name}</h2>
-        <p class="sub">${acqEsc(cur.artist_description || "")}</p>
+        <h2 style="margin-top:8px">${name}</h2>
+        <p class="sub">${acqEsc(cur.artist_description || "")}
+          ${cur.artist_label ? `· <a href="https://www.wikidata.org/wiki/${acqEsc(cur.artist_qid)}" target="_blank" rel="noopener">${acqEsc(cur.artist_qid)}</a>` : ""}</p>
         <p><strong>${cur.n_released}</strong> work${cur.n_released === 1 ? "" : "s"} released by this decision.
            ${cur.n_held_elsewhere ? `<span class="sub">${cur.n_held_elsewhere} more stay held for a
            separate reason — a flagged subject, usually — and need their own call.</span>` : ""}
            <span class="sub">· ${approveDone} decided · ${approveQueue.length} left</span></p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0">${shots}</div>
+        ${heroBlock}
+        <div style="display:flex;gap:10px;flex-wrap:wrap">${strip}</div>
         ${more}
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
           <button onclick="approveAct('approve')"><strong>Approve</strong> (A)</button>
           <button onclick="approveAct('reject')">Never (R)</button>
           <button onclick="approveSkip(1)">Skip (S)</button>

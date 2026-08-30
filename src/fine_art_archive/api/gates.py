@@ -342,3 +342,19 @@ def frontier_gates(
             items=deferred,
         ),
     ]
+
+
+def candidate_image_url(qid: str, *, frontier_path: Path | None = None) -> str | None:
+    """The discovery image URL a frontier candidate carries, or None.
+
+    Exists so the image proxy can resolve a Q-ID to a URL the pipeline already
+    chose, rather than fetching a URL supplied by the caller.
+    """
+    data = _read_json(frontier_path or FRONTIER_JSON)
+    if data is None:
+        return None
+    for cand in _candidates(data):
+        if cand.get("qid") == qid:
+            url = cand.get("image_url")
+            return str(url) if url else None
+    return None
