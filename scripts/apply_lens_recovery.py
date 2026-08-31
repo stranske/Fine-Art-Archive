@@ -76,9 +76,8 @@ def _already_lens(meta: dict[str, Any], field: str) -> bool:
     # The operator guide records manual reverse-image research as a result URL.
     # Treat that form as complete only when its source explicitly identifies the
     # same research method; arbitrary URL provenance must remain eligible.
-    return (
-        entry.get("source") == "reverse_image_search"
-        and source_ref.startswith(("https://", "http://"))
+    return entry.get("source") == "reverse_image_search" and source_ref.startswith(
+        ("https://", "http://")
     )
 
 
