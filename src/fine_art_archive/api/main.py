@@ -7,6 +7,8 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import io
 import json
 import math
@@ -17,6 +19,8 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -1326,6 +1330,253 @@ def review_summary() -> dict:
     }
 
 
+CANDIDATE_IMAGE_MAX = 1400
+
+# Wikimedia asks for a User-Agent naming the tool and a way to reach its
+# operator, and rate-limits anonymous-looking clients harder. The first version
+# of this proxy sent "FineArtArchive/0.3 (companion-app)" with no contact and
+# got HTTP 429 on roughly half the cards -- which the UI could only render as a
+# broken image. The workspace scripts have always sent the address below and
+# have never been throttled.
+CANDIDATE_UA = os.environ.get(
+    "FAA_CONTACT_UA", "FineArtArchive/0.3 (companion-app; tim@stranskemo.com)"
+)
+
+# At most this many outbound image fetches at once. A card asks for seven
+# images the moment it renders, and paging through the queue multiplies that;
+# firing them all in parallel is what turned a polite fetch into a burst that
+# Wikimedia refused. Cached images never reach this gate.
+_CANDIDATE_FETCH_SLOTS = threading.BoundedSemaphore(2)
+_COMMONS_HOST = "commons.wikimedia.org"
+# Maximum wall-clock seconds one review_candidate_image call may occupy a
+# worker thread. Three 30 s attempts + backoffs can reach ~100 s otherwise.
+_CANDIDATE_FETCH_DEADLINE_S = 60.0
+
+
+def _fetch_candidate_bytes(url: str, *, tries: int = 3, deadline: float | None = None) -> bytes:
+    """GET an image, retrying on the throttling responses rather than failing.
+
+    429 and 503 mean "ask again later", not "this image is unavailable", so
+    surfacing them as an error was reporting a temporary condition as a
+    permanent one. `Retry-After` is honoured when the server sends it.
+    """
+    last: Exception | None = None
+    for attempt in range(tries):
+        remaining = (deadline - time.monotonic()) if deadline is not None else None
+        if remaining is not None and remaining <= 0:
+            raise TimeoutError("image fetch deadline exceeded")
+        per_attempt = min(30.0, remaining) if remaining is not None else 30.0
+        try:
+            with _CANDIDATE_FETCH_SLOTS:
+                req = urllib.request.Request(url, headers={"User-Agent": CANDIDATE_UA})
+                with urllib.request.urlopen(req, timeout=per_attempt) as r:
+                    return r.read(24 * 1024 * 1024)
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in (429, 503) or attempt == tries - 1:
+                raise
+            wait = 1.5 * (2**attempt)
+            with suppress(TypeError, ValueError):
+                wait = max(wait, float(exc.headers.get("Retry-After") or 0))
+            time.sleep(min(wait, 8.0))
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            last = exc
+            if attempt == tries - 1:
+                raise
+            time.sleep(1.0 * (attempt + 1))
+    raise last if last else RuntimeError("fetch failed")
+
+
+@app.get("/review/candidate/{qid}/image")
+def review_candidate_image(qid: str, width: int = 700) -> Response:
+    """A cached, downscaled rendition of a frontier candidate's image.
+
+    The approval card used to point `<img src>` straight at the candidate's
+    Commons URL, which is the FULL ORIGINAL — Rufino Tamayo's arrived as
+    3296x1694 and 1.7 MB, six per card, to be painted into a 150 px box. The
+    card looked empty on arrival because it was still downloading megabytes it
+    was about to throw away, and judging an unfamiliar painter from a blank
+    grey square is not a judgement anyone can make.
+
+    Held works have gone through `_serve_resized` for exactly this reason since
+    the gallery was built. Candidates are not in the archive and have no
+    sidecar, so they never got it. This is that same treatment for the
+    pre-acquisition case.
+
+    The URL is looked up from the frontier by Q-ID rather than accepted from
+    the caller: an endpoint that fetches whatever URL it is handed is an SSRF,
+    and this one can only ever fetch an image the discovery pipeline already
+    chose.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", qid):
+        raise HTTPException(400, "qid must look like Q12345")
+    width = max(120, min(int(width), CANDIDATE_IMAGE_MAX))
+
+    src_url = gates.candidate_image_url(qid)
+    if not src_url:
+        raise HTTPException(404, f"no candidate image for {qid}")
+    if not src_url.lower().startswith(("http://", "https://")):
+        raise HTTPException(502, "candidate image URL has a disallowed scheme")
+
+    IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = hashlib.sha256(f"{qid}|{src_url}|{width}".encode()).hexdigest()[:24]
+    cache_p = IMAGE_CACHE_DIR / f"cand_{key}.jpg"
+    if not cache_p.exists():
+        # Ask the source for a scaled rendition where it can make one. Commons
+        # honours ?width= and returns ~127 KB instead of 1.7 MB, which is the
+        # difference between a card that paints and one that does not.
+        fetch_url = src_url
+        if _COMMONS_HOST in src_url and "width=" not in src_url:
+            fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
+        try:
+            raw = _fetch_candidate_bytes(
+                fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S
+            )
+        except urllib.error.HTTPError as exc:
+            # Throttling survived the retries. 503 tells the browser this is
+            # temporary and worth asking for again; 502 would have it cache a
+            # broken image for the rest of the session.
+            if exc.code in (429, 503):
+                raise HTTPException(
+                    503,
+                    "source is throttling; retry shortly",
+                    headers={"Retry-After": "3"},
+                ) from exc
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
+        try:
+            from PIL import Image
+
+            Image.MAX_IMAGE_PIXELS = None
+            with Image.open(io.BytesIO(raw)) as im:
+                im.thumbnail((width, width), Image.Resampling.LANCZOS)
+                if im.mode not in ("RGB", "L"):
+                    im = im.convert("RGB")  # type: ignore[assignment]
+                im.save(cache_p, "JPEG", quality=85, optimize=True)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(502, f"could not decode candidate image: {exc}") from exc
+    return FileResponse(
+        cache_p,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+#: Roots a variant-upgrade candidate file may legitimately live under. The
+#: path comes from a CSV this app does not write, so it is treated as untrusted
+#: and must resolve inside one of these or it is refused.
+VARIANT_CANDIDATE_ROOTS = (
+    ART_WORKS_ROOT,
+    env_path("FAA_STAGING_ROOT", ART_WORKS_ROOT.parent / "staging_acquisitions"),
+    env_path("FAA_QUARANTINE_ROOT", ART_WORKS_ROOT.parent / "quarantine"),
+)
+
+
+@app.get("/variant_upgrades/{existing_wid}/candidate_image")
+def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
+    """The proposed replacement file, so the swap can be judged by eye.
+
+    The upgrade decision is "is this copy better than the one I hold", and the
+    view offered megabyte counts and a ratio to answer it. A number cannot show
+    that the larger file is a different crop, a colour-shifted scan, or the
+    wrong painting — which is the whole reason a person is being asked.
+
+    The path is read from the detector's CSV by work id, never from the caller,
+    and must resolve inside a known root: this endpoint reads local files, so
+    an unchecked path would be an arbitrary-file-read.
+    """
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if not VARIANT_UPGRADE_CSV.exists():
+        raise HTTPException(404, "no variant upgrade candidates on file")
+    raw_path = ""
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw_path = (row.get("candidate_path") or "").strip()
+                break
+    if not raw_path:
+        raise HTTPException(404, f"no candidate file recorded for {existing_wid}")
+
+    candidate = Path(raw_path).expanduser().resolve(strict=False)
+    if not any(
+        candidate.is_relative_to(root.resolve(strict=False)) for root in VARIANT_CANDIDATE_ROOTS
+    ):
+        raise HTTPException(403, "candidate path is outside the permitted roots")
+    if not candidate.is_file():
+        raise HTTPException(404, "candidate file is not on disk")
+    return _serve_resized(candidate, f"variant_{existing_wid}", max)
+
+
+@app.get("/review/works")
+def review_works(limit: int = 400, source: str = "approved") -> dict:
+    """Individual works released by an artist approval, awaiting a look.
+
+    Approving an artist says the painter belongs in the archive. It does not
+    say every canvas does, and this is the screen that separates the two — the
+    last point at which a particular picture can be refused without refusing
+    its painter.
+    """
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    if source not in {"approved", "routed"}:
+        raise HTTPException(400, "source must be 'approved' or 'routed'")
+    approved = gates.load_allowlisted_artists()
+    decided = gates.load_work_decisions()
+    rows = gates.works_awaiting_look(approved, decided=decided, source=source)
+    rejected = sum(1 for d in decided.values() if d == "reject")
+    return {
+        "total": len(rows),
+        "already_decided": len(decided),
+        "already_rejected": rejected,
+        "approved_artists": len(approved),
+        "source": source,
+        "returned": len(rows[:limit]),
+        "works": rows[:limit],
+    }
+
+
+class WorkDecisionIn(BaseModel):
+    decision: Literal["keep", "reject", "force"]
+    title: str = Field(default="", max_length=300)
+    note: str = Field(default="", max_length=500)
+    reviewer: str = Field(default="tim", max_length=80)
+
+
+@app.post("/review/works/{work_qid}/decision")
+def work_decision(work_qid: str, body: WorkDecisionIn) -> dict:
+    """Keep or reject ONE work, without touching its artist.
+
+    A reject is sticky: it records that this picture was seen and refused, so
+    the growth tick never proposes it again. Rejecting a work leaves the artist
+    approved and every other work by them untouched.
+
+    `force` is the deferral override — acquire this one despite the size floor
+    or the throughput floor. Those thresholds are deliberately blunt; this is
+    where a person overrules them for a particular picture.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", work_qid):
+        raise HTTPException(400, "work_qid must look like Q12345")
+    gates.append_work_decision(
+        work_qid,
+        decision=body.decision,
+        title=body.title,
+        note=body.note,
+        reviewer=body.reviewer,
+        ts=datetime.now(UTC).isoformat(),
+    )
+    decided = gates.load_work_decisions()
+    return {
+        "work_qid": work_qid,
+        "decision": body.decision,
+        "decided": len(decided),
+        "rejected": sum(1 for d in decided.values() if d == "reject"),
+    }
+
+
 @app.get("/review/artists")
 def review_artists(limit: int = 500) -> dict:
     """Artists awaiting a decision, one row per ARTIST rather than per work.
@@ -2429,6 +2680,45 @@ def ratings_summary() -> dict:
 import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade endpoint)
 
 
+@functools.lru_cache(maxsize=256)
+def _image_dims(path: Path | None) -> str | None:
+    """ "WxH" for a local image, or None. Header read only — never the full file."""
+    if path is None or not path.is_file():
+        return None
+    try:
+        from PIL import Image
+
+        Image.MAX_IMAGE_PIXELS = None
+        with Image.open(path) as im:
+            return f"{im.size[0]}x{im.size[1]}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _variant_candidate_path(existing_wid: str) -> Path | None:
+    """The proposed file for a work, from the detector CSV, or None."""
+    if not existing_wid or not VARIANT_UPGRADE_CSV.exists():
+        return None
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError:
+        return None
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw = (row.get("candidate_path") or "").strip()
+                if not raw:
+                    return None
+                cand = Path(raw).expanduser().resolve(strict=False)
+                if any(
+                    cand.is_relative_to(root.resolve(strict=False))
+                    for root in VARIANT_CANDIDATE_ROOTS
+                ):
+                    return cand
+                return None
+    return None
+
+
 @app.get("/variant_upgrades")
 def variant_upgrades() -> dict:
     if not VARIANT_UPGRADE_CSV.exists():
@@ -2451,6 +2741,14 @@ def variant_upgrades() -> dict:
         d = decisions.get(c.get("existing_wid"))  # type: ignore[arg-type]
         c["decision"] = d.get("decision") if d else None
         c["decision_ts"] = d.get("ts") if d else None
+        # Megabytes are a poor proxy for image quality: a bigger file can be a
+        # looser JPEG of a SMALLER picture. The question this screen asks is
+        # "is the candidate better", and pixels answer it where bytes cannot.
+        try:
+            c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        except HTTPException:
+            c["existing_px"] = None
+        c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
     return {"candidates": candidates}
 
 

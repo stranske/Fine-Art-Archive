@@ -21,6 +21,7 @@ row is always optional; the surface exists so the *option* is visible.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -102,14 +103,16 @@ def _read_json(path: Path) -> dict | None:
     return decoded if isinstance(decoded, dict) else None
 
 
-def load_allowlisted_artists(path: Path | None = None) -> set[str]:
-    """Artist Q-IDs a person has approved for acquisition."""
+def _artist_decisions(path: Path | None = None) -> tuple[set[str], set[str]]:
+    """Return approved and refused artist Q-IDs from one append-log pass."""
     p = path or ARTIST_ALLOWLIST
-    out: set[str] = set()
+    approved: set[str] = set()
+    refused: set[str] = set()
     try:
         raw = p.read_text(encoding="utf-8")
     except OSError:
-        return out
+        return approved, refused
+
     for line in raw.splitlines():
         line = line.strip()
         if not line:
@@ -118,14 +121,38 @@ def load_allowlisted_artists(path: Path | None = None) -> set[str]:
             rec = json.loads(line)
         except json.JSONDecodeError:
             continue
-        qid = rec.get("artist_qid")
-        if not qid:
+        if not isinstance(rec, dict):
             continue
-        if rec.get("decision") == "reject":
-            out.discard(qid)
+        qid = rec.get("artist_qid")
+        decision = rec.get("decision")
+        if not qid or not decision:
+            continue
+        qid = str(qid)
+        if decision == "reject":
+            approved.discard(qid)
+            refused.add(qid)
         else:
-            out.add(qid)
-    return out
+            refused.discard(qid)
+            approved.add(qid)
+    return approved, refused
+
+
+def load_allowlisted_artists(path: Path | None = None) -> set[str]:
+    """Artist Q-IDs a person has approved for acquisition."""
+    approved, _ = _artist_decisions(path)
+    return approved
+
+
+def load_refused_artists(path: Path | None = None) -> set[str]:
+    """Artist Q-IDs explicitly refused. Decided — not awaiting anything.
+
+    `load_allowlisted_artists` discards a refusal, which correctly keeps the
+    artist out of the approved set but loses the fact that a decision was made
+    at all. Without this the gate cannot tell "not yet considered" from
+    "considered and declined".
+    """
+    _, refused = _artist_decisions(path)
+    return refused
 
 
 def append_allowlist(
@@ -174,8 +201,61 @@ def _gates_all_pass(cand: dict) -> bool:
     return all(v == "pass" for v in gates.values())
 
 
+def _integer_dimensions(value: Any) -> tuple[int, int] | None:
+    """Return one JSON-safe pixel pair, rejecting floats, booleans, and malformed values."""
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return None
+    if not all(
+        isinstance(dimension, int) and not isinstance(dimension, bool) for dimension in value
+    ):
+        return None
+    return value[0], value[1]
+
+
+#: The three genuinely different situations behind a "deferral", which the old
+#: single label ("deferred on image quality") described wrongly for half of
+#: them. Ten of twenty were transfer failures on the BEST images in the pool --
+#: Pastoral Concert at 356 MP, Castiglione at 301 MP -- and three were files
+#: that never decoded, reported as "0px long edge" as though measured.
+DEFER_UNDECODED = "undecoded"
+DEFER_BELOW_FLOOR = "below_floor"
+DEFER_TRANSFER = "transfer_failed"
+DEFER_OTHER = "other"
+
+
+def classify_deferral(reason: str | None) -> dict[str, Any]:
+    """What actually happened, and the numbers a person needs to judge it.
+
+    Returns the kind plus, where the reason states them, the pixels obtained
+    and the pixels required — so the page can say "7 px short of the floor"
+    instead of showing a truncated sentence.
+    """
+    text = reason or ""
+    got = need = None
+    match = re.search(r"(\d+)px long edge, need (\d+)px", text)
+    if match:
+        got, need = int(match.group(1)), int(match.group(2))
+
+    if got == 0:
+        kind = DEFER_UNDECODED
+    elif match:
+        kind = DEFER_BELOW_FLOOR
+    elif "throughput" in text or "wall-clock" in text or "timed out" in text:
+        kind = DEFER_TRANSFER
+    else:
+        kind = DEFER_OTHER
+
+    out: dict[str, Any] = {"kind": kind, "reason": text, "got_px": got, "need_px": need}
+    if kind == DEFER_BELOW_FLOOR and got and need:
+        out["shortfall_px"] = need - got
+        out["percent_of_floor"] = round(100 * got / need)
+    return out
+
+
 def _cand_row(cand: dict, why: str) -> dict[str, Any]:
     scores = cand.get("screen_scores") or {}
+    dims = _integer_dimensions(scores.get("dimensions_px"))
+    megapixels = round(dims[0] * dims[1] / 1e6, 1) if dims else None
     return {
         "id": cand.get("qid", ""),
         "title": cand.get("title", ""),
@@ -189,6 +269,17 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "why": why,
         "status": cand.get("status", ""),
         "last_defer_reason": cand.get("last_defer_reason", ""),
+        # Evidence the decision actually needs, rather than an id and a name.
+        "megapixels": megapixels,
+        "long_edge_px": max(dims) if dims else None,
+        "rights_status": scores.get("rights_status"),
+        "generator": cand.get("generator", ""),
+        "deferrals": cand.get("transfer_deferrals") or 0,
+        "deferral": (
+            classify_deferral(cand.get("last_defer_reason"))
+            if cand.get("transfer_deferrals")
+            else None
+        ),
     }
 
 
@@ -197,6 +288,7 @@ def frontier_gates(
     *,
     frontier_path: Path | None = None,
     allowlist: set[str] | None = None,
+    decided: dict[str, str] | None = None,
 ) -> list[Gate]:
     """Gates derived from the discovery frontier."""
     path = frontier_path or FRONTIER_JSON
@@ -241,11 +333,28 @@ def frontier_gates(
     allow = allowlist if allowlist is not None else load_allowlisted_artists()
     cands = _candidates(data)
 
+    # A work you have already ruled on is DECIDED. It must leave every gate
+    # that asks you to rule on it, or the surface asks the same question
+    # forever and the answers look ignored — which is exactly what happened:
+    # 20 deferrals were all decided and all 20 kept being presented, because
+    # this list was built from the frontier alone and never read the record.
+    #
+    # Applied once, here, for every gate. Filtering per-gate is how three of
+    # them came to disagree about whether feedback counts.
+    ruled_on = set(decided if decided is not None else load_work_decisions())
+    cands = [c for c in cands if c.get("qid") not in ruled_on]
+
     new_artist: list[dict] = []
     drainable_new = 0
+    refused_artists = load_refused_artists()
     for c in cands:
         aq = c.get("artist_qid")
         if not aq or aq in known or aq in allow:
+            continue
+        # An artist you refused is DECIDED, not awaiting a decision. Leaving
+        # them here kept Hitler, Zárraga and Guttero in a queue labelled
+        # "waiting on you" after you had already said no to all three.
+        if aq in refused_artists:
             continue
         # Only `screened` candidates. This gate must count exactly the
         # population that approving an artist would release -- the tick's
@@ -270,6 +379,14 @@ def frontier_gates(
         for c in cands
         if (c.get("transfer_deferrals") or 0) > 0 and c.get("status") != "acquired"
     ]
+    # Sort the near-misses first: those are the quickest calls to make, and the
+    # ones where a person's judgement most obviously beats a fixed threshold.
+    deferred.sort(key=lambda r: -((r.get("deferral") or {}).get("percent_of_floor") or 0))
+    kinds = [(r.get("deferral") or {}).get("kind") for r in deferred]
+    n_floor = kinds.count(DEFER_BELOW_FLOOR)
+    n_transfer = kinds.count(DEFER_TRANSFER)
+    n_undecoded = kinds.count(DEFER_UNDECODED)
+    n_other = kinds.count(DEFER_OTHER)
 
     # Candidates whose rights could not be established. Since 2026-08-29 an
     # in-copyright work may be acquired for private display, so `unclear` is no
@@ -306,7 +423,7 @@ def frontier_gates(
         rights_gate,
         Gate(
             name="new_artist",
-            label="Candidates by artists not yet in the archive",
+            label="Candidates by artists you have not decided on yet",
             blocking=len(new_artist),
             drainable=drainable_new,
             clears_by="approving the artist on this surface",
@@ -327,18 +444,198 @@ def frontier_gates(
         ),
         Gate(
             name="deferred_transfer",
-            label="Candidates deferred on image quality",
+            label=(
+                f"Deferred: {n_floor} just under the size floor, "
+                f"{n_transfer} failed to download, {n_undecoded} would not decode"
+                + (f", {n_other} other" if n_other else "")
+            ),
             blocking=len(deferred),
-            # These clear when a holder re-digitises, not by anything a person
-            # does here. Honest zero for a human drain — but the gate is not
-            # stuck, so it is flagged auto_clears rather than deadlocked.
-            drainable=0,
-            auto_clears=True,
-            clears_by="re-proposed automatically on a later tick; no human action needed",
+            # NOT auto-clearing, and the old label was wrong for half of these.
+            # Ten of twenty were transfer failures on the largest images in the
+            # pool, and the below-floor ones miss by as little as SEVEN PIXELS
+            # (Portrait of Wally, 3053 of 3060). Both are decisions a person can
+            # make in a second given the picture and the numbers, so calling it
+            # "no human action needed" was hiding a real choice.
+            drainable=n_floor + n_transfer + n_other,
+            auto_clears=False,
+            clears_by="accepting a near-miss anyway, or asking for the transfer again",
             note=(
-                "Deferrals are not sticky rejects — each is re-proposed on a later "
-                "tick. Listed so a persistent deferral is visible rather than silent."
+                "Three different situations, so judge them differently: a work just "
+                "under the floor is a size call; a transfer failure says nothing about "
+                "the image (these are the BIGGEST files in the pool); a file that would "
+                "not decode is a defect to look at, not a quality verdict."
             ),
             items=deferred,
         ),
     ]
+
+
+_FRONTIER_MTIME_CACHE: dict[Path, tuple[float, dict]] = {}
+
+
+def _frontier_data_cached(path: Path) -> dict | None:
+    """Return parsed frontier JSON, re-reading only when the file changes."""
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    cached = _FRONTIER_MTIME_CACHE.get(path)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    data = _read_json(path)
+    if data is not None:
+        _FRONTIER_MTIME_CACHE[path] = (mtime, data)
+    return data
+
+
+def candidate_image_url(qid: str, *, frontier_path: Path | None = None) -> str | None:
+    """The discovery image URL a frontier candidate carries, or None.
+
+    Exists so the image proxy can resolve a Q-ID to a URL the pipeline already
+    chose, rather than fetching a URL supplied by the caller.
+    """
+    data = _frontier_data_cached(frontier_path or FRONTIER_JSON)
+    if data is None:
+        return None
+    for cand in _candidates(data):
+        if cand.get("qid") == qid:
+            url = cand.get("image_url")
+            return str(url) if url else None
+    return None
+
+
+# Per-WORK decisions. Approving an artist says "this painter belongs in the
+# archive"; it does not say "every canvas they ever produced belongs". Tim
+# approved 98 artists, which released 555 works — and asked, correctly, to keep
+# the painter and drop particular pictures. Artist-level consent cannot express
+# that, so work-level decisions live here alongside it.
+#
+# A `reject` is STICKY: it is the record that this work was looked at and
+# refused, so nothing re-proposes it later. A `keep` is not required for
+# acquisition — silence means "no objection" — it exists so a work can be
+# marked as seen and deliberately wanted.
+WORK_DECISIONS = env_path("FAA_WORK_DECISIONS", REPO_ROOT / "data" / "work_decisions.jsonl")
+
+
+def load_work_decisions(path: Path | None = None) -> dict[str, str]:
+    """work Q-ID -> "keep" | "reject" | "force". Last decision for a work wins.
+
+    `force` is the deferral override: take this work even though it sits under
+    the size floor or downloads too slowly. It exists because those thresholds
+    are blunt where a person is not — Portrait of Wally was refused for being
+    3053 px against a 3060 floor, and no fixed rule can know that seven pixels
+    do not matter for that picture.
+
+    Acquisition paths outside this module and api/main.py do not read work
+    decisions; `force` is consumed exclusively in frontier_gates (to exclude
+    the work from the deferred gate) and in the deferred-transfer acquisition
+    tick (api/main.py), so its scope is contained.
+    """
+    p = path or WORK_DECISIONS
+    out: dict[str, str] = {}
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        qid, decision = rec.get("work_qid"), rec.get("decision")
+        if qid and decision in {"keep", "reject", "force"}:
+            out[str(qid)] = decision
+    return out
+
+
+def append_work_decision(
+    work_qid: str,
+    *,
+    decision: str,
+    title: str = "",
+    note: str = "",
+    reviewer: str = "tim",
+    ts: str,
+    path: Path | None = None,
+) -> None:
+    """Record a keep/reject for one work. Append-only, like every other decision."""
+    p = path or WORK_DECISIONS
+    p.parent.mkdir(parents=True, exist_ok=True)
+    rec = {
+        "ts": ts,
+        "work_qid": work_qid,
+        "title": title,
+        "decision": decision,
+        "note": note,
+        "reviewer": reviewer,
+    }
+    with open(p, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def works_awaiting_look(
+    approved_artists: set[str],
+    *,
+    frontier_path: Path | None = None,
+    decided: dict[str, str] | None = None,
+    source: str = "approved",
+) -> list[dict[str, Any]]:
+    """Screened works by approved artists that nobody has looked at yet.
+
+    These are the works an artist approval released. They are acquirable now,
+    which is exactly why they are worth a glance: this is the last point at
+    which a particular picture can be refused without refusing its painter.
+    """
+    data = _read_json(frontier_path or FRONTIER_JSON)
+    if data is None:
+        return []
+    seen = decided if decided is not None else load_work_decisions()
+    out: list[dict[str, Any]] = []
+    for cand in _candidates(data):
+        # `approved` = works an artist approval released.
+        # `routed`   = works the screener sent to review. These were being
+        #              presented as ARTISTS, which cannot answer a question
+        #              asked about a picture.
+        if source == "routed":
+            if cand.get("status") != "review":
+                continue
+        else:
+            if cand.get("status") != "screened":
+                continue
+            if cand.get("artist_qid") not in approved_artists:
+                continue
+        qid = cand.get("qid")
+        if not qid or qid in seen:
+            continue
+        row = _cand_row(cand, "released by approving this artist")
+        row["decision"] = None
+        out.append(row)
+    # Named artists first. Sorting on the raw label put every UNNAMED artist at
+    # the head of the queue, so the first cards were the ones showing a bare
+    # Q-ID — the weakest possible opening for a judgement about a painter.
+    out.sort(
+        key=lambda r: (
+            0 if r.get("artist_label") else 1,
+            str(r.get("artist_label") or r.get("artist_qid") or "~"),
+            str(r.get("title") or ""),
+        )
+    )
+    # Attach the artist's OTHER waiting works to each row. Judging one picture
+    # by a painter you do not know is easier beside the rest of what is
+    # offered, and it is the difference between "is this good" and "is this
+    # the one I want of theirs".
+    by_artist: dict[str, list[dict[str, Any]]] = {}
+    for row in out:
+        aqid = row.get("artist_qid")
+        if aqid:
+            by_artist.setdefault(aqid, []).append(row)
+    for row in out:
+        siblings = by_artist.get(row.get("artist_qid") or "", [])
+        row["artist_work_count"] = len(siblings)
+        row["artist_works"] = [
+            {"id": s["id"], "title": s["title"]} for s in siblings if s["id"] != row["id"]
+        ][:11]
+    return out

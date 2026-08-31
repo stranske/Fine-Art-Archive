@@ -1341,17 +1341,20 @@
         the current master. Accept logs intent; the actual master swap
         is gated behind a per-decision grant in <code>permissions.md</code>.</p>
         <table><thead><tr>
-          <th>Work</th><th>Current</th><th>Candidate</th><th>Ratio</th>
-          <th>Quarantined?</th><th>Decision</th><th></th>
+          <th>Work</th><th>Held now</th><th>Proposed</th><th>Current</th><th>Candidate</th>
+          <th>Pixels</th><th>Ratio</th><th>Quarantined?</th><th>Decision</th><th></th>
         </tr></thead><tbody>`;
       for (const c of d.candidates) {
         const wid = c.existing_wid;
         const dec = c.decision || "—";
         html += `<tr>
-          <td><strong>${c.title}</strong> <span class="sub">(${c.artist})</span><br>
-              <span class="qid">${wid}</span></td>
+          <td><strong>${acqEsc(c.title)}</strong> <span class="sub">(${acqEsc(c.artist)})</span><br>
+              <span class="qid">${acqEsc(wid)}</span></td>
+          <td>${heldThumb(wid, 96)}</td>
+          <td>${decisionThumb(`/variant_upgrades/${encodeURIComponent(wid)}/candidate_image?max=200`, c.title, 96)}</td>
           <td>${c.existing_master_mb} MB</td>
           <td>${c.candidate_master_mb} MB</td>
+          <td class="sub">${acqEsc(c.existing_px || "?")}<br>→ ${acqEsc(c.candidate_px || "?")}</td>
           <td><span class="pill">${c.ratio}×</span></td>
           <td>${c.candidate_quarantined}</td>
           <td>${dec}${c.decision_ts ? `<br><span class="sub">${c.decision_ts}</span>` : ""}</td>
@@ -1413,6 +1416,8 @@
         <strong>${d.total_drainable}</strong> of ${d.total_blocking} held items could be
         cleared today. Nothing here is a queue: growth never pauses for it and no row expires.</p>
         <p style="margin:10px 0"><button onclick="loadApproval()"><strong>Approve artists →</strong></button>
+        <button onclick="loadWorkReview()"><strong>Review works →</strong></button>
+        <button onclick="loadDeferrals()"><strong>Deferred →</strong></button>
         <span class="sub">one decision per artist, keyboard-driven — clears the two artist gates together</span></p>
         <table><thead><tr>
           <th>Gate</th><th>Holding</th><th>You can clear</th><th>What clears it</th><th></th>
@@ -1425,8 +1430,22 @@
         if (g.deadlocked) flag = ` <span class="pill" title="held items, nothing can clear them">stuck</span>`;
         else if (!g.drainable_measured) flag = ` <span class="pill" title="this gate could not measure its own drain">unknown</span>`;
         else if (g.auto_clears) flag = ` <span class="sub">(clears itself)</span>`;
+        // Route each gate to the view built for ITS judgement. The generic
+        // list shows a 68 px thumbnail and a truncated reason, which cannot
+        // answer "is this image good enough" — and leaving it as the default
+        // route meant the purpose-built screens were unreachable by the path
+        // anyone actually takes.
+        const GATE_VIEW = {
+          deferred_transfer: "loadDeferrals()",
+          new_artist: "loadApproval()",
+          routed_to_review: "loadWorkReview('routed')",
+        };
         const open = g.blocking > 0
-          ? `<button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})">Open</button>` : "";
+          ? `<button onclick="${GATE_VIEW[g.name] || `loadReviewGate(${acqEsc(JSON.stringify(g.name))})`}">Open</button>`
+            + (GATE_VIEW[g.name]
+                ? ` <button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})" title="plain list">list</button>`
+                : "")
+          : "";
         html += `<tr>
           <td><strong>${acqEsc(g.label)}</strong>${flag}
               ${g.note ? `<br><span class="sub">${acqEsc(g.note)}</span>` : ""}</td>
@@ -1468,7 +1487,7 @@
 
       const isArtistGate = g.name === "new_artist" || g.name === "routed_to_review";
       html += `<table><thead><tr>
-        <th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
+        <th></th><th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
       </tr></thead><tbody>`;
       for (const it of g.items) {
         const ready = it.would_pass_now === false
@@ -1482,7 +1501,9 @@
         } else if (isArtistGate) {
           action = `<td><span class="sub">no artist Q-ID</span></td>`;
         }
+        const thumb = /^Q[1-9][0-9]*$/.test(it.id || "") ? candThumb(it.id, 68) : heldThumb(it.id, 68);
         html += `<tr>
+          <td style="width:78px">${thumb}</td>
           <td><strong>${acqEsc(it.title || it.id)}</strong>${ready}<br>
               <span class="qid">${acqEsc(it.id)}</span></td>
           <td><span class="sub">${acqEsc(it.why || "")}</span></td>
@@ -1583,6 +1604,313 @@
       renderApproval();
     }
 
+    // Re-request an image that failed, backing off. The proxy returns 503 while
+    // the upstream source is throttling; giving up on the first failure is what
+    // left blank squares on the card.
+    function approveRetryImage(img) {
+      const n = (parseInt(img.dataset.tries || "0", 10) || 0) + 1;
+      img.dataset.tries = String(n);
+      if (n > 4) {
+        img.alt = "image unavailable";
+        return;
+      }
+      const base = img.src.split("&_r=")[0];
+      setTimeout(() => { img.src = `${base}${base.includes("?") ? "&" : "?"}_r=${n}`; }, 700 * Math.pow(2, n - 1));
+    }
+
+    // Returns u if it is http(s), otherwise "#" — prevents javascript: injection.
+    function safeHref(u) {
+      return /^https?:\/\//i.test(u || "") ? u : "#";
+    }
+
+    // Every screen that asks for a decision must SHOW the thing being decided.
+    // These build <img> tags that go through the app's resizing/caching routes,
+    // never a raw remote original — see the approval-card fix for what raw
+    // hotlinks cost (1.7 MB into a 150 px box, then rate-limited into blanks).
+    function decisionThumb(src, alt, px, bigSrc) {
+      // Always clickable. A thumbnail you cannot enlarge is useless on a page
+      // that asks you to judge a picture.
+      const rawFull = bigSrc || src.replace(/([?&])(width|max)=\d+/, "$1$2=1600");
+      const full = acqEsc(rawFull);
+      return `<a href="${full}" target="_blank" rel="noopener" title="open full size">
+        <img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
+          onerror="approveRetryImage(this)"
+          style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
+                 background:var(--card,#f3f3f3);vertical-align:middle;cursor:zoom-in"></a>`;
+    }
+    const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
+    const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
+
+    // ----- per-WORK review: keep the painter, drop the picture -----
+    // Approving an artist released 555 works across 98 painters. Artist-level
+    // consent cannot say "this one, not that one", so this screen is where a
+    // single picture is refused without refusing whoever painted it.
+    let workReviewQueue = [];
+    let workReviewIdx = 0;
+    let workReviewDone = 0;
+
+    let workReviewSource = "approved";
+
+    async function loadWorkReview(source) {
+      workReviewSource = source || "approved";
+      const det = showDetailPanel();
+      if (!det) return;
+      let r;
+      try {
+        r = await fetch(`/review/works?limit=400&source=${encodeURIComponent(workReviewSource)}`);
+      } catch (e) {
+        det.innerHTML = `<h2>Review works</h2><p class="sub">Network error: ${acqEsc(String(e))}.</p>`;
+        return;
+      }
+      if (!r.ok) { det.innerHTML = `<h2>Review works</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      let d;
+      try {
+        d = await r.json();
+      } catch (e) {
+        det.innerHTML = `<h2>Review works</h2><p class="sub">Bad response body.</p>`;
+        return;
+      }
+      workReviewQueue = d.works || [];
+      workReviewIdx = 0; workReviewDone = 0;
+      if (!workReviewQueue.length) {
+        det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>Review works</h2>
+          <p class="sub">Nothing waiting. Every work released by an approved artist has been
+          looked at (${d.already_decided} decided, ${d.already_rejected} refused).</p>`;
+        return;
+      }
+      renderWorkReview();
+      if (!window._workReviewKeys) { window._workReviewKeys = true; document.addEventListener("keydown", workReviewKey); }
+    }
+
+    function workReviewKey(ev) {
+      if (!workReviewQueue.length || !document.getElementById("work-card")) return;
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      const k = ev.key.toLowerCase();
+      if (k === "k") { ev.preventDefault(); workReviewAct("keep"); }
+      else if (k === "x") { ev.preventDefault(); workReviewAct("reject"); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); workReviewSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); workReviewSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); loadReview(); }
+    }
+
+    function workReviewSkip(delta) {
+      if (!workReviewQueue.length) return;
+      workReviewIdx = (workReviewIdx + delta + workReviewQueue.length) % workReviewQueue.length;
+      renderWorkReview();
+    }
+
+    async function workReviewAct(decision) {
+      const cur = workReviewQueue[workReviewIdx];
+      if (!cur) return;
+      const r = await fetch(`/review/works/${encodeURIComponent(cur.id)}/decision`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision: decision, title: cur.title || ""})
+      });
+      if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
+      workReviewQueue.splice(workReviewIdx, 1);
+      workReviewDone += 1;
+      if (workReviewIdx >= workReviewQueue.length) workReviewIdx = 0;
+      if (!workReviewQueue.length) {
+        const det = showDetailPanel();
+        if (det) det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>All done</h2><p class="sub">${workReviewDone} work${workReviewDone === 1 ? "" : "s"} decided.</p>`;
+        return;
+      }
+      renderWorkReview();
+    }
+
+    function slCount(v) {
+      if (typeof v === "number") return v;
+      if (v && typeof v === "object") return Object.keys(v).length;
+      return 0;
+    }
+
+    function renderWorkReview() {
+      const w = workReviewQueue[workReviewIdx];
+      const det = showDetailPanel();
+      if (!det || !w) return;
+      const artist = w.artist_label
+        ? acqEsc(w.artist_label)
+        : `<span class="qid">${acqEsc(w.artist_qid || "unknown")}</span>`;
+      const sl = slCount(w.sitelinks);
+      det.innerHTML = `<div id="work-card">
+        <button onclick="loadReview()">← All gates</button>
+        <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
+        <p class="sub">${artist}
+          ${w.megapixels ? ` · ${w.megapixels} MP` : ""}
+          ${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}
+          ${sl ? ` · ${sl} language${sl === 1 ? "" : "s"}` : ""}
+          ${w.generator ? ` · found by ${acqEsc(w.generator)}` : ""}
+          · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
+          <span class="sub">· ${workReviewDone} decided · ${workReviewQueue.length} left</span></p>
+        <img src="/review/candidate/${encodeURIComponent(w.id)}/image?width=1100"
+             alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
+             style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
+                    background:var(--card,#f3f3f3);margin:10px 0">
+        ${(w.artist_works && w.artist_works.length) ? `
+        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
+        waiting — the others:</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
+            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
+          </figure>`).join("")}
+        </div>` : ""}
+        <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
+           target="_blank" rel="noopener">Open larger →</a>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button onclick="workReviewAct('keep')"><strong>Keep</strong> (K)</button>
+          <button onclick="workReviewAct('reject')">Not this one (X)</button>
+          <button onclick="workReviewSkip(1)">Skip (S)</button>
+        </div>
+        <p class="sub" style="margin-top:12px">Refusing a work leaves its artist approved and every
+        other work by them untouched; the tick will never propose this picture again. Skipping
+        decides nothing — an undecided work stays acquirable.</p>
+      </div>`;
+    }
+
+    // ----- deferrals: a size call, a failed download, or a broken file -----
+    // These were shown as a 68 px icon and a truncated sentence, which is no
+    // way to judge image quality. Portrait of Wally was refused for being 3053
+    // px against a 3060 floor — seven pixels — and ten of the twenty were
+    // transfer failures on the LARGEST images in the pool. The picture and the
+    // two numbers are the whole decision.
+    let deferQueue = [];
+    let deferIdx = 0;
+    let deferDone = 0;
+
+    async function loadDeferrals() {
+      const r = await fetch("/review/deferred_transfer?limit=200");
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Deferred</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const g = await r.json();
+      deferQueue = g.items || [];
+      deferIdx = 0; deferDone = 0;
+      if (!deferQueue.length) {
+        det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>Deferred</h2><p class="sub">Nothing deferred right now.</p>`;
+        return;
+      }
+      renderDeferral();
+      if (!window._deferKeys) { window._deferKeys = true; document.addEventListener("keydown", deferKey); }
+    }
+
+    function deferKey(ev) {
+      if (!deferQueue.length || !document.getElementById("defer-card")) return;
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      const k = ev.key.toLowerCase();
+      if (k === "t") { ev.preventDefault(); deferAct("force"); }
+      else if (k === "x") { ev.preventDefault(); deferAct("reject"); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); deferSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); deferSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); loadReview(); }
+    }
+
+    function deferSkip(d) {
+      if (!deferQueue.length) return;
+      deferIdx = (deferIdx + d + deferQueue.length) % deferQueue.length;
+      renderDeferral();
+    }
+
+    async function deferAct(decision) {
+      const cur = deferQueue[deferIdx];
+      if (!cur) return;
+      const r = await fetch(`/review/works/${encodeURIComponent(cur.id)}/decision`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision: decision, title: cur.title || ""})
+      });
+      if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
+      deferQueue.splice(deferIdx, 1);
+      deferDone += 1;
+      if (deferIdx >= deferQueue.length) deferIdx = 0;
+      if (!deferQueue.length) {
+        const det = showDetailPanel();
+        if (det) det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>All done</h2><p class="sub">${deferDone} decided.</p>`;
+        return;
+      }
+      renderDeferral();
+    }
+
+    function renderDeferral() {
+      const w = deferQueue[deferIdx];
+      const det = showDetailPanel();
+      if (!det || !w) return;
+      const d = w.deferral || {};
+      let verdict = "", advice = "";
+      if (d.kind === "below_floor") {
+        verdict = `<strong>${d.got_px} px</strong> on the long edge, against a
+          <strong>${d.need_px} px</strong> floor — <strong>${d.percent_of_floor}%</strong>,
+          short by ${d.shortfall_px} px.`;
+        advice = d.percent_of_floor >= 95
+          ? "A near miss. The floor is 130 PPI across the work's real size; a few percent under it is unlikely to be visible on the panel."
+          : "Meaningfully under the floor — it will be upscaled on a large panel.";
+      } else if (d.kind === "transfer_failed") {
+        // The size below is what the SCREENER read from the catalogue, not a
+        // measured file — the download never completed. And whether it is
+        // large is computed per work: this branch used to assert "among the
+        // largest in the pool" for every one of them, which was true of a
+        // 356 MP Titian and false of a 1.0 MP van Eyck.
+        const mp = w.megapixels;
+        const scale = mp == null ? ""
+          : mp >= 50 ? " — one of the largest in the pool"
+          : mp >= 10 ? " — a large file"
+          : mp >= 4  ? ""
+          : " — and that is <strong>small</strong>, so this one may not clear the floor even if it downloads";
+        verdict = `The <strong>download</strong> failed; the image was never assessed.
+          The catalogue lists it at ${mp == null ? "an unrecorded size" :
+          `<strong>${mp} MP</strong> (${w.long_edge_px} px long edge)`}${scale}.`;
+        advice = mp != null && mp < 4
+          ? "Taking it retries the transfer, but at this catalogue size expect it to be deferred again on the size floor."
+          : "Nothing here says the picture is poor. Taking it means letting a slow transfer run to completion.";
+      } else if (d.kind === "undecoded") {
+        verdict = `The file did not decode, so <em>nothing was measured</em>. The
+          &ldquo;0 px&rdquo; in the log is a failure to read, not a measurement.`;
+        advice = "This is a defect to look into rather than a quality verdict; the source file may be corrupt or an unsupported format.";
+      } else {
+        verdict = acqEsc(d.reason || "deferred");
+      }
+      det.innerHTML = `<div id="defer-card">
+        <button onclick="loadReview()">← All gates</button>
+        <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
+        <p class="sub">${acqEsc(w.artist_label || w.artist_qid || "")}
+          ${w.megapixels ? ` · ${w.megapixels} MP` : ""}
+          ${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}
+          · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
+          <span class="sub">· ${deferDone} decided · ${deferQueue.length} left</span></p>
+        <p style="margin:6px 0">${verdict}</p>
+        ${advice ? `<p class="sub">${advice}</p>` : ""}
+        <img src="/review/candidate/${encodeURIComponent(w.id)}/image?width=1100"
+             alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
+             style="max-width:100%;max-height:58vh;object-fit:contain;border-radius:6px;
+                    background:var(--card,#f3f3f3);margin:10px 0">
+        ${(w.artist_works && w.artist_works.length) ? `
+        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
+        waiting — the others:</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
+            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
+          </figure>`).join("")}
+        </div>` : ""}
+        <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
+           target="_blank" rel="noopener">Open larger →</a>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button onclick="deferAct('force')"><strong>Take it anyway</strong> (T)</button>
+          <button onclick="deferAct('reject')">Not this one (X)</button>
+          <button onclick="deferSkip(1)">Skip (S)</button>
+        </div>
+        <p class="sub" style="margin-top:12px">Taking it overrides the size and speed floors for
+        this picture only, and the exception is recorded on the work. Skipping leaves it deferred —
+        it stays in the queue and is re-proposed on later ticks.</p>
+      </div>`;
+    }
+
     function renderApproval() {
       const cur = approveQueue[approveIdx];
       const det = showDetailPanel();
@@ -1590,28 +1918,54 @@
       const name = cur.artist_label
         ? acqEsc(cur.artist_label)
         : `<a href="https://www.wikidata.org/wiki/${acqEsc(cur.artist_qid)}" target="_blank" rel="noopener">${acqEsc(cur.artist_qid)}</a>`;
-      const shots = (cur.works || []).slice(0, 6).map(w =>
-        w.image_url
-          ? `<figure style="margin:0;width:150px">
-               <img src="${acqEsc(w.image_url)}" alt="${acqEsc(w.title || "")}" loading="lazy"
-                    style="width:150px;height:150px;object-fit:cover;border-radius:4px;background:#eee">
-               <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
-             </figure>`
-          : `<figure style="margin:0;width:150px"><div style="width:150px;height:150px;border-radius:4px;background:#eee;display:grid;place-items:center" class="sub">no image</div>
-             <figcaption class="sub" style="font-size:11px;margin-top:4px">${acqEsc(w.title || "")}</figcaption></figure>`
-      ).join("");
-      const more = cur.n_works > 6 ? `<p class="sub">…and ${cur.n_works - 6} more.</p>` : "";
+      const works = cur.works || [];
+      const hero = works[0];
+      // Images come through /review/candidate/{qid}/image, which downscales and
+      // caches server-side. Pointing at the Commons original meant a 1.7 MB,
+      // 3296 px file per thumbnail and a card that showed grey boxes.
+      const src = (w, px) => `/review/candidate/${encodeURIComponent(w.id)}/image?width=${px}`;
+      // A 503 from the proxy means the source is throttling, not that the
+      // image is missing. Without this the browser paints a broken icon and
+      // keeps it for the session, which is how a transient rate-limit became
+      // "a number of the pictures don't show".
+      const retry = `onerror="approveRetryImage(this)"`;
+      const meta = (w) => [
+        slCount(w.sitelinks) ? `${slCount(w.sitelinks)} language${slCount(w.sitelinks) === 1 ? "" : "s"}` : null,
+        `<a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>`
+      ].filter(Boolean).join(" · ");
+
+      const heroBlock = hero ? `
+        <figure style="margin:0 0 16px 0">
+          <img src="${src(hero, 900)}" alt="${acqEsc(hero.title || "")}"
+               ${retry}
+               style="max-width:100%;max-height:52vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
+          <figcaption class="sub" style="margin-top:6px">
+            <strong>${acqEsc(hero.title || "untitled")}</strong> — ${meta(hero)}
+          </figcaption>
+        </figure>` : `<p class="sub">No image available for this artist's candidates.</p>`;
+
+      const strip = works.slice(1, 7).map(w => `
+        <figure style="margin:0;width:132px">
+          <img src="${src(w, 260)}" alt="${acqEsc(w.title || "")}" loading="lazy"
+               ${retry}
+               style="width:132px;height:132px;object-fit:cover;border-radius:4px;background:var(--card,#f3f3f3)">
+          <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
+        </figure>`).join("");
+      const more = works.length > 7 ? `<p class="sub">…and ${works.length - 7} more.</p>` : "";
+
       det.innerHTML = `<div id="approve-card">
         <button onclick="loadReview()">← All gates</button>
-        <h2>${name}</h2>
-        <p class="sub">${acqEsc(cur.artist_description || "")}</p>
+        <h2 style="margin-top:8px">${name}</h2>
+        <p class="sub">${acqEsc(cur.artist_description || "")}
+          ${cur.artist_label ? `· <a href="https://www.wikidata.org/wiki/${acqEsc(cur.artist_qid)}" target="_blank" rel="noopener">${acqEsc(cur.artist_qid)}</a>` : ""}</p>
         <p><strong>${cur.n_released}</strong> work${cur.n_released === 1 ? "" : "s"} released by this decision.
            ${cur.n_held_elsewhere ? `<span class="sub">${cur.n_held_elsewhere} more stay held for a
            separate reason — a flagged subject, usually — and need their own call.</span>` : ""}
            <span class="sub">· ${approveDone} decided · ${approveQueue.length} left</span></p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0">${shots}</div>
+        ${heroBlock}
+        <div style="display:flex;gap:10px;flex-wrap:wrap">${strip}</div>
         ${more}
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
           <button onclick="approveAct('approve')"><strong>Approve</strong> (A)</button>
           <button onclick="approveAct('reject')">Never (R)</button>
           <button onclick="approveSkip(1)">Skip (S)</button>
@@ -1674,7 +2028,7 @@
         return;
       }
       html += `<table><thead><tr>
-          <th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
+          <th></th><th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
         </tr></thead><tbody>`;
       for (const w of d.works) {
         const workId = acqEsc(w.work_id);
@@ -1687,6 +2041,7 @@
           ? `<button onclick="acqReview(${workIdJs}, true)">Undo</button>`
           : `<button onclick="acqReview(${workIdJs}, false)">Mark reviewed</button>`;
         html += `<tr>
+          <td style="width:78px">${heldThumb(w.work_id, 68)}</td>
           <td><a href="#" onclick="openWork(${workIdJs}); return false;"><strong>${acqEsc(w.title)}</strong></a>
               <span class="sub">(${acqEsc(w.artist_name)})</span><br>
               <span class="qid">${workId}</span></td>
