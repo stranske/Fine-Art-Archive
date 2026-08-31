@@ -358,3 +358,95 @@ def candidate_image_url(qid: str, *, frontier_path: Path | None = None) -> str |
             url = cand.get("image_url")
             return str(url) if url else None
     return None
+
+
+# Per-WORK decisions. Approving an artist says "this painter belongs in the
+# archive"; it does not say "every canvas they ever produced belongs". Tim
+# approved 98 artists, which released 555 works — and asked, correctly, to keep
+# the painter and drop particular pictures. Artist-level consent cannot express
+# that, so work-level decisions live here alongside it.
+#
+# A `reject` is STICKY: it is the record that this work was looked at and
+# refused, so nothing re-proposes it later. A `keep` is not required for
+# acquisition — silence means "no objection" — it exists so a work can be
+# marked as seen and deliberately wanted.
+WORK_DECISIONS = env_path("FAA_WORK_DECISIONS", REPO_ROOT / "data" / "work_decisions.jsonl")
+
+
+def load_work_decisions(path: Path | None = None) -> dict[str, str]:
+    """work Q-ID -> "keep" | "reject". Last decision for a work wins."""
+    p = path or WORK_DECISIONS
+    out: dict[str, str] = {}
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        qid, decision = rec.get("work_qid"), rec.get("decision")
+        if qid and decision in {"keep", "reject"}:
+            out[str(qid)] = decision
+    return out
+
+
+def append_work_decision(
+    work_qid: str,
+    *,
+    decision: str,
+    title: str = "",
+    note: str = "",
+    reviewer: str = "tim",
+    ts: str,
+    path: Path | None = None,
+) -> None:
+    """Record a keep/reject for one work. Append-only, like every other decision."""
+    p = path or WORK_DECISIONS
+    p.parent.mkdir(parents=True, exist_ok=True)
+    rec = {
+        "ts": ts,
+        "work_qid": work_qid,
+        "title": title,
+        "decision": decision,
+        "note": note,
+        "reviewer": reviewer,
+    }
+    with open(p, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def works_awaiting_look(
+    approved_artists: set[str],
+    *,
+    frontier_path: Path | None = None,
+    decided: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Screened works by approved artists that nobody has looked at yet.
+
+    These are the works an artist approval released. They are acquirable now,
+    which is exactly why they are worth a glance: this is the last point at
+    which a particular picture can be refused without refusing its painter.
+    """
+    data = _read_json(frontier_path or FRONTIER_JSON)
+    if data is None:
+        return []
+    seen = decided if decided is not None else load_work_decisions()
+    out: list[dict[str, Any]] = []
+    for cand in _candidates(data):
+        if cand.get("status") != "screened":
+            continue
+        if cand.get("artist_qid") not in approved_artists:
+            continue
+        qid = cand.get("qid")
+        if not qid or qid in seen:
+            continue
+        row = _cand_row(cand, "released by approving this artist")
+        row["decision"] = None
+        out.append(row)
+    out.sort(key=lambda r: (str(r.get("artist_label") or ""), str(r.get("title") or "")))
+    return out

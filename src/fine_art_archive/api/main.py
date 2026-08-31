@@ -1494,6 +1494,65 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
     return _serve_resized(candidate, f"variant_{existing_wid}", max)
 
 
+@app.get("/review/works")
+def review_works(limit: int = 400) -> dict:
+    """Individual works released by an artist approval, awaiting a look.
+
+    Approving an artist says the painter belongs in the archive. It does not
+    say every canvas does, and this is the screen that separates the two — the
+    last point at which a particular picture can be refused without refusing
+    its painter.
+    """
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    approved = gates.load_allowlisted_artists()
+    decided = gates.load_work_decisions()
+    rows = gates.works_awaiting_look(approved, decided=decided)
+    rejected = sum(1 for d in decided.values() if d == "reject")
+    return {
+        "total": len(rows),
+        "already_decided": len(decided),
+        "already_rejected": rejected,
+        "approved_artists": len(approved),
+        "returned": len(rows[:limit]),
+        "works": rows[:limit],
+    }
+
+
+class WorkDecisionIn(BaseModel):
+    decision: Literal["keep", "reject"]
+    title: str = Field(default="", max_length=300)
+    note: str = Field(default="", max_length=500)
+    reviewer: str = Field(default="tim", max_length=80)
+
+
+@app.post("/review/works/{work_qid}/decision")
+def work_decision(work_qid: str, body: WorkDecisionIn) -> dict:
+    """Keep or reject ONE work, without touching its artist.
+
+    A reject is sticky: it records that this picture was seen and refused, so
+    the growth tick never proposes it again. Rejecting a work leaves the artist
+    approved and every other work by them untouched.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", work_qid):
+        raise HTTPException(400, "work_qid must look like Q12345")
+    gates.append_work_decision(
+        work_qid,
+        decision=body.decision,
+        title=body.title,
+        note=body.note,
+        reviewer=body.reviewer,
+        ts=datetime.now(UTC).isoformat(),
+    )
+    decided = gates.load_work_decisions()
+    return {
+        "work_qid": work_qid,
+        "decision": body.decision,
+        "decided": len(decided),
+        "rejected": sum(1 for d in decided.values() if d == "reject"),
+    }
+
+
 @app.get("/review/artists")
 def review_artists(limit: int = 500) -> dict:
     """Artists awaiting a decision, one row per ARTIST rather than per work.
