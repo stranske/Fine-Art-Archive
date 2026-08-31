@@ -197,3 +197,79 @@ def test_no_judgement_card_nests_an_anchor_inside_an_anchor(page: str) -> None:
         start = page.index(f"function {card}(")
         body = page[start : start + 9000]
         assert "<a" not in body or "plainThumb" in body or "decisionThumb" not in body, card
+
+
+# --------------------------------------------------------------------------
+# Rating the autonomous acquisitions
+# --------------------------------------------------------------------------
+def test_the_acquisitions_rating_queue_is_computed_not_frozen(monkeypatch) -> None:
+    """A stored list of work ids is correct until the tick acquires one more.
+
+    A rating queue that silently stops including new arrivals is the same
+    failure as a review surface that silently omits works: it reads as "you
+    have seen everything" when the truth is "we stopped looking".
+    """
+    from fine_art_archive.api import main
+
+    rows = [
+        {"work_id": "a-one", "acquired_at": "2026-08-10T00:00:00+00:00"},
+        {"work_id": "b-two", "acquired_at": "2026-08-11T00:00:00+00:00"},
+    ]
+    monkeypatch.setattr(main.store, "acquisitions_since_epoch", lambda *a, **k: rows)
+    monkeypatch.setattr(main.store, "count_ratings_for", lambda wid: 0)
+    first = main._dynamic_queue("autonomous-acquisitions")
+    assert first is not None
+    assert set(first["work_ids"]) == {"a-one", "b-two"}
+
+    rows.append({"work_id": "c-new", "acquired_at": "2026-08-12T00:00:00+00:00"})
+    second = main._dynamic_queue("autonomous-acquisitions")
+    assert "c-new" in second["work_ids"], "a newly acquired work must appear without a rebuild"
+
+
+def test_unrated_acquisitions_come_first(monkeypatch) -> None:
+    """The queue exists to be rated; an already-rated work is the one entry
+    with nothing to do on it."""
+    from fine_art_archive.api import main
+
+    rows = [
+        {"work_id": "rated-old", "acquired_at": "2026-08-20T00:00:00+00:00"},
+        {"work_id": "unrated-older", "acquired_at": "2026-08-10T00:00:00+00:00"},
+        {"work_id": "unrated-newest", "acquired_at": "2026-08-30T00:00:00+00:00"},
+    ]
+    monkeypatch.setattr(main.store, "acquisitions_since_epoch", lambda *a, **k: rows)
+    monkeypatch.setattr(
+        main.store, "count_ratings_for", lambda wid: 3 if wid == "rated-old" else 0
+    )
+    got = main._dynamic_queue("autonomous-acquisitions")["work_ids"]
+    assert got == ["unrated-newest", "unrated-older", "rated-old"], got
+
+
+def test_an_unknown_queue_name_is_still_a_404(monkeypatch) -> None:
+    """The dynamic lookup must not swallow a genuine typo."""
+    from fine_art_archive.api import main
+
+    assert main._dynamic_queue("no-such-queue") is None
+
+
+def test_the_queue_listing_carries_an_addressable_key() -> None:
+    """The picker sends the key back. A computed queue's readable label is not
+    its key, and sending the label would 404."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    body = TestClient(main.app).get("/queues").json()
+    dynamic = [q for q in body["queues"] if q.get("key") == "autonomous-acquisitions"]
+    assert dynamic, "the acquisitions rating queue is not offered"
+    assert dynamic[0]["name"] != dynamic[0]["key"], "this queue has a label distinct from its key"
+    assert all(q.get("key") for q in body["queues"]), "every queue must be addressable"
+
+
+def test_the_ui_sends_the_key_not_the_label(page: str) -> None:
+    assert "opt.value = q.key || q.name;" in page
+
+
+def test_the_rating_view_says_when_the_file_will_not_open(page: str) -> None:
+    """Otherwise it asks for a judgement on a broken-image icon."""
+    assert 'data._file_health === "truncated"' in page
+    assert "Do not rate this one down" in page

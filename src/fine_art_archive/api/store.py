@@ -357,16 +357,29 @@ def _master_health(path: Path) -> str:
         return "truncated"
 
 
+def master_health(work_id: str) -> str:
+    """"ok" | "truncated" | "unchecked" for a work's archived master."""
+    try:
+        work_dir = contained_work_path(WORKS, work_id)
+    except (ValueError, OSError):
+        return "unchecked"
+    master = _find_master(work_dir)
+    return _master_health(master) if master else "unchecked"
+
+
+def _find_master(work_dir: Path) -> Path | None:
+    for name in ("master.jpeg", "master.jpg", "master.png", "master.tif", "master.tiff"):
+        cand = work_dir / name
+        if cand.exists():
+            return cand
+    return None
+
+
 def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
     prov = meta.get("acquisition_provenance") or {}
     rights = meta.get("rights") or {}
     holder = meta.get("holder") or {}
-    master = None
-    for name in ("master.jpeg", "master.jpg", "master.png", "master.tif", "master.tiff"):
-        cand = work_dir / name
-        if cand.exists():
-            master = cand
-            break
+    master = _find_master(work_dir)
     px = _image_pixels(master) if master else None
     size_mb = round(master.stat().st_size / 1e6, 1) if master else None
     return {

@@ -2233,7 +2233,9 @@
         looked at. Nothing here is waiting on you — growth does not pause for review, and an
         unread list has no consequence.</p>
         <p style="margin:8px 0">${tab("no", "Not yet looked at")} ${tab("yes", "Looked at")} ${tab("any", "All")}
-        &nbsp;·&nbsp; ${vw("cards", "One at a time")} ${vw("table", "Table")}</p>`;
+        &nbsp;·&nbsp; ${vw("cards", "One at a time")} ${vw("table", "Table")}
+        &nbsp;·&nbsp; <button onclick="rateAcquisitions()"><strong>Rate them all →</strong></button>
+        <span class="sub">opens the full record for each, unrated first</span></p>`;
     }
 
     function acqSetView(v) {
@@ -2395,6 +2397,29 @@
     }
 
     function acqOpenCard(i) { acqIdx = i; acqView = "cards"; renderAcquisition(); }
+
+    // Hand the whole set of autonomous acquisitions to the rating view, in the
+    // order that puts the unrated ones first. The queue is COMPUTED server-side,
+    // so it keeps including works the tick acquires after this page loaded — a
+    // frozen list would quietly stop growing and read as "you have rated
+    // everything".
+    async function rateAcquisitions() {
+      const picker = document.getElementById("queue-picker");
+      if (picker) {
+        const opt = Array.from(picker.options).find(o => o.value === "autonomous-acquisitions");
+        if (opt) { picker.value = "autonomous-acquisitions"; await loadQueueFromPicker(); return; }
+      }
+      // The picker has not populated yet (or is absent) — load it directly
+      // rather than failing silently.
+      try {
+        const r = await fetch("/queues/autonomous-acquisitions");
+        if (!r.ok) { toast(`could not load the rating queue (${r.status})`); return; }
+        const d = await r.json();
+        closeDetail();
+        renderListPayload(d);
+        if (d.works && d.works.length) openWork(d.works[0].work_id);
+      } catch (e) { toast("could not load the rating queue"); }
+    }
 
     async function upgradeDecide(wid, decision) {
       const r = await fetch(`/variant_upgrades/${encodeURIComponent(wid)}/decision`, {
@@ -2608,6 +2633,11 @@
                <button class="modality-btn active" data-mod="" onclick="setModality('${wid}','')">Visible</button>
                ${data.modalities.map(m => `<button class="modality-btn" data-mod="${m.modality}" onclick="setModality('${wid}','${m.modality}')" title="${(m.source||'') + (m.license?(' · '+m.license):'')}">${m.label || m.modality}</button>`).join("")}
              </div>` : ""}
+             ${data._file_health === "truncated" ? `<div class="placeholder"
+               style="border:1px solid var(--accent,#c00);padding:8px;margin-top:6px;border-radius:6px">
+               <strong>The archived file is truncated — it will not open.</strong>
+               <div class="sub">The download did not finish, so there is no picture to judge here.
+               Do not rate this one down for it; it needs re-fetching.</div></div>` : ""}
              <div class="image-meta">
                <span>${(data.files?.master?.dimensions_px || []).join(" × ") || ""}</span>
                <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>
@@ -2822,7 +2852,10 @@
         const picker = document.getElementById("queue-picker");
         for (const q of (d.queues || [])) {
           const opt = document.createElement("option");
-          opt.value = q.name;
+          // A file queue's addressable key is its filename stem, which is also
+          // its display name. A computed queue has a readable label and a
+          // separate key — sending the label back would 404.
+          opt.value = q.key || q.name;
           opt.textContent = `${q.name} (${q.n_works})`;
           opt.title = q.description;
           picker.appendChild(opt);
