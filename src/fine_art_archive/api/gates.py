@@ -103,9 +103,16 @@ def _read_json(path: Path) -> dict | None:
     return decoded if isinstance(decoded, dict) else None
 
 
-def _parse_allowlist_entries(raw: str) -> list[tuple[str, str]]:
-    """Return (artist_qid, decision) pairs from raw JSONL text."""
-    out: list[tuple[str, str]] = []
+def _artist_decisions(path: Path | None = None) -> tuple[set[str], set[str]]:
+    """Return approved and refused artist Q-IDs from one append-log pass."""
+    p = path or ARTIST_ALLOWLIST
+    approved: set[str] = set()
+    refused: set[str] = set()
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except OSError:
+        return approved, refused
+
     for line in raw.splitlines():
         line = line.strip()
         if not line:
@@ -114,27 +121,26 @@ def _parse_allowlist_entries(raw: str) -> list[tuple[str, str]]:
             rec = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(rec, dict):
+            continue
         qid = rec.get("artist_qid")
         decision = rec.get("decision")
-        if qid and decision:
-            out.append((str(qid), str(decision)))
-    return out
+        if not qid or not decision:
+            continue
+        qid = str(qid)
+        if decision == "reject":
+            approved.discard(qid)
+            refused.add(qid)
+        else:
+            refused.discard(qid)
+            approved.add(qid)
+    return approved, refused
 
 
 def load_allowlisted_artists(path: Path | None = None) -> set[str]:
     """Artist Q-IDs a person has approved for acquisition."""
-    p = path or ARTIST_ALLOWLIST
-    out: set[str] = set()
-    try:
-        raw = p.read_text(encoding="utf-8")
-    except OSError:
-        return out
-    for qid, decision in _parse_allowlist_entries(raw):
-        if decision == "reject":
-            out.discard(qid)
-        else:
-            out.add(qid)
-    return out
+    approved, _ = _artist_decisions(path)
+    return approved
 
 
 def load_refused_artists(path: Path | None = None) -> set[str]:
@@ -145,18 +151,8 @@ def load_refused_artists(path: Path | None = None) -> set[str]:
     at all. Without this the gate cannot tell "not yet considered" from
     "considered and declined".
     """
-    p = path or ARTIST_ALLOWLIST
-    out: set[str] = set()
-    try:
-        raw = p.read_text(encoding="utf-8")
-    except OSError:
-        return out
-    for qid, decision in _parse_allowlist_entries(raw):
-        if decision == "reject":
-            out.add(qid)
-        else:
-            out.discard(qid)
-    return out
+    _, refused = _artist_decisions(path)
+    return refused
 
 
 def append_allowlist(
@@ -205,6 +201,17 @@ def _gates_all_pass(cand: dict) -> bool:
     return all(v == "pass" for v in gates.values())
 
 
+def _integer_dimensions(value: Any) -> tuple[int, int] | None:
+    """Return one JSON-safe pixel pair, rejecting floats, booleans, and malformed values."""
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return None
+    if not all(
+        isinstance(dimension, int) and not isinstance(dimension, bool) for dimension in value
+    ):
+        return None
+    return value[0], value[1]
+
+
 #: The three genuinely different situations behind a "deferral", which the old
 #: single label ("deferred on image quality") described wrongly for half of
 #: them. Ten of twenty were transfer failures on the BEST images in the pool --
@@ -247,12 +254,8 @@ def classify_deferral(reason: str | None) -> dict[str, Any]:
 
 def _cand_row(cand: dict, why: str) -> dict[str, Any]:
     scores = cand.get("screen_scores") or {}
-    dims = scores.get("dimensions_px") or []
-    megapixels = (
-        round(dims[0] * dims[1] / 1e6, 1)
-        if len(dims) == 2 and all(isinstance(d, int) for d in dims)
-        else None
-    )
+    dims = _integer_dimensions(scores.get("dimensions_px"))
+    megapixels = round(dims[0] * dims[1] / 1e6, 1) if dims else None
     return {
         "id": cand.get("qid", ""),
         "title": cand.get("title", ""),
@@ -268,9 +271,7 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "last_defer_reason": cand.get("last_defer_reason", ""),
         # Evidence the decision actually needs, rather than an id and a name.
         "megapixels": megapixels,
-        "long_edge_px": (
-            max(dims) if len(dims) == 2 and all(isinstance(d, (int, float)) for d in dims) else None
-        ),
+        "long_edge_px": max(dims) if dims else None,
         "rights_status": scores.get("rights_status"),
         "generator": cand.get("generator", ""),
         "deferrals": cand.get("transfer_deferrals") or 0,

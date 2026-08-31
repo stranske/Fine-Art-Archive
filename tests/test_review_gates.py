@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -246,19 +247,38 @@ def test_deferral_reasons_are_classified_not_concatenated() -> None:
     assert slow["got_px"] is None, "a transfer failure says nothing about pixels"
 
 
+@pytest.mark.parametrize("bad_dimension", [float("nan"), float("inf"), 3000.5, True])
+def test_candidate_row_rejects_non_integer_dimensions(bad_dimension: object) -> None:
+    row = gates._cand_row(
+        {"screen_scores": {"dimensions_px": [bad_dimension, 3000]}},
+        "review",
+    )
+    assert row["megapixels"] is None
+    assert row["long_edge_px"] is None
+
+
 def test_allowlist_roundtrip_and_rejection(tmp_path: Path) -> None:
     path = tmp_path / "allowlist.jsonl"
     gates.append_allowlist("Q100", decision="approve", ts="2026-08-29T00:00:00Z", path=path)
     gates.append_allowlist("Q200", decision="approve", ts="2026-08-29T00:01:00Z", path=path)
     assert gates.load_allowlisted_artists(path) == {"Q100", "Q200"}
+    assert gates.load_refused_artists(path) == set()
 
     # A later rejection wins over the earlier approval.
     gates.append_allowlist("Q100", decision="reject", ts="2026-08-29T00:02:00Z", path=path)
     assert gates.load_allowlisted_artists(path) == {"Q200"}
+    assert gates.load_refused_artists(path) == {"Q100"}
+
+    # A later approval also clears the refusal from the shared parser result.
+    gates.append_allowlist("Q100", decision="approve", ts="2026-08-29T00:03:00Z", path=path)
+    assert gates.load_allowlisted_artists(path) == {"Q100", "Q200"}
+    assert gates.load_refused_artists(path) == set()
 
 
 def test_missing_allowlist_is_empty_not_an_error(tmp_path: Path) -> None:
-    assert gates.load_allowlisted_artists(tmp_path / "nope.jsonl") == set()
+    missing = tmp_path / "nope.jsonl"
+    assert gates.load_allowlisted_artists(missing) == set()
+    assert gates.load_refused_artists(missing) == set()
 
 
 def test_summary_endpoint_agrees_with_each_gate(monkeypatch, frontier: Path) -> None:
@@ -486,6 +506,20 @@ def test_candidate_image_unknown_qid_returns_404(monkeypatch, tmp_path: Path) ->
     monkeypatch.setattr(gates, "candidate_image_url", lambda qid, **_: None)
     client = _app_client(monkeypatch, tmp_path)
     assert client.get("/review/candidate/Q99999/image").status_code == 404
+
+
+def test_candidate_image_disallowed_scheme_does_not_fetch(monkeypatch, tmp_path: Path) -> None:
+    from fine_art_archive.api import main
+
+    fetch = Mock()
+    monkeypatch.setattr(gates, "candidate_image_url", lambda qid, **_: "file:///tmp/image.jpg")
+    monkeypatch.setattr(main, "_fetch_candidate_bytes", fetch)
+
+    client = _app_client(monkeypatch, tmp_path)
+    response = client.get("/review/candidate/Q99999/image")
+
+    assert response.status_code == 502
+    fetch.assert_not_called()
 
 
 def test_variant_candidate_image_outside_roots_returns_403(monkeypatch, tmp_path: Path) -> None:
