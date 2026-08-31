@@ -1430,8 +1430,22 @@
         if (g.deadlocked) flag = ` <span class="pill" title="held items, nothing can clear them">stuck</span>`;
         else if (!g.drainable_measured) flag = ` <span class="pill" title="this gate could not measure its own drain">unknown</span>`;
         else if (g.auto_clears) flag = ` <span class="sub">(clears itself)</span>`;
+        // Route each gate to the view built for ITS judgement. The generic
+        // list shows a 68 px thumbnail and a truncated reason, which cannot
+        // answer "is this image good enough" — and leaving it as the default
+        // route meant the purpose-built screens were unreachable by the path
+        // anyone actually takes.
+        const GATE_VIEW = {
+          deferred_transfer: "loadDeferrals()",
+          new_artist: "loadApproval()",
+          routed_to_review: "loadApproval()",
+        };
         const open = g.blocking > 0
-          ? `<button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})">Open</button>` : "";
+          ? `<button onclick="${GATE_VIEW[g.name] || `loadReviewGate(${acqEsc(JSON.stringify(g.name))})`}">Open</button>`
+            + (GATE_VIEW[g.name]
+                ? ` <button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})" title="plain list">list</button>`
+                : "")
+          : "";
         html += `<tr>
           <td><strong>${acqEsc(g.label)}</strong>${flag}
               ${g.note ? `<br><span class="sub">${acqEsc(g.note)}</span>` : ""}</td>
@@ -1607,11 +1621,15 @@
     // These build <img> tags that go through the app's resizing/caching routes,
     // never a raw remote original — see the approval-card fix for what raw
     // hotlinks cost (1.7 MB into a 150 px box, then rate-limited into blanks).
-    function decisionThumb(src, alt, px) {
-      return `<img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
-        onerror="approveRetryImage(this)"
-        style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
-               background:var(--card,#f3f3f3);vertical-align:middle">`;
+    function decisionThumb(src, alt, px, bigSrc) {
+      // Always clickable. A thumbnail you cannot enlarge is useless on a page
+      // that asks you to judge a picture.
+      const full = bigSrc || src.replace(/([?&])(width|max)=\d+/, "$1$2=1600");
+      return `<a href="${full}" target="_blank" rel="noopener" title="open full size">
+        <img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
+          onerror="approveRetryImage(this)"
+          style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
+                 background:var(--card,#f3f3f3);vertical-align:middle;cursor:zoom-in"></a>`;
     }
     const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
     const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
