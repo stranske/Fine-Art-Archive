@@ -1583,6 +1583,20 @@
       renderApproval();
     }
 
+    // Re-request an image that failed, backing off. The proxy returns 503 while
+    // the upstream source is throttling; giving up on the first failure is what
+    // left blank squares on the card.
+    function approveRetryImage(img) {
+      const n = (parseInt(img.dataset.tries || "0", 10) || 0) + 1;
+      img.dataset.tries = String(n);
+      if (n > 4) {
+        img.alt = "image unavailable";
+        return;
+      }
+      const base = img.src.split("&_r=")[0];
+      setTimeout(() => { img.src = `${base}&_r=${n}`; }, 700 * Math.pow(2, n - 1));
+    }
+
     function renderApproval() {
       const cur = approveQueue[approveIdx];
       const det = showDetailPanel();
@@ -1596,6 +1610,11 @@
       // caches server-side. Pointing at the Commons original meant a 1.7 MB,
       // 3296 px file per thumbnail and a card that showed grey boxes.
       const src = (w, px) => `/review/candidate/${encodeURIComponent(w.id)}/image?width=${px}`;
+      // A 503 from the proxy means the source is throttling, not that the
+      // image is missing. Without this the browser paints a broken icon and
+      // keeps it for the session, which is how a transient rate-limit became
+      // "a number of the pictures don't show".
+      const retry = `onerror="approveRetryImage(this)"`;
       const meta = (w) => [
         w.sitelinks ? `${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : null,
         `<a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>`
@@ -1604,6 +1623,7 @@
       const heroBlock = hero ? `
         <figure style="margin:0 0 16px 0">
           <img src="${src(hero, 900)}" alt="${acqEsc(hero.title || "")}"
+               ${retry}
                style="max-width:100%;max-height:52vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
           <figcaption class="sub" style="margin-top:6px">
             <strong>${acqEsc(hero.title || "untitled")}</strong> — ${meta(hero)}
@@ -1613,6 +1633,7 @@
       const strip = works.slice(1, 7).map(w => `
         <figure style="margin:0;width:132px">
           <img src="${src(w, 260)}" alt="${acqEsc(w.title || "")}" loading="lazy"
+               ${retry}
                style="width:132px;height:132px;object-fit:cover;border-radius:4px;background:var(--card,#f3f3f3)">
           <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
         </figure>`).join("");
