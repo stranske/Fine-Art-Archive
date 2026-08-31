@@ -1495,7 +1495,7 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
 
 
 @app.get("/review/works")
-def review_works(limit: int = 400) -> dict:
+def review_works(limit: int = 400, source: str = "approved") -> dict:
     """Individual works released by an artist approval, awaiting a look.
 
     Approving an artist says the painter belongs in the archive. It does not
@@ -1505,15 +1505,18 @@ def review_works(limit: int = 400) -> dict:
     """
     if limit < 1:
         raise HTTPException(400, "limit must be >= 1")
+    if source not in {"approved", "routed"}:
+        raise HTTPException(400, "source must be 'approved' or 'routed'")
     approved = gates.load_allowlisted_artists()
     decided = gates.load_work_decisions()
-    rows = gates.works_awaiting_look(approved, decided=decided)
+    rows = gates.works_awaiting_look(approved, decided=decided, source=source)
     rejected = sum(1 for d in decided.values() if d == "reject")
     return {
         "total": len(rows),
         "already_decided": len(decided),
         "already_rejected": rejected,
         "approved_artists": len(approved),
+        "source": source,
         "returned": len(rows[:limit]),
         "works": rows[:limit],
     }

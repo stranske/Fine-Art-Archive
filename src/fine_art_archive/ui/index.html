@@ -1438,7 +1438,7 @@
         const GATE_VIEW = {
           deferred_transfer: "loadDeferrals()",
           new_artist: "loadApproval()",
-          routed_to_review: "loadApproval()",
+          routed_to_review: "loadWorkReview('routed')",
         };
         const open = g.blocking > 0
           ? `<button onclick="${GATE_VIEW[g.name] || `loadReviewGate(${acqEsc(JSON.stringify(g.name))})`}">Open</button>`
@@ -1642,8 +1642,11 @@
     let workReviewIdx = 0;
     let workReviewDone = 0;
 
-    async function loadWorkReview() {
-      const r = await fetch("/review/works?limit=400");
+    let workReviewSource = "approved";
+
+    async function loadWorkReview(source) {
+      workReviewSource = source || "approved";
+      const r = await fetch(`/review/works?limit=400&source=${encodeURIComponent(workReviewSource)}`);
       const det = showDetailPanel();
       if (!det) return;
       if (!r.ok) { det.innerHTML = `<h2>Review works</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
@@ -1719,6 +1722,15 @@
              alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
              style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
                     background:var(--card,#f3f3f3);margin:10px 0">
+        ${(w.artist_works && w.artist_works.length) ? `
+        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
+        waiting — the others:</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
+            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
+          </figure>`).join("")}
+        </div>` : ""}
         <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
            target="_blank" rel="noopener">Open larger →</a>
            &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
@@ -1811,10 +1823,23 @@
           ? "A near miss. The floor is 130 PPI across the work's real size; a few percent under it is unlikely to be visible on the panel."
           : "Meaningfully under the floor — it will be upscaled on a large panel.";
       } else if (d.kind === "transfer_failed") {
-        verdict = `The download failed, not the image. This file is
-          <strong>${w.megapixels} MP</strong> (${w.long_edge_px} px long edge) — among the
-          largest in the pool.`;
-        advice = "Nothing is wrong with the picture. Taking it means letting a slow transfer run to completion.";
+        // The size below is what the SCREENER read from the catalogue, not a
+        // measured file — the download never completed. And whether it is
+        // large is computed per work: this branch used to assert "among the
+        // largest in the pool" for every one of them, which was true of a
+        // 356 MP Titian and false of a 1.0 MP van Eyck.
+        const mp = w.megapixels;
+        const scale = mp == null ? ""
+          : mp >= 50 ? " — one of the largest in the pool"
+          : mp >= 10 ? " — a large file"
+          : mp >= 4  ? ""
+          : " — and that is <strong>small</strong>, so this one may not clear the floor even if it downloads";
+        verdict = `The <strong>download</strong> failed; the image was never assessed.
+          The catalogue lists it at ${mp == null ? "an unrecorded size" :
+          `<strong>${mp} MP</strong> (${w.long_edge_px} px long edge)`}${scale}.`;
+        advice = mp != null && mp < 4
+          ? "Taking it retries the transfer, but at this catalogue size expect it to be deferred again on the size floor."
+          : "Nothing here says the picture is poor. Taking it means letting a slow transfer run to completion.";
       } else if (d.kind === "undecoded") {
         verdict = `The file did not decode, so <em>nothing was measured</em>. The
           &ldquo;0 px&rdquo; in the log is a failure to read, not a measurement.`;
@@ -1836,6 +1861,15 @@
              alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
              style="max-width:100%;max-height:58vh;object-fit:contain;border-radius:6px;
                     background:var(--card,#f3f3f3);margin:10px 0">
+        ${(w.artist_works && w.artist_works.length) ? `
+        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
+        waiting — the others:</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
+            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
+          </figure>`).join("")}
+        </div>` : ""}
         <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
            target="_blank" rel="noopener">Open larger →</a>
            &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
