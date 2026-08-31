@@ -18,6 +18,8 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -1329,6 +1331,52 @@ def review_summary() -> dict:
 
 CANDIDATE_IMAGE_MAX = 1400
 
+# Wikimedia asks for a User-Agent naming the tool and a way to reach its
+# operator, and rate-limits anonymous-looking clients harder. The first version
+# of this proxy sent "FineArtArchive/0.3 (companion-app)" with no contact and
+# got HTTP 429 on roughly half the cards -- which the UI could only render as a
+# broken image. The workspace scripts have always sent the address below and
+# have never been throttled.
+CANDIDATE_UA = os.environ.get(
+    "FAA_CONTACT_UA", "FineArtArchive/0.3 (companion-app; tim@stranskemo.com)"
+)
+
+# At most this many outbound image fetches at once. A card asks for seven
+# images the moment it renders, and paging through the queue multiplies that;
+# firing them all in parallel is what turned a polite fetch into a burst that
+# Wikimedia refused. Cached images never reach this gate.
+_CANDIDATE_FETCH_SLOTS = threading.BoundedSemaphore(2)
+
+
+def _fetch_candidate_bytes(url: str, *, tries: int = 3) -> bytes:
+    """GET an image, retrying on the throttling responses rather than failing.
+
+    429 and 503 mean "ask again later", not "this image is unavailable", so
+    surfacing them as an error was reporting a temporary condition as a
+    permanent one. `Retry-After` is honoured when the server sends it.
+    """
+    last: Exception | None = None
+    for attempt in range(tries):
+        try:
+            with _CANDIDATE_FETCH_SLOTS:
+                req = urllib.request.Request(url, headers={"User-Agent": CANDIDATE_UA})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    return r.read(24 * 1024 * 1024)
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in (429, 503) or attempt == tries - 1:
+                raise
+            wait = 1.5 * (2**attempt)
+            with suppress(TypeError, ValueError):
+                wait = max(wait, float(exc.headers.get("Retry-After") or 0))
+            time.sleep(min(wait, 8.0))
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            last = exc
+            if attempt == tries - 1:
+                raise
+            time.sleep(1.0 * (attempt + 1))
+    raise last if last else RuntimeError("fetch failed")
+
 
 @app.get("/review/candidate/{qid}/image")
 def review_candidate_image(qid: str, width: int = 700) -> Response:
@@ -1370,11 +1418,17 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         if "commons.wikimedia.org" in src_url and "width=" not in src_url:
             fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
         try:
-            req = urllib.request.Request(
-                fetch_url, headers={"User-Agent": "FineArtArchive/0.3 (companion-app)"}
-            )
-            with urllib.request.urlopen(req, timeout=30) as r:
-                raw = r.read(24 * 1024 * 1024)
+            raw = _fetch_candidate_bytes(fetch_url)
+        except urllib.error.HTTPError as exc:
+            # Throttling survived the retries. 503 tells the browser this is
+            # temporary and worth asking for again; 502 would have it cache a
+            # broken image for the rest of the session.
+            if exc.code in (429, 503):
+                raise HTTPException(
+                    503, "source is throttling; retry shortly",
+                    headers={"Retry-After": "3"},
+                ) from exc
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
         except Exception as exc:  # noqa: BLE001 - many network shapes
             raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
         try:
