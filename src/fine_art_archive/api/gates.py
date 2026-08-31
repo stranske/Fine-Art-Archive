@@ -74,6 +74,12 @@ class Gate:
     #: healthy gate teaches you to ignore the one real alarm.
     auto_clears: bool = False
     note: str = ""
+    #: What an item's ``id`` refers to, so a viewer never has to guess which
+    #: image endpoint serves it. Guessing is how the unreviewed-acquisitions
+    #: list came to request every one of its 103 pictures from the CANDIDATE
+    #: proxy, which only answers to Wikidata Q-IDs -- 103 broken images on a
+    #: screen whose entire purpose is looking at pictures.
+    item_kind: str = "candidate"  # "candidate" (Wikidata Q-ID) | "held_work"
     items: list[dict[str, Any]] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
@@ -86,6 +92,7 @@ class Gate:
             "clears_by": self.clears_by,
             "advisory": self.advisory,
             "auto_clears": self.auto_clears,
+            "item_kind": self.item_kind,
             "note": self.note,
             "deadlocked": (self.blocking > 0 and self.drainable == 0 and not self.auto_clears),
         }
@@ -528,7 +535,7 @@ def frontier_gates(
         label="Candidates whose rights could not be determined",
         blocking=len(unclear),
         drainable=len(unclear) if assessed else UNMEASURED,
-        clears_by="recording a creator death year or work date",
+        clears_by="recording a death year, or taking it anyway",
         note=(
             ""
             if assessed
@@ -700,6 +707,15 @@ def works_awaiting_look(
         if source == "routed":
             if cand.get("status") != "review":
                 continue
+        elif source == "rights":
+            # Since the owner's 2026-08-29 exception, "rights unclear" is a
+            # call a person can actually make -- in-copyright works are
+            # permitted for private display -- so this gate had a decision
+            # behind it and no screen on which to make it.
+            if (cand.get("screen_scores") or {}).get("rights_status") != "unclear":
+                continue
+            if cand.get("status") in {"acquired", "rejected"}:
+                continue
         else:
             if cand.get("status") != "screened":
                 continue
@@ -710,9 +726,10 @@ def works_awaiting_look(
             continue
         row = _cand_row(
             cand,
-            "the screener routed this picture to you"
-            if source == "routed"
-            else "released by approving this artist",
+            {
+                "routed": "the screener routed this picture to you",
+                "rights": "the screener could not determine this work's rights",
+            }.get(source, "released by approving this artist"),
         )
         row["decision"] = None
         out.append(row)

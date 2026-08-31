@@ -1258,6 +1258,8 @@ def _acquisition_gate() -> gates.Gate:
         blocking=len(unreviewed),
         drainable=len(unreviewed),
         clears_by="marking a work reviewed (or simply looking)",
+        # These ids are work ids in the archive, not Wikidata Q-IDs.
+        item_kind="held_work",
         note=(
             "Purely informational — grant G55 does not wait on this. Nothing "
             "acquires more slowly because this list is long."
@@ -1284,6 +1286,10 @@ def _variant_upgrade_gate() -> gates.Gate:
             blocking=0,
             drainable=gates.UNMEASURED,
             clears_by="accepting or rejecting the upgrade",
+            # Declared on BOTH branches. A gate whose item_kind depends on
+            # whether its data happens to be present would tell the viewer a
+            # different story on an empty day than on a busy one.
+            item_kind="held_work",
             note="no candidate file present, so nothing could be counted",
         )
     pending = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
@@ -1293,6 +1299,8 @@ def _variant_upgrade_gate() -> gates.Gate:
         blocking=len(pending),
         drainable=len(pending),
         clears_by="accepting or rejecting the upgrade",
+        # `existing_wid` is an archive work id, not a Wikidata Q-ID.
+        item_kind="held_work",
         items=[
             {
                 "id": c.get("existing_wid", ""),
@@ -1505,8 +1513,8 @@ def review_works(limit: int = 400, source: str = "approved") -> dict:
     """
     if limit < 1:
         raise HTTPException(400, "limit must be >= 1")
-    if source not in {"approved", "routed"}:
-        raise HTTPException(400, "source must be 'approved' or 'routed'")
+    if source not in {"approved", "routed", "rights"}:
+        raise HTTPException(400, "source must be 'approved', 'routed' or 'rights'")
     approved = gates.load_allowlisted_artists()
     decided = gates.load_work_decisions()
     rows = gates.works_awaiting_look(approved, decided=decided, source=source)
