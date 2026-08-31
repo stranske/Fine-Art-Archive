@@ -268,7 +268,9 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "last_defer_reason": cand.get("last_defer_reason", ""),
         # Evidence the decision actually needs, rather than an id and a name.
         "megapixels": megapixels,
-        "long_edge_px": max(dims) if len(dims) == 2 and all(isinstance(d, (int, float)) for d in dims) else None,
+        "long_edge_px": (
+            max(dims) if len(dims) == 2 and all(isinstance(d, (int, float)) for d in dims) else None
+        ),
         "rights_status": scores.get("rights_status"),
         "generator": cand.get("generator", ""),
         "deferrals": cand.get("transfer_deferrals") or 0,
@@ -378,9 +380,7 @@ def frontier_gates(
     ]
     # Sort the near-misses first: those are the quickest calls to make, and the
     # ones where a person's judgement most obviously beats a fixed threshold.
-    deferred.sort(
-        key=lambda r: -((r.get("deferral") or {}).get("percent_of_floor") or 0)
-    )
+    deferred.sort(key=lambda r: -((r.get("deferral") or {}).get("percent_of_floor") or 0))
     kinds = [(r.get("deferral") or {}).get("kind") for r in deferred]
     n_floor = kinds.count(DEFER_BELOW_FLOOR)
     n_transfer = kinds.count(DEFER_TRANSFER)

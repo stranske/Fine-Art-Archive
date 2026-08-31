@@ -1429,14 +1429,17 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         if _COMMONS_HOST in src_url and "width=" not in src_url:
             fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
         try:
-            raw = _fetch_candidate_bytes(fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S)
+            raw = _fetch_candidate_bytes(
+                fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S
+            )
         except urllib.error.HTTPError as exc:
             # Throttling survived the retries. 503 tells the browser this is
             # temporary and worth asking for again; 502 would have it cache a
             # broken image for the rest of the session.
             if exc.code in (429, 503):
                 raise HTTPException(
-                    503, "source is throttling; retry shortly",
+                    503,
+                    "source is throttling; retry shortly",
                     headers={"Retry-After": "3"},
                 ) from exc
             raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
@@ -1454,7 +1457,8 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(502, f"could not decode candidate image: {exc}") from exc
     return FileResponse(
-        cache_p, media_type="image/jpeg",
+        cache_p,
+        media_type="image/jpeg",
         headers={"Cache-Control": "public, max-age=86400"},
     )
 
@@ -1499,8 +1503,7 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
 
     candidate = Path(raw_path).expanduser().resolve(strict=False)
     if not any(
-        candidate.is_relative_to(root.resolve(strict=False))
-        for root in VARIANT_CANDIDATE_ROOTS
+        candidate.is_relative_to(root.resolve(strict=False)) for root in VARIANT_CANDIDATE_ROOTS
     ):
         raise HTTPException(403, "candidate path is outside the permitted roots")
     if not candidate.is_file():
@@ -2679,7 +2682,7 @@ import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade e
 
 @functools.lru_cache(maxsize=256)
 def _image_dims(path: Path | None) -> str | None:
-    """"WxH" for a local image, or None. Header read only — never the full file."""
+    """ "WxH" for a local image, or None. Header read only — never the full file."""
     if path is None or not path.is_file():
         return None
     try:

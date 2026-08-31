@@ -446,9 +446,7 @@ def test_a_decided_work_leaves_every_gate(tmp_path: Path) -> None:
     decisions = tmp_path / "work_decisions.jsonl"
 
     def gates_now() -> dict[str, gates.Gate]:
-        return _by_name(
-            gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set())
-        )
+        return _by_name(gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set()))
 
     import fine_art_archive.api.gates as gates_module
 
@@ -484,7 +482,6 @@ def test_candidate_image_bad_qid_returns_400(monkeypatch, tmp_path: Path) -> Non
 
 
 def test_candidate_image_unknown_qid_returns_404(monkeypatch, tmp_path: Path) -> None:
-    from fine_art_archive.api import main
 
     monkeypatch.setattr(gates, "candidate_image_url", lambda qid, **_: None)
     client = _app_client(monkeypatch, tmp_path)
@@ -493,7 +490,9 @@ def test_candidate_image_unknown_qid_returns_404(monkeypatch, tmp_path: Path) ->
 
 def test_variant_candidate_image_outside_roots_returns_403(monkeypatch, tmp_path: Path) -> None:
     import csv
-    from fine_art_archive.api import main, store as _store
+
+    from fine_art_archive.api import main
+    from fine_art_archive.api import store as _store
 
     csv_path = tmp_path / "upgrades.csv"
     with open(csv_path, "w", newline="") as fh:
@@ -532,7 +531,9 @@ def test_work_decision_removes_work_from_next_response(monkeypatch, tmp_path: Pa
     orig_decisions = gates_module.WORK_DECISIONS
     orig_allowlist = gates_module.ARTIST_ALLOWLIST
     allowlist_path = tmp_path / "allowlist.jsonl"
-    gates.append_allowlist("QAPPROVED", decision="approve", ts="2026-08-31T00:00:00Z", path=allowlist_path)
+    gates.append_allowlist(
+        "QAPPROVED", decision="approve", ts="2026-08-31T00:00:00Z", path=allowlist_path
+    )
     gates_module.FRONTIER_JSON = frontier_path
     gates_module.WORK_DECISIONS = decisions_path
     gates_module.ARTIST_ALLOWLIST = allowlist_path
