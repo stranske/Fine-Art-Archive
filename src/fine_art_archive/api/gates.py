@@ -103,14 +103,9 @@ def _read_json(path: Path) -> dict | None:
     return decoded if isinstance(decoded, dict) else None
 
 
-def load_allowlisted_artists(path: Path | None = None) -> set[str]:
-    """Artist Q-IDs a person has approved for acquisition."""
-    p = path or ARTIST_ALLOWLIST
-    out: set[str] = set()
-    try:
-        raw = p.read_text(encoding="utf-8")
-    except OSError:
-        return out
+def _parse_allowlist_entries(raw: str) -> list[tuple[str, str]]:
+    """Return (artist_qid, decision) pairs from raw JSONL text."""
+    out: list[tuple[str, str]] = []
     for line in raw.splitlines():
         line = line.strip()
         if not line:
@@ -120,9 +115,22 @@ def load_allowlisted_artists(path: Path | None = None) -> set[str]:
         except json.JSONDecodeError:
             continue
         qid = rec.get("artist_qid")
-        if not qid:
-            continue
-        if rec.get("decision") == "reject":
+        decision = rec.get("decision")
+        if qid and decision:
+            out.append((str(qid), str(decision)))
+    return out
+
+
+def load_allowlisted_artists(path: Path | None = None) -> set[str]:
+    """Artist Q-IDs a person has approved for acquisition."""
+    p = path or ARTIST_ALLOWLIST
+    out: set[str] = set()
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for qid, decision in _parse_allowlist_entries(raw):
+        if decision == "reject":
             out.discard(qid)
         else:
             out.add(qid)
@@ -143,18 +151,8 @@ def load_refused_artists(path: Path | None = None) -> set[str]:
         raw = p.read_text(encoding="utf-8")
     except OSError:
         return out
-    for line in raw.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            rec = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        qid = rec.get("artist_qid")
-        if not qid:
-            continue
-        if rec.get("decision") == "reject":
+    for qid, decision in _parse_allowlist_entries(raw):
+        if decision == "reject":
             out.add(qid)
         else:
             out.discard(qid)
@@ -270,7 +268,7 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "last_defer_reason": cand.get("last_defer_reason", ""),
         # Evidence the decision actually needs, rather than an id and a name.
         "megapixels": megapixels,
-        "long_edge_px": max(dims) if len(dims) == 2 else None,
+        "long_edge_px": max(dims) if len(dims) == 2 and all(isinstance(d, (int, float)) for d in dims) else None,
         "rights_status": scores.get("rights_status"),
         "generator": cand.get("generator", ""),
         "deferrals": cand.get("transfer_deferrals") or 0,
@@ -287,6 +285,7 @@ def frontier_gates(
     *,
     frontier_path: Path | None = None,
     allowlist: set[str] | None = None,
+    decided: dict[str, str] | None = None,
 ) -> list[Gate]:
     """Gates derived from the discovery frontier."""
     path = frontier_path or FRONTIER_JSON
@@ -339,7 +338,7 @@ def frontier_gates(
     #
     # Applied once, here, for every gate. Filtering per-gate is how three of
     # them came to disagree about whether feedback counts.
-    ruled_on = set(load_work_decisions())
+    ruled_on = set(decided if decided is not None else load_work_decisions())
     cands = [c for c in cands if c.get("qid") not in ruled_on]
 
     new_artist: list[dict] = []
@@ -386,6 +385,7 @@ def frontier_gates(
     n_floor = kinds.count(DEFER_BELOW_FLOOR)
     n_transfer = kinds.count(DEFER_TRANSFER)
     n_undecoded = kinds.count(DEFER_UNDECODED)
+    n_other = kinds.count(DEFER_OTHER)
 
     # Candidates whose rights could not be established. Since 2026-08-29 an
     # in-copyright work may be acquired for private display, so `unclear` is no
@@ -446,6 +446,7 @@ def frontier_gates(
             label=(
                 f"Deferred: {n_floor} just under the size floor, "
                 f"{n_transfer} failed to download, {n_undecoded} would not decode"
+                + (f", {n_other} other" if n_other else "")
             ),
             blocking=len(deferred),
             # NOT auto-clearing, and the old label was wrong for half of these.
@@ -454,7 +455,7 @@ def frontier_gates(
             # (Portrait of Wally, 3053 of 3060). Both are decisions a person can
             # make in a second given the picture and the numbers, so calling it
             # "no human action needed" was hiding a real choice.
-            drainable=n_floor + n_transfer,
+            drainable=n_floor + n_transfer + n_other,
             auto_clears=False,
             clears_by="accepting a near-miss anyway, or asking for the transfer again",
             note=(
@@ -468,13 +469,31 @@ def frontier_gates(
     ]
 
 
+_FRONTIER_MTIME_CACHE: dict[Path, tuple[float, dict]] = {}
+
+
+def _frontier_data_cached(path: Path) -> dict | None:
+    """Return parsed frontier JSON, re-reading only when the file changes."""
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    cached = _FRONTIER_MTIME_CACHE.get(path)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    data = _read_json(path)
+    if data is not None:
+        _FRONTIER_MTIME_CACHE[path] = (mtime, data)
+    return data
+
+
 def candidate_image_url(qid: str, *, frontier_path: Path | None = None) -> str | None:
     """The discovery image URL a frontier candidate carries, or None.
 
     Exists so the image proxy can resolve a Q-ID to a URL the pipeline already
     chose, rather than fetching a URL supplied by the caller.
     """
-    data = _read_json(frontier_path or FRONTIER_JSON)
+    data = _frontier_data_cached(frontier_path or FRONTIER_JSON)
     if data is None:
         return None
     for cand in _candidates(data):
@@ -505,6 +524,11 @@ def load_work_decisions(path: Path | None = None) -> dict[str, str]:
     are blunt where a person is not — Portrait of Wally was refused for being
     3053 px against a 3060 floor, and no fixed rule can know that seven pixels
     do not matter for that picture.
+
+    Acquisition paths outside this module and api/main.py do not read work
+    decisions; `force` is consumed exclusively in frontier_gates (to exclude
+    the work from the deferred gate) and in the deferred-transfer acquisition
+    tick (api/main.py), so its scope is contained.
     """
     p = path or WORK_DECISIONS
     out: dict[str, str] = {}
@@ -604,7 +628,9 @@ def works_awaiting_look(
     # the one I want of theirs".
     by_artist: dict[str, list[dict[str, Any]]] = {}
     for row in out:
-        by_artist.setdefault(row.get("artist_qid") or "", []).append(row)
+        aqid = row.get("artist_qid")
+        if aqid:
+            by_artist.setdefault(aqid, []).append(row)
     for row in out:
         siblings = by_artist.get(row.get("artist_qid") or "", [])
         row["artist_work_count"] = len(siblings)

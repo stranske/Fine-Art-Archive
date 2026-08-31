@@ -1501,8 +1501,9 @@
         } else if (isArtistGate) {
           action = `<td><span class="sub">no artist Q-ID</span></td>`;
         }
+        const thumb = /^Q[1-9][0-9]*$/.test(it.id || "") ? candThumb(it.id, 68) : heldThumb(it.id, 68);
         html += `<tr>
-          <td style="width:78px">${candThumb(it.id, 68)}</td>
+          <td style="width:78px">${thumb}</td>
           <td><strong>${acqEsc(it.title || it.id)}</strong>${ready}<br>
               <span class="qid">${acqEsc(it.id)}</span></td>
           <td><span class="sub">${acqEsc(it.why || "")}</span></td>
@@ -1614,7 +1615,12 @@
         return;
       }
       const base = img.src.split("&_r=")[0];
-      setTimeout(() => { img.src = `${base}&_r=${n}`; }, 700 * Math.pow(2, n - 1));
+      setTimeout(() => { img.src = `${base}${base.includes("?") ? "&" : "?"}_r=${n}`; }, 700 * Math.pow(2, n - 1));
+    }
+
+    // Returns u if it is http(s), otherwise "#" — prevents javascript: injection.
+    function safeHref(u) {
+      return /^https?:\/\//i.test(u || "") ? u : "#";
     }
 
     // Every screen that asks for a decision must SHOW the thing being decided.
@@ -1624,7 +1630,8 @@
     function decisionThumb(src, alt, px, bigSrc) {
       // Always clickable. A thumbnail you cannot enlarge is useless on a page
       // that asks you to judge a picture.
-      const full = bigSrc || src.replace(/([?&])(width|max)=\d+/, "$1$2=1600");
+      const rawFull = bigSrc || src.replace(/([?&])(width|max)=\d+/, "$1$2=1600");
+      const full = acqEsc(rawFull);
       return `<a href="${full}" target="_blank" rel="noopener" title="open full size">
         <img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
           onerror="approveRetryImage(this)"
@@ -1646,11 +1653,23 @@
 
     async function loadWorkReview(source) {
       workReviewSource = source || "approved";
-      const r = await fetch(`/review/works?limit=400&source=${encodeURIComponent(workReviewSource)}`);
       const det = showDetailPanel();
       if (!det) return;
+      let r;
+      try {
+        r = await fetch(`/review/works?limit=400&source=${encodeURIComponent(workReviewSource)}`);
+      } catch (e) {
+        det.innerHTML = `<h2>Review works</h2><p class="sub">Network error: ${acqEsc(String(e))}.</p>`;
+        return;
+      }
       if (!r.ok) { det.innerHTML = `<h2>Review works</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
-      const d = await r.json();
+      let d;
+      try {
+        d = await r.json();
+      } catch (e) {
+        det.innerHTML = `<h2>Review works</h2><p class="sub">Bad response body.</p>`;
+        return;
+      }
       workReviewQueue = d.works || [];
       workReviewIdx = 0; workReviewDone = 0;
       if (!workReviewQueue.length) {
@@ -1667,6 +1686,7 @@
     function workReviewKey(ev) {
       if (!workReviewQueue.length || !document.getElementById("work-card")) return;
       if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
       const k = ev.key.toLowerCase();
       if (k === "k") { ev.preventDefault(); workReviewAct("keep"); }
       else if (k === "x") { ev.preventDefault(); workReviewAct("reject"); }
@@ -1701,6 +1721,12 @@
       renderWorkReview();
     }
 
+    function slCount(v) {
+      if (typeof v === "number") return v;
+      if (v && typeof v === "object") return Object.keys(v).length;
+      return 0;
+    }
+
     function renderWorkReview() {
       const w = workReviewQueue[workReviewIdx];
       const det = showDetailPanel();
@@ -1708,13 +1734,14 @@
       const artist = w.artist_label
         ? acqEsc(w.artist_label)
         : `<span class="qid">${acqEsc(w.artist_qid || "unknown")}</span>`;
+      const sl = slCount(w.sitelinks);
       det.innerHTML = `<div id="work-card">
         <button onclick="loadReview()">← All gates</button>
         <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
         <p class="sub">${artist}
           ${w.megapixels ? ` · ${w.megapixels} MP` : ""}
           ${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}
-          ${w.sitelinks ? ` · ${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : ""}
+          ${sl ? ` · ${sl} language${sl === 1 ? "" : "s"}` : ""}
           ${w.generator ? ` · found by ${acqEsc(w.generator)}` : ""}
           · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
           <span class="sub">· ${workReviewDone} decided · ${workReviewQueue.length} left</span></p>
@@ -1733,7 +1760,7 @@
         </div>` : ""}
         <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
            target="_blank" rel="noopener">Open larger →</a>
-           &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button onclick="workReviewAct('keep')"><strong>Keep</strong> (K)</button>
           <button onclick="workReviewAct('reject')">Not this one (X)</button>
@@ -1872,7 +1899,7 @@
         </div>` : ""}
         <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
            target="_blank" rel="noopener">Open larger →</a>
-           &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button onclick="deferAct('force')"><strong>Take it anyway</strong> (T)</button>
           <button onclick="deferAct('reject')">Not this one (X)</button>
@@ -1903,7 +1930,7 @@
       // "a number of the pictures don't show".
       const retry = `onerror="approveRetryImage(this)"`;
       const meta = (w) => [
-        w.sitelinks ? `${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : null,
+        slCount(w.sitelinks) ? `${slCount(w.sitelinks)} language${slCount(w.sitelinks) === 1 ? "" : "s"}` : null,
         `<a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>`
       ].filter(Boolean).join(" · ");
 
@@ -2014,8 +2041,7 @@
           ? `<button onclick="acqReview(${workIdJs}, true)">Undo</button>`
           : `<button onclick="acqReview(${workIdJs}, false)">Mark reviewed</button>`;
         html += `<tr>
-          <td style="width:78px"><a href="/works/${encodeURIComponent(w.work_id)}/image?max=1600"
-              target="_blank" rel="noopener" title="open full size">${heldThumb(w.work_id, 68)}</a></td>
+          <td style="width:78px">${heldThumb(w.work_id, 68)}</td>
           <td><a href="#" onclick="openWork(${workIdJs}); return false;"><strong>${acqEsc(w.title)}</strong></a>
               <span class="sub">(${acqEsc(w.artist_name)})</span><br>
               <span class="qid">${workId}</span></td>

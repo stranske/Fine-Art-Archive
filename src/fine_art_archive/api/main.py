@@ -7,6 +7,7 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import io
 import json
@@ -1346,9 +1347,13 @@ CANDIDATE_UA = os.environ.get(
 # firing them all in parallel is what turned a polite fetch into a burst that
 # Wikimedia refused. Cached images never reach this gate.
 _CANDIDATE_FETCH_SLOTS = threading.BoundedSemaphore(2)
+_COMMONS_HOST = "commons.wikimedia.org"
+# Maximum wall-clock seconds one review_candidate_image call may occupy a
+# worker thread. Three 30 s attempts + backoffs can reach ~100 s otherwise.
+_CANDIDATE_FETCH_DEADLINE_S = 60.0
 
 
-def _fetch_candidate_bytes(url: str, *, tries: int = 3) -> bytes:
+def _fetch_candidate_bytes(url: str, *, tries: int = 3, deadline: float | None = None) -> bytes:
     """GET an image, retrying on the throttling responses rather than failing.
 
     429 and 503 mean "ask again later", not "this image is unavailable", so
@@ -1357,10 +1362,14 @@ def _fetch_candidate_bytes(url: str, *, tries: int = 3) -> bytes:
     """
     last: Exception | None = None
     for attempt in range(tries):
+        remaining = (deadline - time.monotonic()) if deadline is not None else None
+        if remaining is not None and remaining <= 0:
+            raise TimeoutError("image fetch deadline exceeded")
+        per_attempt = min(30.0, remaining) if remaining is not None else 30.0
         try:
             with _CANDIDATE_FETCH_SLOTS:
                 req = urllib.request.Request(url, headers={"User-Agent": CANDIDATE_UA})
-                with urllib.request.urlopen(req, timeout=30) as r:
+                with urllib.request.urlopen(req, timeout=per_attempt) as r:
                     return r.read(24 * 1024 * 1024)
         except urllib.error.HTTPError as exc:
             last = exc
@@ -1406,6 +1415,8 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
     src_url = gates.candidate_image_url(qid)
     if not src_url:
         raise HTTPException(404, f"no candidate image for {qid}")
+    if not src_url.lower().startswith(("http://", "https://")):
+        raise HTTPException(502, "candidate image URL has a disallowed scheme")
 
     IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     key = hashlib.sha256(f"{qid}|{src_url}|{width}".encode()).hexdigest()[:24]
@@ -1415,10 +1426,10 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         # honours ?width= and returns ~127 KB instead of 1.7 MB, which is the
         # difference between a card that paints and one that does not.
         fetch_url = src_url
-        if "commons.wikimedia.org" in src_url and "width=" not in src_url:
+        if _COMMONS_HOST in src_url and "width=" not in src_url:
             fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
         try:
-            raw = _fetch_candidate_bytes(fetch_url)
+            raw = _fetch_candidate_bytes(fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S)
         except urllib.error.HTTPError as exc:
             # Throttling survived the retries. 503 tells the browser this is
             # temporary and worth asking for again; 502 would have it cache a
@@ -1471,7 +1482,10 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
     and must resolve inside a known root: this endpoint reads local files, so
     an unchecked path would be an arbitrary-file-read.
     """
-    store.validate_work_id(existing_wid)
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     if not VARIANT_UPGRADE_CSV.exists():
         raise HTTPException(404, "no variant upgrade candidates on file")
     raw_path = ""
@@ -2663,6 +2677,7 @@ def ratings_summary() -> dict:
 import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade endpoint)
 
 
+@functools.lru_cache(maxsize=256)
 def _image_dims(path: Path | None) -> str | None:
     """"WxH" for a local image, or None. Header read only — never the full file."""
     if path is None or not path.is_file():
@@ -2726,7 +2741,10 @@ def variant_upgrades() -> dict:
         # Megabytes are a poor proxy for image quality: a bigger file can be a
         # looser JPEG of a SMALLER picture. The question this screen asks is
         # "is the candidate better", and pixels answer it where bytes cannot.
-        c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        try:
+            c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        except HTTPException:
+            c["existing_px"] = None
         c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
     return {"candidates": candidates}
 
