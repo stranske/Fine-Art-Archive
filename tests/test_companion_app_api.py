@@ -44,13 +44,14 @@ def stub_work(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def empty_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Point every health input at an empty tree.
+    """Point every file-backed health input at an empty tree.
 
     `/healthz` reads the real works directory and the real manifest, so its verdict depends on
-    what the developer happens to have on disk. On a machine holding a populated archive with no
-    manifest.csv — which is the default, since nothing in this repository writes one — it reports
-    `ok: false` correctly, and every test asserting `ok is True` fails for a reason that has
-    nothing to do with the test.
+    what the developer happens to have on disk. The ratings log and queue directory are also
+    health inputs, so leaving either real makes the same assertion depend on unrelated local
+    corruption. On a machine holding a populated archive with no manifest.csv — which is the
+    default, since nothing in this repository writes one — it reports `ok: false` correctly, and
+    every test asserting `ok is True` fails for a reason that has nothing to do with the test.
 
     That direction is backwards: the machine with real data is the one where these tests matter
     least (its health is a fact about the data) and where they were red. Isolating the inputs
@@ -62,6 +63,11 @@ def empty_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(api_store, "WORKS", works)
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
     monkeypatch.setattr(api_store, "load_manifest", lambda: [])
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings_log.jsonl")
+    queues_dir = tmp_path / "empty-queues"
+    queues_dir.mkdir()
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+    api_store.invalidate_ratings_cache()
     return works
 
 
