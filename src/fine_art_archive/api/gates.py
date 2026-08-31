@@ -331,6 +331,17 @@ def frontier_gates(
     allow = allowlist if allowlist is not None else load_allowlisted_artists()
     cands = _candidates(data)
 
+    # A work you have already ruled on is DECIDED. It must leave every gate
+    # that asks you to rule on it, or the surface asks the same question
+    # forever and the answers look ignored — which is exactly what happened:
+    # 20 deferrals were all decided and all 20 kept being presented, because
+    # this list was built from the frontier alone and never read the record.
+    #
+    # Applied once, here, for every gate. Filtering per-gate is how three of
+    # them came to disagree about whether feedback counts.
+    ruled_on = set(load_work_decisions())
+    cands = [c for c in cands if c.get("qid") not in ruled_on]
+
     new_artist: list[dict] = []
     drainable_new = 0
     refused_artists = load_refused_artists()

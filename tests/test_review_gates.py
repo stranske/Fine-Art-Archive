@@ -402,3 +402,55 @@ def test_artist_view_orders_by_what_is_released(monkeypatch, tmp_path: Path) -> 
     )
     body = TestClient(main.app).get("/review/artists").json()
     assert [a["artist_qid"] for a in body["artists"]] == ["QBIG", "QSMALL"]
+
+
+def test_a_decided_work_leaves_every_gate(tmp_path: Path) -> None:
+    """Feedback must be honoured by ALL gates, not gate by gate.
+
+    Twenty deferrals were decided — 14 taken, 6 refused — and all twenty kept
+    being presented, because the deferral list was built from the frontier and
+    never read the decision record. Three gates had the same hole. Filtering
+    per-gate is what let them disagree about whether feedback counts, so the
+    filter is applied once for every gate and this test pins it.
+    """
+    frontier = tmp_path / "frontier.json"
+    frontier.write_text(
+        json.dumps(
+            {
+                "candidates": {
+                    "Q1": _cand("Q1", "QNEW1"),
+                    "Q2": _cand("Q2", "QHELD", status="review"),
+                    "Q3": _cand("Q3", "QHELD", deferrals=2),
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    decisions = tmp_path / "work_decisions.jsonl"
+
+    def gates_now() -> dict[str, gates.Gate]:
+        return _by_name(
+            gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set())
+        )
+
+    import fine_art_archive.api.gates as gates_module
+
+    original = gates_module.WORK_DECISIONS
+    gates_module.WORK_DECISIONS = decisions
+    try:
+        before = gates_now()
+        assert before["new_artist"].blocking == 1
+        assert before["routed_to_review"].blocking == 1
+        assert before["deferred_transfer"].blocking == 1
+
+        for qid, decision in (("Q1", "reject"), ("Q2", "keep"), ("Q3", "force")):
+            gates.append_work_decision(
+                qid, decision=decision, ts="2026-08-31T00:00:00Z", path=decisions
+            )
+
+        after = gates_now()
+        assert after["new_artist"].blocking == 0, "a refused work must leave its gate"
+        assert after["routed_to_review"].blocking == 0, "a kept work must leave its gate"
+        assert after["deferred_transfer"].blocking == 0, "a forced work must leave its gate"
+    finally:
+        gates_module.WORK_DECISIONS = original
