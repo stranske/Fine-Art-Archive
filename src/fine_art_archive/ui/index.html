@@ -1341,15 +1341,17 @@
         the current master. Accept logs intent; the actual master swap
         is gated behind a per-decision grant in <code>permissions.md</code>.</p>
         <table><thead><tr>
-          <th>Work</th><th>Current</th><th>Candidate</th><th>Ratio</th>
-          <th>Quarantined?</th><th>Decision</th><th></th>
+          <th>Work</th><th>Held now</th><th>Proposed</th><th>Current</th><th>Candidate</th>
+          <th>Ratio</th><th>Quarantined?</th><th>Decision</th><th></th>
         </tr></thead><tbody>`;
       for (const c of d.candidates) {
         const wid = c.existing_wid;
         const dec = c.decision || "—";
         html += `<tr>
-          <td><strong>${c.title}</strong> <span class="sub">(${c.artist})</span><br>
-              <span class="qid">${wid}</span></td>
+          <td><strong>${acqEsc(c.title)}</strong> <span class="sub">(${acqEsc(c.artist)})</span><br>
+              <span class="qid">${acqEsc(wid)}</span></td>
+          <td>${heldThumb(wid, 96)}</td>
+          <td>${decisionThumb(`/variant_upgrades/${encodeURIComponent(wid)}/candidate_image?max=200`, c.title, 96)}</td>
           <td>${c.existing_master_mb} MB</td>
           <td>${c.candidate_master_mb} MB</td>
           <td><span class="pill">${c.ratio}×</span></td>
@@ -1468,7 +1470,7 @@
 
       const isArtistGate = g.name === "new_artist" || g.name === "routed_to_review";
       html += `<table><thead><tr>
-        <th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
+        <th></th><th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
       </tr></thead><tbody>`;
       for (const it of g.items) {
         const ready = it.would_pass_now === false
@@ -1483,6 +1485,7 @@
           action = `<td><span class="sub">no artist Q-ID</span></td>`;
         }
         html += `<tr>
+          <td style="width:78px">${candThumb(it.id, 68)}</td>
           <td><strong>${acqEsc(it.title || it.id)}</strong>${ready}<br>
               <span class="qid">${acqEsc(it.id)}</span></td>
           <td><span class="sub">${acqEsc(it.why || "")}</span></td>
@@ -1596,6 +1599,19 @@
       const base = img.src.split("&_r=")[0];
       setTimeout(() => { img.src = `${base}&_r=${n}`; }, 700 * Math.pow(2, n - 1));
     }
+
+    // Every screen that asks for a decision must SHOW the thing being decided.
+    // These build <img> tags that go through the app's resizing/caching routes,
+    // never a raw remote original — see the approval-card fix for what raw
+    // hotlinks cost (1.7 MB into a 150 px box, then rate-limited into blanks).
+    function decisionThumb(src, alt, px) {
+      return `<img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
+        onerror="approveRetryImage(this)"
+        style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
+               background:var(--card,#f3f3f3);vertical-align:middle">`;
+    }
+    const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
+    const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
 
     function renderApproval() {
       const cur = approveQueue[approveIdx];
@@ -1714,7 +1730,7 @@
         return;
       }
       html += `<table><thead><tr>
-          <th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
+          <th></th><th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
         </tr></thead><tbody>`;
       for (const w of d.works) {
         const workId = acqEsc(w.work_id);
@@ -1727,6 +1743,7 @@
           ? `<button onclick="acqReview(${workIdJs}, true)">Undo</button>`
           : `<button onclick="acqReview(${workIdJs}, false)">Mark reviewed</button>`;
         html += `<tr>
+          <td style="width:78px">${heldThumb(w.work_id, 68)}</td>
           <td><a href="#" onclick="openWork(${workIdJs}); return false;"><strong>${acqEsc(w.title)}</strong></a>
               <span class="sub">(${acqEsc(w.artist_name)})</span><br>
               <span class="qid">${workId}</span></td>

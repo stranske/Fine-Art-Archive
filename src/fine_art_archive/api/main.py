@@ -1448,6 +1448,52 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
     )
 
 
+#: Roots a variant-upgrade candidate file may legitimately live under. The
+#: path comes from a CSV this app does not write, so it is treated as untrusted
+#: and must resolve inside one of these or it is refused.
+VARIANT_CANDIDATE_ROOTS = (
+    ART_WORKS_ROOT,
+    env_path("FAA_STAGING_ROOT", ART_WORKS_ROOT.parent / "staging_acquisitions"),
+    env_path("FAA_QUARANTINE_ROOT", ART_WORKS_ROOT.parent / "quarantine"),
+)
+
+
+@app.get("/variant_upgrades/{existing_wid}/candidate_image")
+def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
+    """The proposed replacement file, so the swap can be judged by eye.
+
+    The upgrade decision is "is this copy better than the one I hold", and the
+    view offered megabyte counts and a ratio to answer it. A number cannot show
+    that the larger file is a different crop, a colour-shifted scan, or the
+    wrong painting — which is the whole reason a person is being asked.
+
+    The path is read from the detector's CSV by work id, never from the caller,
+    and must resolve inside a known root: this endpoint reads local files, so
+    an unchecked path would be an arbitrary-file-read.
+    """
+    store.validate_work_id(existing_wid)
+    if not VARIANT_UPGRADE_CSV.exists():
+        raise HTTPException(404, "no variant upgrade candidates on file")
+    raw_path = ""
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw_path = (row.get("candidate_path") or "").strip()
+                break
+    if not raw_path:
+        raise HTTPException(404, f"no candidate file recorded for {existing_wid}")
+
+    candidate = Path(raw_path).expanduser().resolve(strict=False)
+    if not any(
+        candidate.is_relative_to(root.resolve(strict=False))
+        for root in VARIANT_CANDIDATE_ROOTS
+    ):
+        raise HTTPException(403, "candidate path is outside the permitted roots")
+    if not candidate.is_file():
+        raise HTTPException(404, "candidate file is not on disk")
+    return _serve_resized(candidate, f"variant_{existing_wid}", max)
+
+
 @app.get("/review/artists")
 def review_artists(limit: int = 500) -> dict:
     """Artists awaiting a decision, one row per ARTIST rather than per work.
