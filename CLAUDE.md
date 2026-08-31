@@ -135,7 +135,11 @@ the work unresolved.
 4. Record the result in `field_provenance.work_qid` using only schema-supported
    fields. Set `source` to `reverse_image_search`, put the search-result URL in
    `source_ref`, stamp `checked_at`, and cite the holding institution's record and
-   the Wikidata item in `note`. Use `status: available` only for a confirmed match.
+   the Wikidata item in `note`. This URL form is the manual reverse-image-search
+   contract and is recognized as already processed by `apply_lens_recovery.py`.
+   Automated Google Lens recovery instead writes `faa:google-lens/<work-qid>` to
+   `source_ref`; both forms are valid reverse-image provenance. Use `status:
+   available` only for a confirmed match.
 
 ### When it does not settle the question
 

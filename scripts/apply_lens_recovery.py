@@ -68,8 +68,17 @@ def _is_artwork(qid: str, *, client: SparqlClient) -> bool:
 
 def _already_lens(meta: dict[str, Any], field: str) -> bool:
     entry = (meta.get("field_provenance") or {}).get(field)
-    return isinstance(entry, dict) and str(entry.get("source_ref") or "").startswith(
-        LENS_REF_PREFIX
+    if not isinstance(entry, dict):
+        return False
+    source_ref = str(entry.get("source_ref") or "")
+    if source_ref.startswith(LENS_REF_PREFIX):
+        return True
+    # The operator guide records manual reverse-image research as a result URL.
+    # Treat that form as complete only when its source explicitly identifies the
+    # same research method; arbitrary URL provenance must remain eligible.
+    return (
+        entry.get("source") == "reverse_image_search"
+        and source_ref.startswith(("https://", "http://"))
     )
 
 
