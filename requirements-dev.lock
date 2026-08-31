@@ -30,7 +30,7 @@ click==8.4.2
     #   black
     #   huggingface-hub
     #   uvicorn
-coverage==7.15.4
+coverage==7.16.0
     # via pytest-cov
 fastapi==0.136.3
     # via fine-art-archive (pyproject.toml)
@@ -161,7 +161,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.4
+ruff==0.16.5
     # via fine-art-archive (pyproject.toml)
 safetensors==0.8.0
     # via transformers
