@@ -129,6 +129,38 @@ def load_allowlisted_artists(path: Path | None = None) -> set[str]:
     return out
 
 
+def load_refused_artists(path: Path | None = None) -> set[str]:
+    """Artist Q-IDs explicitly refused. Decided — not awaiting anything.
+
+    `load_allowlisted_artists` discards a refusal, which correctly keeps the
+    artist out of the approved set but loses the fact that a decision was made
+    at all. Without this the gate cannot tell "not yet considered" from
+    "considered and declined".
+    """
+    p = path or ARTIST_ALLOWLIST
+    out: set[str] = set()
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        qid = rec.get("artist_qid")
+        if not qid:
+            continue
+        if rec.get("decision") == "reject":
+            out.add(qid)
+        else:
+            out.discard(qid)
+    return out
+
+
 def append_allowlist(
     artist_qid: str,
     *,
@@ -301,9 +333,15 @@ def frontier_gates(
 
     new_artist: list[dict] = []
     drainable_new = 0
+    refused_artists = load_refused_artists()
     for c in cands:
         aq = c.get("artist_qid")
         if not aq or aq in known or aq in allow:
+            continue
+        # An artist you refused is DECIDED, not awaiting a decision. Leaving
+        # them here kept Hitler, Zárraga and Guttero in a queue labelled
+        # "waiting on you" after you had already said no to all three.
+        if aq in refused_artists:
             continue
         # Only `screened` candidates. This gate must count exactly the
         # population that approving an artist would release -- the tick's
@@ -373,7 +411,7 @@ def frontier_gates(
         rights_gate,
         Gate(
             name="new_artist",
-            label="Candidates by artists not yet in the archive",
+            label="Candidates by artists you have not decided on yet",
             blocking=len(new_artist),
             drainable=drainable_new,
             clears_by="approving the artist on this surface",
@@ -507,6 +545,7 @@ def works_awaiting_look(
     *,
     frontier_path: Path | None = None,
     decided: dict[str, str] | None = None,
+    source: str = "approved",
 ) -> list[dict[str, Any]]:
     """Screened works by approved artists that nobody has looked at yet.
 
@@ -520,15 +559,45 @@ def works_awaiting_look(
     seen = decided if decided is not None else load_work_decisions()
     out: list[dict[str, Any]] = []
     for cand in _candidates(data):
-        if cand.get("status") != "screened":
-            continue
-        if cand.get("artist_qid") not in approved_artists:
-            continue
+        # `approved` = works an artist approval released.
+        # `routed`   = works the screener sent to review. These were being
+        #              presented as ARTISTS, which cannot answer a question
+        #              asked about a picture.
+        if source == "routed":
+            if cand.get("status") != "review":
+                continue
+        else:
+            if cand.get("status") != "screened":
+                continue
+            if cand.get("artist_qid") not in approved_artists:
+                continue
         qid = cand.get("qid")
         if not qid or qid in seen:
             continue
         row = _cand_row(cand, "released by approving this artist")
         row["decision"] = None
         out.append(row)
-    out.sort(key=lambda r: (str(r.get("artist_label") or ""), str(r.get("title") or "")))
+    # Named artists first. Sorting on the raw label put every UNNAMED artist at
+    # the head of the queue, so the first cards were the ones showing a bare
+    # Q-ID — the weakest possible opening for a judgement about a painter.
+    out.sort(
+        key=lambda r: (
+            0 if r.get("artist_label") else 1,
+            str(r.get("artist_label") or r.get("artist_qid") or "~"),
+            str(r.get("title") or ""),
+        )
+    )
+    # Attach the artist's OTHER waiting works to each row. Judging one picture
+    # by a painter you do not know is easier beside the rest of what is
+    # offered, and it is the difference between "is this good" and "is this
+    # the one I want of theirs".
+    by_artist: dict[str, list[dict[str, Any]]] = {}
+    for row in out:
+        by_artist.setdefault(row.get("artist_qid") or "", []).append(row)
+    for row in out:
+        siblings = by_artist.get(row.get("artist_qid") or "", [])
+        row["artist_work_count"] = len(siblings)
+        row["artist_works"] = [
+            {"id": s["id"], "title": s["title"]} for s in siblings if s["id"] != row["id"]
+        ][:11]
     return out
