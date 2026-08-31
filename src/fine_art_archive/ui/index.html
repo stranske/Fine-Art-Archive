@@ -1443,7 +1443,9 @@
         const open = g.blocking > 0
           ? `<button onclick="${GATE_VIEW[g.name] || `loadReviewGate(${acqEsc(JSON.stringify(g.name))})`}">Open</button>`
             + (GATE_VIEW[g.name]
-                ? ` <button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})" title="plain list">list</button>`
+                ? ` <button class="sub" style="opacity:.6;font-size:11px"
+                      onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})"
+                      title="flat table, no images — not for judging pictures">table</button>`
                 : "")
           : "";
         html += `<tr>
@@ -1631,6 +1633,15 @@
           style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
                  background:var(--card,#f3f3f3);vertical-align:middle;cursor:zoom-in"></a>`;
     }
+    // Same picture, no anchor. The sibling grid wraps its thumbnails in a jump
+    // link, and an <a> inside an <a> is invalid — the browser closes the outer
+    // one, so the click would have opened the raw JPEG instead of the card.
+    function plainThumb(src, alt, px) {
+      return `<img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
+          onerror="approveRetryImage(this)"
+          style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
+                 background:var(--card,#f3f3f3);vertical-align:middle;cursor:pointer">`;
+    }
     const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
     const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
 
@@ -1701,6 +1712,67 @@
       renderWorkReview();
     }
 
+    // One card = one picture. The queue this renders is a WORK queue: keeping
+    // or refusing here never touches the painter, and the painter's other
+    // waiting pictures each get their own card. The page used to say the
+    // opposite in three places at once ("released by approving this artist",
+    // a gate whose "what clears it" read "approving the artist", and a silent
+    // grid of the artist's other works with no buttons), so it was impossible
+    // to tell whether a click decided a picture or a person.
+    function workReviewJump(qid) {
+      const i = workReviewQueue.findIndex(x => x.id === qid);
+      if (i < 0) return;
+      workReviewIdx = i;
+      renderWorkReview();
+    }
+
+    function workReviewWhy(w) {
+      const f = w.routing_flags || {};
+      const bits = [];
+      if (f.depicts && f.depicts.length) {
+        bits.push(`<li><strong>Subject flagged:</strong> ` + f.depicts.map(d => d.label
+          ? acqEsc(d.label)
+          : `<a href="https://www.wikidata.org/wiki/${acqEsc(d.qid)}" target="_blank" rel="noopener">${acqEsc(d.qid)}</a>`
+        ).join(", ") + ` — the screener will not take this on its own.</li>`);
+      }
+      if (f.near_title) {
+        // Naming the title and stopping there asks you to remember a painting.
+        // The held picture goes on the page, or the page says why it could not.
+        const nh = f.near_held || {};
+        let side = "";
+        if (nh.lookup === "unavailable") {
+          side = `<div class="sub" style="margin:6px 0">The archive could not be read, so the
+            picture you already hold is not shown here. That is a failure to look it up, not a
+            finding that nothing similar is held.</div>`;
+        } else if (nh.matches && nh.matches.length) {
+          side = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
+            ${nh.matches.map(m => `<figure style="margin:0;width:150px">
+              ${heldThumb(m.work_id, 150)}
+              <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">
+                already held · ${acqEsc(m.title || m.work_id)}</figcaption>
+            </figure>`).join("")}
+          </div>`;
+        } else if (nh.lookup === "ok") {
+          side = `<div class="sub" style="margin:6px 0">No held work by this artist actually
+            matches that title — the screener's similarity flag looks spurious here.</div>`;
+        }
+        bits.push(`<li><strong>Looks like one you already hold:</strong>
+          “${acqEsc(f.near_title)}”${f.near_score != null ? ` (title overlap ${f.near_score})` : ""}
+          — the question is whether this is the same painting.${side}</li>`);
+      }
+      if (f.ambiguous_alias) {
+        bits.push(`<li><strong>Ambiguous title:</strong> “${acqEsc(f.ambiguous_alias)}” matches
+          too many works to identify it mechanically.</li>`);
+      }
+      if (f.held_by_artist != null) {
+        bits.push(`<li>The archive already holds <strong>${f.held_by_artist}</strong> work${f.held_by_artist === 1 ? "" : "s"}
+          by this artist${f.variants != null ? `, and ${f.variants} candidate variant${f.variants === 1 ? "" : "s"} of this one exist` : ""}.</li>`);
+      }
+      if (!bits.length) return `<p class="sub">The screener recorded no reason for routing this
+        one. That is a gap in the screener, not a clean bill — judge it on the picture.</p>`;
+      return `<ul class="sub" style="margin:8px 0 0;padding-left:18px;line-height:1.5">${bits.join("")}</ul>`;
+    }
+
     function renderWorkReview() {
       const w = workReviewQueue[workReviewIdx];
       const det = showDetailPanel();
@@ -1708,40 +1780,56 @@
       const artist = w.artist_label
         ? acqEsc(w.artist_label)
         : `<span class="qid">${acqEsc(w.artist_qid || "unknown")}</span>`;
+      // An unprobed candidate has no size and no rights determination. Omitting
+      // the numbers silently would let "never measured" read as "measured and
+      // poor" — the same conflation that made a failed download look like a
+      // low-quality picture.
+      const quality = w.probed
+        ? `${w.megapixels ? ` · ${w.megapixels} MP` : ""}${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}`
+        : ` · <span title="no file has been fetched, so there is no size or rights determination yet">size not yet measured</span>`;
       det.innerHTML = `<div id="work-card">
         <button onclick="loadReview()">← All gates</button>
-        <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
-        <p class="sub">${artist}
-          ${w.megapixels ? ` · ${w.megapixels} MP` : ""}
-          ${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}
+        <p class="sub" style="margin:8px 0 0">Work ${workReviewIdx + 1} of ${workReviewQueue.length}
+          · <strong>you are deciding this one picture</strong>, not the artist — refusing it leaves
+          ${artist} approved and every other picture of theirs still on offer.</p>
+        <h2 style="margin-top:4px">${acqEsc(w.title || "untitled")}</h2>
+        <p class="sub">${artist}${quality}
           ${w.sitelinks ? ` · ${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : ""}
           ${w.generator ? ` · found by ${acqEsc(w.generator)}` : ""}
           · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
-          <span class="sub">· ${workReviewDone} decided · ${workReviewQueue.length} left</span></p>
+          · ${workReviewDone} decided</p>
         <img src="/review/candidate/${encodeURIComponent(w.id)}/image?width=1100"
              alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
              style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
                     background:var(--card,#f3f3f3);margin:10px 0">
+        <p class="sub" style="margin-top:6px"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
+           target="_blank" rel="noopener">Open larger →</a>
+           &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
+        <div style="margin-top:12px">
+          <strong style="font-size:13px">Why you are being asked</strong>
+          ${workReviewWhy(w)}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button onclick="workReviewAct('keep')"><strong>Keep this picture</strong> (K)</button>
+          <button onclick="workReviewAct('reject')">Not this picture (X)</button>
+          <button onclick="workReviewSkip(1)">Skip (S)</button>
+        </div>
         ${(w.artist_works && w.artist_works.length) ? `
-        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
-        waiting — the others:</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <p class="sub" style="margin-top:16px"><strong>${w.artist_work_count} pictures by
+        ${artist} are waiting, and each is decided on its own card</strong> — this is
+        ${w.artist_work_index} of them. Click any of the others to go to its card now; you do not
+        have to decide them together.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
           ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
-            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <a href="#" onclick="workReviewJump(${acqEsc(JSON.stringify(s.id))});return false"
+               title="Go to this picture's card">
+              ${plainThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            </a>
             <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
           </figure>`).join("")}
         </div>` : ""}
-        <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
-           target="_blank" rel="noopener">Open larger →</a>
-           &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button onclick="workReviewAct('keep')"><strong>Keep</strong> (K)</button>
-          <button onclick="workReviewAct('reject')">Not this one (X)</button>
-          <button onclick="workReviewSkip(1)">Skip (S)</button>
-        </div>
-        <p class="sub" style="margin-top:12px">Refusing a work leaves its artist approved and every
-        other work by them untouched; the tick will never propose this picture again. Skipping
-        decides nothing — an undecided work stays acquirable.</p>
+        <p class="sub" style="margin-top:12px">Skipping decides nothing — an undecided work stays
+        acquirable and comes back.</p>
       </div>`;
     }
 
