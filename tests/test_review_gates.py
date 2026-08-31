@@ -196,14 +196,37 @@ def test_known_artist_qid_cache_invalidates(monkeypatch, tmp_path: Path) -> None
     assert store.known_artist_qids() == frozenset({"Q200"})
 
 
-def test_auto_clearing_gate_is_not_reported_as_deadlocked(frontier: Path) -> None:
-    """Deferrals drain on their own, so a zero human-drain is not an alarm."""
+def test_a_deferral_is_a_human_decision_not_a_self_clearing_gate(frontier: Path) -> None:
+    """This gate used to claim no human action could clear it. That was wrong.
+
+    Measured on the live frontier: of 20 deferrals, 10 were TRANSFER failures
+    on the largest images in the pool (356 MP, 301 MP) and 8 were just under
+    the size floor — one by seven pixels, 3053 against 3060. Both are calls a
+    person makes in a second given the picture and the numbers, so reporting
+    them as "re-proposed automatically; no human action needed" hid a real
+    choice behind a reassuring label.
+    """
     g = _by_name(gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set()))
     deferred = g["deferred_transfer"]
     assert deferred.blocking == 1
-    assert deferred.drainable == 0
-    assert deferred.auto_clears is True
-    assert deferred.summary()["deadlocked"] is False
+    assert deferred.auto_clears is False
+    assert "size floor" in deferred.label or "download" in deferred.label
+
+
+def test_deferral_reasons_are_classified_not_concatenated() -> None:
+    """The three situations need different judgements, so they are separated."""
+    floor = gates.classify_deferral("below quality floor: 3053px long edge, need 3060px")
+    assert floor["kind"] == gates.DEFER_BELOW_FLOOR
+    assert floor["shortfall_px"] == 7
+    assert floor["percent_of_floor"] == 100
+
+    # "0px" is the could-not-decode sentinel, NOT a measurement of zero.
+    undecoded = gates.classify_deferral("below quality floor: 0px long edge, need 3060px")
+    assert undecoded["kind"] == gates.DEFER_UNDECODED
+
+    slow = gates.classify_deferral("throughput 25 KB/s below 50 KB/s floor over 52s")
+    assert slow["kind"] == gates.DEFER_TRANSFER
+    assert slow["got_px"] is None, "a transfer failure says nothing about pixels"
 
 
 def test_allowlist_roundtrip_and_rejection(tmp_path: Path) -> None:
@@ -248,8 +271,12 @@ def test_summary_endpoint_agrees_with_each_gate(monkeypatch, frontier: Path) -> 
     )
 
 
-def test_self_clearing_gate_never_lands_in_deadlocked_list(monkeypatch, frontier: Path) -> None:
-    """A gate that drains on its own must not raise the one real alarm."""
+def test_deferrals_report_a_real_drain(monkeypatch, frontier: Path) -> None:
+    """Below-floor and transfer failures are both clearable by a person.
+
+    Only the undecodable ones are not: those are a defect to investigate, not
+    a judgement anyone can make from the page.
+    """
     from fastapi.testclient import TestClient
 
     from fine_art_archive.api import main
@@ -260,7 +287,8 @@ def test_self_clearing_gate_never_lands_in_deadlocked_list(monkeypatch, frontier
         lambda: gates.frontier_gates({"QHELD"}, frontier_path=frontier, allowlist=set()),
     )
     body = TestClient(main.app).get("/review").json()
-    assert "deferred_transfer" not in body["deadlocked_gates"]
+    row = next(g for g in body["gates"] if g["name"] == "deferred_transfer")
+    assert row["auto_clears"] is False
 
 
 def test_rights_gate_is_unmeasured_before_the_screener_has_run(frontier: Path) -> None:

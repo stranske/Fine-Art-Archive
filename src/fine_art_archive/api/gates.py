@@ -21,6 +21,7 @@ row is always optional; the surface exists so the *option* is visible.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -174,8 +175,54 @@ def _gates_all_pass(cand: dict) -> bool:
     return all(v == "pass" for v in gates.values())
 
 
+#: The three genuinely different situations behind a "deferral", which the old
+#: single label ("deferred on image quality") described wrongly for half of
+#: them. Ten of twenty were transfer failures on the BEST images in the pool --
+#: Pastoral Concert at 356 MP, Castiglione at 301 MP -- and three were files
+#: that never decoded, reported as "0px long edge" as though measured.
+DEFER_UNDECODED = "undecoded"
+DEFER_BELOW_FLOOR = "below_floor"
+DEFER_TRANSFER = "transfer_failed"
+DEFER_OTHER = "other"
+
+
+def classify_deferral(reason: str | None) -> dict[str, Any]:
+    """What actually happened, and the numbers a person needs to judge it.
+
+    Returns the kind plus, where the reason states them, the pixels obtained
+    and the pixels required — so the page can say "7 px short of the floor"
+    instead of showing a truncated sentence.
+    """
+    text = reason or ""
+    got = need = None
+    match = re.search(r"(\d+)px long edge, need (\d+)px", text)
+    if match:
+        got, need = int(match.group(1)), int(match.group(2))
+
+    if got == 0:
+        kind = DEFER_UNDECODED
+    elif match:
+        kind = DEFER_BELOW_FLOOR
+    elif "throughput" in text or "wall-clock" in text or "timed out" in text:
+        kind = DEFER_TRANSFER
+    else:
+        kind = DEFER_OTHER
+
+    out: dict[str, Any] = {"kind": kind, "reason": text, "got_px": got, "need_px": need}
+    if kind == DEFER_BELOW_FLOOR and got and need:
+        out["shortfall_px"] = need - got
+        out["percent_of_floor"] = round(100 * got / need)
+    return out
+
+
 def _cand_row(cand: dict, why: str) -> dict[str, Any]:
     scores = cand.get("screen_scores") or {}
+    dims = scores.get("dimensions_px") or []
+    megapixels = (
+        round(dims[0] * dims[1] / 1e6, 1)
+        if len(dims) == 2 and all(isinstance(d, int) for d in dims)
+        else None
+    )
     return {
         "id": cand.get("qid", ""),
         "title": cand.get("title", ""),
@@ -189,6 +236,17 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
         "why": why,
         "status": cand.get("status", ""),
         "last_defer_reason": cand.get("last_defer_reason", ""),
+        # Evidence the decision actually needs, rather than an id and a name.
+        "megapixels": megapixels,
+        "long_edge_px": max(dims) if len(dims) == 2 else None,
+        "rights_status": scores.get("rights_status"),
+        "generator": cand.get("generator", ""),
+        "deferrals": cand.get("transfer_deferrals") or 0,
+        "deferral": (
+            classify_deferral(cand.get("last_defer_reason"))
+            if cand.get("transfer_deferrals")
+            else None
+        ),
     }
 
 
@@ -270,6 +328,15 @@ def frontier_gates(
         for c in cands
         if (c.get("transfer_deferrals") or 0) > 0 and c.get("status") != "acquired"
     ]
+    # Sort the near-misses first: those are the quickest calls to make, and the
+    # ones where a person's judgement most obviously beats a fixed threshold.
+    deferred.sort(
+        key=lambda r: -((r.get("deferral") or {}).get("percent_of_floor") or 0)
+    )
+    kinds = [(r.get("deferral") or {}).get("kind") for r in deferred]
+    n_floor = kinds.count(DEFER_BELOW_FLOOR)
+    n_transfer = kinds.count(DEFER_TRANSFER)
+    n_undecoded = kinds.count(DEFER_UNDECODED)
 
     # Candidates whose rights could not be established. Since 2026-08-29 an
     # in-copyright work may be acquired for private display, so `unclear` is no
@@ -327,17 +394,25 @@ def frontier_gates(
         ),
         Gate(
             name="deferred_transfer",
-            label="Candidates deferred on image quality",
+            label=(
+                f"Deferred: {n_floor} just under the size floor, "
+                f"{n_transfer} failed to download, {n_undecoded} would not decode"
+            ),
             blocking=len(deferred),
-            # These clear when a holder re-digitises, not by anything a person
-            # does here. Honest zero for a human drain — but the gate is not
-            # stuck, so it is flagged auto_clears rather than deadlocked.
-            drainable=0,
-            auto_clears=True,
-            clears_by="re-proposed automatically on a later tick; no human action needed",
+            # NOT auto-clearing, and the old label was wrong for half of these.
+            # Ten of twenty were transfer failures on the largest images in the
+            # pool, and the below-floor ones miss by as little as SEVEN PIXELS
+            # (Portrait of Wally, 3053 of 3060). Both are decisions a person can
+            # make in a second given the picture and the numbers, so calling it
+            # "no human action needed" was hiding a real choice.
+            drainable=n_floor + n_transfer,
+            auto_clears=False,
+            clears_by="accepting a near-miss anyway, or asking for the transfer again",
             note=(
-                "Deferrals are not sticky rejects — each is re-proposed on a later "
-                "tick. Listed so a persistent deferral is visible rather than silent."
+                "Three different situations, so judge them differently: a work just "
+                "under the floor is a size call; a transfer failure says nothing about "
+                "the image (these are the BIGGEST files in the pool); a file that would "
+                "not decode is a defect to look at, not a quality verdict."
             ),
             items=deferred,
         ),
@@ -374,7 +449,14 @@ WORK_DECISIONS = env_path("FAA_WORK_DECISIONS", REPO_ROOT / "data" / "work_decis
 
 
 def load_work_decisions(path: Path | None = None) -> dict[str, str]:
-    """work Q-ID -> "keep" | "reject". Last decision for a work wins."""
+    """work Q-ID -> "keep" | "reject" | "force". Last decision for a work wins.
+
+    `force` is the deferral override: take this work even though it sits under
+    the size floor or downloads too slowly. It exists because those thresholds
+    are blunt where a person is not — Portrait of Wally was refused for being
+    3053 px against a 3060 floor, and no fixed rule can know that seven pixels
+    do not matter for that picture.
+    """
     p = path or WORK_DECISIONS
     out: dict[str, str] = {}
     try:
@@ -390,7 +472,7 @@ def load_work_decisions(path: Path | None = None) -> dict[str, str]:
         except json.JSONDecodeError:
             continue
         qid, decision = rec.get("work_qid"), rec.get("decision")
-        if qid and decision in {"keep", "reject"}:
+        if qid and decision in {"keep", "reject", "force"}:
             out[str(qid)] = decision
     return out
 
