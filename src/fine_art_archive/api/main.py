@@ -1520,7 +1520,7 @@ def review_works(limit: int = 400) -> dict:
 
 
 class WorkDecisionIn(BaseModel):
-    decision: Literal["keep", "reject"]
+    decision: Literal["keep", "reject", "force"]
     title: str = Field(default="", max_length=300)
     note: str = Field(default="", max_length=500)
     reviewer: str = Field(default="tim", max_length=80)
@@ -1533,6 +1533,10 @@ def work_decision(work_qid: str, body: WorkDecisionIn) -> dict:
     A reject is sticky: it records that this picture was seen and refused, so
     the growth tick never proposes it again. Rejecting a work leaves the artist
     approved and every other work by them untouched.
+
+    `force` is the deferral override — acquire this one despite the size floor
+    or the throughput floor. Those thresholds are deliberately blunt; this is
+    where a person overrules them for a particular picture.
     """
     if not re.fullmatch(r"Q[1-9][0-9]{0,11}", work_qid):
         raise HTTPException(400, "work_qid must look like Q12345")
@@ -2656,6 +2660,44 @@ def ratings_summary() -> dict:
 import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade endpoint)
 
 
+def _image_dims(path: Path | None) -> str | None:
+    """"WxH" for a local image, or None. Header read only — never the full file."""
+    if path is None or not path.is_file():
+        return None
+    try:
+        from PIL import Image
+
+        Image.MAX_IMAGE_PIXELS = None
+        with Image.open(path) as im:
+            return f"{im.size[0]}x{im.size[1]}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _variant_candidate_path(existing_wid: str) -> Path | None:
+    """The proposed file for a work, from the detector CSV, or None."""
+    if not existing_wid or not VARIANT_UPGRADE_CSV.exists():
+        return None
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError:
+        return None
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw = (row.get("candidate_path") or "").strip()
+                if not raw:
+                    return None
+                cand = Path(raw).expanduser().resolve(strict=False)
+                if any(
+                    cand.is_relative_to(root.resolve(strict=False))
+                    for root in VARIANT_CANDIDATE_ROOTS
+                ):
+                    return cand
+                return None
+    return None
+
+
 @app.get("/variant_upgrades")
 def variant_upgrades() -> dict:
     if not VARIANT_UPGRADE_CSV.exists():
@@ -2678,6 +2720,11 @@ def variant_upgrades() -> dict:
         d = decisions.get(c.get("existing_wid"))  # type: ignore[arg-type]
         c["decision"] = d.get("decision") if d else None
         c["decision_ts"] = d.get("ts") if d else None
+        # Megabytes are a poor proxy for image quality: a bigger file can be a
+        # looser JPEG of a SMALLER picture. The question this screen asks is
+        # "is the candidate better", and pixels answer it where bytes cannot.
+        c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
     return {"candidates": candidates}
 
 
