@@ -1415,6 +1415,7 @@
         <strong>${d.total_drainable}</strong> of ${d.total_blocking} held items could be
         cleared today. Nothing here is a queue: growth never pauses for it and no row expires.</p>
         <p style="margin:10px 0"><button onclick="loadApproval()"><strong>Approve artists →</strong></button>
+        <button onclick="loadWorkReview()"><strong>Review works →</strong></button>
         <span class="sub">one decision per artist, keyboard-driven — clears the two artist gates together</span></p>
         <table><thead><tr>
           <th>Gate</th><th>Holding</th><th>You can clear</th><th>What clears it</th><th></th>
@@ -1612,6 +1613,99 @@
     }
     const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
     const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
+
+    // ----- per-WORK review: keep the painter, drop the picture -----
+    // Approving an artist released 555 works across 98 painters. Artist-level
+    // consent cannot say "this one, not that one", so this screen is where a
+    // single picture is refused without refusing whoever painted it.
+    let workReviewQueue = [];
+    let workReviewIdx = 0;
+    let workReviewDone = 0;
+
+    async function loadWorkReview() {
+      const r = await fetch("/review/works?limit=400");
+      const det = showDetailPanel();
+      if (!det) return;
+      if (!r.ok) { det.innerHTML = `<h2>Review works</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
+      const d = await r.json();
+      workReviewQueue = d.works || [];
+      workReviewIdx = 0; workReviewDone = 0;
+      if (!workReviewQueue.length) {
+        det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>Review works</h2>
+          <p class="sub">Nothing waiting. Every work released by an approved artist has been
+          looked at (${d.already_decided} decided, ${d.already_rejected} refused).</p>`;
+        return;
+      }
+      renderWorkReview();
+      if (!window._workReviewKeys) { window._workReviewKeys = true; document.addEventListener("keydown", workReviewKey); }
+    }
+
+    function workReviewKey(ev) {
+      if (!workReviewQueue.length || !document.getElementById("work-card")) return;
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      const k = ev.key.toLowerCase();
+      if (k === "k") { ev.preventDefault(); workReviewAct("keep"); }
+      else if (k === "x") { ev.preventDefault(); workReviewAct("reject"); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); workReviewSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); workReviewSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); loadReview(); }
+    }
+
+    function workReviewSkip(delta) {
+      if (!workReviewQueue.length) return;
+      workReviewIdx = (workReviewIdx + delta + workReviewQueue.length) % workReviewQueue.length;
+      renderWorkReview();
+    }
+
+    async function workReviewAct(decision) {
+      const cur = workReviewQueue[workReviewIdx];
+      if (!cur) return;
+      const r = await fetch(`/review/works/${encodeURIComponent(cur.id)}/decision`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({decision: decision, title: cur.title || ""})
+      });
+      if (!r.ok) { alert(`Could not record that (${r.status}).`); return; }
+      workReviewQueue.splice(workReviewIdx, 1);
+      workReviewDone += 1;
+      if (workReviewIdx >= workReviewQueue.length) workReviewIdx = 0;
+      if (!workReviewQueue.length) {
+        const det = showDetailPanel();
+        if (det) det.innerHTML = `<button onclick="loadReview()">← All gates</button>
+          <h2>All done</h2><p class="sub">${workReviewDone} work${workReviewDone === 1 ? "" : "s"} decided.</p>`;
+        return;
+      }
+      renderWorkReview();
+    }
+
+    function renderWorkReview() {
+      const w = workReviewQueue[workReviewIdx];
+      const det = showDetailPanel();
+      if (!det || !w) return;
+      const artist = w.artist_label
+        ? acqEsc(w.artist_label)
+        : `<span class="qid">${acqEsc(w.artist_qid || "unknown")}</span>`;
+      det.innerHTML = `<div id="work-card">
+        <button onclick="loadReview()">← All gates</button>
+        <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
+        <p class="sub">${artist}
+          ${w.sitelinks ? ` · ${w.sitelinks} language${w.sitelinks === 1 ? "" : "s"}` : ""}
+          · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
+          <span class="sub">· ${workReviewDone} decided · ${workReviewQueue.length} left</span></p>
+        <img src="/review/candidate/${encodeURIComponent(w.id)}/image?width=1100"
+             alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
+             style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
+                    background:var(--card,#f3f3f3);margin:10px 0">
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button onclick="workReviewAct('keep')"><strong>Keep</strong> (K)</button>
+          <button onclick="workReviewAct('reject')">Not this one (X)</button>
+          <button onclick="workReviewSkip(1)">Skip (S)</button>
+        </div>
+        <p class="sub" style="margin-top:12px">Refusing a work leaves its artist approved and every
+        other work by them untouched; the tick will never propose this picture again. Skipping
+        decides nothing — an undecided work stays acquirable.</p>
+      </div>`;
+    }
 
     function renderApproval() {
       const cur = approveQueue[approveIdx];
