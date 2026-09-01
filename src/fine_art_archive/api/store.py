@@ -165,7 +165,8 @@ def _matches_query(row: dict, ql: str) -> bool:
     # Also try a folded-name comparison so accent / spelling variants hit
     from fine_art_archive.identity.artist_resolver import fold_name
 
-    if ql in fold_name(raw_artist) or (cname and ql in fold_name(cname)):
+    qf = fold_name(ql)
+    if qf and (qf in fold_name(raw_artist) or (cname and qf in fold_name(cname))):
         return True
     # Finally, an alias the curated table maps to the same artist as this row.
     query_q, _ = _resolve_cached(ql)

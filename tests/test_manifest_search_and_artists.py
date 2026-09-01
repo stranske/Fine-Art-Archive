@@ -71,7 +71,6 @@ def test_the_manifest_is_reread_when_it_changes(manifest):
 
     with open(path, "a", encoding="utf-8", newline="") as handle:
         csv.writer(handle).writerow(["w2", "Second", "Rembrandt"])
-    api_store.invalidate_manifest_cache()
 
     assert len(api_store.load_manifest()) == 2
 
@@ -154,6 +153,13 @@ def test_a_curated_accented_name_is_found_either_way(manifest):
 def test_an_accented_query_still_finds_the_work(manifest):
     """The reverse direction: the accent is typed and the stored name has it too."""
     manifest(_row("w1", "Breton Women", "Émile Bernard"))
+
+    assert _ids(api_store.list_works(q="émile")) == ["w1"]
+
+
+def test_an_accented_query_finds_an_uncurated_unaccented_name(manifest):
+    """Fold the query too; this painter has no curated alias to hide a one-sided fold."""
+    manifest(_row("w1", "Breton Women", "Emile Bernard"))
 
     assert _ids(api_store.list_works(q="émile")) == ["w1"]
 
@@ -289,15 +295,16 @@ def test_an_offset_past_the_end_is_an_empty_page_with_a_real_total(manifest):
 def test_the_filter_is_applied_before_the_page_is_cut(manifest):
     """Paginating first and filtering after would show a half-empty page and a wrong total."""
     manifest(
-        _row("w1", "Night Watch", "Rembrandt"),
         _row("w2", "The Hunters", "Pieter Bruegel the Elder"),
+        _row("w1", "Night Watch", "Rembrandt"),
         _row("w3", "Self Portrait", "Rembrandt"),
     )
 
-    result = api_store.list_works(q="rembrandt", limit=10)
+    result = api_store.list_works(q="rembrandt", limit=1)
 
     assert result["total"] == 2
-    assert _ids(result) == ["w1", "w3"]
+    assert _ids(result) == ["w1"]
+    assert _ids(api_store.list_works(q="rembrandt", limit=1, offset=1)) == ["w3"]
 
 
 def test_each_row_carries_its_canonical_identity(manifest):
@@ -398,9 +405,11 @@ def test_artists_are_ordered_by_work_count(manifest):
         _row("w3", "C", "Pieter Bruegel the Elder"),
     )
 
-    counts = [artist["n_works"] for artist in api_store.list_artists()]
+    artists = api_store.list_artists()
+    counts = [artist["n_works"] for artist in artists]
 
-    assert counts == sorted(counts, reverse=True)
+    assert counts == [2, 1]
+    assert artists[0]["canonical_q"] == "Q5598"
 
 
 def test_a_blank_artist_is_skipped_rather_than_listed(manifest):

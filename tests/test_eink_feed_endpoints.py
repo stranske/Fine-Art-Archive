@@ -339,7 +339,8 @@ def test_each_index_serves_its_own_work(client, archive):
     second = client.get(f"/feed/{playlist['id']}/image/1")
 
     assert first.status_code == second.status_code == 200
-    assert first.headers["X-Work-Id"] != second.headers["X-Work-Id"]
+    assert first.headers["X-Work-Id"] == "aaa1111-first-work-here"
+    assert second.headers["X-Work-Id"] == "bbb2222-second-work-ok"
 
 
 # ---------------------------------------------------------------------------------------------
