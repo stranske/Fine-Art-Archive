@@ -257,7 +257,10 @@ def test_a_row_with_a_blank_path_is_a_404(client, roots, monkeypatch):
     )
     _csv_rows(roots, (_WID, "   "))
 
-    assert client.get(f"/variant_upgrades/{_WID}/candidate_image").status_code == 404
+    response = client.get(f"/variant_upgrades/{_WID}/candidate_image")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"no candidate file recorded for {_WID}"
 
 
 def test_the_listing_helper_refuses_a_blank_path_for_the_same_reason(roots, monkeypatch):
@@ -278,6 +281,7 @@ def test_a_permitted_path_that_is_not_on_disk_is_a_404(client, roots):
 
     assert response.status_code == 404
     assert "not on disk" in response.json()["detail"]
+    assert api_main._variant_candidate_path(_WID) is None
 
 
 def test_a_directory_inside_a_permitted_root_is_not_served_as_a_file(client, roots):
@@ -285,6 +289,7 @@ def test_a_directory_inside_a_permitted_root_is_not_served_as_a_file(client, roo
     _csv_rows(roots, (_WID, str(roots["art"] / _WID)))
 
     assert client.get(f"/variant_upgrades/{_WID}/candidate_image").status_code == 404
+    assert api_main._variant_candidate_path(_WID) is None
 
 
 def test_the_listing_helper_is_quiet_about_every_malformed_input(roots):

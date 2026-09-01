@@ -2714,7 +2714,7 @@ def _variant_candidate_path(existing_wid: str) -> Path | None:
                     cand.is_relative_to(root.resolve(strict=False))
                     for root in VARIANT_CANDIDATE_ROOTS
                 ):
-                    return cand
+                    return cand if cand.is_file() else None
                 return None
     return None
 
