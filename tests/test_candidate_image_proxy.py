@@ -33,9 +33,16 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def cache_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Per-test image cache, so one test's stored rendition is not another's cache hit."""
+    """Per-test image cache, so one test's stored rendition is not another's cache hit.
+
+    AUTOUSE deliberately. The first version of this file applied it only to the tests that
+    obviously needed it, and the ones without it wrote renditions into the repository's real
+    `data/image_cache` — where they then served as cache hits, so a test asserting "exactly one
+    fetch happened" saw zero and failed on the SECOND run of the suite but not the first. An
+    opt-in isolation fixture is one an author can forget; this one cannot be.
+    """
     cache = tmp_path / "image_cache"
     monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", cache)
     return cache
