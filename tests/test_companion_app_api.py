@@ -49,9 +49,10 @@ def empty_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     `/healthz` reads the real works directory and the real manifest, so its verdict depends on
     what the developer happens to have on disk. The ratings log and queue directory are also
     health inputs, so leaving either real makes the same assertion depend on unrelated local
-    corruption. On a machine holding a populated archive with no manifest.csv — which is the
-    default, since nothing in this repository writes one — it reports `ok: false` correctly, and
-    every test asserting `ok is True` fails for a reason that has nothing to do with the test.
+    corruption. On a machine holding a populated archive with no manifest.csv — the default
+    until `scripts/build_manifest.py` existed, and still the state whenever the works tree has
+    grown since the last rebuild — it reports `ok: false` correctly, and every test asserting
+    `ok is True` fails for a reason that has nothing to do with the test.
 
     That direction is backwards: the machine with real data is the one where these tests matter
     least (its health is a fact about the data) and where they were red. Isolating the inputs
@@ -144,7 +145,16 @@ def test_vendored_htmx_is_served(client: TestClient) -> None:
     assert b"htmx" in r.content[:200]
 
 
-def test_works_list_empty_shape(client: TestClient) -> None:
+def test_works_list_empty_shape(client: TestClient, empty_archive: Path) -> None:
+    """The `/works` envelope with nothing to list.
+
+    Isolated for the same reason `empty_archive` isolates health: this asserted
+    an empty list while reading the developer's real manifest, and passed only
+    because no manifest existed anywhere. Once `scripts/build_manifest.py` gave
+    the repo one, it failed locally against 3499 real works and would have kept
+    passing in CI, where there is no archive — a green suite hiding a test that
+    asserts a fact about the machine rather than about the endpoint.
+    """
     r = client.get("/works")
     assert r.status_code == 200
     body = r.json()

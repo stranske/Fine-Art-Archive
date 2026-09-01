@@ -26,5 +26,17 @@ if ! python -c "import uvicorn" >/dev/null 2>&1; then
   exit 1
 fi
 
+# Rebuild the navigation index before serving. manifest.csv is the ONLY way the
+# UI reaches a work, and promotion into Art/works/ happens outside this repo, so
+# between two launches the archive can have grown by any number of works this
+# process would otherwise never list. A full rebuild is ~1 s over 3499 works, so
+# there is nothing to save by skipping it.
+#
+# Deliberately non-fatal: a failure here must not cost you the app. /healthz
+# reports the resulting drift, and names this command as the remedy.
+if ! python scripts/build_manifest.py; then
+  echo "manifest rebuild failed; starting anyway — see /healthz for drift" >&2
+fi
+
 echo "Companion App → http://${HOST}:${PORT}/"
 exec python -m uvicorn fine_art_archive.api.main:app --host "$HOST" --port "$PORT" "$@"

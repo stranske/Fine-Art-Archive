@@ -1,13 +1,15 @@
 """`/healthz` must not report ok:true while the operator UI is blind.
 
 Audit finding 37 (2026-08-08). `manifest.csv` is the Companion App's only
-navigation path, and nothing regenerates it when a work is promoted. On
-2026-08-05 that left 18 promoted works servable and renderable but unfindable —
-browse showed 3393 against 3411 on disk — while `/healthz` reported `ok: true`
-throughout, because `ok` only ever considered ratings and queues.
+navigation path, and until 2026-09-01 nothing regenerated it when a work was
+promoted. On 2026-08-05 that left 18 promoted works servable and renderable but
+unfindable — browse showed 3393 against 3411 on disk — while `/healthz` reported
+`ok: true` throughout, because `ok` only ever considered ratings and queues.
 
 That absence is *why* the gap went unnoticed, so the regression these tests
 guard is "health is silent about drift", not "drift exists".
+`scripts/build_manifest.py` is now the producer that clears the drift; see
+`tests/test_build_manifest.py`.
 """
 
 from __future__ import annotations
@@ -102,8 +104,10 @@ def test_empty_manifest_over_populated_archive_is_not_healthy(archive, client: T
     ``ok: false``. Health was non-monotonic in the severity of the condition
     it exists to detect, and the total-loss case was the silent one.
 
-    Nothing in this repository writes ``manifest.csv``, so this is the state a
-    fresh deployment against a real works tree starts in — not a hypothetical.
+    Nothing in this repository wrote ``manifest.csv`` until 2026-09-01, so this
+    is the state a fresh deployment against a real works tree started in — not a
+    hypothetical. It is still the state a deployment reaches whenever the works
+    tree grows and nobody reruns the generator.
     """
     archive(sidecars=3411, manifest_rows=0)
     body = client.get("/healthz").json()
@@ -111,6 +115,24 @@ def test_empty_manifest_over_populated_archive_is_not_healthy(archive, client: T
     assert body["sidecar_works"] == 3411
     assert body["manifest_drift"] == -3411
     assert body["ok"] is False, "an empty manifest over a populated tree is total navigation loss"
+
+
+def test_drift_arrives_with_the_command_that_clears_it(archive, client: TestClient) -> None:
+    """A gate that cannot say what would clear it is defective, however accurate.
+
+    ``manifest_drift`` sat at a correct, unexplained negative number for weeks
+    while the file had no producer at all. The number alone cannot distinguish
+    "behind" from "unfixable", so health names the producer beside it.
+    """
+    archive(sidecars=11, manifest_rows=8)
+    drifted = client.get("/healthz").json()
+    assert drifted["ok"] is False
+    assert drifted["manifest_remedy"] == api_main.MANIFEST_REBUILD_COMMAND
+
+    archive(sidecars=11, manifest_rows=11)
+    healthy = client.get("/healthz").json()
+    assert healthy["ok"] is True
+    assert healthy["manifest_remedy"] is None, "a healthy manifest needs no remedy"
 
 
 def test_unreadable_tree_is_unknown_not_empty(

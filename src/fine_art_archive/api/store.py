@@ -357,13 +357,36 @@ def invalidate_acquisitions_cache() -> None:
 _artist_qid_cache: dict[str, Any] = {"sig": None, "qids": frozenset()}
 
 
+def artist_qid(meta: dict) -> str | None:
+    """The artist Q-ID a sidecar carries, or None when it carries none.
+
+    Prefers the resolver's canonical Q-ID and falls back to the raw one, so an
+    artist whose name is spelled two ways still resolves to a single Q-ID.
+
+    Shared by `known_artist_qids()` and `scripts/build_manifest.py` so the
+    screener's idea of which Q-ID a work carries cannot drift from the one the
+    manifest publishes to the UI.
+    """
+    artist = meta.get("artist")
+    if not isinstance(artist, dict):
+        return None
+    canonical = artist.get("canonical")
+    canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
+    raw_qid = artist.get("wikidata_q")
+    qid = (
+        canonical_qid
+        if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
+        else raw_qid
+    )
+    return qid if isinstance(qid, str) and _QID_RE.fullmatch(qid) else None
+
+
 def known_artist_qids() -> frozenset[str]:
     """Artist Q-IDs the archive already holds at least one work by.
 
     Read from sidecars rather than the manifest because this set decides what
     the acquisition screener treats as "already represented", and the screener
-    reads sidecars. Prefers the resolver's canonical Q-ID, falling back to the
-    raw one, so an artist whose name is spelled two ways still counts once.
+    reads sidecars.
     """
     sig = _dossier_signature()
     if _artist_qid_cache["sig"] == sig:
@@ -377,18 +400,8 @@ def known_artist_qids() -> frozenset[str]:
             continue
         if not isinstance(meta, dict):
             continue
-        artist = meta.get("artist")
-        if not isinstance(artist, dict):
-            continue
-        canonical = artist.get("canonical")
-        canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
-        raw_qid = artist.get("wikidata_q")
-        qid = (
-            canonical_qid
-            if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
-            else raw_qid
-        )
-        if isinstance(qid, str) and _QID_RE.fullmatch(qid):
+        qid = artist_qid(meta)
+        if qid is not None:
             qids.add(qid)
     frozen = frozenset(qids)
     _artist_qid_cache["sig"] = sig
