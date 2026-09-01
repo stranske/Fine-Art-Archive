@@ -136,9 +136,24 @@ def invalidate_manifest_cache() -> None:
 
 
 def _matches_query(row: dict, ql: str) -> bool:
-    """Search match. Includes raw title + raw artist_name + the
-    canonical artist name + the canonical family_key. That last one is
-    what makes searching 'Brueghel' return all 40 'Bruegel' works too."""
+    """Search match over the title and every name the archive knows for the artist.
+
+    Four passes, widening: the raw title, the raw `artist_name`, the canonical display
+    name, and a folded comparison of both so accents do not have to be typed (`durer`
+    finds `Dürer`).
+
+    The last pass resolves the QUERY through the same curated alias table the rows go
+    through, and matches when both land on the same Wikidata Q-ID. Without it, a name
+    this repository explicitly asserts is the same painter finds nothing: `CURATED_ALIASES`
+    lists `Pieter Brueghel` and `Pieter Bruegel I` under Q43270, the works are catalogued
+    as `Pieter Bruegel the Elder` under Q43270, and searching either alias returned an
+    empty archive because no substring of one appears in the other.
+
+    This cannot over-match. It fires only where the curated table already says two
+    spellings are one person, so it unifies exactly the variants somebody chose to
+    record — and a bare surname like `Brueghel`, which resolves to nothing, still
+    matches nothing.
+    """
     raw_artist = row.get("artist_name", "") or ""
     cq, cname = _resolve_cached(raw_artist)
     if ql in (row.get("title", "") or "").lower():
@@ -150,7 +165,12 @@ def _matches_query(row: dict, ql: str) -> bool:
     # Also try a folded-name comparison so accent / spelling variants hit
     from fine_art_archive.identity.artist_resolver import fold_name
 
-    return bool(ql in fold_name(raw_artist) or (cname and ql in fold_name(cname)))
+    qf = fold_name(ql)
+    if qf and (qf in fold_name(raw_artist) or (cname and qf in fold_name(cname))):
+        return True
+    # Finally, an alias the curated table maps to the same artist as this row.
+    query_q, _ = _resolve_cached(ql)
+    return bool(query_q and cq and query_q == cq)
 
 
 def list_works(
