@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import glob
 import json
+import math
+import os
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -161,6 +163,8 @@ def load_refused_artists(path: Path | None = None) -> set[str]:
     """
     _, refused = _artist_decisions(path)
     return refused
+
+
 def append_allowlist(
     artist_qid: str,
     *,
@@ -284,6 +288,11 @@ def _held_by_artist_index() -> dict[str, list[dict[str, str]]] | None:
     try:
         from fine_art_archive.api import store
 
+        # glob silently converts an unreadable root into an empty result.  Probe
+        # the root first so an unavailable comparison is never presented as an
+        # empty archive.
+        with os.scandir(store.WORKS):
+            pass
         paths = sorted(glob.glob(str(store.WORKS / "*/meta.json")))
     except Exception:  # noqa: BLE001 - any failure here means "cannot compare"
         return None
@@ -360,7 +369,7 @@ def routing_flags(cand: dict) -> dict[str, Any]:
     if near:
         out["near_title"] = str(near)
         score = sc.get("fuzzy_jaccard")
-        if isinstance(score, (int, float)):
+        if isinstance(score, (int, float)) and math.isfinite(score):
             out["near_score"] = round(float(score), 3)
     alias = sc.get("ambiguous_short_alias")
     if alias:

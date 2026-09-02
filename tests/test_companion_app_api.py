@@ -239,7 +239,7 @@ def test_invalid_queue_returns_partial_list_handled_detail_and_health_signal(
     # queues (the autonomous-acquisitions rating queue), which are not on disk
     # and correctly appear whatever this temp directory contains — pinning the
     # whole list would make this test fail on an unrelated, correct change.
-    file_queues = [q for q in list_body["queues"] if q["key"] in {"valid", "broken"}]
+    file_queues = [q for q in list_body["queues"] if q["key"] in {"valid", "bad"}]
     assert file_queues == [{"name": "Valid", "key": "valid", "description": "ok", "n_works": 1}]
     assert list_body["queues_invalid_count"] == 1
     assert list_body["invalid_queues"][0]["error"] == expected_error

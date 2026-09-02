@@ -591,7 +591,6 @@ def test_work_decision_removes_work_from_next_response(monkeypatch, tmp_path: Pa
         gates_module.ARTIST_ALLOWLIST = orig_allowlist
 
 
-
 # --------------------------------------------------------------------------
 # The routed queue asks about PICTURES, and must say so
 # --------------------------------------------------------------------------
@@ -653,13 +652,21 @@ def test_an_unnamed_depicts_flag_is_still_reported() -> None:
 
 
 def test_unreadable_archive_is_reported_not_shown_as_nothing_similar() -> None:
-    """"Could not look it up" and "nothing similar is held" are opposite
+    """ "Could not look it up" and "nothing similar is held" are opposite
     answers to "is this the painting you already have"."""
     assert gates.held_lookalikes("QA", "a title", None) == {"lookup": "unavailable"}
     ok = gates.held_lookalikes(
         "QA",
         "virgin and child with the young saint john",
-        {"QA": [{"id": "w1", "title": "Virgin and Child with the Young Saint John", "norm": "virgin and child with the young saint john"}]},
+        {
+            "QA": [
+                {
+                    "id": "w1",
+                    "title": "Virgin and Child with the Young Saint John",
+                    "norm": "virgin and child with the young saint john",
+                }
+            ]
+        },
     )
     assert ok["lookup"] == "ok"
     assert ok["matches"][0]["work_id"] == "w1"
@@ -671,6 +678,22 @@ def test_empty_held_archive_is_a_valid_empty_index(monkeypatch: pytest.MonkeyPat
     index = gates._held_by_artist_index()
     assert index == {}
     assert gates.held_lookalikes("QA", "a title", index) == {"lookup": "ok", "matches": []}
+
+
+def test_unreadable_held_archive_is_not_reported_as_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    def unreadable(_path):
+        raise PermissionError("archive root unavailable")
+
+    monkeypatch.setattr(gates.os, "scandir", unreadable)
+    assert gates._held_by_artist_index() is None
+
+
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_near_score_is_omitted(score: float) -> None:
+    flags = gates.routing_flags(
+        {"screen_scores": {"fuzzy_against": "Held work", "fuzzy_jaccard": score}}
+    )
+    assert "near_score" not in flags
 
 
 def test_review_rows_do_not_repeat_artist_siblings_in_the_api_payload(tmp_path: Path) -> None:

@@ -2303,11 +2303,16 @@
     async function acqAct(undo) {
       const cur = acqQueue[acqIdx];
       if (!cur) return;
-      const r = await fetch(`/works/${encodeURIComponent(cur.work_id)}/acquisition_review`, {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({undo: !!undo, note: ""}),
-      });
-      if (!r.ok) { toast("failed: " + r.status); return; }
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(cur.work_id)}/acquisition_review`, {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({undo: !!undo, note: ""}),
+        });
+        if (!r.ok) { toast("failed: " + r.status); return; }
+      } catch (e) { toast("could not save review"); return; }
+      if (acqMeta && typeof acqMeta.unreviewed === "number") {
+        acqMeta.unreviewed = Math.max(0, acqMeta.unreviewed + (undo ? 1 : -1));
+      }
       refreshAcqBadge();
       acqDone += 1;
       if (acqFilter === "no") {
@@ -2463,12 +2468,14 @@
     }
 
     async function upgradeDecide(wid, decision) {
-      const r = await fetch(`/variant_upgrades/${encodeURIComponent(wid)}/decision`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({decision, note: ""}),
-      });
-      if (!r.ok) { toast("failed: " + r.status); return; }
+      try {
+        const r = await fetch(`/variant_upgrades/${encodeURIComponent(wid)}/decision`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({decision, note: ""}),
+        });
+        if (!r.ok) { toast("failed: " + r.status); return; }
+      } catch (e) { toast("could not save decision"); return; }
       toast(`${decision} logged for ${String(wid).slice(0, 7)}…`);
       // Record it on the row and move on. Reloading the whole list snapped
       // back to the first candidate after every decision, which on a queue is

@@ -19,6 +19,7 @@ one was last complained about.
 from __future__ import annotations
 
 import re
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -110,7 +111,9 @@ def test_a_truncated_jpeg_is_reported_as_truncated(tmp_path: Path) -> None:
     """Three acquired masters in this archive are truncated. Their headers
     still report full dimensions, so every list showed them as normal."""
     p = tmp_path / "master.jpeg"
-    p.write_bytes(_jpeg_bytes()[:-400])
+    complete = _jpeg_bytes()
+    assert len(complete) > 200, "fixture too small to truncate meaningfully"
+    p.write_bytes(complete[: len(complete) // 2])
     assert store._master_health(p) == "truncated"
 
 
@@ -166,6 +169,26 @@ def test_a_work_with_no_master_reports_unmeasured_not_zero(tmp_path: Path) -> No
     assert ev["file_health"] == "unchecked"
 
 
+def test_acquisition_evidence_survives_master_removal_during_stat(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    master = tmp_path / "master.jpeg"
+    master.write_bytes(_jpeg_bytes())
+    original_stat = Path.stat
+
+    def disappearing_stat(path: Path, *args, **kwargs):
+        if path == master:
+            raise OSError("master removed")
+        return original_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(store, "_find_master", lambda _work_dir: master)
+    monkeypatch.setattr(store, "_image_pixels", lambda _path: None)
+    monkeypatch.setattr(Path, "stat", disappearing_stat)
+    ev = store._acquisition_evidence({}, tmp_path)
+    assert ev["master_mb"] is None
+    assert ev["file_health"] == "unchecked"
+
+
 # --------------------------------------------------------------------------
 # What the card must actually put on the page
 # --------------------------------------------------------------------------
@@ -184,7 +207,9 @@ def test_a_work_with_no_master_reports_unmeasured_not_zero(tmp_path: Path) -> No
         ("renderApproval", "does not acquire anything now"),
     ],
 )
-def test_each_card_shows_the_picture_and_states_its_scope(page: str, card: str, needle: str) -> None:
+def test_each_card_shows_the_picture_and_states_its_scope(
+    page: str, card: str, needle: str
+) -> None:
     start = page.index(f"function {card}(")
     body = page[start : start + 9000]
     assert needle in body, f"{card} is missing {needle!r}"
@@ -196,12 +221,15 @@ def test_no_judgement_card_nests_an_anchor_inside_an_anchor(page: str) -> None:
     for card in ("renderWorkReview", "renderAcquisition", "renderUpgrade", "renderApproval"):
         start = page.index(f"function {card}(")
         body = page[start : start + 9000]
-        assert "<a" not in body or "plainThumb" in body or "decisionThumb" not in body, card
+        nested = re.search(r"<a\b[^>]*>(?:(?!</a>).)*?decisionThumb\(", body, re.S)
+        assert not nested, f"{card} nests decisionThumb inside an anchor"
 
 
 def test_review_cards_guard_all_external_evidence_links(page: str) -> None:
     """Escaping an href preserves a javascript: scheme; safeHref rejects it."""
-    review = page[page.index("function renderWorkReview(") : page.index("function renderAcquisition(")]
+    review = page[
+        page.index("function renderWorkReview(") : page.index("function renderAcquisition(")
+    ]
     acquisition_start = page.index("function acqEvidence(")
     acquisition = page[acquisition_start : page.index("function renderAcquisition(")]
     assert "safeHref(w.image_url)" in review
@@ -255,9 +283,7 @@ def test_unrated_acquisitions_come_first(monkeypatch) -> None:
         {"work_id": "unrated-newest", "acquired_at": "2026-08-30T00:00:00+00:00"},
     ]
     monkeypatch.setattr(main.store, "acquisitions_since_epoch", lambda *a, **k: rows)
-    monkeypatch.setattr(
-        main.store, "count_ratings_for", lambda wid: 3 if wid == "rated-old" else 0
-    )
+    monkeypatch.setattr(main.store, "count_ratings_for", lambda wid: 3 if wid == "rated-old" else 0)
     got = main._dynamic_queue("autonomous-acquisitions")["work_ids"]
     assert got == ["unrated-newest", "unrated-older", "rated-old"], got
 
@@ -312,7 +338,6 @@ def test_the_inline_script_is_syntactically_valid(page: str) -> None:
     import re
     import shutil
     import subprocess
-    import tempfile
 
     node = shutil.which("node")
     if node is None:  # pragma: no cover - depends on the host
@@ -325,6 +350,9 @@ def test_the_inline_script_is_syntactically_valid(page: str) -> None:
             continue
         with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as fh:
             fh.write(block)
-            path = fh.name
-        result = subprocess.run([node, "--check", path], capture_output=True, text=True)
+            path = Path(fh.name)
+        try:
+            result = subprocess.run([node, "--check", path], capture_output=True, text=True)
+        finally:
+            path.unlink(missing_ok=True)
         assert result.returncode == 0, f"script block {i} does not parse:\n{result.stderr}"

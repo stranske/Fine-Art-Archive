@@ -337,31 +337,20 @@ def _image_pixels(path: Path) -> tuple[int, int] | None:
 
 
 def _master_health(path: Path) -> str:
-    """"ok" | "truncated" | "unchecked" for an archived master.
+    """ "ok" | "truncated" | "unchecked" for an archived master.
 
-    Two stages, because either alone gives a wrong answer:
-
-    * The cheap tell is a JPEG's end-of-image marker. It is not proof -- one
-      master in this archive (Rousseau, *The Dream*) is missing it and decodes
-      perfectly. Reporting on that alone would have told you a working picture
-      was broken.
-    * So a file that fails the cheap test is DECODED to confirm. That is
-      expensive, which is why it runs only on the handful that fail, not on
-      every master.
+    A JPEG marker pair is only a cheap hint: a marker-only file is not an
+    image, while a master missing its final marker can still decode perfectly.
+    Decode every readable master so both cases receive the truthful result.
 
     "unchecked" is returned when neither stage could run, and is never
     collapsed into "ok" -- not looking is not a clean bill.
     """
     try:
         with open(path, "rb") as fh:
-            head = fh.read(2)
-            fh.seek(-2, 2)
-            tail = fh.read(2)
+            fh.read(1)
     except OSError:
         return "unchecked"
-
-    if head == b"\xff\xd8" and tail == b"\xff\xd9":
-        return "ok"
 
     try:
         import warnings
@@ -378,7 +367,7 @@ def _master_health(path: Path) -> str:
 
 
 def master_health(work_id: str) -> str:
-    """"ok" | "truncated" | "unchecked" for a work's archived master."""
+    """ "ok" | "truncated" | "unchecked" for a work's archived master."""
     try:
         work_dir = contained_work_path(WORKS, work_id)
     except (ValueError, OSError):
@@ -401,7 +390,14 @@ def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
     holder = meta.get("holder") or {}
     master = _find_master(work_dir)
     px = _image_pixels(master) if master else None
-    size_mb = round(master.stat().st_size / 1e6, 1) if master else None
+    stat_failed = False
+    try:
+        size_mb = round(master.stat().st_size / 1e6, 1) if master else None
+    except OSError:
+        # A master can disappear after _find_master() but before we assemble
+        # its evidence. Keep the row useful and make the uncertainty explicit.
+        size_mb = None
+        stat_failed = True
     return {
         "holder_name": holder.get("name") or "",
         "source": prov.get("source") or "",
@@ -419,7 +415,7 @@ def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
         "master_mb": size_mb,
         # "ok" | "truncated" | "unchecked". Never collapse the last into the
         # first: not looking is not a clean bill.
-        "file_health": _master_health(master) if master else "unchecked",
+        "file_health": _master_health(master) if master and not stat_failed else "unchecked",
     }
 
 
