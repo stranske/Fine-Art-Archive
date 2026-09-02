@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "faa-companion",
-      "runtimeExecutable": "/Users/teacher/.faa-venv/bin/python3",
-      "runtimeArgs": ["-m", "uvicorn", "fine_art_archive.api.main:app", "--host", "127.0.0.1", "--port", "8931"],
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "export FAA_STAGING_ROOT=\"${FAA_STAGING_ROOT:-$HOME/Library/CloudStorage/Dropbox/Pictures/Claude Project/staging_acquisitions}\" FAA_APP_PORT=8931 PATH=\"${FAA_VENV_BIN:-$HOME/.faa-venv/bin}:$PATH\"; exec ./scripts/run_companion_app.sh"
+      ],
       "port": 8931
     }
   ]
