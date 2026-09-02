@@ -209,19 +209,28 @@ different TITLE convince you a work is absent: the same David was invisible to a
 Empress", and Rembrandt's *Moses Smashing the Tablets* is held as *Moses Breaking the Tablets of
 the Law*. Search on artist plus subject words, then confirm identity on the identifiers.
 
-### The staleness trap — a "no match" is not a negative result
+### The coverage trap — a "no match" is not a negative result
 
-`visual_find_in_unindexed.py` defaults to `Art/Others Photos/` and reads a cached index
-(`dinov2_unindexed_index.json`). **The archive reorg emptied that directory: as of 2026-09-01 all
-725 cached entries point at paths that no longer exist, and the default search covers 0 files.**
-A tool that cannot see the library returns exactly the same answer as a library that does not
-contain the work.
+**"Searched the library, no match" is only a finding if the number of files searched was
+non-zero.** A tool that cannot see the library answers exactly like a library that does not hold
+the work. Record which roots were searched and how many files each contributed, every time.
 
-So before trusting a "not found": confirm the search actually looked at files that exist — check
-the index entry count against what resolves on disk, or pass `--dirs` explicitly as above. Record
-which locations were searched and how many files each contributed. "Searched the library, no
-match" is only a finding if the number of files searched was non-zero. See the standing rule that
-a check narrower than its own claim is a defect report, not a negative result.
+`visual_find_in_unindexed.py` globs its `--dirs` live (it does **not** consult a cached index).
+Its default pointed at `Art/Others Photos/` until 2026-09-02; the reorg had emptied that directory
+and moved its ~697 Meural exports to `Archive/references/meural/`, so every default run scanned
+zero files. The default now covers both roots, prints per-directory coverage, and **exits 2 with
+`SEARCHED NOTHING` rather than reporting an empty result** — a distinct code from 1 ("could not
+embed the reference"), so a caller cannot confuse them.
+
+Two embedding banks are separately stale, and they fail differently:
+
+| Bank | State (2026-09-02) | Consequence |
+|---|---|---|
+| `dinov2_embed_cache.npz` (`Art/works/`) | 3,411 embeddings vs 3,507 works on disk | The newest ~96 works are invisible to `promote_acquisitions.py --visual-gate`, so a duplicate of a recent acquisition is not caught. Rebuild before trusting that gate. |
+| `dinov2_unindexed_cache.npz` (Meural set) | 725 embeddings, 0 of their recorded paths resolve | The **vectors are still valid**, so detection works; only the reported filenames are stale and point into the pre-reorg tree. A hit here is real — go looking for the file under its new root. |
+
+Rebuild with `build_unindexed_embed_cache.py` / `embed_cache_maintenance.py`. See the standing
+rule that a check narrower than its own claim is a defect report, not a negative result.
 
 ## Useful References
 
