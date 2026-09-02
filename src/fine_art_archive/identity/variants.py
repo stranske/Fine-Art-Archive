@@ -220,10 +220,17 @@ class VariantLinks:
         a sidecar listing its own ``work_id``. Nothing can inherit from itself,
         so this is a defect in the link, not in the identity.
     ``ambiguous``
-        A lists B and B lists A. A 2026-08-09 pass wrote entries in the
-        direction opposite to today's, so several pairs now claim each other.
-        Whoever wrote the entry does not settle which file is the crop, and
-        guessing would strip the Q-ID from the authoritative capture.
+        A lists B and B lists A, and NO other sidecar claims them one-way. A
+        2026-08-09 pass wrote entries in the direction opposite to today's, so
+        several pairs now claim each other. Whoever wrote the entry does not
+        settle which file is the crop, and guessing would strip the Q-ID from
+        the authoritative capture.
+
+        Ambiguity is a property of the PAIR. A sidecar caught in a mutual pair
+        is still an unambiguous holding of any THIRD sidecar that lists it
+        one-way, and is recorded in ``holdings`` on that basis -- see
+        :func:`variant_links`. Treating it as globally ambiguous meant a master
+        could not own the crops it had just been acquired for.
 
     They are NOT barred alike, and the difference is deliberate.
 
@@ -342,10 +349,28 @@ def variant_links(metas: Iterable[Mapping[str, Any]]) -> VariantLinks:
     holdings: dict[str, VariantHolding] = {}
     ambiguous: set[str] = set()
     for held, owners in edges.items():
-        if any(held in [o for o, _role in edges.get(owner, [])] for owner, _role in owners):
+        # Ambiguity is a property of a PAIR, not of a sidecar. "A lists B and B
+        # lists A" leaves that pair unsettled, but it says nothing about a
+        # third sidecar's one-way claim on B -- and until 2026-09-02 one mutual
+        # edge discarded every other owner, so an unambiguous master could not
+        # own its own crop.
+        #
+        # Live instance: the Tintoretto and Van Gogh crops each list their
+        # sibling (mutual, genuinely unsettled between the two of them) and are
+        # each listed one-way by the full-frame master acquired for them. All
+        # four landed in `ambiguous`, so `holdings` never learned who owned
+        # them -- which meant clearing the redundant work Q-ID off a crop would
+        # have left it resolvable by nothing, the failure that kept
+        # e7bc13e-estuary-at-day-s-end-vlieger unidentifiable for twelve days.
+        unambiguous = [
+            (owner, role)
+            for owner, role in owners
+            if held not in [other for other, _r in edges.get(owner, [])]
+        ]
+        if not unambiguous:
             ambiguous.add(held)
             continue
-        owner, role = owners[0]
+        owner, role = unambiguous[0]
         holdings[held] = VariantHolding(work_id=held, owner_work_id=owner, role=role)
 
     return VariantLinks(

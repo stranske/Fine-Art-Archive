@@ -394,3 +394,54 @@ class TestSelfReferenceIsNotBarred:
         assert "Both are still barred" not in doc
         assert "``ambiguous`` IS barred by" in doc
         assert "``self_referential`` is NOT barred." in doc
+
+
+class TestAmbiguityIsAPropertyOfThePair:
+    """A mutual pair does not make its members unownable by a third sidecar.
+
+    The real shape, 2026-09-02: two complementary crops list each other (mutual,
+    genuinely unsettled between the two of them) and a newly acquired full-frame
+    master lists each of them one-way. Before this, one mutual edge discarded
+    every other owner, so `holdings` never learned the master owned them — and
+    clearing the redundant work Q-ID off a crop would have left it resolvable by
+    nothing at all.
+    """
+
+    def _meta(self, work_id: str, variants: list[dict]) -> dict:
+        return {
+            "work_id": work_id,
+            "files": {"variants": variants},
+        }
+
+    def _crop_of(self, target: str) -> dict:
+        return {"rel_path": f"works/{target}/master.jpeg", "role": "partial-crop"}
+
+    def _metas(self) -> list[dict]:
+        return [
+            self._meta("ccccccc-master", [self._crop_of("aaaaaaa-left"),
+                                          self._crop_of("bbbbbbb-right")]),
+            self._meta("aaaaaaa-left", [self._crop_of("bbbbbbb-right")]),
+            self._meta("bbbbbbb-right", [self._crop_of("aaaaaaa-left")]),
+        ]
+
+    def test_the_one_way_owner_wins_over_the_mutual_sibling(self) -> None:
+        links = variant_links(self._metas())
+        assert links.holdings["aaaaaaa-left"].owner_work_id == "ccccccc-master"
+        assert links.holdings["bbbbbbb-right"].owner_work_id == "ccccccc-master"
+        assert links.ambiguous == frozenset()
+
+    def test_a_resolved_holding_is_still_barred_from_a_work_qid(self) -> None:
+        """Resolving the owner must not make a crop eligible to hold identity."""
+        links = variant_links(self._metas())
+        for crop in ("aaaaaaa-left", "bbbbbbb-right"):
+            assert not links.may_hold_work_qid(crop)
+            assert links.exclusion_reason(crop) == "variant-holding"
+
+    def test_a_bare_mutual_pair_is_still_ambiguous(self) -> None:
+        """With no third claimant there is still nothing to settle the pair."""
+        links = variant_links([
+            self._meta("aaaaaaa-left", [self._crop_of("bbbbbbb-right")]),
+            self._meta("bbbbbbb-right", [self._crop_of("aaaaaaa-left")]),
+        ])
+        assert links.ambiguous == frozenset({"aaaaaaa-left", "bbbbbbb-right"})
+        assert links.holdings == {}
