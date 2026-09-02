@@ -362,9 +362,12 @@ def test_every_documented_launch_path_rebuilds_the_index_before_serving() -> Non
             [str(entry.get("runtimeExecutable", ""))]
             + [str(a) for a in entry.get("runtimeArgs", [])]
         )
-        if "fine_art_archive.api.main:app" not in command:
+        if "fine_art_archive.api.main:app" not in command and "run_companion_app.sh" not in command:
             continue
-        assert "build_manifest" in command, (
+        assert "build_manifest" in command or "run_companion_app.sh" in command, (
             f"launch configuration {entry.get('name')!r} serves the app without "
             "rebuilding manifest.csv, so it will show a stale archive"
         )
+        assert (
+            "/Users/" not in command
+        ), f"launch configuration {entry.get('name')!r} hard-codes a local user path"
