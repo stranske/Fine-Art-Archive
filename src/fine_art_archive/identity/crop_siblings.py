@@ -181,17 +181,22 @@ def crop_sibling_groups(metas: Iterable[Mapping[str, Any]]) -> list[CropSiblingG
             continue
         declared = {str(m.get("work_id")): _partial_crop_targets(m) for m in members}
 
-        # Every member must name at least one other member, and every member
-        # must be named by at least one other. That is mutual declaration
-        # without requiring a complete graph, so a three-crop work works too.
-        named_by_someone: set[str] = set()
+        # Every declared in-group link must be reciprocated. A complete graph
+        # is unnecessary (a three-crop work may be a chain), but a directed
+        # cycle cannot prove that any pair is mutually complementary.
+        reciprocal: dict[str, set[str]] = {}
         for owner, targets in declared.items():
-            in_group = {t for t in targets if t in ids and t != owner}
+            in_group = {target for target in targets if target in ids and target != owner}
             if not in_group:
-                named_by_someone = set()
+                reciprocal = {}
                 break
-            named_by_someone |= in_group
-        if named_by_someone != ids:
+            reciprocal[owner] = {
+                target for target in in_group if owner in declared.get(target, {})
+            }
+            if reciprocal[owner] != in_group:
+                reciprocal = {}
+                break
+        if not reciprocal or set(reciprocal) != ids:
             continue
 
         positions: dict[str, str | None] = {}
@@ -248,7 +253,7 @@ def measure_lateral_overlap(
     width = min(a.shape[1], b.shape[1])
     aligned = float((norm(a[:, :width]) * norm(b[:, :width])).mean())
 
-    strip = max(8, int(width * strip_fraction))
+    strip = min(width, max(1, int(width * strip_fraction)))
     span = width - strip
 
     def locate(needle: Any, haystack: Any) -> tuple[float, int]:

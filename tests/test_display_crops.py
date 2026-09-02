@@ -152,6 +152,18 @@ class TestPairsThatAreGenuinelyRedundant:
         assert v.protected and not v.safe_to_dedupe
         assert "complementary crops" in " ".join(v.reasons)
 
+    def test_non_finite_content_correlation_needs_review(self) -> None:
+        v = classify_pair(
+            16 / 9,
+            12 * MB,
+            (1600, 900),
+            16 / 9,
+            12 * MB,
+            (1600, 900),
+            content_correlation=float("nan"),
+        )
+        assert v.verdict == "needs_review"
+
     def test_identical_dimensions_off_any_display_aspect(self) -> None:
         v = classify_pair(4 / 3, 10 * MB, (4000, 3000), 4 / 3, 6 * MB, (4000, 3000))
         assert v.safe_to_dedupe

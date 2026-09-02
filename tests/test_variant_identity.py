@@ -97,6 +97,13 @@ def test_complementary_crops_are_never_eligible_for_clearing() -> None:
     assert not any("clear" in f.recommended_action for f in findings)
 
 
+def test_complementary_flag_does_not_hide_conflicting_qids() -> None:
+    finding = classify_variant_identity(
+        _meta("owner", "Q1"), _meta("holding", "Q2"), complementary=True
+    )
+    assert finding.verdict is VariantIdentityVerdict.QID_CONFLICT
+
+
 def test_a_master_and_its_single_crop_is_still_clearable() -> None:
     """The narrowing must not disarm the genuine master-plus-crop cleanup."""
     from fine_art_archive.identity.variant_identity import (

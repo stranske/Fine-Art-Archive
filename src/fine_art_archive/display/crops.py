@@ -27,6 +27,7 @@ its 16:9 crop are *supposed* to look alike.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 #: The display aspects Tim actually targets. A file sitting exactly on one of
@@ -50,7 +51,7 @@ MEURAL_CAP_BYTES = 20 * 1024 * 1024
 #: Aligned image correlation at or above which two files of identical geometry
 #: are the same framing at two qualities. Below it they show different parts of
 #: the work. Kept in step with
-#: ``fine_art_archive.identity.crop_siblings.SAME_CONTENT_MIN_NCC``.
+#: ``fine_art_archive.identity.crop_siblings.SAME_CONTENT_MIN_CORRELATION``.
 SAME_CONTENT_MIN_CORRELATION = 0.98
 
 #: Roles as written into `files.variants[].role` by `link_display_crops.py`.
@@ -187,6 +188,12 @@ def classify_pair(
                     "that is one rendition at two qualities OR two complementary "
                     "crops for the same panel, which geometry cannot tell apart; "
                     "measure content correlation before calling either redundant"
+                )
+                return CropVerdict(True, "needs_review", reasons)
+            if not math.isfinite(content_correlation):
+                reasons.append(
+                    "content correlation is not finite — measure again before "
+                    "deduplication"
                 )
                 return CropVerdict(True, "needs_review", reasons)
             if content_correlation < SAME_CONTENT_MIN_CORRELATION:

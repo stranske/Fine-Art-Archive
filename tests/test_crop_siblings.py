@@ -109,6 +109,15 @@ class TestWhatMustNotBeExcused:
         ]
         assert crop_sibling_groups(metas) == []
 
+    def test_a_directed_cycle_is_not_a_crop_sibling_group(self) -> None:
+        """A cycle lacks the reciprocal pair evidence needed to excuse a Q-ID."""
+        metas = [
+            _meta("aaa-work", "Q1", [_crop("bbb-work", "left")]),
+            _meta("bbb-work", "Q1", [_crop("ccc-work", "centre")]),
+            _meta("ccc-work", "Q1", [_crop("aaa-work", "right")]),
+        ]
+        assert crop_sibling_groups(metas) == []
+
     def test_a_different_role_is_not_a_partial_crop(self) -> None:
         """`duplicate-copy` means the opposite thing and must not be excused."""
         metas = [
@@ -155,7 +164,7 @@ class TestTheMeasurement:
     """`measure_lateral_overlap` needs real pixels; these cover its contract."""
 
     def test_missing_imaging_libraries_raise_rather_than_verdict(self) -> None:
-        """ "Could not measure" must never be readable as "measured, they differ"."""
+        """Could not measure must never be readable as measured and different."""
         pytest.importorskip("numpy")
         pytest.importorskip("PIL")
         from fine_art_archive.identity.crop_siblings import measure_lateral_overlap
@@ -178,6 +187,24 @@ class TestTheMeasurement:
         )
         assert crops.complementary
         assert not crops.same_content
+
+    def test_measurement_returns_numeric_scores_for_real_images(self, tmp_path) -> None:
+        """Valid images exercise the locate path rather than only its error path."""
+        pytest.importorskip("numpy")
+        pillow = pytest.importorskip("PIL.Image")
+        import numpy as np
+
+        from fine_art_archive.identity.crop_siblings import measure_lateral_overlap
+
+        panorama = np.tile(np.arange(120, dtype=np.uint8), (40, 1))
+        left_path = tmp_path / "left.png"
+        right_path = tmp_path / "right.png"
+        pillow.fromarray(panorama[:, :80]).save(left_path)
+        pillow.fromarray(panorama[:, 40:]).save(right_path)
+
+        result = measure_lateral_overlap(left_path, right_path, height=40)
+        assert isinstance(result.best_ncc, float)
+        assert result.best_ncc <= 1.0
 
 
 class TestTheCalibration:

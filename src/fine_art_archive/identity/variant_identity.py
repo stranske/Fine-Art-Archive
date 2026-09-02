@@ -82,7 +82,7 @@ def classify_variant_identity(
     owner_qid = work_qid_of(owner)
     holding_qid = work_qid_of(holding)
 
-    if complementary:
+    if complementary and owner_qid is not None and owner_qid == holding_qid:
         verdict = VariantIdentityVerdict.COMPLEMENTARY_CROP
         action = (
             "preserve BOTH: complementary crops of one work, no master among "
