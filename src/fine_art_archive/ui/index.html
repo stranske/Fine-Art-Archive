@@ -1836,10 +1836,13 @@
       renderWorkReview();
     }
 
+    // A sitelinks value may arrive as a count or as the object it was counted
+    // from; both must render as a number of languages.
     function slCount(v) {
       if (typeof v === "number") return v;
       if (v && typeof v === "object") return Object.keys(v).length;
       return 0;
+    }
 
     // One card = one picture. The queue this renders is a WORK queue: keeping
     // or refusing here never touches the painter, and the painter's other

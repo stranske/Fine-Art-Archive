@@ -273,3 +273,40 @@ def test_the_rating_view_says_when_the_file_will_not_open(page: str) -> None:
     """Otherwise it asks for a judgement on a broken-image icon."""
     assert 'data._file_health === "truncated"' in page
     assert "Do not rate this one down" in page
+
+
+# --------------------------------------------------------------------------
+# The page's script must actually parse
+# --------------------------------------------------------------------------
+def test_the_inline_script_is_syntactically_valid(page: str) -> None:
+    """A single unbalanced brace silently disables EVERY control on the page.
+
+    This is not hypothetical. Merging main into the review work spliced a block
+    between `slCount`'s opening brace and its closing one; the whole 146 KB
+    script then failed to evaluate, so no card, no gate and no rating control
+    existed at all — and every test in this file still passed, because they all
+    read the HTML as text. The browser reported one line:
+
+        Uncaught SyntaxError: Unexpected end of input
+
+    Grepping for a string proves the string is present, not that the code runs.
+    """
+    import re
+    import shutil
+    import subprocess
+    import tempfile
+
+    node = shutil.which("node")
+    if node is None:  # pragma: no cover - depends on the host
+        pytest.skip("node not available to parse the inline script")
+
+    blocks = re.findall(r"<script[^>]*>(.*?)</script>", page, re.S)
+    assert blocks, "no inline script found — the page is served from this file"
+    for i, block in enumerate(sorted(blocks, key=len, reverse=True)):
+        if len(block.strip()) < 200:
+            continue
+        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as fh:
+            fh.write(block)
+            path = fh.name
+        result = subprocess.run([node, "--check", path], capture_output=True, text=True)
+        assert result.returncode == 0, f"script block {i} does not parse:\n{result.stderr}"
