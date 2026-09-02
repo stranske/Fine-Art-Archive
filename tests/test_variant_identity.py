@@ -87,8 +87,10 @@ def test_complementary_crops_are_never_eligible_for_clearing() -> None:
         }
 
     findings = classify_variant_links(
-        [meta("0777183-loaves", "7c89c9a-loaves", "right"),
-         meta("7c89c9a-loaves", "0777183-loaves", "left")]
+        [
+            meta("0777183-loaves", "7c89c9a-loaves", "right"),
+            meta("7c89c9a-loaves", "0777183-loaves", "left"),
+        ]
     )
     assert len(findings) == 2
     assert {f.verdict for f in findings} == {VariantIdentityVerdict.COMPLEMENTARY_CROP}
@@ -106,9 +108,7 @@ def test_a_master_and_its_single_crop_is_still_clearable() -> None:
         "work_id": "aaa-master",
         "stable_identifiers": {"wikidata_q": "Q1"},
         "files": {
-            "variants": [
-                {"rel_path": "works/bbb-crop/master.jpeg", "role": "landscape-crop"}
-            ]
+            "variants": [{"rel_path": "works/bbb-crop/master.jpeg", "role": "landscape-crop"}]
         },
     }
     holding = {"work_id": "bbb-crop", "stable_identifiers": {"wikidata_q": "Q1"}}

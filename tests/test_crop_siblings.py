@@ -90,9 +90,7 @@ class TestRecognisingTheGroup:
             _meta("0777183-loaves", TINTORETTO, [_crop("7c89c9a-loaves", "right")]),
             _meta("7c89c9a-loaves", TINTORETTO, [_crop("0777183-loaves", "left")]),
         ]
-        assert crop_sibling_work_ids(metas) == frozenset(
-            {"0777183-loaves", "7c89c9a-loaves"}
-        )
+        assert crop_sibling_work_ids(metas) == frozenset({"0777183-loaves", "7c89c9a-loaves"})
 
 
 class TestWhatMustNotBeExcused:
@@ -157,7 +155,7 @@ class TestTheMeasurement:
     """`measure_lateral_overlap` needs real pixels; these cover its contract."""
 
     def test_missing_imaging_libraries_raise_rather_than_verdict(self) -> None:
-        """"Could not measure" must never be readable as "measured, they differ"."""
+        """ "Could not measure" must never be readable as "measured, they differ"."""
         pytest.importorskip("numpy")
         pytest.importorskip("PIL")
         from fine_art_archive.identity.crop_siblings import measure_lateral_overlap
@@ -169,13 +167,15 @@ class TestTheMeasurement:
         """A high best-match alone is not enough — a re-encode also matches high."""
         from fine_art_archive.identity.crop_siblings import LateralOverlap
 
-        reencode = LateralOverlap(aligned_ncc=0.995, best_ncc=0.995, shift_fraction=0.0,
-                                  ordering=None)
+        reencode = LateralOverlap(
+            aligned_ncc=0.995, best_ncc=0.995, shift_fraction=0.0, ordering=None
+        )
         assert reencode.same_content
         assert not reencode.complementary
 
-        crops = LateralOverlap(aligned_ncc=-0.17, best_ncc=0.982, shift_fraction=0.33,
-                               ordering="a-left")
+        crops = LateralOverlap(
+            aligned_ncc=-0.17, best_ncc=0.982, shift_fraction=0.33, ordering="a-left"
+        )
         assert crops.complementary
         assert not crops.same_content
 
@@ -194,8 +194,8 @@ class TestTheCalibration:
     def test_the_first_draft_threshold_would_have_rejected_a_true_pair(self) -> None:
         """Guards the specific mistake: deriving this from the sameness bound."""
         from fine_art_archive.identity.crop_siblings import (
-            SAME_CONTENT_MIN_CORRELATION,
             OVERLAP_MIN_NCC,
+            SAME_CONTENT_MIN_CORRELATION,
         )
 
         assert OVERLAP_MIN_NCC < SAME_CONTENT_MIN_CORRELATION - 0.03

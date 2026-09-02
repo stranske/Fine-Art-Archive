@@ -132,9 +132,7 @@ def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCo
     )
 
     crop_sibling_qids = sum(
-        1
-        for group in crop_sibling_groups(materialized)
-        if len(holders.get(group.work_qid, ())) > 1
+        1 for group in crop_sibling_groups(materialized) if len(holders.get(group.work_qid, ())) > 1
     )
 
     return WorkQidCollisionMeasures(

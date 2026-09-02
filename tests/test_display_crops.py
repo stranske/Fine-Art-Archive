@@ -115,7 +115,12 @@ class TestPairsThatAreGenuinelyRedundant:
         decide on is shared with the complementary-crop case below.
         """
         v = classify_pair(
-            16 / 9, 298 * MB, (29294, 16478), 16 / 9, 297 * MB, (29294, 16478),
+            16 / 9,
+            298 * MB,
+            (29294, 16478),
+            16 / 9,
+            297 * MB,
+            (29294, 16478),
             content_correlation=0.998,
         )
         assert v.safe_to_dedupe and not v.protected
@@ -136,7 +141,12 @@ class TestPairsThatAreGenuinelyRedundant:
     def test_low_content_correlation_protects_complementary_crops(self) -> None:
         """The measured Van Gogh pair: identical geometry, different content."""
         v = classify_pair(
-            9 / 16, 12 * MB, (2013, 3579), 9 / 16, 12 * MB, (2013, 3579),
+            9 / 16,
+            12 * MB,
+            (2013, 3579),
+            9 / 16,
+            12 * MB,
+            (2013, 3579),
             content_correlation=-0.168,
         )
         assert v.protected and not v.safe_to_dedupe
