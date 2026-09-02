@@ -109,9 +109,60 @@ class TestPairsThatMustBeProtected:
 
 class TestPairsThatAreGenuinelyRedundant:
     def test_identical_dimensions_at_the_same_display_aspect(self) -> None:
-        """Same rendition, two JPEG qualities — the real Third of May case."""
-        v = classify_pair(16 / 9, 298 * MB, (29294, 16478), 16 / 9, 297 * MB, (29294, 16478))
+        """Same rendition, two JPEG qualities — the real Third of May case.
+
+        Now requires the content evidence, because the geometry it used to
+        decide on is shared with the complementary-crop case below.
+        """
+        v = classify_pair(
+            16 / 9,
+            298 * MB,
+            (29294, 16478),
+            16 / 9,
+            297 * MB,
+            (29294, 16478),
+            content_correlation=0.998,
+        )
         assert v.safe_to_dedupe and not v.protected
+
+    def test_identical_display_geometry_alone_is_no_longer_enough(self) -> None:
+        """Without the pixels, this shape has two explanations — so it is review.
+
+        The regression this guards: `classify_pair` returned `redundant` for the
+        real Van Gogh *Garden of the Asylum* pair (2013x3579 twice, 11.72 vs
+        11.75 MB), which are two COMPLEMENTARY crops. The module written to stop
+        display crops being deleted would have greenlit deleting one.
+        """
+        v = classify_pair(9 / 16, 12 * MB, (2013, 3579), 9 / 16, 12 * MB, (2013, 3579))
+        assert not v.safe_to_dedupe
+        assert v.verdict == "needs_review"
+        assert "geometry cannot tell apart" in " ".join(v.reasons)
+
+    def test_low_content_correlation_protects_complementary_crops(self) -> None:
+        """The measured Van Gogh pair: identical geometry, different content."""
+        v = classify_pair(
+            9 / 16,
+            12 * MB,
+            (2013, 3579),
+            9 / 16,
+            12 * MB,
+            (2013, 3579),
+            content_correlation=-0.168,
+        )
+        assert v.protected and not v.safe_to_dedupe
+        assert "complementary crops" in " ".join(v.reasons)
+
+    def test_non_finite_content_correlation_needs_review(self) -> None:
+        v = classify_pair(
+            16 / 9,
+            12 * MB,
+            (1600, 900),
+            16 / 9,
+            12 * MB,
+            (1600, 900),
+            content_correlation=float("nan"),
+        )
+        assert v.verdict == "needs_review"
 
     def test_identical_dimensions_off_any_display_aspect(self) -> None:
         v = classify_pair(4 / 3, 10 * MB, (4000, 3000), 4 / 3, 6 * MB, (4000, 3000))

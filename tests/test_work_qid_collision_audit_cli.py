@@ -29,12 +29,16 @@ def _write_meta(root: Path) -> Path:
 
 
 def test_audit_report_has_fixed_schema_version(tmp_path: Path) -> None:
+    """Bumped to 2 when `crop_sibling_qids`/`actionable_qids` joined the measures.
+
+    Consumers pin this, so it moves only with a deliberate contract change.
+    """
     root = tmp_path / "works"
     _write_meta(root)
 
     payload = _load_audit_module().report(root)
 
-    assert payload["report_schema_version"] == 1
+    assert payload["report_schema_version"] == 2
 
 
 def test_audit_script_cli_emits_versioned_json(tmp_path: Path, monkeypatch, capsys) -> None:
@@ -46,8 +50,12 @@ def test_audit_script_cli_emits_versioned_json(tmp_path: Path, monkeypatch, caps
     assert module.main() == 0
 
     payload = json.loads(capsys.readouterr().out)
-    assert payload["report_schema_version"] == 1
+    assert payload["report_schema_version"] == 2
     assert payload["measures"]["valid_work_qid"] == 1
+    # A review surface must be able to read the drainable count and the list it
+    # goes with, in the same payload as the blocking total.
+    assert payload["measures"]["actionable_qids"] == 0
+    assert payload["actionable_offenders"] == {}
 
 
 def test_audit_fails_for_unreadable_sidecar(tmp_path: Path, monkeypatch) -> None:

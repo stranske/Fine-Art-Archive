@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from fine_art_archive.identity.work_qid_collision_audit import (
+    actionable_offenders,
     measure_work_qid_collisions,
     worst_offenders,
 )
@@ -36,6 +37,79 @@ def _meta(
         "history": [{"ts": "2026-08-24T00:00:00Z", "actor": "test", "op": "ingested"}],
         "stable_identifiers": {"wikidata_q": qid},
     }
+
+
+def test_complementary_crops_are_counted_but_not_actionable() -> None:
+    """The total keeps #591 honest; the drainable count is what can reach zero.
+
+    Both Tintoretto crops depict Q19904859, so both correctly carry it. Reported
+    as an outstanding defect it is a gate with no exit — 2 blocking, 0 drainable
+    — which is how the same pair reached the owner five weeks running.
+    """
+    crops = [
+        _meta(
+            "0777183-loaves",
+            "Q19904859",
+            variants=[
+                {
+                    "rel_path": "works/7c89c9a-loaves/master.jpeg",
+                    "role": "partial-crop",
+                    "crop_position": "right",
+                }
+            ],
+        ),
+        _meta(
+            "7c89c9a-loaves",
+            "Q19904859",
+            variants=[
+                {
+                    "rel_path": "works/0777183-loaves/master.jpeg",
+                    "role": "partial-crop",
+                    "crop_position": "left",
+                }
+            ],
+        ),
+    ]
+    measures = measure_work_qid_collisions(crops)
+    assert measures.qids_on_multiple == 1, "the total must still see it (#591)"
+    assert measures.crop_sibling_qids == 1
+    assert measures.actionable_qids == 0, "nothing here is fixable, so nothing is owed"
+    assert actionable_offenders(crops) == {}
+
+
+def test_a_real_duplicate_stays_actionable_beside_a_crop_pair() -> None:
+    """The excuse must be narrow: only the declared crop group drops out."""
+    metas = [
+        _meta(
+            "0777183-loaves",
+            "Q19904859",
+            variants=[
+                {
+                    "rel_path": "works/7c89c9a-loaves/master.jpeg",
+                    "role": "partial-crop",
+                    "crop_position": "right",
+                }
+            ],
+        ),
+        _meta(
+            "7c89c9a-loaves",
+            "Q19904859",
+            variants=[
+                {
+                    "rel_path": "works/0777183-loaves/master.jpeg",
+                    "role": "partial-crop",
+                    "crop_position": "left",
+                }
+            ],
+        ),
+        _meta("aaa-dupe", "Q999"),
+        _meta("bbb-dupe", "Q999"),
+    ]
+    measures = measure_work_qid_collisions(metas)
+    assert measures.qids_on_multiple == 2
+    assert measures.crop_sibling_qids == 1
+    assert measures.actionable_qids == 1
+    assert set(actionable_offenders(metas)) == {"Q999"}
 
 
 def test_mutual_variant_pair_is_counted_as_a_collision() -> None:

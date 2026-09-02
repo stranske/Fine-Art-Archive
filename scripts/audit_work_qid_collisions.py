@@ -14,12 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
+    actionable_offenders,
     measure_work_qid_collisions,
     measures_as_dict,
     worst_offenders,
 )
 
-REPORT_SCHEMA_VERSION = 1
+REPORT_SCHEMA_VERSION = 2
 
 
 def load_sidecars(root: Path) -> list[dict[str, Any]]:
@@ -46,6 +47,10 @@ def report(root: Path) -> dict[str, Any]:
         "sidecar_root": str(root),
         "measures": measures_as_dict(measures),
         "worst_offenders": worst_offenders(metas),
+        # What a review surface must read. `worst_offenders` lists every shared
+        # Q-ID including the complementary-crop groups, which are correct and
+        # have nothing to decide; this drops those.
+        "actionable_offenders": actionable_offenders(metas),
     }
 
 
