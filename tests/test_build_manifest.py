@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
+from scripts import build_manifest  # noqa: E402
 from scripts.build_manifest import COLUMNS, build, main  # noqa: E402
 
 from fine_art_archive.api import store  # noqa: E402
@@ -274,6 +275,29 @@ def test_unreadable_works_root_does_not_truncate_the_manifest(works: Path, tmp_p
 
     assert main(["--works-root", str(tmp_path / "gone"), "--out", str(manifest)]) == 2
     assert manifest.read_bytes() == good
+
+
+def test_unlistable_works_root_exits_rather_than_crashing(
+    works: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A root that exists but cannot be LISTED is still "cannot measure".
+
+    `is_dir()` is true and `os.scandir()` then raises -- a permission denial, or
+    a cloud-sync mount that has evicted the tree, which is the likely shape on
+    this archive's volume. main() caught only NotADirectoryError, so this exact
+    case produced a traceback instead of the exit 2 the docstring promises, and
+    a caller reading the exit code could not tell it apart from a crash.
+    """
+    manifest = tmp_path / "manifest.csv"
+    assert main(["--works-root", str(works), "--out", str(manifest)]) == 0
+    good = manifest.read_bytes()
+
+    def deny(_path: object) -> object:
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(build_manifest.os, "scandir", deny)
+    assert main(["--works-root", str(works), "--out", str(manifest)]) == 2
+    assert manifest.read_bytes() == good, "an unlistable root must not rewrite the manifest"
 
 
 def test_generated_manifest_drives_the_real_consumers(

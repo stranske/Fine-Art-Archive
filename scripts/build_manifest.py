@@ -131,10 +131,11 @@ def build(works_root: Path) -> BuildResult:
     file byte for byte and a real change diffs to just that change.
 
     A sidecar that cannot be read is named and skipped, never raised: one
-    corrupt file must not cost navigation to the other 3498. A missing or
-    unreadable `works_root` is the opposite case and does raise, because
-    "cannot measure the tree" is not "the tree is empty" -- treating it as
-    empty would truncate a good manifest to nothing.
+    corrupt file must not cost navigation to the other 3498. A `works_root`
+    that is missing, is not a directory, or cannot be listed is the opposite
+    case and raises `OSError`, because "cannot measure the tree" is not "the
+    tree is empty" -- treating it as empty would truncate a good manifest to
+    nothing.
 
     Only `artist.name` being absent is tolerated within a row, because a work
     whose attribution is mid-repair still has to be reachable; it is exactly the
@@ -242,7 +243,13 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         result = build(args.works_root)
-    except NotADirectoryError as exc:
+    except OSError as exc:
+        # NotADirectoryError from build()'s own guard, and anything os.scandir()
+        # raises on a root that exists but cannot be listed -- a permission
+        # denial, or a cloud-sync mount that has evicted the tree. Both are
+        # "cannot measure the tree", and both must exit rather than write an
+        # empty manifest over a good one. Catching only NotADirectoryError left
+        # the unreadable case crashing with a traceback instead of exit 2.
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
@@ -257,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             current = args.out.read_text(encoding="utf-8")
         except OSError:
-            print(f"stale: {args.out} does not exist ({tally} on disk)")
+            print(f"stale: {args.out} does not exist ({tally} in the works tree)")
             return 1
         if current == render(result.rows):
             print(f"current: {args.out} matches the works tree ({tally})")

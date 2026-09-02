@@ -129,6 +129,14 @@ def test_drift_arrives_with_the_command_that_clears_it(archive, client: TestClie
     assert drifted["ok"] is False
     assert drifted["manifest_remedy"] == api_main.MANIFEST_REBUILD_COMMAND
 
+    # Absolute, and pointing at a generator that exists. More than one checkout
+    # of this repo lives on a machine, each with its own manifest.csv beside it,
+    # and the app is often served from a different one than the operator has
+    # open; a relative command would rebuild a file the running app never reads.
+    interpreter, script = drifted["manifest_remedy"].split(" ", 1)
+    assert Path(interpreter).is_absolute() and Path(interpreter).exists()
+    assert Path(script).is_absolute() and Path(script).is_file()
+
     archive(sidecars=11, manifest_rows=11)
     healthy = client.get("/healthz").json()
     assert healthy["ok"] is True

@@ -62,7 +62,15 @@ FRESH_CHECKOUT_SIDECAR_WORKS = 1
 # arrives with its remedy: the 2026-08-05 gap went unnoticed for a month partly
 # because nothing anywhere named a producer for the file, and a reader had no
 # way to tell "behind" from "unfixable".
-MANIFEST_REBUILD_COMMAND = "python3 scripts/build_manifest.py"
+#
+# Built from THIS process's interpreter and THIS checkout's path, never a bare
+# "python3 scripts/...". More than one checkout of this repo exists on a given
+# machine, each with its own manifest.csv beside it, and the app is routinely
+# served from a different one than the operator has open. A relative command
+# would be copy-pasted into whichever directory the shell happened to be in and
+# would rebuild a manifest the running app never reads -- reporting success
+# while the drift it was meant to clear stayed exactly where it was.
+MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_manifest.py'}"
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
