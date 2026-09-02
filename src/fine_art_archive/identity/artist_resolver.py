@@ -458,7 +458,7 @@ def resolve_artist(
     alias_table: dict[str, AliasEntry] | None = None,
     *,
     allow_wikidata: bool = False,
-    wb_cache: dict[str, dict] | None = None,
+    wb_cache: dict[str, dict | None] | None = None,
     _surnames_cache: set[str] | None = None,
 ) -> ResolvedArtist:
     """Resolve one raw artist string to a canonical entry.
@@ -567,10 +567,17 @@ def resolve_artist(
     # 3. Wikidata search fallback
     if allow_wikidata:
         cache = wb_cache if wb_cache is not None else {}
-        cached = cache.get(folded)
-        if cached is None:
+        # `folded in cache` is the check, not `cache.get(folded) is None` — a Wikidata
+        # search that found nothing legitimately caches as None, and `.get()` cannot
+        # tell that apart from "never queried". The old check re-issued the same two
+        # network calls (wbsearchentities + wbgetentities) for EVERY occurrence of an
+        # artist Wikidata simply doesn't have, defeating the cache the caller passes in
+        # specifically to bound its own rate limiting across a batch run.
+        if folded in cache:
+            cached = cache[folded]
+        else:
             cached = _wb_search_for_artist(raw)
-            cache[folded] = cached  # type: ignore[assignment]
+            cache[folded] = cached
         if cached:
             return ResolvedArtist(
                 raw=raw,
