@@ -19,6 +19,7 @@ has drained it, because nothing in the archive waits on that happening.
 from __future__ import annotations
 
 import json
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -589,3 +590,133 @@ def test_work_decision_removes_work_from_next_response(monkeypatch, tmp_path: Pa
         gates_module.FRONTIER_JSON = orig_frontier
         gates_module.WORK_DECISIONS = orig_decisions
         gates_module.ARTIST_ALLOWLIST = orig_allowlist
+
+
+# --------------------------------------------------------------------------
+# The routed queue asks about PICTURES, and must say so
+# --------------------------------------------------------------------------
+def _routed(qid: str, artist: str, **scores: object) -> dict:
+    row = _cand(qid, artist, status="review")
+    row["screen_scores"].update(scores)
+    return row
+
+
+def test_routed_row_states_the_screener_flagged_the_picture(tmp_path: Path) -> None:
+    p = tmp_path / "frontier.json"
+    p.write_text(
+        json.dumps(
+            {
+                "candidates": {
+                    "Q1": _routed(
+                        "Q1",
+                        "QA",
+                        held_titles_for_artist=19,
+                        candidate_variants=8,
+                        depicts_flagged=["Q10791"],
+                    )
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    rows = gates.works_awaiting_look(set(), frontier_path=p, decided={}, source="routed")
+    assert len(rows) == 1
+    row = rows[0]
+    assert "artist" not in row["why"], row["why"]
+    flags = row["routing_flags"]
+    assert flags["held_by_artist"] == 19
+    assert flags["variants"] == 8
+    assert flags["depicts"] == [{"qid": "Q10791", "label": "nudity"}]
+    # Position in the artist's set, so the card can say "1 of 12" instead of
+    # showing a silent grid that reads as a group approval.
+    assert row["artist_work_index"] == 1
+    assert row["artist_work_count"] == 1
+
+
+def test_routed_gate_says_works_are_decided_one_at_a_time(tmp_path: Path) -> None:
+    p = tmp_path / "frontier.json"
+    p.write_text(json.dumps({"candidates": {"Q1": _routed("Q1", "QA")}}), encoding="utf-8")
+    gate = next(
+        g
+        for g in gates.frontier_gates({"QA"}, allowlist=set(), frontier_path=p)
+        if g.name == "routed_to_review"
+    )
+    assert "artist" not in gate.clears_by, gate.clears_by
+    assert "work" in gate.clears_by
+
+
+def test_an_unnamed_depicts_flag_is_still_reported() -> None:
+    """A flag we cannot name is still a flag. Dropping it would render as
+    "nothing flagged", which is the opposite of what an unknown code means."""
+    flags = gates.routing_flags({"screen_scores": {"depicts_flagged": ["Q99999999"]}})
+    assert flags["depicts"] == [{"qid": "Q99999999", "label": None}]
+
+
+def test_unreadable_archive_is_reported_not_shown_as_nothing_similar() -> None:
+    """ "Could not look it up" and "nothing similar is held" are opposite
+    answers to "is this the painting you already have"."""
+    assert gates.held_lookalikes("QA", "a title", None) == {"lookup": "unavailable"}
+    ok = gates.held_lookalikes(
+        "QA",
+        "virgin and child with the young saint john",
+        {
+            "QA": [
+                {
+                    "id": "w1",
+                    "title": "Virgin and Child with the Young Saint John",
+                    "norm": "virgin and child with the young saint john",
+                }
+            ]
+        },
+    )
+    assert ok["lookup"] == "ok"
+    assert ok["matches"][0]["work_id"] == "w1"
+
+
+def test_empty_held_archive_is_a_valid_empty_index(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No sidecars means no possible title match, not a failed lookup."""
+    # Make readability explicit: CI has no real archive tree, while this case
+    # represents a readable archive containing no sidecars.
+    monkeypatch.setattr(gates.os, "scandir", lambda _path: nullcontext())
+    monkeypatch.setattr(gates.glob, "glob", lambda _pattern: [])
+    index = gates._held_by_artist_index()
+    assert index == {}
+    assert gates.held_lookalikes("QA", "a title", index) == {"lookup": "ok", "matches": []}
+
+
+def test_unreadable_held_archive_is_not_reported_as_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    def unreadable(_path):
+        raise PermissionError("archive root unavailable")
+
+    monkeypatch.setattr(gates.os, "scandir", unreadable)
+    assert gates._held_by_artist_index() is None
+
+
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_near_score_is_omitted(score: float) -> None:
+    flags = gates.routing_flags(
+        {"screen_scores": {"fuzzy_against": "Held work", "fuzzy_jaccard": score}}
+    )
+    assert "near_score" not in flags
+
+
+def test_review_rows_do_not_repeat_artist_siblings_in_the_api_payload(tmp_path: Path) -> None:
+    """The browser can group a linear queue; each row must not carry the whole group."""
+    p = tmp_path / "frontier.json"
+    p.write_text(
+        json.dumps({"candidates": {"Q1": _routed("Q1", "QA"), "Q2": _routed("Q2", "QA")}}),
+        encoding="utf-8",
+    )
+    rows = gates.works_awaiting_look(set(), frontier_path=p, decided={}, source="routed")
+    assert [row["artist_work_count"] for row in rows] == [2, 2]
+    assert all("artist_works" not in row for row in rows)
+
+
+def test_a_candidate_that_was_never_probed_says_so() -> None:
+    """An absent megapixel count must not read as a small picture."""
+    unprobed = gates._cand_row({"qid": "Q1", "screen_scores": {}}, "why")
+    assert unprobed["probed"] is False
+    assert unprobed["megapixels"] is None
+    probed = gates._cand_row({"qid": "Q2", "screen_scores": {"dimensions_px": [4000, 3000]}}, "why")
+    assert probed["probed"] is True
+    assert probed["megapixels"] == 12.0

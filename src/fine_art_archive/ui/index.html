@@ -1323,12 +1323,32 @@
       });
     }
 
+    // ----- variant upgrades: is the candidate the SAME painting, and better? -----
+    // This asked "accept or reject" with two 96 px thumbnails and a megabyte
+    // count. Megabytes cannot answer it: a synthetic test row showed a
+    // candidate 3.25x larger that was a DIFFERENT painting, and the table
+    // would have said accept. Both pictures go on the page at a size where
+    // that is obvious, side by side, before any number is quoted.
+    let upgQueue = [];
+    let upgIdx = 0;
+
     async function loadUpgrades() {
-      const r = await fetch("/variant_upgrades");
-      const d = await r.json();
       const det = showDetailPanel();
       if (!det) return;
-      if (!d.candidates || d.candidates.length === 0) {
+      let d;
+      try {
+        const r = await fetch("/variant_upgrades");
+        if (!r.ok) { det.innerHTML = `<h2>Variant upgrade candidates</h2>
+          <p class="sub">Could not load (${r.status}).</p>`; return; }
+        d = await r.json();
+      } catch (e) {
+        console.warn("Could not load upgrades", e);
+        det.innerHTML = `<h2>Variant upgrade candidates</h2><p class="sub">Could not load.</p>`;
+        return;
+      }
+      upgQueue = d.candidates || [];
+      upgIdx = 0;
+      if (!upgQueue.length) {
         det.innerHTML = `<h2>Variant upgrade candidates</h2>
           <p class="sub">No candidates right now. The detector found no
           staged file that's materially larger (≥1.5×) than an existing
@@ -1336,39 +1356,90 @@
         window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
         return;
       }
-      let html = `<h2>Variant upgrade candidates</h2>
-        <p class="sub">For each row: candidate file is ≥1.5× larger than
-        the current master. Accept logs intent; the actual master swap
-        is gated behind a per-decision grant in <code>permissions.md</code>.</p>
-        <table><thead><tr>
-          <th>Work</th><th>Held now</th><th>Proposed</th><th>Current</th><th>Candidate</th>
-          <th>Pixels</th><th>Ratio</th><th>Quarantined?</th><th>Decision</th><th></th>
-        </tr></thead><tbody>`;
-      for (const c of d.candidates) {
-        const wid = c.existing_wid;
-        const dec = c.decision || "—";
-        html += `<tr>
-          <td><strong>${acqEsc(c.title)}</strong> <span class="sub">(${acqEsc(c.artist)})</span><br>
-              <span class="qid">${acqEsc(wid)}</span></td>
-          <td>${heldThumb(wid, 96)}</td>
-          <td>${decisionThumb(`/variant_upgrades/${encodeURIComponent(wid)}/candidate_image?max=200`, c.title, 96)}</td>
-          <td>${c.existing_master_mb} MB</td>
-          <td>${c.candidate_master_mb} MB</td>
-          <td class="sub">${acqEsc(c.existing_px || "?")}<br>→ ${acqEsc(c.candidate_px || "?")}</td>
-          <td><span class="pill">${c.ratio}×</span></td>
-          <td>${c.candidate_quarantined}</td>
-          <td>${dec}${c.decision_ts ? `<br><span class="sub">${c.decision_ts}</span>` : ""}</td>
-          <td>
-            <button onclick="upgradeDecide('${wid}', 'accept')">Accept</button>
-            <button onclick="upgradeDecide('${wid}', 'reject')">Reject</button>
-            <button onclick="upgradeDecide('${wid}', 'defer')">Defer</button>
-          </td>
-        </tr>`;
-      }
-      html += "</tbody></table>";
-      det.innerHTML = html;
+      renderUpgrade();
+      if (!window._upgKeys) { window._upgKeys = true; document.addEventListener("keydown", upgKey); }
       window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
     }
+
+    function upgKey(ev) {
+      if (!upgQueue.length || !document.getElementById("upg-card")) return;
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      const k = ev.key.toLowerCase();
+      if (k === "a") { ev.preventDefault(); upgradeDecide(upgQueue[upgIdx].existing_wid, "accept"); }
+      else if (k === "x") { ev.preventDefault(); upgradeDecide(upgQueue[upgIdx].existing_wid, "reject"); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); upgSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); upgSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); closeDetail(); }
+    }
+
+    function upgSkip(delta) {
+      if (!upgQueue.length) return;
+      upgIdx = (upgIdx + delta + upgQueue.length) % upgQueue.length;
+      renderUpgrade();
+    }
+
+    // "?" is what the detector writes when it could not read a file's
+    // dimensions. Printed bare next to a real number it reads as a measurement,
+    // so it is spelled out instead.
+    function upgPx(v) {
+      return (!v || v === "?")
+        ? `<span class="sub">dimensions could not be read</span>`
+        : acqEsc(v);
+    }
+
+    function renderUpgrade() {
+      const c = upgQueue[upgIdx];
+      const det = showDetailPanel();
+      if (!det || !c) return;
+      const wid = c.existing_wid;
+      const widJs = acqEsc(JSON.stringify(String(wid)));
+      const half = `flex:1 1 380px;min-width:280px`;
+      det.innerHTML = `<button onclick="closeDetail()">← Back to list</button>
+        <h2>Better copy of a work you already hold?</h2>
+        <div id="upg-card">
+        <p class="sub">Candidate ${upgIdx + 1} of ${upgQueue.length}. The detector only checks that
+        a staged file is ≥1.5× larger than the master, with the same title and artist — it does
+        <strong>not</strong> check that it is the same painting. That is the judgement being asked
+        for here, and it is why both pictures are shown before any number.</p>
+        <h3 style="margin:6px 0">${acqEsc(c.title)} <span class="sub">(${acqEsc(c.artist)})</span></h3>
+        <p class="sub"><span class="qid">${acqEsc(wid)}</span></p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px">
+          <figure style="${half};margin:0">
+            <img src="/works/${encodeURIComponent(wid)}/image?max=1000" alt="held copy"
+                 onerror="approveRetryImage(this)"
+                 style="width:100%;max-height:46vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
+            <figcaption class="sub" style="margin-top:6px"><strong>The copy you hold now</strong><br>
+              ${upgPx(c.existing_px)} · ${c.existing_master_mb} MB<br>
+              <a href="/works/${encodeURIComponent(wid)}/image?max=4000" target="_blank" rel="noopener">full size →</a>
+            </figcaption>
+          </figure>
+          <figure style="${half};margin:0">
+            <img src="/variant_upgrades/${encodeURIComponent(wid)}/candidate_image?max=1000" alt="candidate copy"
+                 onerror="approveRetryImage(this)"
+                 style="width:100%;max-height:46vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
+            <figcaption class="sub" style="margin-top:6px"><strong>The candidate</strong>
+              <span class="pill">${c.ratio}× the bytes</span><br>
+              ${upgPx(c.candidate_px)} · ${c.candidate_master_mb} MB<br>
+              ${c.candidate_quarantined ? `<span class="sub">quarantined — held aside, not in the archive</span><br>` : ""}
+              <a href="/variant_upgrades/${encodeURIComponent(wid)}/candidate_image?max=4000" target="_blank" rel="noopener">full size →</a>
+            </figcaption>
+          </figure>
+        </div>
+        <p class="sub" style="margin-top:10px">Larger is not automatically better: check it is the
+        same picture, the same crop, and not a differently-toned copy. Accepting only logs the
+        intent — the master swap is gated behind a per-decision grant in
+        <code>permissions.md</code>, so nothing is overwritten by this click.</p>
+        ${c.decision ? `<p class="sub">Already decided: <strong>${acqEsc(c.decision)}</strong>${
+          c.decision_ts ? ` on ${acqEsc(c.decision_ts)}` : ""}. Deciding again replaces it.</p>` : ""}
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button onclick="upgradeDecide(${widJs}, 'accept')"><strong>Accept the candidate</strong> (A)</button>
+          <button onclick="upgradeDecide(${widJs}, 'reject')">Keep what I have (X)</button>
+          <button onclick="upgradeDecide(${widJs}, 'defer')">Decide later</button>
+          <button onclick="upgSkip(1)">Skip (S)</button>
+        </div>
+        </div>`;
+    }
+
 
     // ----- review: every gate, with its drain beside it -----
     // Each row shows what a gate is holding AND what could clear it. A gate
@@ -1396,6 +1467,23 @@
     function showReviewLoadError(det, detail = "") {
       det.innerHTML = `<h2>Review</h2><p class="sub">Could not load${detail}.</p>`;
     }
+
+    // Route each gate to the view built for ITS judgement. The generic table
+    // shows a thumbnail and a truncated reason, which cannot answer "is this
+    // image good enough" — leaving it as the default route meant the
+    // purpose-built screens were unreachable by the path anyone actually takes.
+    //
+    // ONE map, consumed by both the gate list and the gate table. Two copies
+    // is how the table came to offer "Approve artist" on a gate the list had
+    // already learned was per-work.
+    const GATE_VIEW = {
+      deferred_transfer: "loadDeferrals()",
+      new_artist: "loadApproval()",
+      routed_to_review: "loadWorkReview('routed')",
+      unreviewed_acquisitions: "loadAcquisitions('no')",
+      variant_upgrades: "loadUpgrades()",
+      rights_unclear: "loadWorkReview('rights')",
+    };
 
     async function loadReview() {
       const det = showDetailPanel();
@@ -1430,20 +1518,12 @@
         if (g.deadlocked) flag = ` <span class="pill" title="held items, nothing can clear them">stuck</span>`;
         else if (!g.drainable_measured) flag = ` <span class="pill" title="this gate could not measure its own drain">unknown</span>`;
         else if (g.auto_clears) flag = ` <span class="sub">(clears itself)</span>`;
-        // Route each gate to the view built for ITS judgement. The generic
-        // list shows a 68 px thumbnail and a truncated reason, which cannot
-        // answer "is this image good enough" — and leaving it as the default
-        // route meant the purpose-built screens were unreachable by the path
-        // anyone actually takes.
-        const GATE_VIEW = {
-          deferred_transfer: "loadDeferrals()",
-          new_artist: "loadApproval()",
-          routed_to_review: "loadWorkReview('routed')",
-        };
         const open = g.blocking > 0
           ? `<button onclick="${GATE_VIEW[g.name] || `loadReviewGate(${acqEsc(JSON.stringify(g.name))})`}">Open</button>`
             + (GATE_VIEW[g.name]
-                ? ` <button onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})" title="plain list">list</button>`
+                ? ` <button class="sub" style="opacity:.6;font-size:11px"
+                      onclick="loadReviewGate(${acqEsc(JSON.stringify(g.name))})"
+                      title="flat table, no images — not for judging pictures">table</button>`
                 : "")
           : "";
         html += `<tr>
@@ -1485,7 +1565,16 @@
       if (g.note) html += `<p class="sub">${acqEsc(g.note)}</p>`;
       if (!g.items.length) { html += `<p class="sub">Nothing held.</p>`; det.innerHTML = html; return; }
 
-      const isArtistGate = g.name === "new_artist" || g.name === "routed_to_review";
+      // routed_to_review is a WORK gate. Offering "Approve artist" beside its
+      // rows contradicted the card that decides them one at a time, and an
+      // approval here would have answered a question nobody asked.
+      const isArtistGate = g.name === "new_artist";
+      const cardView = GATE_VIEW[g.name];
+      if (cardView) {
+        html += `<p style="margin:8px 0"><button onclick="${cardView}">
+          <strong>Judge these one at a time, with the pictures →</strong></button>
+          <span class="sub">this table is for scanning; it cannot show you enough to decide</span></p>`;
+      }
       html += `<table><thead><tr>
         <th></th><th>Item</th><th>Why it is held</th>${isArtistGate ? "<th>Artist</th><th></th>" : ""}
       </tr></thead><tbody>`;
@@ -1501,13 +1590,17 @@
         } else if (isArtistGate) {
           action = `<td><span class="sub">no artist Q-ID</span></td>`;
         }
-        const thumb = /^Q[1-9][0-9]*$/.test(it.id || "") ? candThumb(it.id, 68) : heldThumb(it.id, 68);
         html += `<tr>
-          <td style="width:78px">${thumb}</td>
+          <td style="width:130px">${(g.item_kind === "held_work"
+              || (!g.item_kind && !/^Q[1-9][0-9]*$/.test(it.id || "")))
+              ? heldThumb(it.id, 120)
+              : candThumb(it.id, 120)}</td>
           <td><strong>${acqEsc(it.title || it.id)}</strong>${ready}<br>
               <span class="qid">${acqEsc(it.id)}</span></td>
           <td><span class="sub">${acqEsc(it.why || "")}</span></td>
-          ${isArtistGate ? `<td><span class="qid">${acqEsc(it.artist_qid || "—")}</span></td>` : ""}
+          ${isArtistGate ? `<td>${it.artist_label
+              ? acqEsc(it.artist_label)
+              : `<span class="qid">${acqEsc(it.artist_qid || "—")}</span>`}</td>` : ""}
           ${action}
         </tr>`;
       }
@@ -1536,6 +1629,7 @@
     // half-done without consequence: nothing here expires and growth never
     // waits on it.
     let approveQueue = [];
+    let approveShowAll = false;
     let approveIdx = 0;
     let approveDone = 0;
 
@@ -1575,6 +1669,7 @@
     }
 
     function approveSkip(delta) {
+      approveShowAll = false;
       if (!approveQueue.length) return;
       approveIdx = (approveIdx + delta + approveQueue.length) % approveQueue.length;
       renderApproval();
@@ -1583,6 +1678,7 @@
     async function approveAct(decision) {
       const cur = approveQueue[approveIdx];
       if (!cur) return;
+      approveShowAll = false;
       const r = await fetch(`/review/artists/${encodeURIComponent(cur.artist_qid)}/decision`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -1638,6 +1734,15 @@
           style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
                  background:var(--card,#f3f3f3);vertical-align:middle;cursor:zoom-in"></a>`;
     }
+    // Same picture, no anchor. The sibling grid wraps its thumbnails in a jump
+    // link, and an <a> inside an <a> is invalid — the browser closes the outer
+    // one, so the click would have opened the raw JPEG instead of the card.
+    function plainThumb(src, alt, px) {
+      return `<img src="${src}" alt="${acqEsc(alt || "")}" loading="lazy"
+          onerror="approveRetryImage(this)"
+          style="width:${px}px;height:${px}px;object-fit:cover;border-radius:4px;
+                 background:var(--card,#f3f3f3);vertical-align:middle;cursor:pointer">`;
+    }
     const heldThumb = (wid, px) => decisionThumb(`/works/${encodeURIComponent(wid)}/image?max=${px * 2}`, wid, px);
     const candThumb = (qid, px) => decisionThumb(`/review/candidate/${encodeURIComponent(qid)}/image?width=${px * 2}`, qid, px);
 
@@ -1671,12 +1776,35 @@
         return;
       }
       workReviewQueue = d.works || [];
+      // Keep the response linear: the API returns each work once, then the
+      // browser derives the other cards for an artist from this one queue.
+      const worksByArtist = new Map();
+      for (const work of workReviewQueue) {
+        if (!work.artist_qid) continue;
+        const works = worksByArtist.get(work.artist_qid) || [];
+        works.push({id: work.id, title: work.title});
+        worksByArtist.set(work.artist_qid, works);
+      }
+      for (const work of workReviewQueue) {
+        const works = worksByArtist.get(work.artist_qid) || [];
+        work.artist_works = works.filter(other => other.id !== work.id);
+      }
       workReviewIdx = 0; workReviewDone = 0;
       if (!workReviewQueue.length) {
+        // The empty message must name the queue it is empty FOR. One shared
+        // sentence told you the rights queue was clear because approved-artist
+        // works had been looked at — an all-clear about a different question.
+        const empty = {
+          routed: "Nothing waiting. Every work the screener routed to you has been decided.",
+          rights: "Nothing waiting. No candidate is held on an undetermined rights status.",
+        }[workReviewSource] ||
+          "Nothing waiting. Every work released by an approved artist has been looked at.";
         det.innerHTML = `<button onclick="loadReview()">← All gates</button>
-          <h2>Review works</h2>
-          <p class="sub">Nothing waiting. Every work released by an approved artist has been
-          looked at (${d.already_decided} decided, ${d.already_rejected} refused).</p>`;
+          <h2>${workReviewSource === "rights" ? "Rights could not be determined"
+                : workReviewSource === "routed" ? "Works the screener routed to you"
+                : "Works released by an approved artist"}</h2>
+          <p class="sub">${empty}
+          <span class="sub">(${d.already_decided} works decided in all, ${d.already_rejected} refused.)</span></p>`;
         return;
       }
       renderWorkReview();
@@ -1688,7 +1816,7 @@
       if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
       if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
       const k = ev.key.toLowerCase();
-      if (k === "k") { ev.preventDefault(); workReviewAct("keep"); }
+      if (k === "k") { ev.preventDefault(); workReviewAct(workReviewSource === "rights" ? "force" : "keep"); }
       else if (k === "x") { ev.preventDefault(); workReviewAct("reject"); }
       else if (k === "s" || k === "arrowright") { ev.preventDefault(); workReviewSkip(1); }
       else if (k === "arrowleft") { ev.preventDefault(); workReviewSkip(-1); }
@@ -1721,10 +1849,73 @@
       renderWorkReview();
     }
 
+    // A sitelinks value may arrive as a count or as the object it was counted
+    // from; both must render as a number of languages.
     function slCount(v) {
       if (typeof v === "number") return v;
       if (v && typeof v === "object") return Object.keys(v).length;
       return 0;
+    }
+
+    // One card = one picture. The queue this renders is a WORK queue: keeping
+    // or refusing here never touches the painter, and the painter's other
+    // waiting pictures each get their own card. The page used to say the
+    // opposite in three places at once ("released by approving this artist",
+    // a gate whose "what clears it" read "approving the artist", and a silent
+    // grid of the artist's other works with no buttons), so it was impossible
+    // to tell whether a click decided a picture or a person.
+    function workReviewJump(qid) {
+      const i = workReviewQueue.findIndex(x => x.id === qid);
+      if (i < 0) return;
+      workReviewIdx = i;
+      renderWorkReview();
+    }
+
+    function workReviewWhy(w) {
+      const f = w.routing_flags || {};
+      const bits = [];
+      if (f.depicts && f.depicts.length) {
+        bits.push(`<li><strong>Subject flagged:</strong> ` + f.depicts.map(d => d.label
+          ? acqEsc(d.label)
+          : `<a href="https://www.wikidata.org/wiki/${acqEsc(d.qid)}" target="_blank" rel="noopener">${acqEsc(d.qid)}</a>`
+        ).join(", ") + ` — the screener will not take this on its own.</li>`);
+      }
+      if (f.near_title) {
+        // Naming the title and stopping there asks you to remember a painting.
+        // The held picture goes on the page, or the page says why it could not.
+        const nh = f.near_held || {};
+        let side = "";
+        if (nh.lookup === "unavailable") {
+          side = `<div class="sub" style="margin:6px 0">The archive could not be read, so the
+            picture you already hold is not shown here. That is a failure to look it up, not a
+            finding that nothing similar is held.</div>`;
+        } else if (nh.matches && nh.matches.length) {
+          side = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
+            ${nh.matches.map(m => `<figure style="margin:0;width:150px">
+              ${heldThumb(m.work_id, 150)}
+              <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">
+                already held · ${acqEsc(m.title || m.work_id)}</figcaption>
+            </figure>`).join("")}
+          </div>`;
+        } else if (nh.lookup === "ok") {
+          side = `<div class="sub" style="margin:6px 0">No held work by this artist actually
+            matches that title — the screener's similarity flag looks spurious here.</div>`;
+        }
+        bits.push(`<li><strong>Looks like one you already hold:</strong>
+          “${acqEsc(f.near_title)}”${f.near_score != null ? ` (title overlap ${f.near_score})` : ""}
+          — the question is whether this is the same painting.${side}</li>`);
+      }
+      if (f.ambiguous_alias) {
+        bits.push(`<li><strong>Ambiguous title:</strong> “${acqEsc(f.ambiguous_alias)}” matches
+          too many works to identify it mechanically.</li>`);
+      }
+      if (f.held_by_artist != null) {
+        bits.push(`<li>The archive already holds <strong>${f.held_by_artist}</strong> work${f.held_by_artist === 1 ? "" : "s"}
+          by this artist${f.variants != null ? `, and ${f.variants} candidate variant${f.variants === 1 ? "" : "s"} of this one exist` : ""}.</li>`);
+      }
+      if (!bits.length) return `<p class="sub">The screener recorded no reason for routing this
+        one. That is a gap in the screener, not a clean bill — judge it on the picture.</p>`;
+      return `<ul class="sub" style="margin:8px 0 0;padding-left:18px;line-height:1.5">${bits.join("")}</ul>`;
     }
 
     function renderWorkReview() {
@@ -1734,41 +1925,63 @@
       const artist = w.artist_label
         ? acqEsc(w.artist_label)
         : `<span class="qid">${acqEsc(w.artist_qid || "unknown")}</span>`;
-      const sl = slCount(w.sitelinks);
+      // An unprobed candidate has no size and no rights determination. Omitting
+      // the numbers silently would let "never measured" read as "measured and
+      // poor" — the same conflation that made a failed download look like a
+      // low-quality picture.
+      const quality = w.probed
+        ? `${w.megapixels ? ` · ${w.megapixels} MP` : ""}${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}`
+        : ` · <span title="no file has been fetched, so there is no size or rights determination yet">size not yet measured</span>`;
       det.innerHTML = `<div id="work-card">
         <button onclick="loadReview()">← All gates</button>
-        <h2 style="margin-top:8px">${acqEsc(w.title || "untitled")}</h2>
-        <p class="sub">${artist}
-          ${w.megapixels ? ` · ${w.megapixels} MP` : ""}
-          ${w.rights_status ? ` · ${acqEsc(w.rights_status)}` : ""}
-          ${sl ? ` · ${sl} language${sl === 1 ? "" : "s"}` : ""}
+        <p class="sub" style="margin:8px 0 0">Work ${workReviewIdx + 1} of ${workReviewQueue.length}
+          · <strong>you are deciding this one picture</strong>, not the artist — refusing it leaves
+          ${artist} approved and every other picture of theirs still on offer.</p>
+        <h2 style="margin-top:4px">${acqEsc(w.title || "untitled")}</h2>
+        <p class="sub">${artist}${quality}
+          ${slCount(w.sitelinks) ? ` · ${slCount(w.sitelinks)} language${slCount(w.sitelinks) === 1 ? "" : "s"}` : ""}
           ${w.generator ? ` · found by ${acqEsc(w.generator)}` : ""}
           · <a href="https://www.wikidata.org/wiki/${acqEsc(w.id)}" target="_blank" rel="noopener">${acqEsc(w.id)}</a>
-          <span class="sub">· ${workReviewDone} decided · ${workReviewQueue.length} left</span></p>
+          · ${workReviewDone} decided</p>
         <img src="/review/candidate/${encodeURIComponent(w.id)}/image?width=1100"
              alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
              style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
                     background:var(--card,#f3f3f3);margin:10px 0">
+        <p class="sub" style="margin-top:6px"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
+           target="_blank" rel="noopener">Open larger →</a>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
+        <div style="margin-top:12px">
+          <strong style="font-size:13px">Why you are being asked</strong>
+          ${workReviewWhy(w)}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          ${workReviewSource === "rights"
+            ? `<button onclick="workReviewAct('force')"><strong>Take it anyway</strong> (K)</button>
+               <button onclick="workReviewAct('reject')">Leave it (X)</button>`
+            : `<button onclick="workReviewAct('keep')"><strong>Keep this picture</strong> (K)</button>
+               <button onclick="workReviewAct('reject')">Not this picture (X)</button>`}
+          <button onclick="workReviewSkip(1)">Skip (S)</button>
+        </div>
+        ${workReviewSource === "rights" ? `<p class="sub" style="margin-top:8px">The screener could
+        not establish this work's copyright status, so it will not take it on its own. Your
+        2026-08-29 exception permits in-copyright works for private display, which is why "take it
+        anyway" is offered here — the recorded rights status stays truthful either way.</p>` : ""}
         ${(w.artist_works && w.artist_works.length) ? `
-        <p class="sub" style="margin-top:10px">${w.artist_work_count} works by this artist are
-        waiting — the others:</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <p class="sub" style="margin-top:16px"><strong>${w.artist_work_count} pictures by
+        ${artist} are waiting, and each is decided on its own card</strong> — this is
+        ${w.artist_work_index} of them. Click any of the others to go to its card now; you do not
+        have to decide them together.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
           ${w.artist_works.map(s => `<figure style="margin:0;width:120px">
-            ${decisionThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            <a href="#" onclick="workReviewJump(${acqEsc(JSON.stringify(s.id))});return false"
+               title="Go to this picture's card">
+              ${plainThumb(`/review/candidate/${encodeURIComponent(s.id)}/image?width=240`, s.title, 120)}
+            </a>
             <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:3px">${acqEsc(s.title || "")}</figcaption>
           </figure>`).join("")}
         </div>` : ""}
-        <p class="sub"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
-           target="_blank" rel="noopener">Open larger →</a>
-           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button onclick="workReviewAct('keep')"><strong>Keep</strong> (K)</button>
-          <button onclick="workReviewAct('reject')">Not this one (X)</button>
-          <button onclick="workReviewSkip(1)">Skip (S)</button>
-        </div>
-        <p class="sub" style="margin-top:12px">Refusing a work leaves its artist approved and every
-        other work by them untouched; the tick will never propose this picture again. Skipping
-        decides nothing — an undecided work stays acquirable.</p>
+        <p class="sub" style="margin-top:12px">Skipping decides nothing — an undecided work stays
+        acquirable and comes back.</p>
       </div>`;
     }
 
@@ -1941,17 +2154,31 @@
                style="max-width:100%;max-height:52vh;object-fit:contain;border-radius:6px;background:var(--card,#f3f3f3)">
           <figcaption class="sub" style="margin-top:6px">
             <strong>${acqEsc(hero.title || "untitled")}</strong> — ${meta(hero)}
+            · <a href="${src(hero, 1600)}" target="_blank" rel="noopener">open larger →</a>
           </figcaption>
         </figure>` : `<p class="sub">No image available for this artist's candidates.</p>`;
 
-      const strip = works.slice(1, 7).map(w => `
+      // Every thumbnail opens full size. A picture you cannot enlarge is not
+      // evidence, and this strip is the only view of the rest of what the
+      // approval would release.
+      const shown = approveShowAll ? works.slice(1) : works.slice(1, 7);
+      const strip = shown.map(w => `
         <figure style="margin:0;width:132px">
-          <img src="${src(w, 260)}" alt="${acqEsc(w.title || "")}" loading="lazy"
-               ${retry}
-               style="width:132px;height:132px;object-fit:cover;border-radius:4px;background:var(--card,#f3f3f3)">
+          <a href="${src(w, 1600)}" target="_blank" rel="noopener" title="open full size">
+            <img src="${src(w, 260)}" alt="${acqEsc(w.title || "")}" loading="lazy"
+                 ${retry}
+                 style="width:132px;height:132px;object-fit:cover;border-radius:4px;
+                        background:var(--card,#f3f3f3);cursor:zoom-in"></a>
           <figcaption class="sub" style="font-size:11px;line-height:1.3;margin-top:4px">${acqEsc(w.title || "")}</figcaption>
         </figure>`).join("");
-      const more = works.length > 7 ? `<p class="sub">…and ${works.length - 7} more.</p>` : "";
+      // "…and 41 more" with no way to reach them hid most of what the decision
+      // covers behind a full stop.
+      const more = (works.length > 7 && !approveShowAll)
+        ? `<p class="sub"><a href="#" onclick="approveShowAll=true;renderApproval();return false">
+           Show the other ${works.length - 7} →</a></p>`
+        : (approveShowAll && works.length > 7
+            ? `<p class="sub"><a href="#" onclick="approveShowAll=false;renderApproval();return false">Show fewer</a></p>`
+            : "");
 
       det.innerHTML = `<div id="approve-card">
         <button onclick="loadReview()">← All gates</button>
@@ -2003,6 +2230,18 @@
       })[ch]);
     }
 
+    // ----- newly acquired: LOOK at the picture, not at a 68 px icon -----
+    // This screen exists so a wrong acquisition can be caught, and it was a
+    // table of 68 px thumbnails with a title, a name and a date. That cannot
+    // show what actually landed: "The Poppy Field near Argenteuil" was filled
+    // from a file named "Poppy Field in a Hollow near Giverny", and nothing on
+    // the page could have told you. The card shows the archived picture large,
+    // and beside it the source filename and URL the bytes actually came from.
+    let acqQueue = [];
+    let acqIdx = 0;
+    let acqDone = 0;
+    let acqView = "cards";
+
     async function loadAcquisitions(filter) {
       if (filter) acqFilter = filter;
       const r = await fetch(`/acquisitions?reviewed=${acqFilter}&limit=500`);
@@ -2013,67 +2252,237 @@
       if (!det) return;
       if (!r.ok) { det.innerHTML = `<h2>Newly acquired</h2><p class="sub">Could not load (${r.status}).</p>`; return; }
       const d = await r.json();
+      acqQueue = d.works || [];
+      acqIdx = 0; acqDone = 0;
+      acqMeta = {epoch: d.epoch, unreviewed: d.unreviewed, total: d.total};
+      if (!acqQueue.length) { det.innerHTML = acqHeader() + `<p class="sub">Nothing in this view.</p>`; return; }
+      if (acqView === "table") renderAcqTable(); else renderAcquisition();
+      if (!window._acqKeys) { window._acqKeys = true; document.addEventListener("keydown", acqKey); }
+    }
+
+    let acqMeta = {};
+
+    function acqHeader() {
       const tab = (v, label) =>
         `<button onclick="loadAcquisitions('${v}')" style="${v === acqFilter ? "font-weight:600;border-color:var(--accent)" : ""}">${label}</button>`;
-      let html = `<button onclick="closeDetail()">← Back to list</button>
+      const vw = (v, label) =>
+        `<button onclick="acqSetView('${v}')" style="${v === acqView ? "font-weight:600;border-color:var(--accent)" : ""}">${label}</button>`;
+      return `<button onclick="closeDetail()">← Back to list</button>
         <h2>Newly acquired</h2>
         <p class="sub">Works the growth automation acquired and promoted on its own,
-        since ${acqEsc(d.epoch)}. <strong>${d.unreviewed}</strong> of ${d.total} not yet reviewed.
-        Nothing here is waiting on you — growth does not pause for review, and an
+        since ${acqEsc(acqMeta.epoch || "")}. <strong>${acqMeta.unreviewed}</strong> of ${acqMeta.total} not yet
+        looked at. Nothing here is waiting on you — growth does not pause for review, and an
         unread list has no consequence.</p>
-        <p style="margin:8px 0">${tab("no", "Not yet reviewed")} ${tab("yes", "Reviewed")} ${tab("any", "All")}</p>`;
-      if (!d.works.length) {
-        html += `<p class="sub">Nothing in this view.</p>`;
-        det.innerHTML = html;
-        return;
+        <p style="margin:8px 0">${tab("no", "Not yet looked at")} ${tab("yes", "Looked at")} ${tab("any", "All")}
+        &nbsp;·&nbsp; ${vw("cards", "One at a time")} ${vw("table", "Table")}
+        &nbsp;·&nbsp; <button onclick="rateAcquisitions()"><strong>Rate them all →</strong></button>
+        <span class="sub">opens the full record for each, unrated first</span></p>`;
+    }
+
+    function acqSetView(v) {
+      acqView = v;
+      if (v === "table") renderAcqTable(); else renderAcquisition();
+    }
+
+    function acqKey(ev) {
+      if (!acqQueue.length || !document.getElementById("acq-card")) return;
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+      const k = ev.key.toLowerCase();
+      if (k === "r") { ev.preventDefault(); acqAct(false); }
+      else if (k === "s" || k === "arrowright") { ev.preventDefault(); acqSkip(1); }
+      else if (k === "arrowleft") { ev.preventDefault(); acqSkip(-1); }
+      else if (k === "escape") { ev.preventDefault(); closeDetail(); }
+    }
+
+    function acqSkip(delta) {
+      if (!acqQueue.length) return;
+      acqIdx = (acqIdx + delta + acqQueue.length) % acqQueue.length;
+      renderAcquisition();
+    }
+
+    async function acqAct(undo) {
+      const cur = acqQueue[acqIdx];
+      if (!cur) return;
+      try {
+        const r = await fetch(`/works/${encodeURIComponent(cur.work_id)}/acquisition_review`, {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({undo: !!undo, note: ""}),
+        });
+        if (!r.ok) { toast("failed: " + r.status); return; }
+      } catch (e) { toast("could not save review"); return; }
+      if (acqMeta && typeof acqMeta.unreviewed === "number") {
+        acqMeta.unreviewed = Math.max(0, acqMeta.unreviewed + (undo ? 1 : -1));
       }
-      html += `<table><thead><tr>
-          <th></th><th>Work</th><th>Acquired</th><th>By</th><th>Reviewed</th><th></th>
+      refreshAcqBadge();
+      acqDone += 1;
+      if (acqFilter === "no") {
+        acqQueue.splice(acqIdx, 1);
+        if (acqIdx >= acqQueue.length) acqIdx = 0;
+        if (!acqQueue.length) {
+          const det = showDetailPanel();
+          if (det) det.innerHTML = acqHeader() +
+            `<h3>All looked at</h3><p class="sub">${acqDone} work${acqDone === 1 ? "" : "s"} this sitting.</p>`;
+          return;
+        }
+      } else {
+        acqQueue[acqIdx].reviewed = !undo;
+      }
+      renderAcquisition();
+    }
+
+    // Every fact the sidecar recorded about where these bytes came from.
+    // A missing measurement says so; it is never printed as a number.
+    function acqEvidence(w) {
+      const rows = [];
+      if (w.holder_name) rows.push(["Holder", acqEsc(w.holder_name)]);
+      rows.push(["Source", w.source
+        ? acqEsc(w.source) + (w.scaled_rendition
+            ? ` <span class="sub">· a scaled rendition, not the source's full original</span>` : "")
+        : `<span class="sub">not recorded</span>`]);
+      if (w.source_filename) {
+        rows.push(["File fetched", `<code style="font-size:11px">${acqEsc(w.source_filename)}</code>
+          <div class="sub" style="font-size:11px">Compare this with the title above — they are
+          often in different languages, but they should describe the same picture.</div>`]);
+      }
+      rows.push(["File", w.file_health === "truncated"
+        ? `<strong>truncated — will not open</strong>`
+        : (w.file_health === "ok"
+            ? `<span class="sub">opens correctly</span>`
+            : `<span class="sub">not checked — this is not a clean bill</span>`)]);
+      rows.push(["Size", w.pixels_measured
+        ? `${w.width_px} × ${w.height_px} px · ${w.megapixels} MP · ${w.master_mb} MB`
+        : `<span class="sub">the archived file could not be measured — that is a defect to look
+           at, not a small picture</span>`]);
+      rows.push(["Rights", w.rights_status
+        ? acqEsc(w.rights_status) + (w.rights_evidence_url
+            ? ` · <a href="${acqEsc(safeHref(w.rights_evidence_url))}" target="_blank" rel="noopener">evidence →</a>` : "")
+        : `<span class="sub">not determined</span>`]);
+      rows.push(["Acquired", `${acqEsc((w.acquired_at || "").slice(0, 16).replace("T", " "))}
+        by ${acqEsc(w.acquired_by || "—")}`]);
+      const links = [];
+      if (w.source_url) links.push(`<a href="${acqEsc(safeHref(w.source_url))}" target="_blank" rel="noopener">the file at its source →</a>`);
+      if (w.wikidata_q) links.push(`<a href="https://www.wikidata.org/wiki/${acqEsc(w.wikidata_q)}" target="_blank" rel="noopener">${acqEsc(w.wikidata_q)} on Wikidata →</a>`);
+      if (links.length) rows.push(["Check against", links.join("&nbsp;·&nbsp;")]);
+      return `<table style="margin-top:10px"><tbody>${rows.map(([k, v]) =>
+        `<tr><td class="sub" style="white-space:nowrap;vertical-align:top;padding-right:12px">${k}</td>
+             <td>${v}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderAcquisition() {
+      const w = acqQueue[acqIdx];
+      const det = showDetailPanel();
+      if (!det || !w) return;
+      // Name pinned by tests/test_acquisition_review.py — this is the escaping
+      // boundary for a work id that goes into an onclick attribute.
+      const workIdJs = acqEsc(JSON.stringify(String(w.work_id ?? "")));
+      det.innerHTML = acqHeader() + `<div id="acq-card">
+        <p class="sub">Work ${acqIdx + 1} of ${acqQueue.length}${acqDone ? ` · ${acqDone} looked at this sitting` : ""}
+          · looking at one of these changes nothing except this list — it does not accept,
+          reject or re-acquire anything.</p>
+        <h3 style="margin:4px 0">${acqEsc(w.title || "untitled")}</h3>
+        <p class="sub">${acqEsc(w.artist_name || "unknown artist")}${w.year ? ` · ${acqEsc(w.year)}` : ""}
+          · <span class="qid">${acqEsc(w.work_id)}</span></p>
+        ${w.file_health === "truncated" ? `
+        <div style="border:1px solid var(--accent,#c00);border-radius:6px;padding:10px;margin:10px 0">
+          <strong>The archived file is truncated — the download did not finish.</strong>
+          <div class="sub">Its header still claims
+          ${w.pixels_measured ? `${w.width_px} × ${w.height_px} px` : "full dimensions"}, which is why
+          it looks like a normal acquisition in every list. Nothing can display it. This is a
+          transfer defect to re-fetch, not a judgement about the picture — do not reject the work
+          over it.</div>
+        </div>` : ""}
+        <img src="/works/${encodeURIComponent(w.work_id)}/image?max=1400"
+             alt="${acqEsc(w.title || "")}" onerror="approveRetryImage(this)"
+             style="max-width:100%;max-height:62vh;object-fit:contain;border-radius:6px;
+                    background:var(--card,#f3f3f3);margin:10px 0">
+        <p class="sub"><a href="/works/${encodeURIComponent(w.work_id)}/image?max=4000"
+           target="_blank" rel="noopener">Open the archived file full size →</a>
+           &nbsp;·&nbsp; <a href="#" onclick="openWork(${workIdJs});return false">open its full record (to rate it) →</a></p>
+        ${acqEvidence(w)}
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          ${w.reviewed
+            ? `<button onclick="acqAct(true)">Mark not looked at (undo)</button>`
+            : `<button onclick="acqAct(false)"><strong>Looked at it</strong> (R)</button>`}
+          <button onclick="acqSkip(1)">Skip (S)</button>
+        </div>
+        ${w.reviewed ? `<p class="sub" style="margin-top:8px">Marked looked at
+          ${acqEsc((w.reviewed_at || "").slice(0, 10))}${w.reviewed_by ? ` by ${acqEsc(w.reviewed_by)}` : ""}.
+          ${w.review_note ? `<br>Note: ${acqEsc(w.review_note)}` : ""}</p>` : ""}
+      </div>`;
+    }
+
+    // The table stays available for scanning a long list, but it is not where
+    // a judgement gets made and no longer pretends to be: it links into the
+    // card rather than offering a decision button beside a 68 px icon.
+    function renderAcqTable() {
+      const det = showDetailPanel();
+      if (!det) return;
+      let html = acqHeader() + `<table><thead><tr>
+          <th></th><th>Work</th><th>Size</th><th>Acquired</th><th>Looked at</th><th></th>
         </tr></thead><tbody>`;
-      for (const w of d.works) {
-        const workId = acqEsc(w.work_id);
-        const workIdJs = acqEsc(JSON.stringify(String(w.work_id ?? "")));
+      acqQueue.forEach((w, i) => {
         const when = acqEsc((w.acquired_at || "").slice(0, 16).replace("T", " "));
-        const rev = w.reviewed
-          ? `${acqEsc((w.reviewed_at || "").slice(0, 10))}${w.review_note ? `<br><span class="sub">${acqEsc(w.review_note)}</span>` : ""}`
-          : "—";
-        const btn = w.reviewed
-          ? `<button onclick="acqReview(${workIdJs}, true)">Undo</button>`
-          : `<button onclick="acqReview(${workIdJs}, false)">Mark reviewed</button>`;
         html += `<tr>
-          <td style="width:78px">${heldThumb(w.work_id, 68)}</td>
-          <td><a href="#" onclick="openWork(${workIdJs}); return false;"><strong>${acqEsc(w.title)}</strong></a>
+          <td style="width:110px">${heldThumb(w.work_id, 100)}</td>
+          <td><strong>${acqEsc(w.title)}</strong>
               <span class="sub">(${acqEsc(w.artist_name)})</span><br>
-              <span class="qid">${workId}</span></td>
-          <td>${when}</td><td>${acqEsc(w.acquired_by || "—")}</td><td>${rev}</td><td>${btn}</td>
+              <span class="qid">${acqEsc(w.work_id)}</span></td>
+          <td class="sub">${w.file_health === "truncated"
+              ? `<strong>truncated</strong>`
+              : (w.pixels_measured ? `${w.megapixels} MP` : "not measured")}</td>
+          <td class="sub">${when}</td>
+          <td class="sub">${w.reviewed
+              ? acqEsc((w.reviewed_at || "").slice(0, 10)) +
+                (w.review_note ? `<br>${acqEsc(w.review_note)}` : "")
+              : "—"}</td>
+          <td><button onclick="acqOpenCard(${i})">Look at it</button></td>
         </tr>`;
-      }
+      });
       html += "</tbody></table>";
       det.innerHTML = html;
     }
 
-    async function acqReview(wid, undo) {
-      const r = await fetch(`/works/${wid}/acquisition_review`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({undo: !!undo, note: ""}),
-      });
-      if (!r.ok) { toast("failed: " + r.status); return; }
-      toast(undo ? "marked unreviewed" : "marked reviewed");
-      refreshAcqBadge();
-      loadAcquisitions();
+    function acqOpenCard(i) { acqIdx = i; acqView = "cards"; renderAcquisition(); }
+
+    // Hand the whole set of autonomous acquisitions to the rating view, in the
+    // order that puts the unrated ones first. The queue is COMPUTED server-side,
+    // so it keeps including works the tick acquires after this page loaded — a
+    // frozen list would quietly stop growing and read as "you have rated
+    // everything".
+    async function rateAcquisitions() {
+      const picker = document.getElementById("queue-picker");
+      if (picker) {
+        const opt = Array.from(picker.options).find(o => o.value === "autonomous-acquisitions");
+        if (opt) { picker.value = "autonomous-acquisitions"; await loadQueueFromPicker(); return; }
+      }
+      // The picker has not populated yet (or is absent) — load it directly
+      // rather than failing silently.
+      try {
+        const r = await fetch("/queues/autonomous-acquisitions");
+        if (!r.ok) { toast(`could not load the rating queue (${r.status})`); return; }
+        const d = await r.json();
+        closeDetail();
+        renderListPayload(d);
+        if (d.works && d.works.length) openWork(d.works[0].work_id);
+      } catch (e) { toast("could not load the rating queue"); }
     }
 
     async function upgradeDecide(wid, decision) {
-      const r = await fetch(`/variant_upgrades/${wid}/decision`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({decision, note: ""}),
-      });
-      if (!r.ok) { toast("failed: " + r.status); return; }
-      const d = await r.json();
-      toast(`${decision} logged for ${wid.slice(0,7)}…`);
-      loadUpgrades();
+      try {
+        const r = await fetch(`/variant_upgrades/${encodeURIComponent(wid)}/decision`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({decision, note: ""}),
+        });
+        if (!r.ok) { toast("failed: " + r.status); return; }
+      } catch (e) { toast("could not save decision"); return; }
+      toast(`${decision} logged for ${String(wid).slice(0, 7)}…`);
+      // Record it on the row and move on. Reloading the whole list snapped
+      // back to the first candidate after every decision, which on a queue is
+      // a way to lose your place and re-judge what you just judged.
+      const cur = upgQueue[upgIdx];
+      if (cur && cur.existing_wid === wid) cur.decision = decision;
+      if (upgQueue.length > 1) upgSkip(1); else renderUpgrade();
     }
 
     // Reveal the detail pane for a non-work panel (summary, upgrades, e-paper).
@@ -2272,6 +2681,11 @@
                <button class="modality-btn active" data-mod="" onclick="setModality('${wid}','')">Visible</button>
                ${data.modalities.map(m => `<button class="modality-btn" data-mod="${m.modality}" onclick="setModality('${wid}','${m.modality}')" title="${(m.source||'') + (m.license?(' · '+m.license):'')}">${m.label || m.modality}</button>`).join("")}
              </div>` : ""}
+             ${data._file_health === "truncated" ? `<div class="placeholder"
+               style="border:1px solid var(--accent,#c00);padding:8px;margin-top:6px;border-radius:6px">
+               <strong>The archived file is truncated — it will not open.</strong>
+               <div class="sub">The download did not finish, so there is no picture to judge here.
+               Do not rate this one down for it; it needs re-fetching.</div></div>` : ""}
              <div class="image-meta">
                <span>${(data.files?.master?.dimensions_px || []).join(" × ") || ""}</span>
                <span>${data.files?.master?.size_bytes ? (Math.round(data.files.master.size_bytes/1e5)/10) + " MB" : ""}</span>
@@ -2486,7 +2900,10 @@
         const picker = document.getElementById("queue-picker");
         for (const q of (d.queues || [])) {
           const opt = document.createElement("option");
-          opt.value = q.name;
+          // A file queue's addressable key is its filename stem, which is also
+          // its display name. A computed queue has a readable label and a
+          // separate key — sending the label back would 404.
+          opt.value = q.key || q.name;
           opt.textContent = `${q.name} (${q.n_works})`;
           opt.title = q.description;
           picker.appendChild(opt);

@@ -20,7 +20,10 @@ row is always optional; the surface exists so the *option* is visible.
 
 from __future__ import annotations
 
+import glob
 import json
+import math
+import os
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -73,6 +76,12 @@ class Gate:
     #: healthy gate teaches you to ignore the one real alarm.
     auto_clears: bool = False
     note: str = ""
+    #: What an item's ``id`` refers to, so a viewer never has to guess which
+    #: image endpoint serves it. Guessing is how the unreviewed-acquisitions
+    #: list came to request every one of its 103 pictures from the CANDIDATE
+    #: proxy, which only answers to Wikidata Q-IDs -- 103 broken images on a
+    #: screen whose entire purpose is looking at pictures.
+    item_kind: str = "candidate"  # "candidate" (Wikidata Q-ID) | "held_work"
     items: list[dict[str, Any]] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
@@ -85,6 +94,7 @@ class Gate:
             "clears_by": self.clears_by,
             "advisory": self.advisory,
             "auto_clears": self.auto_clears,
+            "item_kind": self.item_kind,
             "note": self.note,
             "deadlocked": (self.blocking > 0 and self.drainable == 0 and not self.auto_clears),
         }
@@ -252,6 +262,126 @@ def classify_deferral(reason: str | None) -> dict[str, Any]:
     return out
 
 
+#: Subjects the screener flags for a person to look at. 92 of the 100 works in
+#: the routed queue are there for one of these, and the card never said so --
+#: it asked "keep or not?" about a picture without stating the question. An
+#: unknown flag renders as its bare Q-ID rather than disappearing: a flag we
+#: cannot name is still a flag, and silence would read as "nothing flagged".
+DEPICTS_FLAG_LABELS = {
+    "Q10791": "nudity",
+    "Q22808839": "naked woman",
+}
+
+
+def _norm_title(text: str) -> str:
+    return " ".join(re.sub(r"[^a-z0-9 ]+", " ", (text or "").lower()).split())
+
+
+def _held_by_artist_index() -> dict[str, list[dict[str, str]]] | None:
+    """artist Q-ID -> the works the archive already holds by them.
+
+    Returns None when the archive directory cannot be read. None is not an
+    empty archive: the card must say the comparison could not be made rather
+    than showing an empty space, which reads as "nothing similar is held" --
+    the exact opposite of what an unreadable index means.
+    """
+    try:
+        from fine_art_archive.api import store
+
+        # glob silently converts an unreadable root into an empty result.  Probe
+        # the root first so an unavailable comparison is never presented as an
+        # empty archive.
+        with os.scandir(store.WORKS):
+            pass
+        paths = sorted(glob.glob(str(store.WORKS / "*/meta.json")))
+    except Exception:  # noqa: BLE001 - any failure here means "cannot compare"
+        return None
+    if not paths:
+        # An archive which is readable but has no works is a valid empty index.
+        # Only an exception above means the comparison itself was unavailable.
+        return {}
+    out: dict[str, list[dict[str, str]]] = {}
+    for path in paths:
+        try:
+            meta = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        artist = meta.get("artist") or {}
+        qid = (artist.get("canonical") or {}).get("wikidata_q") or artist.get("wikidata_q")
+        title = meta.get("title") or ""
+        wid = meta.get("id") or Path(path).parent.name
+        if not qid:
+            continue
+        out.setdefault(str(qid), []).append(
+            {"id": str(wid), "title": str(title), "norm": _norm_title(str(title))}
+        )
+    return out
+
+
+def _jaccard(a: str, b: str) -> float:
+    sa, sb = set(a.split()), set(b.split())
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / len(sa | sb)
+
+
+def held_lookalikes(
+    artist_qid: str, near_title: str, index: dict[str, list[dict[str, str]]] | None
+) -> dict[str, Any]:
+    """The works already held that a candidate's title resembles.
+
+    "Looks like one you already hold" is unanswerable without the picture you
+    already hold beside it. Naming the title and stopping there asks you to
+    remember a painting.
+    """
+    if index is None:
+        return {"lookup": "unavailable"}
+    want = _norm_title(near_title)
+    held = index.get(artist_qid or "", [])
+    scored = sorted(
+        ((_jaccard(want, h["norm"]), h) for h in held), key=lambda t: t[0], reverse=True
+    )
+    matches = [
+        {"work_id": h["id"], "title": h["title"], "overlap": round(score, 2)}
+        for score, h in scored
+        if score >= 0.5
+    ][:4]
+    return {"lookup": "ok", "matches": matches}
+
+
+def routing_flags(cand: dict) -> dict[str, Any]:
+    """Why the screener sent this work to a person, in the screener's own terms.
+
+    Every one of these is a question about THIS PICTURE -- is it the one you
+    already hold, is its subject one you want, is its title ambiguous. None of
+    them is a question about the painter, which is why presenting this queue as
+    an artist decision could never answer it.
+    """
+    sc = cand.get("screen_scores") or {}
+    out: dict[str, Any] = {}
+    held = sc.get("held_titles_for_artist")
+    if isinstance(held, int):
+        out["held_by_artist"] = held
+    variants = sc.get("candidate_variants")
+    if isinstance(variants, int):
+        out["variants"] = variants
+    near = sc.get("fuzzy_against")
+    if near:
+        out["near_title"] = str(near)
+        score = sc.get("fuzzy_jaccard")
+        if isinstance(score, (int, float)) and math.isfinite(score):
+            out["near_score"] = round(float(score), 3)
+    alias = sc.get("ambiguous_short_alias")
+    if alias:
+        out["ambiguous_alias"] = str(alias)
+    flagged = sc.get("depicts_flagged") or []
+    if flagged:
+        out["depicts"] = [
+            {"qid": str(q), "label": DEPICTS_FLAG_LABELS.get(str(q))} for q in flagged
+        ]
+    return out
+
+
 def _cand_row(cand: dict, why: str) -> dict[str, Any]:
     scores = cand.get("screen_scores") or {}
     dims = _integer_dimensions(scores.get("dimensions_px"))
@@ -280,6 +410,12 @@ def _cand_row(cand: dict, why: str) -> dict[str, Any]:
             if cand.get("transfer_deferrals")
             else None
         ),
+        # Not "no flags" -- the screener's actual reasons for asking.
+        "routing_flags": routing_flags(cand),
+        # A candidate that has never been probed has no size and no rights
+        # determination. That is different from "small" or "unclear", and the
+        # card must say which, or an absent number reads as a bad one.
+        "probed": bool((cand.get("screen_scores") or {}).get("dimensions_px")),
     }
 
 
@@ -409,7 +545,7 @@ def frontier_gates(
         label="Candidates whose rights could not be determined",
         blocking=len(unclear),
         drainable=len(unclear) if assessed else UNMEASURED,
-        clears_by="recording a creator death year or work date",
+        clears_by="recording a death year, or taking it anyway",
         note=(
             ""
             if assessed
@@ -439,7 +575,10 @@ def frontier_gates(
             label="Candidates the screener routed to review",
             blocking=len(reviewed),
             drainable=len(reviewed),
-            clears_by="approving the artist, or a widened auto-accept rule",
+            # Was "approving the artist". It is not: every work here is kept or
+            # refused on its own, and saying otherwise made the queue unreadable
+            # -- you cannot tell what you are answering.
+            clears_by="keeping or refusing each work, one at a time",
             items=reviewed,
         ),
         Gate(
@@ -602,6 +741,15 @@ def works_awaiting_look(
         if source == "routed":
             if cand.get("status") != "review":
                 continue
+        elif source == "rights":
+            # Since the owner's 2026-08-29 exception, "rights unclear" is a
+            # call a person can actually make -- in-copyright works are
+            # permitted for private display -- so this gate had a decision
+            # behind it and no screen on which to make it.
+            if (cand.get("screen_scores") or {}).get("rights_status") != "unclear":
+                continue
+            if cand.get("status") in {"acquired", "rejected"}:
+                continue
         else:
             if cand.get("status") != "screened":
                 continue
@@ -610,7 +758,13 @@ def works_awaiting_look(
         qid = cand.get("qid")
         if not qid or qid in seen:
             continue
-        row = _cand_row(cand, "released by approving this artist")
+        row = _cand_row(
+            cand,
+            {
+                "routed": "the screener routed this picture to you",
+                "rights": "the screener could not determine this work's rights",
+            }.get(source, "released by approving this artist"),
+        )
         row["decision"] = None
         out.append(row)
     # Named artists first. Sorting on the raw label put every UNNAMED artist at
@@ -623,6 +777,18 @@ def works_awaiting_look(
             str(r.get("title") or ""),
         )
     )
+    # Where the screener said "this looks like one you already hold", resolve
+    # WHICH one, so the card can put the two pictures side by side. The index
+    # is built once per request and only when some row needs it.
+    if any((r.get("routing_flags") or {}).get("near_title") for r in out):
+        index = _held_by_artist_index()
+        for row in out:
+            flags = row.get("routing_flags") or {}
+            if flags.get("near_title"):
+                flags["near_held"] = held_lookalikes(
+                    str(row.get("artist_qid") or ""), str(flags["near_title"]), index
+                )
+
     # Attach the artist's OTHER waiting works to each row. Judging one picture
     # by a painter you do not know is easier beside the rest of what is
     # offered, and it is the difference between "is this good" and "is this
@@ -632,10 +798,18 @@ def works_awaiting_look(
         aqid = row.get("artist_qid")
         if aqid:
             by_artist.setdefault(aqid, []).append(row)
+    for siblings in by_artist.values():
+        for position, row in enumerate(siblings, start=1):
+            row["artist_work_count"] = len(siblings)
+            row["artist_work_index"] = position
     for row in out:
-        siblings = by_artist.get(row.get("artist_qid") or "", [])
-        row["artist_work_count"] = len(siblings)
-        row["artist_works"] = [
-            {"id": s["id"], "title": s["title"]} for s in siblings if s["id"] != row["id"]
-        ][:11]
+        if row.get("artist_qid"):
+            continue
+        # No artist Q-ID, so it is grouped with nothing. It is still one work:
+        # "0 of 0" would be a lie about a picture that is on screen.
+        row["artist_work_count"] = 1
+        row["artist_work_index"] = 1
+    # The browser derives the other cards from this response once. Sending
+    # every sibling list on every row makes a large artist queue quadratic on
+    # the wire, even though the data is identical for each card.
     return out

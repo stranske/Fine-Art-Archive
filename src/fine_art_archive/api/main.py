@@ -271,6 +271,10 @@ def get_work(work_id: str) -> dict:
     latest = store.latest_rating(work_id)
     if latest is not None:
         w = {**w, "_latest_rating": latest}
+    # Whether the archived file actually opens. Three acquired masters are
+    # truncated, and without this the rating view asks for a judgement on a
+    # picture it is showing as a broken-image icon.
+    w = {**w, "_file_health": store.master_health(work_id)}
     return w
 
 
@@ -1004,6 +1008,43 @@ def _queue_invalid_count() -> int:
     return invalid
 
 
+#: Queues that are COMPUTED, not stored. A frozen list of work ids would be
+#: correct for exactly as long as it took the growth tick to acquire the next
+#: work -- and a rating queue that silently stops including new arrivals is
+#: the same failure as a review surface that silently omits works: it reads as
+#: "you have seen everything".
+DYNAMIC_QUEUES = {
+    "autonomous-acquisitions": (
+        "Everything the growth automation acquired on its own",
+        "unrated first, then newest — rate them here",
+    ),
+}
+
+
+def _dynamic_queue(name: str) -> dict | None:
+    if name not in DYNAMIC_QUEUES:
+        return None
+    label, description = DYNAMIC_QUEUES[name]
+    rows = store.acquisitions_since_epoch()
+    # Unrated first: the whole point is to rate these, and a work already rated
+    # is the one place in the queue where there is nothing to do. Newest first
+    # within each group, which is the order the acquisitions list already uses.
+    def sort_key(r: dict) -> tuple:
+        return (store.count_ratings_for(r["work_id"]) > 0, _neg_ts(r.get("acquired_at")))
+
+    return {
+        "name": label,
+        "description": description,
+        "work_ids": [r["work_id"] for r in sorted(rows, key=sort_key)],
+    }
+
+
+def _neg_ts(ts: object) -> str:
+    """Sort newest-first inside an ascending sort, without parsing dates."""
+    text = str(ts or "")
+    return "".join(chr(0x10FFFD - ord(c)) if ord(c) < 0x10FFFD else c for c in text)
+
+
 @app.get("/queues")
 def list_queues() -> dict:
     """List named queues available for the rating UI."""
@@ -1019,8 +1060,24 @@ def list_queues() -> dict:
             out.append(
                 {
                     "name": q.get("name", p.stem),
+                    # The addressable key. For a file queue it is the filename
+                    # stem, which may differ from the display name inside it.
+                    "key": p.stem,
                     "description": q.get("description", ""),
                     "n_works": len(q.get("work_ids", [])),
+                }
+            )
+    for key in DYNAMIC_QUEUES:
+        # A separate name: `q` above is the file-backed queue dict, and reusing
+        # it here made this an Optional assignment to a non-Optional variable.
+        dyn = _dynamic_queue(key)
+        if dyn:
+            out.append(
+                {
+                    "name": dyn["name"],
+                    "key": key,
+                    "description": dyn["description"],
+                    "n_works": len(dyn["work_ids"]),
                 }
             )
     return {
@@ -1037,10 +1094,12 @@ def get_queue(name: str) -> dict:
     The works list mirrors /works rows so the UI can render them with
     the same renderer used for the regular list (badges, etc.).
     """
-    p = QUEUES_DIR / f"{name}.json"
-    if not p.exists():
-        raise HTTPException(404, f"no queue named {name!r}")
-    q = _load_queue_file(p)
+    q = _dynamic_queue(name)
+    if q is None:
+        p = QUEUES_DIR / f"{name}.json"
+        if not p.exists():
+            raise HTTPException(404, f"no queue named {name!r}")
+        q = _load_queue_file(p)
     wids_ordered = q.get("work_ids", [])
     # Fetch each work via the store. Preserve queue order.
     works_out = []
@@ -1066,8 +1125,11 @@ def get_queue(name: str) -> dict:
                 "_n_ratings": store.count_ratings_for(wid),
             }
         )
+    # File-backed queues carry a stem key; dynamic ones carry their own.
+    key = name
     return {
         "name": q.get("name", name),
+        "key": key,
         "description": q.get("description", ""),
         "total": len(works_out),
         "works": works_out,
@@ -1280,6 +1342,8 @@ def _acquisition_gate() -> gates.Gate:
         blocking=len(unreviewed),
         drainable=len(unreviewed),
         clears_by="marking a work reviewed (or simply looking)",
+        # These ids are work ids in the archive, not Wikidata Q-IDs.
+        item_kind="held_work",
         note=(
             "Purely informational — grant G55 does not wait on this. Nothing "
             "acquires more slowly because this list is long."
@@ -1306,6 +1370,10 @@ def _variant_upgrade_gate() -> gates.Gate:
             blocking=0,
             drainable=gates.UNMEASURED,
             clears_by="accepting or rejecting the upgrade",
+            # Declared on BOTH branches. A gate whose item_kind depends on
+            # whether its data happens to be present would tell the viewer a
+            # different story on an empty day than on a busy one.
+            item_kind="held_work",
             note="no candidate file present, so nothing could be counted",
         )
     pending = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
@@ -1315,6 +1383,8 @@ def _variant_upgrade_gate() -> gates.Gate:
         blocking=len(pending),
         drainable=len(pending),
         clears_by="accepting or rejecting the upgrade",
+        # `existing_wid` is an archive work id, not a Wikidata Q-ID.
+        item_kind="held_work",
         items=[
             {
                 "id": c.get("existing_wid", ""),
@@ -1543,8 +1613,8 @@ def review_works(limit: int = 400, source: str = "approved") -> dict:
     """
     if limit < 1:
         raise HTTPException(400, "limit must be >= 1")
-    if source not in {"approved", "routed"}:
-        raise HTTPException(400, "source must be 'approved' or 'routed'")
+    if source not in {"approved", "routed", "rights"}:
+        raise HTTPException(400, "source must be 'approved', 'routed' or 'rights'")
     approved = gates.load_allowlisted_artists()
     decided = gates.load_work_decisions()
     rows = gates.works_awaiting_look(approved, decided=decided, source=source)

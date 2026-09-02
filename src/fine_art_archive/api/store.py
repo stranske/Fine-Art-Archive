@@ -314,6 +314,111 @@ def _owner_review_event(meta: dict) -> dict | None:
     return max(seen, key=lambda e: str(e.get("ts") or "")) if seen else None
 
 
+def _image_pixels(path: Path) -> tuple[int, int] | None:
+    """Master dimensions, or None when they cannot be read.
+
+    None means "could not measure". It is never rendered as a size, because a
+    missing number that looks like a small number is how a transfer failure
+    came to read as a low-quality picture.
+    """
+    try:
+        import warnings
+
+        from PIL import Image
+
+        with warnings.catch_warnings():
+            # Header read only, no decode. The bomb warning would otherwise
+            # fire on every gigapixel master and bury real log lines.
+            warnings.simplefilter("ignore", Image.DecompressionBombWarning)
+            with Image.open(path) as im:
+                return int(im.width), int(im.height)
+    except Exception:  # noqa: BLE001 - unreadable, truncated, or no PIL
+        return None
+
+
+def _master_health(path: Path) -> str:
+    """ "ok" | "truncated" | "unchecked" for an archived master.
+
+    A JPEG marker pair is only a cheap hint: a marker-only file is not an
+    image, while a master missing its final marker can still decode perfectly.
+    Decode every readable master so both cases receive the truthful result.
+
+    "unchecked" is returned when neither stage could run, and is never
+    collapsed into "ok" -- not looking is not a clean bill.
+    """
+    try:
+        with open(path, "rb") as fh:
+            fh.read(1)
+    except OSError:
+        return "unchecked"
+
+    try:
+        import warnings
+
+        from PIL import Image
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", Image.DecompressionBombWarning)
+            with Image.open(path) as im:
+                im.load()
+        return "ok"
+    except Exception:  # noqa: BLE001 - any decode failure means unusable
+        return "truncated"
+
+
+def master_health(work_id: str) -> str:
+    """ "ok" | "truncated" | "unchecked" for a work's archived master."""
+    try:
+        work_dir = contained_work_path(WORKS, work_id)
+    except (ValueError, OSError):
+        return "unchecked"
+    master = _find_master(work_dir)
+    return _master_health(master) if master else "unchecked"
+
+
+def _find_master(work_dir: Path) -> Path | None:
+    for name in ("master.jpeg", "master.jpg", "master.png", "master.tif", "master.tiff"):
+        cand = work_dir / name
+        if cand.exists():
+            return cand
+    return None
+
+
+def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
+    prov = meta.get("acquisition_provenance") or {}
+    rights = meta.get("rights") or {}
+    holder = meta.get("holder") or {}
+    master = _find_master(work_dir)
+    px = _image_pixels(master) if master else None
+    stat_failed = False
+    try:
+        size_mb = round(master.stat().st_size / 1e6, 1) if master else None
+    except OSError:
+        # A master can disappear after _find_master() but before we assemble
+        # its evidence. Keep the row useful and make the uncertainty explicit.
+        size_mb = None
+        stat_failed = True
+    return {
+        "holder_name": holder.get("name") or "",
+        "source": prov.get("source") or "",
+        "source_filename": prov.get("commons_filename") or "",
+        "source_url": prov.get("image_url") or "",
+        "scaled_rendition": bool(prov.get("scaled_rendition")),
+        "wikidata_q": (meta.get("stable_identifiers") or {}).get("wikidata_q") or "",
+        "rights_status": rights.get("status") or "",
+        "rights_evidence_url": rights.get("evidence_url") or "",
+        # Absent, not zero. `pixels_measured` says which.
+        "pixels_measured": px is not None,
+        "width_px": px[0] if px else None,
+        "height_px": px[1] if px else None,
+        "megapixels": round(px[0] * px[1] / 1e6, 1) if px else None,
+        "master_mb": size_mb,
+        # "ok" | "truncated" | "unchecked". Never collapse the last into the
+        # first: not looking is not a clean bill.
+        "file_health": _master_health(master) if master and not stat_failed else "unchecked",
+    }
+
+
 def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
     """Works acquired in the autonomous era, newest first, with review state.
 
@@ -361,6 +466,13 @@ def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
                 "reviewed_at": (reviewed or {}).get("ts"),
                 "reviewed_by": (reviewed or {}).get("actor"),
                 "review_note": (reviewed or {}).get("notes"),
+                # The evidence a person needs to say "yes, that is the picture
+                # I meant to acquire". The list used to carry a title, a name
+                # and a 68 px icon -- which cannot show that a work titled
+                # "Poppy Field near ARGENTEUIL" was filled from a file named
+                # "Poppy Field in a Hollow near GIVERNY". The source filename
+                # and URL are the only place that disagreement is visible.
+                **_acquisition_evidence(meta, meta_path.parent),
             }
         )
     rows.sort(key=lambda r: str(r["acquired_at"]), reverse=True)
