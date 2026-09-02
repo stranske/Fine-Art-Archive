@@ -41,6 +41,18 @@ automation_logs/
 # Source masters live outside the repo under FAA_ART_WORKS_ROOT.
 /data/image_cache/
 
+# The operator UI's navigation index, rebuilt from the sidecar tree by
+# scripts/build_manifest.py. GENERATED-LOCAL, deliberately not committed:
+# it is a pure function of a works tree that lives outside the repo at a
+# per-machine path, it changes on every promotion (which happens outside this
+# repo too), and CI has no works tree to check a committed copy against. A
+# tracked copy would be stale on arrival and would collide across the automated
+# PR fleet, the same reason the status files below are ignored. Being neither
+# tracked nor ignored is what let it stay missing: `git status` never mentioned
+# it. Rebuild with `python3 scripts/build_manifest.py`; `--check` reports
+# staleness, and /healthz reports drift.
+/manifest.csv
+
 # =============================================================================
 # Workflows Consumer Repo - Shared Status Files
 # =============================================================================

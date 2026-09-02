@@ -58,6 +58,20 @@ TILES_CACHE_DIR = env_path("FAA_TILES_CACHE_DIR", Path.home() / ".faa-tiles")
 # the test that pins the allowance, so the two cannot drift apart.
 FRESH_CHECKOUT_SIDECAR_WORKS = 1
 
+# What clears manifest drift. Reported alongside the drift itself so the number
+# arrives with its remedy: the 2026-08-05 gap went unnoticed for a month partly
+# because nothing anywhere named a producer for the file, and a reader had no
+# way to tell "behind" from "unfixable".
+#
+# Built from THIS process's interpreter and THIS checkout's path, never a bare
+# "python3 scripts/...". More than one checkout of this repo exists on a given
+# machine, each with its own manifest.csv beside it, and the app is routinely
+# served from a different one than the operator has open. A relative command
+# would be copy-pasted into whichever directory the shell happened to be in and
+# would rebuild a manifest the running app never reads -- reporting success
+# while the drift it was meant to clear stayed exactly where it was.
+MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_manifest.py'}"
+
 app = FastAPI(
     title="Fine Art Archive — Companion API",
     description="Browse + rate the canonical Fine Art Archive.",
@@ -195,12 +209,16 @@ def healthz() -> dict:
     sidecar_works = _count_work_dirs(store.WORKS)
     archive_works = _count_work_dirs(ART_WORKS_ROOT)
 
-    # The manifest is the operator UI's ONLY navigation path, and nothing
-    # regenerates it on promotion. On 2026-08-05 that left 18 promoted works
-    # servable but unfindable — browse showed 3393 against 3411 on disk — while
-    # this endpoint reported ok:true throughout, because `ok` only ever looked
-    # at ratings and queues. A work the operator cannot find cannot be rated,
-    # so it never enters the curation loop. Drift is therefore a health fact.
+    # The manifest is the operator UI's ONLY navigation path, and until
+    # 2026-09-01 nothing regenerated it on promotion. On 2026-08-05 that left 18
+    # promoted works servable but unfindable — browse showed 3393 against 3411
+    # on disk — while this endpoint reported ok:true throughout, because `ok`
+    # only ever looked at ratings and queues. A work the operator cannot find
+    # cannot be rated, so it never enters the curation loop. Drift is therefore
+    # a health fact. `scripts/build_manifest.py` is now the producer that
+    # clears it; `manifest_remedy` below names it in the response, because a
+    # gate that cannot say what would clear it is defective however accurate
+    # its number is.
     manifest_drift = None if sidecar_works is None else manifest_loaded - sidecar_works
     # An ABSENT or empty manifest is "not configured" ONLY when there is
     # nothing to navigate: a fresh checkout ships one fixture sidecar and no
@@ -212,13 +230,16 @@ def healthz() -> dict:
     # consulting `sidecar_works`, computed four lines above, so `ok` was
     # non-monotonic in the severity of the very condition it exists to detect:
     # 0 rows over 3411 sidecars reported healthy while 1 row over 3411 did not.
-    # Nothing in this repository writes manifest.csv, so that was the default
-    # state of every fresh deployment against a real works tree.
+    # Nothing in this repository wrote manifest.csv until 2026-09-01, so that
+    # was the default state of every fresh deployment against a real works tree
+    # — and on this machine it had reached all 3499 works, the file never
+    # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "manifest_loaded": manifest_loaded,
+        "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
         "sidecar_works": sidecar_works,
         "archive_works": archive_works,
         "manifest_drift": manifest_drift,
