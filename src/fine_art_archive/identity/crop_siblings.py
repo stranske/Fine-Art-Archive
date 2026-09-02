@@ -198,6 +198,15 @@ def crop_sibling_groups(metas: Iterable[Mapping[str, Any]]) -> list[CropSiblingG
                 break
         if not reciprocal or set(reciprocal) != ids:
             continue
+        connected = {next(iter(ids))}
+        pending = list(connected)
+        while pending:
+            member = pending.pop()
+            for target in reciprocal[member] - connected:
+                connected.add(target)
+                pending.append(target)
+        if connected != ids:
+            continue
 
         positions: dict[str, str | None] = {}
         for targets in declared.values():
@@ -238,6 +247,13 @@ def measure_lateral_overlap(
     """
     import numpy as np  # noqa: PLC0415 - optional at import time by design
     from PIL import Image  # noqa: PLC0415
+
+    if (
+        not isinstance(strip_fraction, (int, float))
+        or not np.isfinite(strip_fraction)
+        or not 0 < strip_fraction <= 1
+    ):
+        raise ValueError("strip_fraction must be a finite value in (0, 1]")
 
     def load(path: Any) -> Any:
         with Image.open(path) as im:

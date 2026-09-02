@@ -118,6 +118,16 @@ class TestWhatMustNotBeExcused:
         ]
         assert crop_sibling_groups(metas) == []
 
+    def test_disconnected_reciprocal_pairs_are_not_one_group(self) -> None:
+        """Shared Q-IDs need one connected crop relationship, not two pairs."""
+        metas = [
+            _meta("aaa-work", "Q1", [_crop("bbb-work", "left")]),
+            _meta("bbb-work", "Q1", [_crop("aaa-work", "right")]),
+            _meta("ccc-work", "Q1", [_crop("ddd-work", "left")]),
+            _meta("ddd-work", "Q1", [_crop("ccc-work", "right")]),
+        ]
+        assert crop_sibling_groups(metas) == []
+
     def test_a_different_role_is_not_a_partial_crop(self) -> None:
         """`duplicate-copy` means the opposite thing and must not be excused."""
         metas = [
@@ -205,6 +215,15 @@ class TestTheMeasurement:
         result = measure_lateral_overlap(left_path, right_path, height=40)
         assert isinstance(result.best_ncc, float)
         assert result.best_ncc <= 1.0
+
+    @pytest.mark.parametrize("fraction", [None, -0.1, 0, 1.1, float("nan")])
+    def test_measurement_rejects_invalid_strip_fractions(self, fraction) -> None:
+        pytest.importorskip("numpy")
+        pytest.importorskip("PIL")
+        from fine_art_archive.identity.crop_siblings import measure_lateral_overlap
+
+        with pytest.raises(ValueError, match="strip_fraction"):
+            measure_lateral_overlap("unused-a", "unused-b", strip_fraction=fraction)
 
 
 class TestTheCalibration:
