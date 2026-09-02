@@ -25,7 +25,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 from contextlib import contextmanager, suppress
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -188,6 +188,48 @@ def htmx_vendor() -> FileResponse:
     )
 
 
+#: Quarantine directories name their own expiry: `<date>__<reason>__purge-after-<date>`
+#: (D02). Nothing ever read that date. On 2026-09-02 eight directories were past
+#: it, the oldest by 78 days, holding ~1.8 GB — a deletion deadline encoded in a
+#: filename that no code parses is a gate whose drain does not exist. Reporting
+#: it is the durable fix; purging stays a human decision.
+_PURGE_AFTER_RE = re.compile(r"purge-after-(\d{4}-\d{2}-\d{2})")
+
+
+def _quarantine_report(root: Path, today: date | None = None) -> dict | None:
+    """Overdue and TTL-less quarantine directories under `root`.
+
+    None means the directory could not be read — distinct from "nothing is
+    overdue", which is `{"overdue": [], ...}`. A quarantine tree that cannot be
+    listed must not report clean.
+
+    `no_ttl` is tracked beside `overdue` because a quarantine with no
+    `purge-after-` date in its name can never come due at all: it is the same
+    defect one step earlier, and it is the quieter of the two.
+    """
+    today = today or date.today()
+    try:
+        entries = [child for child in root.iterdir() if child.is_dir()]
+    except OSError:
+        return None
+    overdue: list[dict] = []
+    no_ttl: list[str] = []
+    for child in entries:
+        match = _PURGE_AFTER_RE.search(child.name)
+        if match is None:
+            no_ttl.append(child.name)
+            continue
+        try:
+            due = date.fromisoformat(match.group(1))
+        except ValueError:
+            no_ttl.append(child.name)
+            continue
+        if due < today:
+            overdue.append({"name": child.name, "days_overdue": (today - due).days})
+    overdue.sort(key=lambda row: -row["days_overdue"])
+    return {"overdue": overdue, "no_ttl": sorted(no_ttl), "total": len(entries)}
+
+
 def _count_work_dirs(root: Path) -> int | None:
     """Number of work directories under `root`, or None if it is unreadable.
 
@@ -243,6 +285,9 @@ def healthz() -> dict:
         "sidecar_works": sidecar_works,
         "archive_works": archive_works,
         "manifest_drift": manifest_drift,
+        # FYI only — deliberately NOT part of `ok`. An expired quarantine is not
+        # an outage and must never block; it is a fact that had no reader.
+        "quarantine": _quarantine_report(ART_WORKS_ROOT.parent / "quarantine"),
         "ratings_count": store.count_ratings(),
         "ratings_corrupt_line_count": corrupt_line_count,
         "queues_invalid_count": queues_invalid_count,
