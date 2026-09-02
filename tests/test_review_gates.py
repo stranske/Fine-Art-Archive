@@ -440,8 +440,6 @@ def test_artist_view_orders_by_what_is_released(monkeypatch, tmp_path: Path) -> 
     )
     body = TestClient(main.app).get("/review/artists").json()
     assert [a["artist_qid"] for a in body["artists"]] == ["QBIG", "QSMALL"]
-<<<<<<< HEAD
-=======
 
 
 def test_a_decided_work_leaves_every_gate(tmp_path: Path) -> None:
@@ -722,4 +720,3 @@ def test_a_candidate_that_was_never_probed_says_so() -> None:
     probed = gates._cand_row({"qid": "Q2", "screen_scores": {"dimensions_px": [4000, 3000]}}, "why")
     assert probed["probed"] is True
     assert probed["megapixels"] == 12.0
->>>>>>> origin/main

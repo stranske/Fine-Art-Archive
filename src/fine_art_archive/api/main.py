@@ -1421,8 +1421,6 @@ def review_summary() -> dict:
     }
 
 
-<<<<<<< HEAD
-=======
 CANDIDATE_IMAGE_MAX = 1400
 
 # Wikimedia asks for a User-Agent naming the tool and a way to reach its
@@ -1670,7 +1668,6 @@ def work_decision(work_qid: str, body: WorkDecisionIn) -> dict:
     }
 
 
->>>>>>> origin/main
 @app.get("/review/artists")
 def review_artists(limit: int = 500) -> dict:
     """Artists awaiting a decision, one row per ARTIST rather than per work.
