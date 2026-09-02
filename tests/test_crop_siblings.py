@@ -245,3 +245,54 @@ class TestTheCalibration:
         )
 
         assert OVERLAP_MIN_NCC < SAME_CONTENT_MIN_CORRELATION - 0.03
+
+
+class TestTheMeasurementCannotRefuteAnIdentity:
+    """The 2026-09-01 near-miss: a low score was written up as "different work".
+
+    Both crops of Tintoretto's *Miracle of the Loaves and Fishes* scored inside
+    the unrelated-pairs range against the Met's own plate, because display crops
+    carry tonal edits and the plate includes the frame. They are the same
+    painting. Acting on the number would have cleared a correct work Q-ID.
+    """
+
+    def _measured(self) -> list:
+        from fine_art_archive.identity.crop_siblings import LateralOverlap
+
+        # The real numbers, both crops vs the Met plate DT5476.jpg.
+        return [
+            LateralOverlap(aligned_ncc=0.041, best_ncc=0.229, shift_fraction=0.0,
+                           ordering=None),
+            LateralOverlap(aligned_ncc=0.058, best_ncc=0.327, shift_fraction=0.0,
+                           ordering=None),
+        ]
+
+    def test_a_true_pair_that_scores_low_reads_as_inconclusive(self) -> None:
+        for overlap in self._measured():
+            assert overlap.verdict == "inconclusive"
+
+    def test_there_is_no_verdict_meaning_different(self) -> None:
+        """Three values, and none of them is a negative finding."""
+        from fine_art_archive.identity.crop_siblings import LateralOverlap
+
+        seen = {
+            LateralOverlap(0.99, 0.99, 0.0, None).verdict,
+            LateralOverlap(0.10, 0.99, 0.33, "a-left").verdict,
+            LateralOverlap(0.04, 0.23, 0.0, None).verdict,
+        }
+        assert seen == {"same-content", "complementary", "inconclusive"}
+
+    def test_the_measurement_never_disproves_a_shared_identity(self) -> None:
+        for overlap in self._measured():
+            assert overlap.disproves_shared_identity is False
+        from fine_art_archive.identity.crop_siblings import LateralOverlap
+
+        assert LateralOverlap(-0.9, -0.9, 0.0, None).disproves_shared_identity is False
+
+    def test_inconclusive_is_distinct_from_a_measured_negative(self) -> None:
+        """`not complementary` must not be the way callers ask the question."""
+        from fine_art_archive.identity.crop_siblings import LateralOverlap
+
+        weak = LateralOverlap(0.041, 0.229, 0.0, None)
+        assert not weak.complementary  # true, but says nothing about identity
+        assert weak.verdict == "inconclusive"

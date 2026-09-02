@@ -87,7 +87,30 @@ OVERLAP_MIN_NCC = 0.80
 
 @dataclass(frozen=True)
 class LateralOverlap:
-    """Where one rendition sits inside another, measured from the pixels."""
+    """Where one rendition sits inside another, measured from the pixels.
+
+    **This measurement can CONFIRM a relationship and can never refute one.**
+    There is deliberately no "different work" verdict and none may be added --
+    see :meth:`verdict`. A low correlation on this corpus is the EXPECTED
+    result for a legitimate crop, for two reasons that co-occur constantly:
+
+    * Display crops carry non-linear tonal edits, not just a rectangle. A
+      parent plus the right rectangle reproduces one at only ~17.5 dB, so
+      greyscale correlation collapses on a true match.
+    * Museum plates routinely include the picture FRAME. The Met's own plate of
+      *The Miracle of the Loaves and Fishes* reads aspect 2.26 against a canvas
+      catalogued at 2.63, which breaks both the scale assumption here and any
+      aspect sanity check applied around it.
+
+    Measured 2026-09-01, the near-miss this warning exists for: the archive's
+    two crops of that painting scored 0.229 and 0.327 against the Met plate --
+    inside the unrelated-pairs range (max 0.559, n=11) -- and that was written
+    up as "different painting, the work Q-ID is wrong". They are the same
+    painting, left half and right half, and the CLIP dedup gate had it right at
+    cos 0.9347. Acting on the number would have cleared a CORRECT
+    ``stable_identifiers.wikidata_q``, which CLAUDE.md permits only "when
+    evidence shows it is wrong".
+    """
 
     #: Correlation of the two images with no shift applied. Low for
     #: complementary crops, near 1.0 for a re-encode.
@@ -102,7 +125,11 @@ class LateralOverlap:
 
     @property
     def complementary(self) -> bool:
-        """True when these are different parts of one image, not one image twice."""
+        """True when these are POSITIVELY shown to be parts of one image.
+
+        False means "not shown", never "shown not to be" -- read
+        :meth:`verdict` rather than negating this.
+        """
         return (
             self.best_ncc >= OVERLAP_MIN_NCC
             and self.aligned_ncc <= COMPLEMENTARY_MAX_NCC
@@ -111,8 +138,39 @@ class LateralOverlap:
 
     @property
     def same_content(self) -> bool:
-        """True when the two files show the same framing at some quality."""
+        """True when the two files are POSITIVELY shown to share one framing.
+
+        False means "not shown", never "shown not to be". See :meth:`verdict`.
+        """
         return self.aligned_ncc >= SAME_CONTENT_MIN_CORRELATION
+
+    @property
+    def verdict(self) -> str:
+        """``"same-content"`` | ``"complementary"`` | ``"inconclusive"``.
+
+        The point of this property is the third value and the absence of a
+        fourth. Two booleans invite ``if not overlap.complementary:`` read as a
+        finding; a named ``inconclusive`` cannot be read that way. Callers must
+        branch on this rather than negate a boolean, and must treat
+        ``inconclusive`` as "no information", never as evidence of difference.
+        """
+        if self.same_content:
+            return "same-content"
+        if self.complementary:
+            return "complementary"
+        return "inconclusive"
+
+    @property
+    def disproves_shared_identity(self) -> bool:
+        """Always False. Present so the question has a written answer.
+
+        Something will eventually want to ask this measurement whether two
+        files are different works. It cannot answer: it has no negative
+        verdict, by design. Refuting a shared identity needs a method that
+        survives tonal edits and framing -- CLIP/DINOv2, the holder's own
+        catalogue record, or a person looking at the two images.
+        """
+        return False
 
 
 @dataclass(frozen=True)
