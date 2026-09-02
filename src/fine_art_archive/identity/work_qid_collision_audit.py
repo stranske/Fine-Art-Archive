@@ -6,6 +6,21 @@ Collision auditing must do the opposite: count every sidecar that currently
 asserts ``stable_identifiers.wikidata_q``, including holdings and ambiguous
 pairs. Under-reporting here is how shared-Q-ID backlogs silently rebuild
 (Fine-Art-Archive#591).
+
+That total is necessary and it is not sufficient, because not every collision is
+a defect. A work too wide for any panel is held as several complementary crops,
+and each of them depicts that work, so each *correctly* carries its Q-ID. On
+2026-09-01 ``qids_on_multiple`` was 2 and BOTH were complementary-crop pairs:
+the metric read as two outstanding defects with nothing that could ever clear
+them, and the weekly review had put the same two pairs to the owner five times.
+A count whose drainable quantity is zero is a latched gate, and reporting the
+blocking number without the drainable one is what let it sit.
+
+So the totals are partitioned rather than filtered. ``qids_on_multiple`` still
+counts everything, which keeps #591's regression caught; ``crop_sibling_qids``
+names the subset that is correct by construction; and ``actionable_qids`` is
+what is actually left to fix. Only the last one is allowed to drive a review
+surface, and only the last one can reach zero.
 """
 
 from __future__ import annotations
@@ -15,11 +30,13 @@ from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from fine_art_archive.identity.crop_siblings import crop_sibling_groups
 from fine_art_archive.identity.variant_identity import work_qid_of
 from fine_art_archive.identity.variants import variant_links
 
 __all__ = [
     "WorkQidCollisionMeasures",
+    "actionable_offenders",
     "measure_work_qid_collisions",
     "measures_as_dict",
     "worst_offenders",
@@ -38,6 +55,13 @@ class WorkQidCollisionMeasures:
     holdings_asserting_own_qid: int
     mutual_links_ambiguous: int
     self_referential_variant_entries: int
+    #: Of ``qids_on_multiple``, those shared by complementary crops of one work.
+    #: Correct by construction -- nothing here is a defect and nothing can
+    #: clear it, so it must never be presented as outstanding work.
+    crop_sibling_qids: int = 0
+    #: ``qids_on_multiple`` minus the above: the drainable count, and the only
+    #: one a review surface may act on. This is the number that reaches zero.
+    actionable_qids: int = 0
 
 
 def worst_offenders(metas: Iterable[Mapping[str, Any]], *, limit: int = 10) -> dict[str, list[str]]:
@@ -56,6 +80,27 @@ def worst_offenders(metas: Iterable[Mapping[str, Any]], *, limit: int = 10) -> d
         key=lambda item: (-len(item[1]), item[0]),
     )
     return dict(ordered[:limit])
+
+
+def actionable_offenders(
+    metas: Iterable[Mapping[str, Any]], *, limit: int = 10
+) -> dict[str, list[str]]:
+    """Shared Q-IDs that are actually defects — the review surface's input.
+
+    :func:`worst_offenders` is the raw listing and deliberately hides nothing.
+    This is what a surface that ASKS SOMEONE TO DECIDE must read instead: it
+    drops the complementary-crop groups, which are correct by construction and
+    have no remedy to choose between. Putting those in front of a person is how
+    the same two Tintoretto and Van Gogh pairs came back five weeks running.
+    """
+    materialized = [meta for meta in metas if isinstance(meta, Mapping)]
+    excused = {group.work_qid for group in crop_sibling_groups(materialized)}
+    kept = {
+        qid: work_ids
+        for qid, work_ids in worst_offenders(materialized, limit=limit + len(excused)).items()
+        if qid not in excused
+    }
+    return dict(list(kept.items())[:limit])
 
 
 def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCollisionMeasures:
@@ -86,6 +131,12 @@ def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCo
         1 for work_id in links.holdings if work_qid_of(by_work_id.get(work_id, {}))
     )
 
+    crop_sibling_qids = sum(
+        1
+        for group in crop_sibling_groups(materialized)
+        if len(holders.get(group.work_qid, ())) > 1
+    )
+
     return WorkQidCollisionMeasures(
         sidecars=len(materialized),
         valid_work_qid=valid_work_qid,
@@ -95,6 +146,8 @@ def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCo
         holdings_asserting_own_qid=holdings_asserting_own_qid,
         mutual_links_ambiguous=len(links.ambiguous),
         self_referential_variant_entries=len(links.self_referential),
+        crop_sibling_qids=crop_sibling_qids,
+        actionable_qids=qids_on_multiple - crop_sibling_qids,
     )
 
 
