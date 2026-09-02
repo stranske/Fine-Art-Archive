@@ -136,9 +136,24 @@ def invalidate_manifest_cache() -> None:
 
 
 def _matches_query(row: dict, ql: str) -> bool:
-    """Search match. Includes raw title + raw artist_name + the
-    canonical artist name + the canonical family_key. That last one is
-    what makes searching 'Brueghel' return all 40 'Bruegel' works too."""
+    """Search match over the title and every name the archive knows for the artist.
+
+    Four passes, widening: the raw title, the raw `artist_name`, the canonical display
+    name, and a folded comparison of both so accents do not have to be typed (`durer`
+    finds `Dürer`).
+
+    The last pass resolves the QUERY through the same curated alias table the rows go
+    through, and matches when both land on the same Wikidata Q-ID. Without it, a name
+    this repository explicitly asserts is the same painter finds nothing: `CURATED_ALIASES`
+    lists `Pieter Brueghel` and `Pieter Bruegel I` under Q43270, the works are catalogued
+    as `Pieter Bruegel the Elder` under Q43270, and searching either alias returned an
+    empty archive because no substring of one appears in the other.
+
+    This cannot over-match. It fires only where the curated table already says two
+    spellings are one person, so it unifies exactly the variants somebody chose to
+    record — and a bare surname like `Brueghel`, which resolves to nothing, still
+    matches nothing.
+    """
     raw_artist = row.get("artist_name", "") or ""
     cq, cname = _resolve_cached(raw_artist)
     if ql in (row.get("title", "") or "").lower():
@@ -150,7 +165,12 @@ def _matches_query(row: dict, ql: str) -> bool:
     # Also try a folded-name comparison so accent / spelling variants hit
     from fine_art_archive.identity.artist_resolver import fold_name
 
-    return bool(ql in fold_name(raw_artist) or (cname and ql in fold_name(cname)))
+    qf = fold_name(ql)
+    if qf and (qf in fold_name(raw_artist) or (cname and qf in fold_name(cname))):
+        return True
+    # Finally, an alias the curated table maps to the same artist as this row.
+    query_q, _ = _resolve_cached(ql)
+    return bool(query_q and cq and query_q == cq)
 
 
 def list_works(
@@ -294,6 +314,111 @@ def _owner_review_event(meta: dict) -> dict | None:
     return max(seen, key=lambda e: str(e.get("ts") or "")) if seen else None
 
 
+def _image_pixels(path: Path) -> tuple[int, int] | None:
+    """Master dimensions, or None when they cannot be read.
+
+    None means "could not measure". It is never rendered as a size, because a
+    missing number that looks like a small number is how a transfer failure
+    came to read as a low-quality picture.
+    """
+    try:
+        import warnings
+
+        from PIL import Image
+
+        with warnings.catch_warnings():
+            # Header read only, no decode. The bomb warning would otherwise
+            # fire on every gigapixel master and bury real log lines.
+            warnings.simplefilter("ignore", Image.DecompressionBombWarning)
+            with Image.open(path) as im:
+                return int(im.width), int(im.height)
+    except Exception:  # noqa: BLE001 - unreadable, truncated, or no PIL
+        return None
+
+
+def _master_health(path: Path) -> str:
+    """ "ok" | "truncated" | "unchecked" for an archived master.
+
+    A JPEG marker pair is only a cheap hint: a marker-only file is not an
+    image, while a master missing its final marker can still decode perfectly.
+    Decode every readable master so both cases receive the truthful result.
+
+    "unchecked" is returned when neither stage could run, and is never
+    collapsed into "ok" -- not looking is not a clean bill.
+    """
+    try:
+        with open(path, "rb") as fh:
+            fh.read(1)
+    except OSError:
+        return "unchecked"
+
+    try:
+        import warnings
+
+        from PIL import Image
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", Image.DecompressionBombWarning)
+            with Image.open(path) as im:
+                im.load()
+        return "ok"
+    except Exception:  # noqa: BLE001 - any decode failure means unusable
+        return "truncated"
+
+
+def master_health(work_id: str) -> str:
+    """ "ok" | "truncated" | "unchecked" for a work's archived master."""
+    try:
+        work_dir = contained_work_path(WORKS, work_id)
+    except (ValueError, OSError):
+        return "unchecked"
+    master = _find_master(work_dir)
+    return _master_health(master) if master else "unchecked"
+
+
+def _find_master(work_dir: Path) -> Path | None:
+    for name in ("master.jpeg", "master.jpg", "master.png", "master.tif", "master.tiff"):
+        cand = work_dir / name
+        if cand.exists():
+            return cand
+    return None
+
+
+def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
+    prov = meta.get("acquisition_provenance") or {}
+    rights = meta.get("rights") or {}
+    holder = meta.get("holder") or {}
+    master = _find_master(work_dir)
+    px = _image_pixels(master) if master else None
+    stat_failed = False
+    try:
+        size_mb = round(master.stat().st_size / 1e6, 1) if master else None
+    except OSError:
+        # A master can disappear after _find_master() but before we assemble
+        # its evidence. Keep the row useful and make the uncertainty explicit.
+        size_mb = None
+        stat_failed = True
+    return {
+        "holder_name": holder.get("name") or "",
+        "source": prov.get("source") or "",
+        "source_filename": prov.get("commons_filename") or "",
+        "source_url": prov.get("image_url") or "",
+        "scaled_rendition": bool(prov.get("scaled_rendition")),
+        "wikidata_q": (meta.get("stable_identifiers") or {}).get("wikidata_q") or "",
+        "rights_status": rights.get("status") or "",
+        "rights_evidence_url": rights.get("evidence_url") or "",
+        # Absent, not zero. `pixels_measured` says which.
+        "pixels_measured": px is not None,
+        "width_px": px[0] if px else None,
+        "height_px": px[1] if px else None,
+        "megapixels": round(px[0] * px[1] / 1e6, 1) if px else None,
+        "master_mb": size_mb,
+        # "ok" | "truncated" | "unchecked". Never collapse the last into the
+        # first: not looking is not a clean bill.
+        "file_health": _master_health(master) if master and not stat_failed else "unchecked",
+    }
+
+
 def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
     """Works acquired in the autonomous era, newest first, with review state.
 
@@ -341,6 +466,13 @@ def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
                 "reviewed_at": (reviewed or {}).get("ts"),
                 "reviewed_by": (reviewed or {}).get("actor"),
                 "review_note": (reviewed or {}).get("notes"),
+                # The evidence a person needs to say "yes, that is the picture
+                # I meant to acquire". The list used to carry a title, a name
+                # and a 68 px icon -- which cannot show that a work titled
+                # "Poppy Field near ARGENTEUIL" was filled from a file named
+                # "Poppy Field in a Hollow near GIVERNY". The source filename
+                # and URL are the only place that disagreement is visible.
+                **_acquisition_evidence(meta, meta_path.parent),
             }
         )
     rows.sort(key=lambda r: str(r["acquired_at"]), reverse=True)
@@ -357,13 +489,36 @@ def invalidate_acquisitions_cache() -> None:
 _artist_qid_cache: dict[str, Any] = {"sig": None, "qids": frozenset()}
 
 
+def artist_qid(meta: dict) -> str | None:
+    """The artist Q-ID a sidecar carries, or None when it carries none.
+
+    Prefers the resolver's canonical Q-ID and falls back to the raw one, so an
+    artist whose name is spelled two ways still resolves to a single Q-ID.
+
+    Shared by `known_artist_qids()` and `scripts/build_manifest.py` so the
+    screener's idea of which Q-ID a work carries cannot drift from the one the
+    manifest publishes to the UI.
+    """
+    artist = meta.get("artist")
+    if not isinstance(artist, dict):
+        return None
+    canonical = artist.get("canonical")
+    canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
+    raw_qid = artist.get("wikidata_q")
+    qid = (
+        canonical_qid
+        if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
+        else raw_qid
+    )
+    return qid if isinstance(qid, str) and _QID_RE.fullmatch(qid) else None
+
+
 def known_artist_qids() -> frozenset[str]:
     """Artist Q-IDs the archive already holds at least one work by.
 
     Read from sidecars rather than the manifest because this set decides what
     the acquisition screener treats as "already represented", and the screener
-    reads sidecars. Prefers the resolver's canonical Q-ID, falling back to the
-    raw one, so an artist whose name is spelled two ways still counts once.
+    reads sidecars.
     """
     sig = _dossier_signature()
     if _artist_qid_cache["sig"] == sig:
@@ -377,6 +532,7 @@ def known_artist_qids() -> frozenset[str]:
             continue
         if not isinstance(meta, dict):
             continue
+<<<<<<< HEAD
         artist = meta.get("artist")
         if not isinstance(artist, dict):
             continue
@@ -389,6 +545,10 @@ def known_artist_qids() -> frozenset[str]:
             else raw_qid
         )
         if isinstance(qid, str) and _QID_RE.fullmatch(qid):
+=======
+        qid = artist_qid(meta)
+        if qid is not None:
+>>>>>>> origin/main
             qids.add(qid)
     frozen = frozenset(qids)
     _artist_qid_cache["sig"] = sig

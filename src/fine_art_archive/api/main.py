@@ -7,6 +7,8 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import io
 import json
 import math
@@ -17,6 +19,8 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -53,6 +57,20 @@ TILES_CACHE_DIR = env_path("FAA_TILES_CACHE_DIR", Path.home() / ".faa-tiles")
 # allowed to call healthy. Defined once and consumed by both the endpoint and
 # the test that pins the allowance, so the two cannot drift apart.
 FRESH_CHECKOUT_SIDECAR_WORKS = 1
+
+# What clears manifest drift. Reported alongside the drift itself so the number
+# arrives with its remedy: the 2026-08-05 gap went unnoticed for a month partly
+# because nothing anywhere named a producer for the file, and a reader had no
+# way to tell "behind" from "unfixable".
+#
+# Built from THIS process's interpreter and THIS checkout's path, never a bare
+# "python3 scripts/...". More than one checkout of this repo exists on a given
+# machine, each with its own manifest.csv beside it, and the app is routinely
+# served from a different one than the operator has open. A relative command
+# would be copy-pasted into whichever directory the shell happened to be in and
+# would rebuild a manifest the running app never reads -- reporting success
+# while the drift it was meant to clear stayed exactly where it was.
+MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_manifest.py'}"
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
@@ -191,12 +209,16 @@ def healthz() -> dict:
     sidecar_works = _count_work_dirs(store.WORKS)
     archive_works = _count_work_dirs(ART_WORKS_ROOT)
 
-    # The manifest is the operator UI's ONLY navigation path, and nothing
-    # regenerates it on promotion. On 2026-08-05 that left 18 promoted works
-    # servable but unfindable — browse showed 3393 against 3411 on disk — while
-    # this endpoint reported ok:true throughout, because `ok` only ever looked
-    # at ratings and queues. A work the operator cannot find cannot be rated,
-    # so it never enters the curation loop. Drift is therefore a health fact.
+    # The manifest is the operator UI's ONLY navigation path, and until
+    # 2026-09-01 nothing regenerated it on promotion. On 2026-08-05 that left 18
+    # promoted works servable but unfindable — browse showed 3393 against 3411
+    # on disk — while this endpoint reported ok:true throughout, because `ok`
+    # only ever looked at ratings and queues. A work the operator cannot find
+    # cannot be rated, so it never enters the curation loop. Drift is therefore
+    # a health fact. `scripts/build_manifest.py` is now the producer that
+    # clears it; `manifest_remedy` below names it in the response, because a
+    # gate that cannot say what would clear it is defective however accurate
+    # its number is.
     manifest_drift = None if sidecar_works is None else manifest_loaded - sidecar_works
     # An ABSENT or empty manifest is "not configured" ONLY when there is
     # nothing to navigate: a fresh checkout ships one fixture sidecar and no
@@ -208,13 +230,16 @@ def healthz() -> dict:
     # consulting `sidecar_works`, computed four lines above, so `ok` was
     # non-monotonic in the severity of the very condition it exists to detect:
     # 0 rows over 3411 sidecars reported healthy while 1 row over 3411 did not.
-    # Nothing in this repository writes manifest.csv, so that was the default
-    # state of every fresh deployment against a real works tree.
+    # Nothing in this repository wrote manifest.csv until 2026-09-01, so that
+    # was the default state of every fresh deployment against a real works tree
+    # — and on this machine it had reached all 3499 works, the file never
+    # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "manifest_loaded": manifest_loaded,
+        "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
         "sidecar_works": sidecar_works,
         "archive_works": archive_works,
         "manifest_drift": manifest_drift,
@@ -246,6 +271,10 @@ def get_work(work_id: str) -> dict:
     latest = store.latest_rating(work_id)
     if latest is not None:
         w = {**w, "_latest_rating": latest}
+    # Whether the archived file actually opens. Three acquired masters are
+    # truncated, and without this the rating view asks for a judgement on a
+    # picture it is showing as a broken-image icon.
+    w = {**w, "_file_health": store.master_health(work_id)}
     return w
 
 
@@ -979,6 +1008,43 @@ def _queue_invalid_count() -> int:
     return invalid
 
 
+#: Queues that are COMPUTED, not stored. A frozen list of work ids would be
+#: correct for exactly as long as it took the growth tick to acquire the next
+#: work -- and a rating queue that silently stops including new arrivals is
+#: the same failure as a review surface that silently omits works: it reads as
+#: "you have seen everything".
+DYNAMIC_QUEUES = {
+    "autonomous-acquisitions": (
+        "Everything the growth automation acquired on its own",
+        "unrated first, then newest — rate them here",
+    ),
+}
+
+
+def _dynamic_queue(name: str) -> dict | None:
+    if name not in DYNAMIC_QUEUES:
+        return None
+    label, description = DYNAMIC_QUEUES[name]
+    rows = store.acquisitions_since_epoch()
+    # Unrated first: the whole point is to rate these, and a work already rated
+    # is the one place in the queue where there is nothing to do. Newest first
+    # within each group, which is the order the acquisitions list already uses.
+    def sort_key(r: dict) -> tuple:
+        return (store.count_ratings_for(r["work_id"]) > 0, _neg_ts(r.get("acquired_at")))
+
+    return {
+        "name": label,
+        "description": description,
+        "work_ids": [r["work_id"] for r in sorted(rows, key=sort_key)],
+    }
+
+
+def _neg_ts(ts: object) -> str:
+    """Sort newest-first inside an ascending sort, without parsing dates."""
+    text = str(ts or "")
+    return "".join(chr(0x10FFFD - ord(c)) if ord(c) < 0x10FFFD else c for c in text)
+
+
 @app.get("/queues")
 def list_queues() -> dict:
     """List named queues available for the rating UI."""
@@ -994,8 +1060,24 @@ def list_queues() -> dict:
             out.append(
                 {
                     "name": q.get("name", p.stem),
+                    # The addressable key. For a file queue it is the filename
+                    # stem, which may differ from the display name inside it.
+                    "key": p.stem,
                     "description": q.get("description", ""),
                     "n_works": len(q.get("work_ids", [])),
+                }
+            )
+    for key in DYNAMIC_QUEUES:
+        # A separate name: `q` above is the file-backed queue dict, and reusing
+        # it here made this an Optional assignment to a non-Optional variable.
+        dyn = _dynamic_queue(key)
+        if dyn:
+            out.append(
+                {
+                    "name": dyn["name"],
+                    "key": key,
+                    "description": dyn["description"],
+                    "n_works": len(dyn["work_ids"]),
                 }
             )
     return {
@@ -1012,10 +1094,12 @@ def get_queue(name: str) -> dict:
     The works list mirrors /works rows so the UI can render them with
     the same renderer used for the regular list (badges, etc.).
     """
-    p = QUEUES_DIR / f"{name}.json"
-    if not p.exists():
-        raise HTTPException(404, f"no queue named {name!r}")
-    q = _load_queue_file(p)
+    q = _dynamic_queue(name)
+    if q is None:
+        p = QUEUES_DIR / f"{name}.json"
+        if not p.exists():
+            raise HTTPException(404, f"no queue named {name!r}")
+        q = _load_queue_file(p)
     wids_ordered = q.get("work_ids", [])
     # Fetch each work via the store. Preserve queue order.
     works_out = []
@@ -1041,8 +1125,11 @@ def get_queue(name: str) -> dict:
                 "_n_ratings": store.count_ratings_for(wid),
             }
         )
+    # File-backed queues carry a stem key; dynamic ones carry their own.
+    key = name
     return {
         "name": q.get("name", name),
+        "key": key,
         "description": q.get("description", ""),
         "total": len(works_out),
         "works": works_out,
@@ -1255,6 +1342,8 @@ def _acquisition_gate() -> gates.Gate:
         blocking=len(unreviewed),
         drainable=len(unreviewed),
         clears_by="marking a work reviewed (or simply looking)",
+        # These ids are work ids in the archive, not Wikidata Q-IDs.
+        item_kind="held_work",
         note=(
             "Purely informational — grant G55 does not wait on this. Nothing "
             "acquires more slowly because this list is long."
@@ -1281,6 +1370,10 @@ def _variant_upgrade_gate() -> gates.Gate:
             blocking=0,
             drainable=gates.UNMEASURED,
             clears_by="accepting or rejecting the upgrade",
+            # Declared on BOTH branches. A gate whose item_kind depends on
+            # whether its data happens to be present would tell the viewer a
+            # different story on an empty day than on a busy one.
+            item_kind="held_work",
             note="no candidate file present, so nothing could be counted",
         )
     pending = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
@@ -1290,6 +1383,8 @@ def _variant_upgrade_gate() -> gates.Gate:
         blocking=len(pending),
         drainable=len(pending),
         clears_by="accepting or rejecting the upgrade",
+        # `existing_wid` is an archive work id, not a Wikidata Q-ID.
+        item_kind="held_work",
         items=[
             {
                 "id": c.get("existing_wid", ""),
@@ -1326,6 +1421,256 @@ def review_summary() -> dict:
     }
 
 
+<<<<<<< HEAD
+=======
+CANDIDATE_IMAGE_MAX = 1400
+
+# Wikimedia asks for a User-Agent naming the tool and a way to reach its
+# operator, and rate-limits anonymous-looking clients harder. The first version
+# of this proxy sent "FineArtArchive/0.3 (companion-app)" with no contact and
+# got HTTP 429 on roughly half the cards -- which the UI could only render as a
+# broken image. The workspace scripts have always sent the address below and
+# have never been throttled.
+CANDIDATE_UA = os.environ.get(
+    "FAA_CONTACT_UA", "FineArtArchive/0.3 (companion-app; tim@stranskemo.com)"
+)
+
+# At most this many outbound image fetches at once. A card asks for seven
+# images the moment it renders, and paging through the queue multiplies that;
+# firing them all in parallel is what turned a polite fetch into a burst that
+# Wikimedia refused. Cached images never reach this gate.
+_CANDIDATE_FETCH_SLOTS = threading.BoundedSemaphore(2)
+_COMMONS_HOST = "commons.wikimedia.org"
+# Maximum wall-clock seconds one review_candidate_image call may occupy a
+# worker thread. Three 30 s attempts + backoffs can reach ~100 s otherwise.
+_CANDIDATE_FETCH_DEADLINE_S = 60.0
+
+
+def _fetch_candidate_bytes(url: str, *, tries: int = 3, deadline: float | None = None) -> bytes:
+    """GET an image, retrying on the throttling responses rather than failing.
+
+    429 and 503 mean "ask again later", not "this image is unavailable", so
+    surfacing them as an error was reporting a temporary condition as a
+    permanent one. `Retry-After` is honoured when the server sends it.
+    """
+    last: Exception | None = None
+    for attempt in range(tries):
+        remaining = (deadline - time.monotonic()) if deadline is not None else None
+        if remaining is not None and remaining <= 0:
+            raise TimeoutError("image fetch deadline exceeded")
+        per_attempt = min(30.0, remaining) if remaining is not None else 30.0
+        try:
+            with _CANDIDATE_FETCH_SLOTS:
+                req = urllib.request.Request(url, headers={"User-Agent": CANDIDATE_UA})
+                with urllib.request.urlopen(req, timeout=per_attempt) as r:
+                    return r.read(24 * 1024 * 1024)
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in (429, 503) or attempt == tries - 1:
+                raise
+            wait = 1.5 * (2**attempt)
+            with suppress(TypeError, ValueError):
+                wait = max(wait, float(exc.headers.get("Retry-After") or 0))
+            time.sleep(min(wait, 8.0))
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            last = exc
+            if attempt == tries - 1:
+                raise
+            time.sleep(1.0 * (attempt + 1))
+    raise last if last else RuntimeError("fetch failed")
+
+
+@app.get("/review/candidate/{qid}/image")
+def review_candidate_image(qid: str, width: int = 700) -> Response:
+    """A cached, downscaled rendition of a frontier candidate's image.
+
+    The approval card used to point `<img src>` straight at the candidate's
+    Commons URL, which is the FULL ORIGINAL — Rufino Tamayo's arrived as
+    3296x1694 and 1.7 MB, six per card, to be painted into a 150 px box. The
+    card looked empty on arrival because it was still downloading megabytes it
+    was about to throw away, and judging an unfamiliar painter from a blank
+    grey square is not a judgement anyone can make.
+
+    Held works have gone through `_serve_resized` for exactly this reason since
+    the gallery was built. Candidates are not in the archive and have no
+    sidecar, so they never got it. This is that same treatment for the
+    pre-acquisition case.
+
+    The URL is looked up from the frontier by Q-ID rather than accepted from
+    the caller: an endpoint that fetches whatever URL it is handed is an SSRF,
+    and this one can only ever fetch an image the discovery pipeline already
+    chose.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", qid):
+        raise HTTPException(400, "qid must look like Q12345")
+    width = max(120, min(int(width), CANDIDATE_IMAGE_MAX))
+
+    src_url = gates.candidate_image_url(qid)
+    if not src_url:
+        raise HTTPException(404, f"no candidate image for {qid}")
+    if not src_url.lower().startswith(("http://", "https://")):
+        raise HTTPException(502, "candidate image URL has a disallowed scheme")
+
+    IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = hashlib.sha256(f"{qid}|{src_url}|{width}".encode()).hexdigest()[:24]
+    cache_p = IMAGE_CACHE_DIR / f"cand_{key}.jpg"
+    if not cache_p.exists():
+        # Ask the source for a scaled rendition where it can make one. Commons
+        # honours ?width= and returns ~127 KB instead of 1.7 MB, which is the
+        # difference between a card that paints and one that does not.
+        fetch_url = src_url
+        if _COMMONS_HOST in src_url and "width=" not in src_url:
+            fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
+        try:
+            raw = _fetch_candidate_bytes(
+                fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S
+            )
+        except urllib.error.HTTPError as exc:
+            # Throttling survived the retries. 503 tells the browser this is
+            # temporary and worth asking for again; 502 would have it cache a
+            # broken image for the rest of the session.
+            if exc.code in (429, 503):
+                raise HTTPException(
+                    503,
+                    "source is throttling; retry shortly",
+                    headers={"Retry-After": "3"},
+                ) from exc
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001 - many network shapes
+            raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
+        try:
+            from PIL import Image
+
+            Image.MAX_IMAGE_PIXELS = None
+            with Image.open(io.BytesIO(raw)) as im:
+                im.thumbnail((width, width), Image.Resampling.LANCZOS)
+                if im.mode not in ("RGB", "L"):
+                    im = im.convert("RGB")  # type: ignore[assignment]
+                im.save(cache_p, "JPEG", quality=85, optimize=True)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(502, f"could not decode candidate image: {exc}") from exc
+    return FileResponse(
+        cache_p,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+#: Roots a variant-upgrade candidate file may legitimately live under. The
+#: path comes from a CSV this app does not write, so it is treated as untrusted
+#: and must resolve inside one of these or it is refused.
+VARIANT_CANDIDATE_ROOTS = (
+    ART_WORKS_ROOT,
+    env_path("FAA_STAGING_ROOT", ART_WORKS_ROOT.parent / "staging_acquisitions"),
+    env_path("FAA_QUARANTINE_ROOT", ART_WORKS_ROOT.parent / "quarantine"),
+)
+
+
+@app.get("/variant_upgrades/{existing_wid}/candidate_image")
+def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
+    """The proposed replacement file, so the swap can be judged by eye.
+
+    The upgrade decision is "is this copy better than the one I hold", and the
+    view offered megabyte counts and a ratio to answer it. A number cannot show
+    that the larger file is a different crop, a colour-shifted scan, or the
+    wrong painting — which is the whole reason a person is being asked.
+
+    The path is read from the detector's CSV by work id, never from the caller,
+    and must resolve inside a known root: this endpoint reads local files, so
+    an unchecked path would be an arbitrary-file-read.
+    """
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if not VARIANT_UPGRADE_CSV.exists():
+        raise HTTPException(404, "no variant upgrade candidates on file")
+    raw_path = ""
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw_path = (row.get("candidate_path") or "").strip()
+                break
+    if not raw_path:
+        raise HTTPException(404, f"no candidate file recorded for {existing_wid}")
+
+    candidate = Path(raw_path).expanduser().resolve(strict=False)
+    if not any(
+        candidate.is_relative_to(root.resolve(strict=False)) for root in VARIANT_CANDIDATE_ROOTS
+    ):
+        raise HTTPException(403, "candidate path is outside the permitted roots")
+    if not candidate.is_file():
+        raise HTTPException(404, "candidate file is not on disk")
+    return _serve_resized(candidate, f"variant_{existing_wid}", max)
+
+
+@app.get("/review/works")
+def review_works(limit: int = 400, source: str = "approved") -> dict:
+    """Individual works released by an artist approval, awaiting a look.
+
+    Approving an artist says the painter belongs in the archive. It does not
+    say every canvas does, and this is the screen that separates the two — the
+    last point at which a particular picture can be refused without refusing
+    its painter.
+    """
+    if limit < 1:
+        raise HTTPException(400, "limit must be >= 1")
+    if source not in {"approved", "routed", "rights"}:
+        raise HTTPException(400, "source must be 'approved', 'routed' or 'rights'")
+    approved = gates.load_allowlisted_artists()
+    decided = gates.load_work_decisions()
+    rows = gates.works_awaiting_look(approved, decided=decided, source=source)
+    rejected = sum(1 for d in decided.values() if d == "reject")
+    return {
+        "total": len(rows),
+        "already_decided": len(decided),
+        "already_rejected": rejected,
+        "approved_artists": len(approved),
+        "source": source,
+        "returned": len(rows[:limit]),
+        "works": rows[:limit],
+    }
+
+
+class WorkDecisionIn(BaseModel):
+    decision: Literal["keep", "reject", "force"]
+    title: str = Field(default="", max_length=300)
+    note: str = Field(default="", max_length=500)
+    reviewer: str = Field(default="tim", max_length=80)
+
+
+@app.post("/review/works/{work_qid}/decision")
+def work_decision(work_qid: str, body: WorkDecisionIn) -> dict:
+    """Keep or reject ONE work, without touching its artist.
+
+    A reject is sticky: it records that this picture was seen and refused, so
+    the growth tick never proposes it again. Rejecting a work leaves the artist
+    approved and every other work by them untouched.
+
+    `force` is the deferral override — acquire this one despite the size floor
+    or the throughput floor. Those thresholds are deliberately blunt; this is
+    where a person overrules them for a particular picture.
+    """
+    if not re.fullmatch(r"Q[1-9][0-9]{0,11}", work_qid):
+        raise HTTPException(400, "work_qid must look like Q12345")
+    gates.append_work_decision(
+        work_qid,
+        decision=body.decision,
+        title=body.title,
+        note=body.note,
+        reviewer=body.reviewer,
+        ts=datetime.now(UTC).isoformat(),
+    )
+    decided = gates.load_work_decisions()
+    return {
+        "work_qid": work_qid,
+        "decision": body.decision,
+        "decided": len(decided),
+        "rejected": sum(1 for d in decided.values() if d == "reject"),
+    }
+
+
+>>>>>>> origin/main
 @app.get("/review/artists")
 def review_artists(limit: int = 500) -> dict:
     """Artists awaiting a decision, one row per ARTIST rather than per work.
@@ -2429,6 +2774,45 @@ def ratings_summary() -> dict:
 import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade endpoint)
 
 
+@functools.lru_cache(maxsize=256)
+def _image_dims(path: Path | None) -> str | None:
+    """ "WxH" for a local image, or None. Header read only — never the full file."""
+    if path is None or not path.is_file():
+        return None
+    try:
+        from PIL import Image
+
+        Image.MAX_IMAGE_PIXELS = None
+        with Image.open(path) as im:
+            return f"{im.size[0]}x{im.size[1]}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _variant_candidate_path(existing_wid: str) -> Path | None:
+    """The proposed file for a work, from the detector CSV, or None."""
+    if not existing_wid or not VARIANT_UPGRADE_CSV.exists():
+        return None
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError:
+        return None
+    with open(VARIANT_UPGRADE_CSV, encoding="utf-8", newline="") as fh:
+        for row in _csv.DictReader(fh):
+            if row.get("existing_wid") == existing_wid:
+                raw = (row.get("candidate_path") or "").strip()
+                if not raw:
+                    return None
+                cand = Path(raw).expanduser().resolve(strict=False)
+                if any(
+                    cand.is_relative_to(root.resolve(strict=False))
+                    for root in VARIANT_CANDIDATE_ROOTS
+                ):
+                    return cand if cand.is_file() else None
+                return None
+    return None
+
+
 @app.get("/variant_upgrades")
 def variant_upgrades() -> dict:
     if not VARIANT_UPGRADE_CSV.exists():
@@ -2451,6 +2835,14 @@ def variant_upgrades() -> dict:
         d = decisions.get(c.get("existing_wid"))  # type: ignore[arg-type]
         c["decision"] = d.get("decision") if d else None
         c["decision_ts"] = d.get("ts") if d else None
+        # Megabytes are a poor proxy for image quality: a bigger file can be a
+        # looser JPEG of a SMALLER picture. The question this screen asks is
+        # "is the candidate better", and pixels answer it where bytes cannot.
+        try:
+            c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        except HTTPException:
+            c["existing_px"] = None
+        c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
     return {"candidates": candidates}
 
 

@@ -263,9 +263,9 @@ def test_shares_land_over_a_month_even_at_a_small_batch() -> None:
     for name, share in lenses.LENS_SHARES.items():
         monthly_err = abs(spent[name] / total - share)
         batch_err = abs(per_batch[name] / 7 - share)
-        assert monthly_err <= batch_err + 1e-9, (
-            f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
-        )
+        assert (
+            monthly_err <= batch_err + 1e-9
+        ), f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
     # And the worst lens must land close, not merely closer.
     worst = max(abs(spent[n] / total - lenses.LENS_SHARES[n]) for n in names)
     assert worst < 0.02, f"realised shares drift by {worst:.3f}"
@@ -284,3 +284,28 @@ def test_select_reports_a_quota_met_lens_as_available_with_a_reason() -> None:
     assert canon.available is True
     assert canon.allotted == 0
     assert "monthly share" in canon.reason
+
+
+# --------------------------------------------------------------------------
+# Standing: institutional judgement about the work, not the building
+# --------------------------------------------------------------------------
+def test_curated_work_outranks_a_more_famous_building() -> None:
+    """The White House case that forced a holder cap.
+
+    A modest museum that chose to publish a work must outrank a landmark that
+    is merely famous — this lens is about a judgement made on the work.
+    """
+    white_house = cand("famous-building", holder_sitelinks=142)
+    small_museum = cand("curated", holder_sitelinks=11, gac_curated=True)
+    assert lenses._standing(small_museum) > lenses._standing(white_house)
+
+
+def test_renown_still_ranks_and_still_breaks_ties() -> None:
+    """An institution GA&C never partnered with is not silently excluded."""
+    assert lenses._standing(cand("a", holder_sitelinks=40)) > lenses._standing(
+        cand("b", holder_sitelinks=11)
+    )
+    both = lenses._standing(cand("c", holder_sitelinks=40, gac_curated=True))
+    one = lenses._standing(cand("d", holder_sitelinks=11, gac_curated=True))
+    assert both > one, "renown breaks ties inside the curated band"
+    assert lenses._standing(cand("e")) is None, "no signal at all is unscorable"

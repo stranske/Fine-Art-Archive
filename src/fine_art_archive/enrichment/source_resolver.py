@@ -358,12 +358,13 @@ class WikidataProvider:
                 score = SequenceMatcher(None, folded_name, fold_name(candidate_name)).ratio()
                 if best is None or score > best[0]:
                     best = score, qid
-        if best is not None and best[0] >= 0.88:
+        if best is not None and best[0] >= self.ARTIST_NAME_MATCH_MIN:
             return best[1], f"Wikidata alias/fuzzy match ({best[0]:.2f})"
         return None, None
 
-    #: Same threshold the artist-name lookup below already uses. One number, so
-    #: "close enough to be this artist" cannot mean two different things.
+    #: Shared with the artist-name lookup above, which used to hardcode its own
+    #: copy of this literal. One number, so "close enough to be this artist"
+    #: cannot mean two different things depending on which caller you're reading.
     ARTIST_NAME_MATCH_MIN = 0.88
 
     def _verified_artist_qid(

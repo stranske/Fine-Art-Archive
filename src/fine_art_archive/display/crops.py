@@ -27,6 +27,7 @@ its 16:9 crop are *supposed* to look alike.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 #: The display aspects Tim actually targets. A file sitting exactly on one of
@@ -46,6 +47,12 @@ ASPECT_TOLERANCE = 0.02
 #: Meural refuses to display a file over 20 MB. When one side is over and the
 #: other under, the small file exists BECAUSE the large one cannot be shown.
 MEURAL_CAP_BYTES = 20 * 1024 * 1024
+
+#: Aligned image correlation at or above which two files of identical geometry
+#: are the same framing at two qualities. Below it they show different parts of
+#: the work. Kept in step with
+#: ``fine_art_archive.identity.crop_siblings.SAME_CONTENT_MIN_CORRELATION``.
+SAME_CONTENT_MIN_CORRELATION = 0.98
 
 #: Roles as written into `files.variants[].role` by `link_display_crops.py`.
 ROLE_LANDSCAPE = "landscape-crop"
@@ -104,6 +111,7 @@ def classify_pair(
     *,
     a_has_variant_links: bool = False,
     b_has_variant_links: bool = False,
+    content_correlation: float | None = None,
 ) -> CropVerdict:
     """Decide whether two renditions of one work may be treated as redundant.
 
@@ -111,6 +119,20 @@ def classify_pair(
     redundant comes back as `needs_review`, never as safe: the cost of a wrong
     "redundant" is deleting a file in use on a frame, and the cost of a wrong
     "needs review" is one glance.
+
+    `content_correlation`, when supplied, is the aligned correlation of the two
+    images -- see
+    :func:`~fine_art_archive.identity.crop_siblings.measure_lateral_overlap`.
+    It is required before any `redundant` verdict on two files that both sit on
+    a display aspect, because geometry alone cannot tell one rendition at two
+    JPEG qualities from two COMPLEMENTARY crops cut for the same panel. Those
+    two cases look identical on every input this function used to take: the same
+    display aspect, the same pixel dimensions, near-equal byte sizes. The real
+    Third of May pair (29294x16478, 298 vs 297 MB) and the real Van Gogh
+    *Garden of the Asylum* pair (2013x3579, 11.72 vs 11.75 MB) differ only in
+    what the pixels show, and this function called both redundant -- so the
+    module written to stop display crops being deleted would itself have
+    greenlit deleting one of a complementary pair.
     """
     reasons: list[str] = []
 
@@ -154,13 +176,38 @@ def classify_pair(
         # Both are crops at the same display aspect. Tim targets SEVERAL devices
         # with different resolutions (Meural, Inky 13.3", InkPoster 28.5", Frame
         # TV), so two 16:9 files may be one per device rather than waste.
-        # Pixel dimensions are the discriminator, NOT file size: identical
-        # dimensions differing only in bytes is one rendition at two JPEG
-        # qualities; different dimensions is plausibly one rendition per device.
         if a_pixels and b_pixels and a_pixels == b_pixels:
+            # Identical geometry has TWO explanations and this function cannot
+            # see the difference: one rendition at two JPEG qualities, or two
+            # complementary crops cut to the same panel — which have identical
+            # dimensions by construction, since they target the same device.
+            # Only the pixels separate them, so only the pixels may decide.
+            if content_correlation is None:
+                reasons.append(
+                    f"both sit on {da_a} at identical {a_pixels[0]}x{a_pixels[1]} — "
+                    "that is one rendition at two qualities OR two complementary "
+                    "crops for the same panel, which geometry cannot tell apart; "
+                    "measure content correlation before calling either redundant"
+                )
+                return CropVerdict(True, "needs_review", reasons)
+            if not math.isfinite(content_correlation):
+                reasons.append(
+                    "content correlation is not finite — measure again before "
+                    "deduplication"
+                )
+                return CropVerdict(True, "needs_review", reasons)
+            if content_correlation < SAME_CONTENT_MIN_CORRELATION:
+                reasons.append(
+                    f"both sit on {da_a} at identical {a_pixels[0]}x{a_pixels[1]} "
+                    f"but content correlation is {content_correlation:.3f} — they "
+                    "show DIFFERENT parts of the work, so they are complementary "
+                    "crops and neither is redundant"
+                )
+                return CropVerdict(True, "protected", reasons)
             reasons.append(
-                f"both sit on {da_a} at identical {a_pixels[0]}x{a_pixels[1]} — "
-                "the same rendition at two JPEG qualities, so one is redundant"
+                f"both sit on {da_a} at identical {a_pixels[0]}x{a_pixels[1]} and "
+                f"content correlation is {content_correlation:.3f} — the same "
+                "rendition at two JPEG qualities, so one is redundant"
             )
             return CropVerdict(False, "redundant", reasons)
         reasons.append(
