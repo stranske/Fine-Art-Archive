@@ -53,6 +53,13 @@ automation_logs/
 # staleness, and /healthz reports drift.
 /manifest.csv
 
+# The variant-upgrade detector's output, written by the acquisition workspace's
+# detect_variant_upgrades.py. Generated-local for the same reasons as the
+# manifest: it is a pure function of a staging tree outside this repo, and it
+# changes whenever that tree does. Untracked AND unignored is the state that
+# hid manifest.csv's absence for a month, so it is named here deliberately.
+/variant_upgrade_candidates.csv
+
 # =============================================================================
 # Workflows Consumer Repo - Shared Status Files
 # =============================================================================

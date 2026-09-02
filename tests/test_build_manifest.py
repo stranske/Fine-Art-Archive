@@ -328,3 +328,43 @@ def test_generated_manifest_drives_the_real_consumers(
     # contributes no artist at all.
     artists = store.list_artists(limit=10)
     assert sorted(entry["n_works"] for entry in artists) == [1, 1]
+
+
+# --------------------------------------------------------------------------
+# Every launch path must run the producer
+# --------------------------------------------------------------------------
+def test_every_documented_launch_path_rebuilds_the_index_before_serving() -> None:
+    """A producer nothing calls is the same as no producer.
+
+    Promotion into `Art/works/` happens outside this repo, so the manifest can
+    only ever go stale between launches — which is why
+    `scripts/run_companion_app.sh` rebuilds before it serves. `.claude/launch.json`
+    called uvicorn directly and did not, so every launch through that path
+    served whatever index had last been written by hand. Measured 2026-09-02:
+    five works acquired since the previous rebuild, `/healthz` reporting
+    `ok: false`, and those five unreachable in the UI — the exact condition
+    #639 existed to end, reintroduced by the launcher rather than by the code.
+    """
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+
+    sh = (root / "scripts" / "run_companion_app.sh").read_text(encoding="utf-8")
+    assert "build_manifest.py" in sh, "the shell runner no longer rebuilds the index"
+
+    launch = root / ".claude" / "launch.json"
+    if not launch.exists():  # pragma: no cover - optional local file
+        return
+    cfg = json.loads(launch.read_text(encoding="utf-8"))
+    for entry in cfg.get("configurations", []):
+        command = " ".join(
+            [str(entry.get("runtimeExecutable", ""))]
+            + [str(a) for a in entry.get("runtimeArgs", [])]
+        )
+        if "fine_art_archive.api.main:app" not in command:
+            continue
+        assert "build_manifest" in command, (
+            f"launch configuration {entry.get('name')!r} serves the app without "
+            "rebuilding manifest.csv, so it will show a stale archive"
+        )

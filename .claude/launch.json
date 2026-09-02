@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "faa-companion",
-      "runtimeExecutable": "/Users/teacher/.faa-venv/bin/python3",
-      "runtimeArgs": ["-m", "uvicorn", "fine_art_archive.api.main:app", "--host", "127.0.0.1", "--port", "8931"],
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "export FAA_STAGING_ROOT=\"/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Claude Project/staging_acquisitions\"; /Users/teacher/.faa-venv/bin/python3 scripts/build_manifest.py || echo \"manifest rebuild failed; serving anyway \u2014 see /healthz\" >&2; exec /Users/teacher/.faa-venv/bin/python3 -m uvicorn fine_art_archive.api.main:app --host 127.0.0.1 --port 8931"
+      ],
       "port": 8931
     }
   ]
