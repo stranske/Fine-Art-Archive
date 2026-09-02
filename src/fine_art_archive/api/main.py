@@ -1026,6 +1026,7 @@ def _dynamic_queue(name: str) -> dict | None:
         return None
     label, description = DYNAMIC_QUEUES[name]
     rows = store.acquisitions_since_epoch()
+
     # Unrated first: the whole point is to rate these, and a work already rated
     # is the one place in the queue where there is nothing to do. Newest first
     # within each group, which is the order the acquisitions list already uses.

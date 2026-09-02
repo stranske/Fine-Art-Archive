@@ -248,9 +248,7 @@ def crop_sibling_groups(metas: Iterable[Mapping[str, Any]]) -> list[CropSiblingG
             if not in_group:
                 reciprocal = {}
                 break
-            reciprocal[owner] = {
-                target for target in in_group if owner in declared.get(target, {})
-            }
+            reciprocal[owner] = {target for target in in_group if owner in declared.get(target, {})}
             if reciprocal[owner] != in_group:
                 reciprocal = {}
                 break

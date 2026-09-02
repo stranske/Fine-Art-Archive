@@ -192,8 +192,7 @@ def classify_pair(
                 return CropVerdict(True, "needs_review", reasons)
             if not math.isfinite(content_correlation):
                 reasons.append(
-                    "content correlation is not finite — measure again before "
-                    "deduplication"
+                    "content correlation is not finite — measure again before " "deduplication"
                 )
                 return CropVerdict(True, "needs_review", reasons)
             if content_correlation < SAME_CONTENT_MIN_CORRELATION:
