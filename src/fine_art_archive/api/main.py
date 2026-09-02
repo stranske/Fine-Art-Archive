@@ -1068,14 +1068,16 @@ def list_queues() -> dict:
                 }
             )
     for key in DYNAMIC_QUEUES:
-        q = _dynamic_queue(key)
-        if q:
+        # A separate name: `q` above is the file-backed queue dict, and reusing
+        # it here made this an Optional assignment to a non-Optional variable.
+        dyn = _dynamic_queue(key)
+        if dyn:
             out.append(
                 {
-                    "name": q["name"],
+                    "name": dyn["name"],
                     "key": key,
-                    "description": q["description"],
-                    "n_works": len(q["work_ids"]),
+                    "description": dyn["description"],
+                    "n_works": len(dyn["work_ids"]),
                 }
             )
     return {
