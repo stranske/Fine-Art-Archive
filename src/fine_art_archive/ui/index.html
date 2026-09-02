@@ -1776,6 +1776,19 @@
         return;
       }
       workReviewQueue = d.works || [];
+      // Keep the response linear: the API returns each work once, then the
+      // browser derives the other cards for an artist from this one queue.
+      const worksByArtist = new Map();
+      for (const work of workReviewQueue) {
+        if (!work.artist_qid) continue;
+        const works = worksByArtist.get(work.artist_qid) || [];
+        works.push({id: work.id, title: work.title});
+        worksByArtist.set(work.artist_qid, works);
+      }
+      for (const work of workReviewQueue) {
+        const works = worksByArtist.get(work.artist_qid) || [];
+        work.artist_works = works.filter(other => other.id !== work.id);
+      }
       workReviewIdx = 0; workReviewDone = 0;
       if (!workReviewQueue.length) {
         // The empty message must name the queue it is empty FOR. One shared
@@ -1936,7 +1949,7 @@
                     background:var(--card,#f3f3f3);margin:10px 0">
         <p class="sub" style="margin-top:6px"><a href="/review/candidate/${encodeURIComponent(w.id)}/image?width=1400"
            target="_blank" rel="noopener">Open larger →</a>
-           &nbsp;·&nbsp; <a href="${acqEsc(w.image_url || "#")}" target="_blank" rel="noopener">original file at the source →</a></p>
+           &nbsp;·&nbsp; <a href="${acqEsc(safeHref(w.image_url))}" target="_blank" rel="noopener">original file at the source →</a></p>
         <div style="margin-top:12px">
           <strong style="font-size:13px">Why you are being asked</strong>
           ${workReviewWhy(w)}
@@ -2337,12 +2350,12 @@
            at, not a small picture</span>`]);
       rows.push(["Rights", w.rights_status
         ? acqEsc(w.rights_status) + (w.rights_evidence_url
-            ? ` · <a href="${acqEsc(w.rights_evidence_url)}" target="_blank" rel="noopener">evidence →</a>` : "")
+            ? ` · <a href="${acqEsc(safeHref(w.rights_evidence_url))}" target="_blank" rel="noopener">evidence →</a>` : "")
         : `<span class="sub">not determined</span>`]);
       rows.push(["Acquired", `${acqEsc((w.acquired_at || "").slice(0, 16).replace("T", " "))}
         by ${acqEsc(w.acquired_by || "—")}`]);
       const links = [];
-      if (w.source_url) links.push(`<a href="${acqEsc(w.source_url)}" target="_blank" rel="noopener">the file at its source →</a>`);
+      if (w.source_url) links.push(`<a href="${acqEsc(safeHref(w.source_url))}" target="_blank" rel="noopener">the file at its source →</a>`);
       if (w.wikidata_q) links.push(`<a href="https://www.wikidata.org/wiki/${acqEsc(w.wikidata_q)}" target="_blank" rel="noopener">${acqEsc(w.wikidata_q)} on Wikidata →</a>`);
       if (links.length) rows.push(["Check against", links.join("&nbsp;·&nbsp;")]);
       return `<table style="margin-top:10px"><tbody>${rows.map(([k, v]) =>

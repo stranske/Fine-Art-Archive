@@ -665,6 +665,26 @@ def test_unreadable_archive_is_reported_not_shown_as_nothing_similar() -> None:
     assert ok["matches"][0]["work_id"] == "w1"
 
 
+def test_empty_held_archive_is_a_valid_empty_index(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No sidecars means no possible title match, not a failed lookup."""
+    monkeypatch.setattr(gates.glob, "glob", lambda _pattern: [])
+    index = gates._held_by_artist_index()
+    assert index == {}
+    assert gates.held_lookalikes("QA", "a title", index) == {"lookup": "ok", "matches": []}
+
+
+def test_review_rows_do_not_repeat_artist_siblings_in_the_api_payload(tmp_path: Path) -> None:
+    """The browser can group a linear queue; each row must not carry the whole group."""
+    p = tmp_path / "frontier.json"
+    p.write_text(
+        json.dumps({"candidates": {"Q1": _routed("Q1", "QA"), "Q2": _routed("Q2", "QA")}}),
+        encoding="utf-8",
+    )
+    rows = gates.works_awaiting_look(set(), frontier_path=p, decided={}, source="routed")
+    assert [row["artist_work_count"] for row in rows] == [2, 2]
+    assert all("artist_works" not in row for row in rows)
+
+
 def test_a_candidate_that_was_never_probed_says_so() -> None:
     """An absent megapixel count must not read as a small picture."""
     unprobed = gates._cand_row({"qid": "Q1", "screen_scores": {}}, "why")

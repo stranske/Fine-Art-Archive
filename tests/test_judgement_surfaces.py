@@ -199,6 +199,24 @@ def test_no_judgement_card_nests_an_anchor_inside_an_anchor(page: str) -> None:
         assert "<a" not in body or "plainThumb" in body or "decisionThumb" not in body, card
 
 
+def test_review_cards_guard_all_external_evidence_links(page: str) -> None:
+    """Escaping an href preserves a javascript: scheme; safeHref rejects it."""
+    review = page[page.index("function renderWorkReview(") : page.index("function renderAcquisition(")]
+    acquisition_start = page.index("function acqEvidence(")
+    acquisition = page[acquisition_start : page.index("function renderAcquisition(")]
+    assert "safeHref(w.image_url)" in review
+    assert "safeHref(w.rights_evidence_url)" in acquisition
+    assert "safeHref(w.source_url)" in acquisition
+
+
+def test_work_review_derives_artist_siblings_once_in_the_browser(page: str) -> None:
+    """One API row per work avoids a quadratic review-queue response."""
+    start = page.index("async function loadWorkReview(")
+    body = page[start : start + 2500]
+    assert "const worksByArtist = new Map()" in body
+    assert "work.artist_works = works.filter" in body
+
+
 # --------------------------------------------------------------------------
 # Rating the autonomous acquisitions
 # --------------------------------------------------------------------------

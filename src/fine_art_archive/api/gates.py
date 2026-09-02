@@ -288,7 +288,9 @@ def _held_by_artist_index() -> dict[str, list[dict[str, str]]] | None:
     except Exception:  # noqa: BLE001 - any failure here means "cannot compare"
         return None
     if not paths:
-        return None
+        # An archive which is readable but has no works is a valid empty index.
+        # Only an exception above means the comparison itself was unavailable.
+        return {}
     out: dict[str, list[dict[str, str]]] = {}
     for path in paths:
         try:
@@ -787,21 +789,18 @@ def works_awaiting_look(
         aqid = row.get("artist_qid")
         if aqid:
             by_artist.setdefault(aqid, []).append(row)
-    for row in out:
-        siblings = by_artist.get(row.get("artist_qid") or "", [])
-        if row in siblings:
+    for siblings in by_artist.values():
+        for position, row in enumerate(siblings, start=1):
             row["artist_work_count"] = len(siblings)
-            row["artist_work_index"] = siblings.index(row) + 1
-        else:
-            # No artist Q-ID, so it is grouped with nothing. It is still one
-            # work: "0 of 0" would be a lie about a picture that is on screen.
-            row["artist_work_count"] = 1
-            row["artist_work_index"] = 1
-        # ALL of them, and each carries its id so the card can jump straight to
-        # that work's own card. Capped at 11 with no note, these read as a set
-        # being approved together rather than a list of separate decisions
-        # still to come -- exactly the confusion this queue caused.
-        row["artist_works"] = [
-            {"id": s["id"], "title": s["title"]} for s in siblings if s["id"] != row["id"]
-        ]
+            row["artist_work_index"] = position
+    for row in out:
+        if row.get("artist_qid"):
+            continue
+        # No artist Q-ID, so it is grouped with nothing. It is still one work:
+        # "0 of 0" would be a lie about a picture that is on screen.
+        row["artist_work_count"] = 1
+        row["artist_work_index"] = 1
+    # The browser derives the other cards from this response once. Sending
+    # every sibling list on every row makes a large artist queue quadratic on
+    # the wire, even though the data is identical for each card.
     return out
