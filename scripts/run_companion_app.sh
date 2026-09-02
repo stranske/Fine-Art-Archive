@@ -8,7 +8,11 @@
 #   FAA_APP_HOST         bind host (default 127.0.0.1)
 #   FAA_APP_PORT         bind port (default 8401)
 #   FAA_ART_WORKS_ROOT   promoted masters root (default ~/Library/CloudStorage/Dropbox/Pictures/Art/works)
-#   FAA_STAGING_DIR      sidecar root (default ./staging_sidecars)
+#   FAA_WORKS_DIR        sidecar root (default ~/Library/CloudStorage/Dropbox/Pictures/Art/works)
+#   FAA_STAGING_DIR      RETIRED name for FAA_WORKS_DIR, still honoured. D020 collapsed the
+#                        two sidecar trees onto Art/works and quarantined ./staging_sidecars,
+#                        so anything still setting this points the app at a tree that no
+#                        longer exists — an empty archive, reported as an empty archive.
 #   FAA_MANIFEST_CSV     flat manifest path (default ./manifest.csv)
 #   FAA_RATINGS_LOG      ratings JSONL path (default ./data/ratings_log.jsonl)
 #   FAA_IMAGE_CACHE_DIR  resized image cache (default ./data/image_cache)
