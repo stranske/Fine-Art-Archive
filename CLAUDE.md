@@ -154,6 +154,75 @@ An inconclusive or conflicting new search does **not** on its own disprove an al
 Q-ID only when evidence shows it is wrong, using the repository's re-resolution flow so the
 prior value and corrective evidence remain recoverable.
 
+## Missing or Lost Originals: Search the Local Library BEFORE Acquiring
+
+**Any time a master is missing, lost, or about to be (re-)acquired, search the local image
+library first.** This is a standard step in that work, not a fallback and not an optimisation.
+It runs before you fetch a single byte from the internet.
+
+The archive is not the only place originals live. Three reasons this is mandatory:
+
+1. **The local copy is often BETTER than what you would download.** 7,648 assets in the Photos
+   library have originals larger than their rendered version, and the Meural set holds
+   uncropped source images. Re-acquiring can silently downgrade a work you already hold.
+2. **The local copy is sometimes the ONLY copy.** A lost master may still exist here and nowhere
+   else; downloading a substitute buries that fact instead of recovering the original.
+3. **Acquisition budget is capped.** Spending it on a work already held is a real cost.
+
+### Where to look
+
+| Location | Holds | Notes |
+|---|---|---|
+| `Pictures/Archive/references/meural/` | ~697 images | Meural exports. Opaque numeric/stock filenames, no sidecars — **text search cannot find anything here.** |
+| `~/Pictures/Photos Library.photoslibrary` | ~7,648 with oversized originals | Query `Photos.sqlite` offline; never crawl the 542 GB tree. |
+| `Pictures/Archive/references/<work_id>/` | per-work reference images | Named by work, so text search works. |
+| The retired library | secondary RAWs and edits | Stays online as a safeguard; some halves of RAW+JPEG pairs exist nowhere else. |
+
+### How
+
+Content-based search, because filenames in the Meural set are meaningless:
+
+```bash
+.faa-venv/bin/python3 scripts/visual_find_in_unindexed.py <reference_image> \
+    --dirs ~/Library/CloudStorage/Dropbox/Pictures/Archive/references/meural --topk 12
+```
+
+Cosine guide: `>=0.90` likely the same work, `0.80-0.90` near/related, lower unrelated.
+
+**When the original is the thing that is lost, you have no reference image to search with.** Fetch
+a LOW-RES reference (a thumbnail or a scaled rendition) first, search with that, and download the
+full master only if nothing matches. Do not download the master "to search with" — that is the
+acquisition you were trying to avoid.
+
+### A visual match is not proof you already hold it
+
+Pixels cannot separate a work from its own autograph replica, and this corpus is full of them.
+Worked example, 2026-09-01: David's *Sacre* was found "already in the archive" by title and would
+have matched at high cosine — but the held work is the **Versailles replica** (Q18683217, Musée de
+l'Histoire de France, MV 7156, 1808-1822) and the missing one is the **Louvre original** (INV 3699 /
+MR 1437, 1806-07). Two separate holdings of one composition. Concluding "already held" would have
+discarded the original.
+
+Discriminate on **holder, accession number, and date**, not on the image. Conversely, do not let a
+different TITLE convince you a work is absent: the same David was invisible to a title search for
+"Coronation of Napoleon" because the archive files it as "The Coronation of the Emperor and
+Empress", and Rembrandt's *Moses Smashing the Tablets* is held as *Moses Breaking the Tablets of
+the Law*. Search on artist plus subject words, then confirm identity on the identifiers.
+
+### The staleness trap — a "no match" is not a negative result
+
+`visual_find_in_unindexed.py` defaults to `Art/Others Photos/` and reads a cached index
+(`dinov2_unindexed_index.json`). **The archive reorg emptied that directory: as of 2026-09-01 all
+725 cached entries point at paths that no longer exist, and the default search covers 0 files.**
+A tool that cannot see the library returns exactly the same answer as a library that does not
+contain the work.
+
+So before trusting a "not found": confirm the search actually looked at files that exist — check
+the index entry count against what resolves on disk, or pass `--dirs` explicitly as above. Record
+which locations were searched and how many files each contributed. "Searched the library, no
+match" is only a finding if the number of files searched was non-zero. See the standing rule that
+a check narrower than its own claim is a defect report, not a negative result.
+
 ## Useful References
 
 - `stranske/Workflows/README.md`

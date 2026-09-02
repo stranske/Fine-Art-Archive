@@ -27,6 +27,9 @@ class VariantIdentityVerdict(StrEnum):
     """The safe disposition for one directed owner-to-holding link."""
 
     TRUE_CROP = "TRUE_CROP"
+    #: Two complementary crops of one work, neither of which is the other's
+    #: master. Both correctly hold the Q-ID and neither may be cleared.
+    COMPLEMENTARY_CROP = "COMPLEMENTARY_CROP"
     OWNER_NO_QID = "OWNER_NO_QID"
     QID_CONFLICT = "QID_CONFLICT"
     UNRESOLVED = "UNRESOLVED"
@@ -52,7 +55,10 @@ def work_qid_of(meta: Mapping[str, Any]) -> str | None:
 
 
 def classify_variant_identity(
-    owner: Mapping[str, Any], holding: Mapping[str, Any]
+    owner: Mapping[str, Any],
+    holding: Mapping[str, Any],
+    *,
+    complementary: bool = False,
 ) -> VariantIdentityFinding:
     """Classify a linked holding without choosing between conflicting Q-IDs.
 
@@ -60,13 +66,29 @@ def classify_variant_identity(
     redundant.  A missing owner Q-ID must preserve the holding's sole identity.
     Different Q-IDs are *not* automatically called a false variant: that needs
     the accession- or collection-backed evidence retained by the audit process.
+
+    ``complementary`` marks the pair as two crops that between them cover one
+    work, with no master among them -- see
+    :func:`~fine_art_archive.identity.crop_siblings.crop_sibling_groups`. The
+    matching Q-ID is then correct on BOTH sides and neither is redundant, so
+    the TRUE_CROP disposition below must not be reached. It is checked first
+    because the shapes are otherwise identical: on 2026-09-01 every TRUE_CROP
+    finding in the archive (4 of 4) was one direction of a complementary pair,
+    and because such a pair links mutually, the advice was to clear the Q-ID
+    from BOTH members -- leaving the work with no identity at all.
     """
     owner_id = str(owner.get("work_id") or "")
     holding_id = str(holding.get("work_id") or "")
     owner_qid = work_qid_of(owner)
     holding_qid = work_qid_of(holding)
 
-    if holding_qid is None:
+    if complementary and owner_qid is not None and owner_qid == holding_qid:
+        verdict = VariantIdentityVerdict.COMPLEMENTARY_CROP
+        action = (
+            "preserve BOTH: complementary crops of one work, no master among "
+            "them — each correctly carries the work Q-ID"
+        )
+    elif holding_qid is None:
         verdict = VariantIdentityVerdict.UNRESOLVED
         action = "preserve: holding has no work Q-ID to evaluate"
     elif owner_qid is None:
@@ -100,6 +122,13 @@ def classify_variant_links(metas: Iterable[Mapping[str, Any]]) -> list[VariantId
         for meta in metas
         if isinstance((work_id := meta.get("work_id")), str) and work_id
     }
+    # Imported here, not at module scope: crop_siblings reads `work_qid_of`
+    # from this module, so a top-level import would be circular.
+    from fine_art_archive.identity.crop_siblings import (  # noqa: PLC0415
+        crop_sibling_work_ids,
+    )
+
+    complementary_ids = crop_sibling_work_ids(by_work_id.values())
     findings: list[VariantIdentityFinding] = []
     for owner_id, owner in by_work_id.items():
         files = owner.get("files")
@@ -115,7 +144,15 @@ def classify_variant_links(metas: Iterable[Mapping[str, Any]]) -> list[VariantId
                 continue
             holding = by_work_id.get(parts[1])
             if holding is not None:
-                findings.append(classify_variant_identity(owner, holding))
+                findings.append(
+                    classify_variant_identity(
+                        owner,
+                        holding,
+                        complementary=(
+                            owner_id in complementary_ids and parts[1] in complementary_ids
+                        ),
+                    )
+                )
     return sorted(findings, key=lambda item: (item.owner_work_id, item.holding_work_id))
 
 
