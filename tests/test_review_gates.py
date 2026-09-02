@@ -19,6 +19,7 @@ has drained it, because nothing in the archive waits on that happening.
 from __future__ import annotations
 
 import json
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -674,6 +675,9 @@ def test_unreadable_archive_is_reported_not_shown_as_nothing_similar() -> None:
 
 def test_empty_held_archive_is_a_valid_empty_index(monkeypatch: pytest.MonkeyPatch) -> None:
     """No sidecars means no possible title match, not a failed lookup."""
+    # Make readability explicit: CI has no real archive tree, while this case
+    # represents a readable archive containing no sidecars.
+    monkeypatch.setattr(gates.os, "scandir", lambda _path: nullcontext())
     monkeypatch.setattr(gates.glob, "glob", lambda _pattern: [])
     index = gates._held_by_artist_index()
     assert index == {}
