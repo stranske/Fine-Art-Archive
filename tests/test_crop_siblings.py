@@ -216,7 +216,10 @@ class TestTheMeasurement:
         assert isinstance(result.best_ncc, float)
         assert result.best_ncc <= 1.0
 
-    @pytest.mark.parametrize("fraction", [None, -0.1, 0, 1.1, float("nan")])
+    @pytest.mark.parametrize(
+        "fraction",
+        [None, -0.1, 0, 1.1, float("nan"), float("inf"), float("-inf")],
+    )
     def test_measurement_rejects_invalid_strip_fractions(self, fraction) -> None:
         pytest.importorskip("numpy")
         pytest.importorskip("PIL")
