@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "faa-companion",
-      "runtimeExecutable": "/private/tmp/claude-502/-Users-teacher-Library-CloudStorage-Dropbox-Learning-Code/3523455e-4614-4e5e-9394-809dfe95a596/scratchpad/run_faa.sh",
-      "runtimeArgs": [],
-      "port": 8932
+      "runtimeExecutable": "/Users/teacher/.faa-venv/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "fine_art_archive.api.main:app", "--host", "127.0.0.1", "--port", "8931"],
+      "port": 8931
     }
   ]
 }

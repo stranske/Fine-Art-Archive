@@ -82,6 +82,28 @@ def test_resumable_skip_detection() -> None:
     assert _already_lens({"work_id": "w"}, "artist_qid") is False
 
 
+def test_manual_reverse_image_contract_in_docs_is_resumable() -> None:
+    """Keep the human guide's URL form aligned with the recovery skip check."""
+    for guide_name in ("AGENTS.md", "CLAUDE.md"):
+        guide = (ROOT / guide_name).read_text()
+        assert "source` to `reverse_image_search`" in guide
+        assert "search-result URL in\n   `source_ref`" in guide
+        assert "both forms are valid reverse-image provenance" in guide
+
+    meta = {
+        "work_id": "w",
+        "field_provenance": {
+            "work_qid": {
+                "source": "reverse_image_search",
+                "source_ref": "https://lens.google.com/uploadbyurl?url=https%3A%2F%2Fexample.test%2Fwork.jpg",
+            }
+        },
+    }
+    assert _already_lens(meta, "work_qid") is True
+    meta["field_provenance"]["work_qid"]["source"] = "museum"
+    assert _already_lens(meta, "work_qid") is False
+
+
 def test_confirmed_no_artist_finalizes_null() -> None:
     # Image search confirms it's a place / has no individual artist -> null becomes
     # a searched, terminal outcome (not a silent gap).

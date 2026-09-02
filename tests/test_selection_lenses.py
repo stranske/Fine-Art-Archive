@@ -263,9 +263,9 @@ def test_shares_land_over_a_month_even_at_a_small_batch() -> None:
     for name, share in lenses.LENS_SHARES.items():
         monthly_err = abs(spent[name] / total - share)
         batch_err = abs(per_batch[name] / 7 - share)
-        assert monthly_err <= batch_err + 1e-9, (
-            f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
-        )
+        assert (
+            monthly_err <= batch_err + 1e-9
+        ), f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
     # And the worst lens must land close, not merely closer.
     worst = max(abs(spent[n] / total - lenses.LENS_SHARES[n]) for n in names)
     assert worst < 0.02, f"realised shares drift by {worst:.3f}"

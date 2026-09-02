@@ -136,9 +136,24 @@ def invalidate_manifest_cache() -> None:
 
 
 def _matches_query(row: dict, ql: str) -> bool:
-    """Search match. Includes raw title + raw artist_name + the
-    canonical artist name + the canonical family_key. That last one is
-    what makes searching 'Brueghel' return all 40 'Bruegel' works too."""
+    """Search match over the title and every name the archive knows for the artist.
+
+    Four passes, widening: the raw title, the raw `artist_name`, the canonical display
+    name, and a folded comparison of both so accents do not have to be typed (`durer`
+    finds `Dürer`).
+
+    The last pass resolves the QUERY through the same curated alias table the rows go
+    through, and matches when both land on the same Wikidata Q-ID. Without it, a name
+    this repository explicitly asserts is the same painter finds nothing: `CURATED_ALIASES`
+    lists `Pieter Brueghel` and `Pieter Bruegel I` under Q43270, the works are catalogued
+    as `Pieter Bruegel the Elder` under Q43270, and searching either alias returned an
+    empty archive because no substring of one appears in the other.
+
+    This cannot over-match. It fires only where the curated table already says two
+    spellings are one person, so it unifies exactly the variants somebody chose to
+    record — and a bare surname like `Brueghel`, which resolves to nothing, still
+    matches nothing.
+    """
     raw_artist = row.get("artist_name", "") or ""
     cq, cname = _resolve_cached(raw_artist)
     if ql in (row.get("title", "") or "").lower():
@@ -150,7 +165,12 @@ def _matches_query(row: dict, ql: str) -> bool:
     # Also try a folded-name comparison so accent / spelling variants hit
     from fine_art_archive.identity.artist_resolver import fold_name
 
-    return bool(ql in fold_name(raw_artist) or (cname and ql in fold_name(cname)))
+    qf = fold_name(ql)
+    if qf and (qf in fold_name(raw_artist) or (cname and qf in fold_name(cname))):
+        return True
+    # Finally, an alias the curated table maps to the same artist as this row.
+    query_q, _ = _resolve_cached(ql)
+    return bool(query_q and cq and query_q == cq)
 
 
 def list_works(
@@ -473,13 +493,36 @@ def invalidate_acquisitions_cache() -> None:
 _artist_qid_cache: dict[str, Any] = {"sig": None, "qids": frozenset()}
 
 
+def artist_qid(meta: dict) -> str | None:
+    """The artist Q-ID a sidecar carries, or None when it carries none.
+
+    Prefers the resolver's canonical Q-ID and falls back to the raw one, so an
+    artist whose name is spelled two ways still resolves to a single Q-ID.
+
+    Shared by `known_artist_qids()` and `scripts/build_manifest.py` so the
+    screener's idea of which Q-ID a work carries cannot drift from the one the
+    manifest publishes to the UI.
+    """
+    artist = meta.get("artist")
+    if not isinstance(artist, dict):
+        return None
+    canonical = artist.get("canonical")
+    canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
+    raw_qid = artist.get("wikidata_q")
+    qid = (
+        canonical_qid
+        if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
+        else raw_qid
+    )
+    return qid if isinstance(qid, str) and _QID_RE.fullmatch(qid) else None
+
+
 def known_artist_qids() -> frozenset[str]:
     """Artist Q-IDs the archive already holds at least one work by.
 
     Read from sidecars rather than the manifest because this set decides what
     the acquisition screener treats as "already represented", and the screener
-    reads sidecars. Prefers the resolver's canonical Q-ID, falling back to the
-    raw one, so an artist whose name is spelled two ways still counts once.
+    reads sidecars.
     """
     sig = _dossier_signature()
     if _artist_qid_cache["sig"] == sig:
@@ -493,18 +536,8 @@ def known_artist_qids() -> frozenset[str]:
             continue
         if not isinstance(meta, dict):
             continue
-        artist = meta.get("artist")
-        if not isinstance(artist, dict):
-            continue
-        canonical = artist.get("canonical")
-        canonical_qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
-        raw_qid = artist.get("wikidata_q")
-        qid = (
-            canonical_qid
-            if isinstance(canonical_qid, str) and _QID_RE.fullmatch(canonical_qid)
-            else raw_qid
-        )
-        if isinstance(qid, str) and _QID_RE.fullmatch(qid):
+        qid = artist_qid(meta)
+        if qid is not None:
             qids.add(qid)
     frozen = frozenset(qids)
     _artist_qid_cache["sig"] = sig

@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 
 from fine_art_archive.api import main as api_main
 from fine_art_archive.api import store as api_store
-from fine_art_archive.api.main import app
+from fine_art_archive.api.main import FRESH_CHECKOUT_SIDECAR_WORKS, app
 
 
 @pytest.fixture(scope="module")
@@ -42,10 +42,92 @@ def stub_work(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(api_store, "get_work", lambda work_id: {"work_id": work_id})
 
 
-def test_healthz(client: TestClient) -> None:
+@pytest.fixture
+def empty_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Point every file-backed health input at an empty tree.
+
+    `/healthz` reads the real works directory and the real manifest, so its verdict depends on
+    what the developer happens to have on disk. The ratings log and queue directory are also
+    health inputs, so leaving either real makes the same assertion depend on unrelated local
+    corruption. On a machine holding a populated archive with no manifest.csv — the default
+    until `scripts/build_manifest.py` existed, and still the state whenever the works tree has
+    grown since the last rebuild — it reports `ok: false` correctly, and every test asserting
+    `ok is True` fails for a reason that has nothing to do with the test.
+
+    That direction is backwards: the machine with real data is the one where these tests matter
+    least (its health is a fact about the data) and where they were red. Isolating the inputs
+    makes each test assert the ENDPOINT'S LOGIC on state it controls, which is the same on any
+    machine.
+    """
+    works = tmp_path / "works"
+    works.mkdir()
+    monkeypatch.setattr(api_store, "WORKS", works)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    monkeypatch.setattr(api_store, "load_manifest", lambda: [])
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings_log.jsonl")
+    queues_dir = tmp_path / "empty-queues"
+    queues_dir.mkdir()
+    monkeypatch.setattr(api_main, "QUEUES_DIR", queues_dir)
+    api_store.invalidate_ratings_cache()
+    return works
+
+
+def test_healthz(client: TestClient, empty_archive: Path) -> None:
     r = client.get("/healthz")
     assert r.status_code == 200
     assert r.json()["ok"] is True
+
+
+def test_healthz_reports_manifest_drift_as_unhealthy(
+    client: TestClient, empty_archive: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The condition the endpoint exists for, and the counterweight to the fixture above.
+
+    A populated works tree with an empty manifest is total navigation loss: every work on disk is
+    unfindable by the operator, so none of them can be rated and none enter the curation loop.
+    The endpoint must call that unhealthy — and this test is what stops the isolation fixture from
+    turning `/healthz` into something that always says yes.
+    """
+    for index in range(FRESH_CHECKOUT_SIDECAR_WORKS + 2):
+        (empty_archive / f"work-{index}").mkdir()
+
+    body = client.get("/healthz").json()
+
+    assert body["ok"] is False
+    assert body["manifest_loaded"] == 0
+    assert body["sidecar_works"] == FRESH_CHECKOUT_SIDECAR_WORKS + 2
+    assert body["manifest_drift"] == -(FRESH_CHECKOUT_SIDECAR_WORKS + 2)
+
+
+def test_a_fresh_checkout_is_healthy_without_a_manifest(
+    client: TestClient, empty_archive: Path
+) -> None:
+    """The allowance, pinned against the same constant the endpoint uses.
+
+    A fresh checkout ships `FRESH_CHECKOUT_SIDECAR_WORKS` fixture sidecars and no manifest at all.
+    Failing health there would be a false alarm on every dev machine — so the endpoint allows it,
+    and only it.
+    """
+    for index in range(FRESH_CHECKOUT_SIDECAR_WORKS):
+        (empty_archive / f"work-{index}").mkdir()
+
+    assert client.get("/healthz").json()["ok"] is True
+
+
+def test_a_matching_manifest_is_healthy_at_any_size(
+    client: TestClient, empty_archive: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Drift, not size, is the health fact. A large archive whose manifest covers it is fine."""
+    for index in range(25):
+        (empty_archive / f"work-{index}").mkdir()
+    monkeypatch.setattr(
+        api_store, "load_manifest", lambda: [{"work_id": f"work-{i}"} for i in range(25)]
+    )
+
+    body = client.get("/healthz").json()
+
+    assert body["ok"] is True
+    assert body["manifest_drift"] == 0
 
 
 def test_root_serves_focus_ui(client: TestClient) -> None:
@@ -63,7 +145,16 @@ def test_vendored_htmx_is_served(client: TestClient) -> None:
     assert b"htmx" in r.content[:200]
 
 
-def test_works_list_empty_shape(client: TestClient) -> None:
+def test_works_list_empty_shape(client: TestClient, empty_archive: Path) -> None:
+    """The `/works` envelope with nothing to list.
+
+    Isolated for the same reason `empty_archive` isolates health: this asserted
+    an empty list while reading the developer's real manifest, and passed only
+    because no manifest existed anywhere. Once `scripts/build_manifest.py` gave
+    the repo one, it failed locally against 3499 real works and would have kept
+    passing in CI, where there is no archive — a green suite hiding a test that
+    asserts a fact about the machine rather than about the endpoint.
+    """
     r = client.get("/works")
     assert r.status_code == 200
     body = r.json()
@@ -163,7 +254,12 @@ def test_queue_invalid_count_cache_reloads_when_files_change(
     client: TestClient,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    empty_archive: Path,
 ) -> None:
+    """`empty_archive` is required, not incidental: this test asserts `ok` flips with the
+    QUEUE state, and manifest drift is an independent input to the same flag. Without the
+    isolation the assertion is decided by the developer's works tree, and the test stops
+    watching queues at all on any machine that has one."""
     queues_dir = tmp_path / "queues"
     queues_dir.mkdir()
     (queues_dir / "bad.json").write_bytes(b"\xff")

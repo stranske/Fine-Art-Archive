@@ -7,6 +7,7 @@ Parquet rollup later can read these straight in.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import io
 import json
@@ -56,6 +57,20 @@ TILES_CACHE_DIR = env_path("FAA_TILES_CACHE_DIR", Path.home() / ".faa-tiles")
 # allowed to call healthy. Defined once and consumed by both the endpoint and
 # the test that pins the allowance, so the two cannot drift apart.
 FRESH_CHECKOUT_SIDECAR_WORKS = 1
+
+# What clears manifest drift. Reported alongside the drift itself so the number
+# arrives with its remedy: the 2026-08-05 gap went unnoticed for a month partly
+# because nothing anywhere named a producer for the file, and a reader had no
+# way to tell "behind" from "unfixable".
+#
+# Built from THIS process's interpreter and THIS checkout's path, never a bare
+# "python3 scripts/...". More than one checkout of this repo exists on a given
+# machine, each with its own manifest.csv beside it, and the app is routinely
+# served from a different one than the operator has open. A relative command
+# would be copy-pasted into whichever directory the shell happened to be in and
+# would rebuild a manifest the running app never reads -- reporting success
+# while the drift it was meant to clear stayed exactly where it was.
+MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_manifest.py'}"
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
@@ -194,12 +209,16 @@ def healthz() -> dict:
     sidecar_works = _count_work_dirs(store.WORKS)
     archive_works = _count_work_dirs(ART_WORKS_ROOT)
 
-    # The manifest is the operator UI's ONLY navigation path, and nothing
-    # regenerates it on promotion. On 2026-08-05 that left 18 promoted works
-    # servable but unfindable — browse showed 3393 against 3411 on disk — while
-    # this endpoint reported ok:true throughout, because `ok` only ever looked
-    # at ratings and queues. A work the operator cannot find cannot be rated,
-    # so it never enters the curation loop. Drift is therefore a health fact.
+    # The manifest is the operator UI's ONLY navigation path, and until
+    # 2026-09-01 nothing regenerated it on promotion. On 2026-08-05 that left 18
+    # promoted works servable but unfindable — browse showed 3393 against 3411
+    # on disk — while this endpoint reported ok:true throughout, because `ok`
+    # only ever looked at ratings and queues. A work the operator cannot find
+    # cannot be rated, so it never enters the curation loop. Drift is therefore
+    # a health fact. `scripts/build_manifest.py` is now the producer that
+    # clears it; `manifest_remedy` below names it in the response, because a
+    # gate that cannot say what would clear it is defective however accurate
+    # its number is.
     manifest_drift = None if sidecar_works is None else manifest_loaded - sidecar_works
     # An ABSENT or empty manifest is "not configured" ONLY when there is
     # nothing to navigate: a fresh checkout ships one fixture sidecar and no
@@ -211,13 +230,16 @@ def healthz() -> dict:
     # consulting `sidecar_works`, computed four lines above, so `ok` was
     # non-monotonic in the severity of the very condition it exists to detect:
     # 0 rows over 3411 sidecars reported healthy while 1 row over 3411 did not.
-    # Nothing in this repository writes manifest.csv, so that was the default
-    # state of every fresh deployment against a real works tree.
+    # Nothing in this repository wrote manifest.csv until 2026-09-01, so that
+    # was the default state of every fresh deployment against a real works tree
+    # — and on this machine it had reached all 3499 works, the file never
+    # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "manifest_loaded": manifest_loaded,
+        "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
         "sidecar_works": sidecar_works,
         "archive_works": archive_works,
         "manifest_drift": manifest_drift,
@@ -1414,9 +1436,13 @@ CANDIDATE_UA = os.environ.get(
 # firing them all in parallel is what turned a polite fetch into a burst that
 # Wikimedia refused. Cached images never reach this gate.
 _CANDIDATE_FETCH_SLOTS = threading.BoundedSemaphore(2)
+_COMMONS_HOST = "commons.wikimedia.org"
+# Maximum wall-clock seconds one review_candidate_image call may occupy a
+# worker thread. Three 30 s attempts + backoffs can reach ~100 s otherwise.
+_CANDIDATE_FETCH_DEADLINE_S = 60.0
 
 
-def _fetch_candidate_bytes(url: str, *, tries: int = 3) -> bytes:
+def _fetch_candidate_bytes(url: str, *, tries: int = 3, deadline: float | None = None) -> bytes:
     """GET an image, retrying on the throttling responses rather than failing.
 
     429 and 503 mean "ask again later", not "this image is unavailable", so
@@ -1425,10 +1451,14 @@ def _fetch_candidate_bytes(url: str, *, tries: int = 3) -> bytes:
     """
     last: Exception | None = None
     for attempt in range(tries):
+        remaining = (deadline - time.monotonic()) if deadline is not None else None
+        if remaining is not None and remaining <= 0:
+            raise TimeoutError("image fetch deadline exceeded")
+        per_attempt = min(30.0, remaining) if remaining is not None else 30.0
         try:
             with _CANDIDATE_FETCH_SLOTS:
                 req = urllib.request.Request(url, headers={"User-Agent": CANDIDATE_UA})
-                with urllib.request.urlopen(req, timeout=30) as r:
+                with urllib.request.urlopen(req, timeout=per_attempt) as r:
                     return r.read(24 * 1024 * 1024)
         except urllib.error.HTTPError as exc:
             last = exc
@@ -1474,6 +1504,8 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
     src_url = gates.candidate_image_url(qid)
     if not src_url:
         raise HTTPException(404, f"no candidate image for {qid}")
+    if not src_url.lower().startswith(("http://", "https://")):
+        raise HTTPException(502, "candidate image URL has a disallowed scheme")
 
     IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     key = hashlib.sha256(f"{qid}|{src_url}|{width}".encode()).hexdigest()[:24]
@@ -1483,17 +1515,20 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         # honours ?width= and returns ~127 KB instead of 1.7 MB, which is the
         # difference between a card that paints and one that does not.
         fetch_url = src_url
-        if "commons.wikimedia.org" in src_url and "width=" not in src_url:
+        if _COMMONS_HOST in src_url and "width=" not in src_url:
             fetch_url = f"{src_url}{'&' if '?' in src_url else '?'}width={width}"
         try:
-            raw = _fetch_candidate_bytes(fetch_url)
+            raw = _fetch_candidate_bytes(
+                fetch_url, deadline=time.monotonic() + _CANDIDATE_FETCH_DEADLINE_S
+            )
         except urllib.error.HTTPError as exc:
             # Throttling survived the retries. 503 tells the browser this is
             # temporary and worth asking for again; 502 would have it cache a
             # broken image for the rest of the session.
             if exc.code in (429, 503):
                 raise HTTPException(
-                    503, "source is throttling; retry shortly",
+                    503,
+                    "source is throttling; retry shortly",
                     headers={"Retry-After": "3"},
                 ) from exc
             raise HTTPException(502, f"could not fetch candidate image: {exc}") from exc
@@ -1511,7 +1546,8 @@ def review_candidate_image(qid: str, width: int = 700) -> Response:
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(502, f"could not decode candidate image: {exc}") from exc
     return FileResponse(
-        cache_p, media_type="image/jpeg",
+        cache_p,
+        media_type="image/jpeg",
         headers={"Cache-Control": "public, max-age=86400"},
     )
 
@@ -1539,7 +1575,10 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
     and must resolve inside a known root: this endpoint reads local files, so
     an unchecked path would be an arbitrary-file-read.
     """
-    store.validate_work_id(existing_wid)
+    try:
+        store.validate_work_id(existing_wid)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     if not VARIANT_UPGRADE_CSV.exists():
         raise HTTPException(404, "no variant upgrade candidates on file")
     raw_path = ""
@@ -1553,8 +1592,7 @@ def variant_candidate_image(existing_wid: str, max: int = 900) -> Response:
 
     candidate = Path(raw_path).expanduser().resolve(strict=False)
     if not any(
-        candidate.is_relative_to(root.resolve(strict=False))
-        for root in VARIANT_CANDIDATE_ROOTS
+        candidate.is_relative_to(root.resolve(strict=False)) for root in VARIANT_CANDIDATE_ROOTS
     ):
         raise HTTPException(403, "candidate path is outside the permitted roots")
     if not candidate.is_file():
@@ -2731,8 +2769,9 @@ def ratings_summary() -> dict:
 import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade endpoint)
 
 
+@functools.lru_cache(maxsize=256)
 def _image_dims(path: Path | None) -> str | None:
-    """"WxH" for a local image, or None. Header read only — never the full file."""
+    """ "WxH" for a local image, or None. Header read only — never the full file."""
     if path is None or not path.is_file():
         return None
     try:
@@ -2764,7 +2803,7 @@ def _variant_candidate_path(existing_wid: str) -> Path | None:
                     cand.is_relative_to(root.resolve(strict=False))
                     for root in VARIANT_CANDIDATE_ROOTS
                 ):
-                    return cand
+                    return cand if cand.is_file() else None
                 return None
     return None
 
@@ -2794,7 +2833,10 @@ def variant_upgrades() -> dict:
         # Megabytes are a poor proxy for image quality: a bigger file can be a
         # looser JPEG of a SMALLER picture. The question this screen asks is
         # "is the candidate better", and pixels answer it where bytes cannot.
-        c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        try:
+            c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
+        except HTTPException:
+            c["existing_px"] = None
         c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
     return {"candidates": candidates}
 
