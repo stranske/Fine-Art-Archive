@@ -264,10 +264,8 @@ class TestTheMeasurementCannotRefuteAnIdentity:
 
         # The real numbers, both crops vs the Met plate DT5476.jpg.
         return [
-            LateralOverlap(aligned_ncc=0.041, best_ncc=0.229, shift_fraction=0.0,
-                           ordering=None),
-            LateralOverlap(aligned_ncc=0.058, best_ncc=0.327, shift_fraction=0.0,
-                           ordering=None),
+            LateralOverlap(aligned_ncc=0.041, best_ncc=0.229, shift_fraction=0.0, ordering=None),
+            LateralOverlap(aligned_ncc=0.058, best_ncc=0.327, shift_fraction=0.0, ordering=None),
         ]
 
     def test_a_true_pair_that_scores_low_reads_as_inconclusive(self) -> None:
