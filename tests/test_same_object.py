@@ -87,9 +87,10 @@ class TestWhatMustNotBeExcused:
         assert distinct_object_groups(metas) == []
 
     def test_a_lone_sidecar_forms_no_group(self) -> None:
-        assert distinct_object_groups(
-            [_meta("aaa", PRINT, "Cleveland Museum of Art", "1930.189")]
-        ) == []
+        assert (
+            distinct_object_groups([_meta("aaa", PRINT, "Cleveland Museum of Art", "1930.189")])
+            == []
+        )
 
     def test_sidecars_without_a_qid_form_no_group(self) -> None:
         metas = [

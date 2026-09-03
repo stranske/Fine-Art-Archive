@@ -96,7 +96,7 @@ def distinct_object_groups(metas: Iterable[Mapping[str, Any]]) -> list[DistinctO
         if not keys or len(keys) != len(members):
             continue
         if len(set(keys.values())) != len(keys):
-            continue          # two members claim the SAME object: a real duplicate
+            continue  # two members claim the SAME object: a real duplicate
         groups.append(
             DistinctObjectGroup(
                 work_qid=qid,
