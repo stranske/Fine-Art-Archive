@@ -290,7 +290,7 @@ def healthz() -> dict:
     # page, where absence actually misleads and where the wording can be true
     # in both cases: if you have made decisions, they are not being read.
     decisions = gates.decisions_sources()
-    decisions_missing = [d["name"] for d in decisions if not d["exists"]]
+    decisions_missing = [d["name"] for d in decisions if not d["exists"] or d["records"] is None]
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "decisions_sources": decisions,
@@ -298,8 +298,8 @@ def healthz() -> dict:
         "decisions_remedy": (
             None
             if not decisions_missing
-            else "set FAA_ARTIST_ALLOWLIST / FAA_WORK_DECISIONS to the companion "
-            "repo's data/ directory — the app is reading a checkout that has none"
+            else "verify FAA_ARTIST_ALLOWLIST / FAA_WORK_DECISIONS, then recover the "
+            "expected decision files before relying on filtered review counts"
         ),
         "manifest_loaded": manifest_loaded,
         "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
@@ -1491,7 +1491,9 @@ def review_summary() -> dict:
         "unmeasured_gates": [s["name"] for s in summaries if not s["drainable_measured"]],
         "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
         "decisions_sources": sources,
-        "decisions_unreadable": [s["name"] for s in sources if not s["exists"]],
+        "decisions_unreadable": [
+            s["name"] for s in sources if not s["exists"] or s["records"] is None
+        ],
     }
 
 

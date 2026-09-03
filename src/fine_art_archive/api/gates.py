@@ -157,8 +157,9 @@ def _count_lines(path: Path) -> int | None:
     None is "not measured". It must never be rendered as 0.
     """
     try:
-        return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
-    except OSError:
+        with path.open(encoding="utf-8") as source:
+            return sum(1 for line in source if line.strip())
+    except (OSError, UnicodeError):
         return None
 
 

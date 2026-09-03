@@ -36,7 +36,7 @@ cd "$REPO_ROOT"
 # he had already given, with every count on the page looking entirely
 # plausible. Pinning it here, next to the REPO_ROOT that is already correct,
 # means no caller has to remember.
-export PYTHONPATH="${PYTHONPATH:-$REPO_ROOT/src}"
+export PYTHONPATH="$REPO_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
 HOST="${FAA_APP_HOST:-127.0.0.1}"
 PORT="${FAA_APP_PORT:-8401}"

@@ -1502,17 +1502,18 @@
       // the same direction: it re-presents what you already decided. Said at
       // the top of the page, before any number, because the numbers themselves
       // look entirely plausible when this happens.
-      const unreadable = (d.decisions_sources || []).filter(x => !x.exists);
+      const unreadable = (d.decisions_sources || []).filter(x => !x.exists || x.records === null);
       const banner = unreadable.length ? `
         <div style="border:2px solid var(--accent,#c00);border-radius:6px;padding:10px;margin:10px 0">
-          <strong>Your decision record was not found, so everything below is
+          <strong>Your decision record was unavailable, so everything below is
           over-counted.</strong>
           <div class="sub" style="margin-top:4px">These queues exclude what you have already
           ruled on. That filter read nothing, so works and artists you have decided are being
           shown again. Missing:
           ${unreadable.map(x => `<br><code style="font-size:11px">${acqEsc(x.path)}</code>
             <span class="sub">(set <code>${acqEsc(x.env_var)}</code>)</span>`).join("")}
-          <br>This is a wrong path, not an empty record — nothing has been lost.</div>
+          <br>Verify these paths and recover the expected decision files before
+          relying on the review counts.</div>
         </div>` : "";
       let html = `<button onclick="closeDetail()">← Back to list</button>
         <h2>Review</h2>${banner}

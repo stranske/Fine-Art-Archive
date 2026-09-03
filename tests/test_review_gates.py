@@ -779,10 +779,30 @@ def test_healthz_reports_an_unreadable_decision_record_without_crying_wolf(
     assert "ok" in body, "health still answers, it simply does not fail on this"
 
 
+def test_healthz_reports_invalid_utf8_decision_records_as_unreadable(monkeypatch, tmp_path) -> None:
+    """Malformed records must report a remedy instead of turning healthz into a 500."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    malformed = tmp_path / "artist_allowlist.jsonl"
+    malformed.write_bytes(b"\xff\xfe\n")
+    monkeypatch.setattr(gates, "ARTIST_ALLOWLIST", malformed)
+    monkeypatch.setattr(gates, "WORK_DECISIONS", tmp_path / "work_decisions.jsonl")
+
+    body = TestClient(main.app).get("/healthz").json()
+    sources = {source["name"]: source for source in body["decisions_sources"]}
+    assert sources["artist_allowlist"]["exists"] is True
+    assert sources["artist_allowlist"]["records"] is None
+    assert "artist_allowlist" in body["decisions_missing"]
+    assert body["decisions_remedy"]
+
+
 def test_the_review_page_says_so_before_it_shows_a_single_count() -> None:
     """An endpoint field nobody renders would not have prevented this."""
-    page = (
-        Path(__file__).resolve().parents[1] / "src/fine_art_archive/ui/index.html"
-    ).read_text(encoding="utf-8")
+    page = (Path(__file__).resolve().parents[1] / "src/fine_art_archive/ui/index.html").read_text(
+        encoding="utf-8"
+    )
     assert "decisions_sources" in page
     assert "everything below is" in page and "over-counted" in page
+    assert page.index("${banner}") < page.index("${d.total_drainable}")
