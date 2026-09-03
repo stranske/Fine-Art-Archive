@@ -2963,7 +2963,10 @@ def variant_upgrade_decision(existing_wid: str, body: UpgradeDecisionIn) -> dict
         "next_steps": (
             "Decision logged. Promotion is gated — to actually swap the "
             "current master with the candidate, add a per-decision grant "
-            "in permissions.md and run scripts/promote_variant_upgrade.py."
+            "in permissions.md and run scripts/promote_variant_upgrade.py, "
+            "which dry-runs by default. It re-checks that the candidate is "
+            "the SAME work on Wikidata identity and refuses the swap if it "
+            "is not, so an accept here is a request, not a guarantee."
             if body.decision == "accept"
             else "Decision logged; no file changes."
         ),
