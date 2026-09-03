@@ -22,6 +22,22 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Pin WHICH CHECKOUT serves. Two clones of this package exist on the operator's
+# machine and the venv installs one of them editable, so `import
+# fine_art_archive` is decided by an import race. That is not only a code
+# question: api/config.py derives REPO_ROOT from the module's own location, so
+# the losing clone also takes `data/artist_allowlist.jsonl` and
+# `data/work_decisions.jsonl` with it -- and both loaders return an empty set
+# for a file they cannot open.
+#
+# On 2026-09-02 a launch resolved to the install rather than this repo. 129
+# artist decisions and 120 work decisions vanished in one step: the routed
+# queue reported 116 items instead of 16 and asked the owner again for feedback
+# he had already given, with every count on the page looking entirely
+# plausible. Pinning it here, next to the REPO_ROOT that is already correct,
+# means no caller has to remember.
+export PYTHONPATH="${PYTHONPATH:-$REPO_ROOT/src}"
+
 HOST="${FAA_APP_HOST:-127.0.0.1}"
 PORT="${FAA_APP_PORT:-8401}"
 

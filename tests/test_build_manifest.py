@@ -352,6 +352,14 @@ def test_every_documented_launch_path_rebuilds_the_index_before_serving() -> Non
 
     sh = (root / "scripts" / "run_companion_app.sh").read_text(encoding="utf-8")
     assert "build_manifest.py" in sh, "the shell runner no longer rebuilds the index"
+    # Which checkout serves also decides where the owner's decisions are read
+    # from, because REPO_ROOT is derived from the module's own location. Left
+    # to an import race on 2026-09-02, it silently discarded 129 artist and 120
+    # work decisions and re-presented everything already ruled on.
+    assert "PYTHONPATH" in sh, (
+        "the shell runner no longer pins PYTHONPATH, so which checkout serves — and "
+        "therefore whether the owner's decisions are found — depends on an import race"
+    )
 
     launch = root / ".claude" / "launch.json"
     if not launch.exists():  # pragma: no cover - optional local file

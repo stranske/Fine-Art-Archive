@@ -278,8 +278,30 @@ def healthz() -> dict:
     # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
+    # The owner's decision record. A missing file is not automatically a fault
+    # -- a fresh install has decided nothing -- but a file that is missing while
+    # a sibling checkout holds one means the app is reading the wrong place and
+    # is about to ask for feedback already given. Reported either way, because
+    # the failure is silent by construction: both loaders return empty for a
+    # file they cannot open, so "decided nothing" and "could not read your
+    # decisions" are the same value and only this line can tell them apart.
+    decisions = gates.decisions_sources()
+    decisions_missing = [d["name"] for d in decisions if not d["exists"]]
     return {
-        "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
+        "ok": (
+            corrupt_line_count == 0
+            and queues_invalid_count == 0
+            and drift_is_healthy
+            and not decisions_missing
+        ),
+        "decisions_sources": decisions,
+        "decisions_missing": decisions_missing,
+        "decisions_remedy": (
+            None
+            if not decisions_missing
+            else "set FAA_ARTIST_ALLOWLIST / FAA_WORK_DECISIONS to the companion "
+            "repo's data/ directory — the app is reading a checkout that has none"
+        ),
         "manifest_loaded": manifest_loaded,
         "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
         "sidecar_works": sidecar_works,
@@ -1458,12 +1480,19 @@ def review_summary() -> dict:
     # from the first the moment either changed — and drifted silently, since
     # both would keep returning plausible numbers.
     summaries = [g.summary() for g in found]
+    # Where the owner's decisions were read from. Every gate below filters on
+    # that record, so a gate count is only meaningful if the record was
+    # readable — an unreadable one re-presents everything already decided while
+    # every number on the page still looks plausible.
+    sources = gates.decisions_sources()
     return {
         "gates": summaries,
         "total_blocking": sum(s["blocking"] for s in summaries),
         "total_drainable": sum(s["drainable"] for s in summaries if s["drainable_measured"]),
         "unmeasured_gates": [s["name"] for s in summaries if not s["drainable_measured"]],
         "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
+        "decisions_sources": sources,
+        "decisions_unreadable": [s["name"] for s in sources if not s["exists"]],
     }
 
 

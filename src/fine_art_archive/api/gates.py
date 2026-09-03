@@ -113,6 +113,55 @@ def _read_json(path: Path) -> dict | None:
     return decoded if isinstance(decoded, dict) else None
 
 
+def decisions_sources() -> list[dict[str, Any]]:
+    """Where the owner's decisions are being read from, and whether they exist.
+
+    Both loaders below return an empty set for a file they cannot open, which
+    is correct as a value and catastrophic as a report: "you have decided
+    nothing" and "I could not find your decisions" then look identical, and the
+    review surface silently re-presents everything already ruled on.
+
+    That is not hypothetical and it is not old. On 2026-09-02 the app was
+    launched so that `fine_art_archive` resolved to the ~/.faa-lib checkout
+    instead of the companion repo. REPO_ROOT moved with it, both files
+    vanished, and 129 artist decisions and 120 work decisions became invisible:
+    the routed queue went from 16 items to 116, new-artist from 23 to 132, and
+    the owner was asked again for feedback he had already given. Nothing in the
+    app said so, because nothing asked whether the record could be read.
+
+    So this reports the paths and their existence, and callers surface it. It
+    deliberately does NOT guess at another location: a decisions file found by
+    searching is how you end up writing to one copy and reading another.
+    """
+    return [
+        {
+            "name": "artist_allowlist",
+            "path": str(ARTIST_ALLOWLIST),
+            "exists": ARTIST_ALLOWLIST.exists(),
+            "env_var": "FAA_ARTIST_ALLOWLIST",
+            "records": _count_lines(ARTIST_ALLOWLIST),
+        },
+        {
+            "name": "work_decisions",
+            "path": str(WORK_DECISIONS),
+            "exists": WORK_DECISIONS.exists(),
+            "env_var": "FAA_WORK_DECISIONS",
+            "records": _count_lines(WORK_DECISIONS),
+        },
+    ]
+
+
+def _count_lines(path: Path) -> int | None:
+    """Non-blank lines, or None when the file cannot be read.
+
+    None is "not measured". It must never be rendered as 0.
+    """
+    try:
+        return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    except OSError:
+        return None
+
+
 def _artist_decisions(path: Path | None = None) -> tuple[set[str], set[str]]:
     """Return approved and refused artist Q-IDs from one append-log pass."""
     p = path or ARTIST_ALLOWLIST
