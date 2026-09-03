@@ -278,8 +278,29 @@ def healthz() -> dict:
     # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
+    # The owner's decision record, REPORTED but deliberately not part of `ok`.
+    #
+    # Both loaders return an empty set for a file they cannot open, so "you have
+    # decided nothing" and "I am looking in the wrong place" are the same value,
+    # and something has to tell them apart. But absence is genuinely ambiguous:
+    # a fresh checkout has decided nothing and its files correctly do not exist.
+    # Gating `ok` on it fired on every dev machine and in CI -- the same false
+    # alarm the manifest arm above documents and avoids -- so the signal is
+    # published here with the remedy, and the loud warning lives on the Review
+    # page, where absence actually misleads and where the wording can be true
+    # in both cases: if you have made decisions, they are not being read.
+    decisions = gates.decisions_sources()
+    decisions_missing = [d["name"] for d in decisions if not d["exists"] or d["records"] is None]
     return {
         "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
+        "decisions_sources": decisions,
+        "decisions_missing": decisions_missing,
+        "decisions_remedy": (
+            None
+            if not decisions_missing
+            else "verify FAA_ARTIST_ALLOWLIST / FAA_WORK_DECISIONS, then recover the "
+            "expected decision files before relying on filtered review counts"
+        ),
         "manifest_loaded": manifest_loaded,
         "manifest_remedy": None if drift_is_healthy else MANIFEST_REBUILD_COMMAND,
         "sidecar_works": sidecar_works,
@@ -1458,12 +1479,21 @@ def review_summary() -> dict:
     # from the first the moment either changed — and drifted silently, since
     # both would keep returning plausible numbers.
     summaries = [g.summary() for g in found]
+    # Where the owner's decisions were read from. Every gate below filters on
+    # that record, so a gate count is only meaningful if the record was
+    # readable — an unreadable one re-presents everything already decided while
+    # every number on the page still looks plausible.
+    sources = gates.decisions_sources()
     return {
         "gates": summaries,
         "total_blocking": sum(s["blocking"] for s in summaries),
         "total_drainable": sum(s["drainable"] for s in summaries if s["drainable_measured"]),
         "unmeasured_gates": [s["name"] for s in summaries if not s["drainable_measured"]],
         "deadlocked_gates": [s["name"] for s in summaries if s["deadlocked"]],
+        "decisions_sources": sources,
+        "decisions_unreadable": [
+            s["name"] for s in sources if not s["exists"] or s["records"] is None
+        ],
     }
 
 

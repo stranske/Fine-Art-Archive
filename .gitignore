@@ -60,6 +60,19 @@ automation_logs/
 # hid manifest.csv's absence for a month, so it is named here deliberately.
 /variant_upgrade_candidates.csv
 
+# The owner's own decisions — which artists and which works he has ruled on,
+# and which acquisitions he has looked at. Generated-local and deliberately not
+# committed: they are personal judgements tied to one archive on one machine,
+# they are appended to constantly, and a tracked copy would collide across the
+# automated PR fleet. Named here rather than left untracked-and-unignored,
+# which is the state that hid manifest.csv's absence for a month.
+#
+# Losing these costs the owner feedback he has already given, so they are
+# reported by /healthz and on the Review page when the app cannot read them.
+/data/artist_allowlist.jsonl
+/data/work_decisions.jsonl
+/data/acquisition_review_events.jsonl
+
 # =============================================================================
 # Workflows Consumer Repo - Shared Status Files
 # =============================================================================

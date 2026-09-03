@@ -720,3 +720,89 @@ def test_a_candidate_that_was_never_probed_says_so() -> None:
     probed = gates._cand_row({"qid": "Q2", "screen_scores": {"dimensions_px": [4000, 3000]}}, "why")
     assert probed["probed"] is True
     assert probed["megapixels"] == 12.0
+
+
+# --------------------------------------------------------------------------
+# "Could not read your decisions" must never look like "you decided nothing"
+# --------------------------------------------------------------------------
+def test_a_missing_decisions_file_is_reported_not_silently_empty(monkeypatch, tmp_path) -> None:
+    """The defect this exists for, in full.
+
+    Both loaders return an empty set for a file they cannot open. As a value
+    that is right; as a REPORT it is catastrophic, because it makes "you have
+    decided nothing" and "I am looking in the wrong place" identical.
+
+    On 2026-09-02 the app was launched so `fine_art_archive` resolved to the
+    ~/.faa-lib checkout rather than the companion repo. REPO_ROOT moved with
+    it, both files vanished, and 129 artist decisions and 120 work decisions
+    became invisible: the routed queue read 116 instead of 16, new-artist 132
+    instead of 23, and the owner was asked again for feedback he had already
+    given. Every number on the page looked plausible. Nothing said the filter
+    had read nothing.
+    """
+    missing = tmp_path / "gone" / "artist_allowlist.jsonl"
+    present = tmp_path / "work_decisions.jsonl"
+    present.write_text(
+        json.dumps({"work_qid": "Q1", "decision": "reject"}) + "\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(gates, "ARTIST_ALLOWLIST", missing)
+    monkeypatch.setattr(gates, "WORK_DECISIONS", present)
+
+    sources = {s["name"]: s for s in gates.decisions_sources()}
+    assert sources["artist_allowlist"]["exists"] is False
+    assert sources["artist_allowlist"]["records"] is None, "unreadable must not count as 0"
+    assert sources["artist_allowlist"]["env_var"] == "FAA_ARTIST_ALLOWLIST"
+    assert sources["work_decisions"]["exists"] is True
+    assert sources["work_decisions"]["records"] == 1
+
+
+def test_healthz_reports_an_unreadable_decision_record_without_crying_wolf(
+    monkeypatch, tmp_path
+) -> None:
+    """Reported with its remedy, but NOT folded into `ok`.
+
+    A fresh checkout has decided nothing and its files correctly do not exist.
+    Gating `ok` on their absence fired on every dev machine and in CI — the same
+    false alarm the manifest arm documents and avoids. The signal is published
+    here; the warning that can actually mislead someone lives on the Review
+    page, worded to be true whether or not any decision has been made.
+    """
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    monkeypatch.setattr(gates, "ARTIST_ALLOWLIST", tmp_path / "nope.jsonl")
+    monkeypatch.setattr(gates, "WORK_DECISIONS", tmp_path / "also-nope.jsonl")
+    body = TestClient(main.app).get("/healthz").json()
+    assert set(body["decisions_missing"]) == {"artist_allowlist", "work_decisions"}
+    assert body["decisions_remedy"], "a report must say what would clear it"
+    assert "ok" in body, "health still answers, it simply does not fail on this"
+
+
+def test_healthz_reports_invalid_utf8_decision_records_as_unreadable(monkeypatch, tmp_path) -> None:
+    """Malformed records must report a remedy instead of turning healthz into a 500."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main
+
+    malformed = tmp_path / "artist_allowlist.jsonl"
+    malformed.write_bytes(b"\xff\xfe\n")
+    monkeypatch.setattr(gates, "ARTIST_ALLOWLIST", malformed)
+    monkeypatch.setattr(gates, "WORK_DECISIONS", tmp_path / "work_decisions.jsonl")
+
+    body = TestClient(main.app).get("/healthz").json()
+    sources = {source["name"]: source for source in body["decisions_sources"]}
+    assert sources["artist_allowlist"]["exists"] is True
+    assert sources["artist_allowlist"]["records"] is None
+    assert "artist_allowlist" in body["decisions_missing"]
+    assert body["decisions_remedy"]
+
+
+def test_the_review_page_says_so_before_it_shows_a_single_count() -> None:
+    """An endpoint field nobody renders would not have prevented this."""
+    page = (Path(__file__).resolve().parents[1] / "src/fine_art_archive/ui/index.html").read_text(
+        encoding="utf-8"
+    )
+    assert "decisions_sources" in page
+    assert "everything below is" in page and "over-counted" in page
+    assert page.index("${banner}") < page.index("${d.total_drainable}")
