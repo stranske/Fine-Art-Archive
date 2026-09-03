@@ -1362,7 +1362,7 @@
           ${upgStale.length ? `<p class="sub"><strong>${upgStale.length} row${upgStale.length === 1 ? "" : "s"}
             in the candidate file name an image that is no longer on disk</strong> — the staging tree
             moved on, most often a quarantine purge. Nothing here is waiting on you; the list itself
-            is out of date. Refresh it with
+            is out of date. From the acquisition workspace, refresh it with
             <code style="font-size:11px">${acqEsc(upgStaleCommand)}</code>.</p>`
           : `<p class="sub">No candidates right now. The detector found no
              staged file that's materially larger (≥1.5×) than an existing
@@ -1412,7 +1412,7 @@
         <h2>Better copy of a work you already hold?</h2>
         <div id="upg-card">
         ${upgStale.length ? `<p class="sub">(${upgStale.length} further row${upgStale.length === 1 ? "" : "s"}
-          name a file that is no longer on disk and are not shown — refresh with
+          name a file that is no longer on disk and are not shown — from the acquisition workspace, refresh with
           <code style="font-size:11px">${acqEsc(upgStaleCommand)}</code>.)</p>` : ""}
         <p class="sub">Candidate ${upgIdx + 1} of ${upgQueue.length}. The detector only checks that
         a staged file is ≥1.5× larger than the master, with the same title and artist — it does

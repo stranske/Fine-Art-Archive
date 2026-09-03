@@ -74,7 +74,7 @@ MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_ma
 #: The mechanism that clears a stale variant-upgrade row. Named here so the
 #: gate can print it: a gate that cannot say what would clear it is already
 #: defective, and this one had no stated drain at all.
-VARIANT_DETECT_COMMAND = "python3 scripts/detect_variant_upgrades.py (in the acquisition workspace)"
+VARIANT_DETECT_COMMAND = "python3 scripts/detect_variant_upgrades.py"
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",

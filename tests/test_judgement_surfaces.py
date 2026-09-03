@@ -366,9 +366,16 @@ def _variant_csv(tmp_path, rows):
 
     p = tmp_path / "variant_upgrade_candidates.csv"
     cols = [
-        "existing_wid", "title", "artist", "existing_master_mb",
-        "candidate_master_mb", "ratio", "candidate_path", "candidate_meta",
-        "candidate_quarantined", "candidate_canonical_q",
+        "existing_wid",
+        "title",
+        "artist",
+        "existing_master_mb",
+        "candidate_master_mb",
+        "ratio",
+        "candidate_path",
+        "candidate_meta",
+        "candidate_quarantined",
+        "candidate_canonical_q",
     ]
     with open(p, "w", encoding="utf-8", newline="") as fh:
         w = _c.DictWriter(fh, fieldnames=cols)
@@ -424,14 +431,14 @@ def test_the_variant_gate_names_a_drain_that_something_actually_invokes() -> Non
     The quarantine purge is what deletes these candidates, so it is what must
     refresh the list. Before this it deleted the files and walked away.
     """
+    import os
     from pathlib import Path
 
-    purge = (
-        Path.home()
-        / "Library/CloudStorage/Dropbox/Pictures/Claude Project/scripts/purge_expired_quarantines.py"
-    )
-    if not purge.exists():  # pragma: no cover - workspace not present on CI
-        pytest.skip("acquisition workspace not on this machine")
+    workspace = os.environ.get("FAA_ACQUISITION_WORKSPACE")
+    if not workspace:  # pragma: no cover - external workspace is opt-in in CI
+        pytest.skip("set FAA_ACQUISITION_WORKSPACE to check the external purge contract")
+    purge = Path(workspace) / "scripts" / "purge_expired_quarantines.py"
+    assert purge.is_file(), "FAA_ACQUISITION_WORKSPACE must name the acquisition workspace"
     text = purge.read_text(encoding="utf-8")
     assert "detect_variant_upgrades" in text, (
         "the quarantine purge deletes variant candidates without refreshing the "
