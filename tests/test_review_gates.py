@@ -756,7 +756,17 @@ def test_a_missing_decisions_file_is_reported_not_silently_empty(monkeypatch, tm
     assert sources["work_decisions"]["records"] == 1
 
 
-def test_healthz_is_not_ok_while_the_decision_record_is_unreadable(monkeypatch, tmp_path) -> None:
+def test_healthz_reports_an_unreadable_decision_record_without_crying_wolf(
+    monkeypatch, tmp_path
+) -> None:
+    """Reported with its remedy, but NOT folded into `ok`.
+
+    A fresh checkout has decided nothing and its files correctly do not exist.
+    Gating `ok` on their absence fired on every dev machine and in CI — the same
+    false alarm the manifest arm documents and avoids. The signal is published
+    here; the warning that can actually mislead someone lives on the Review
+    page, worded to be true whether or not any decision has been made.
+    """
     from fastapi.testclient import TestClient
 
     from fine_art_archive.api import main
@@ -764,9 +774,9 @@ def test_healthz_is_not_ok_while_the_decision_record_is_unreadable(monkeypatch, 
     monkeypatch.setattr(gates, "ARTIST_ALLOWLIST", tmp_path / "nope.jsonl")
     monkeypatch.setattr(gates, "WORK_DECISIONS", tmp_path / "also-nope.jsonl")
     body = TestClient(main.app).get("/healthz").json()
-    assert body["ok"] is False
     assert set(body["decisions_missing"]) == {"artist_allowlist", "work_decisions"}
-    assert body["decisions_remedy"], "a gate must say what would clear it"
+    assert body["decisions_remedy"], "a report must say what would clear it"
+    assert "ok" in body, "health still answers, it simply does not fail on this"
 
 
 def test_the_review_page_says_so_before_it_shows_a_single_count() -> None:

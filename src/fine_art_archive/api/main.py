@@ -278,22 +278,21 @@ def healthz() -> dict:
     # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
     drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
-    # The owner's decision record. A missing file is not automatically a fault
-    # -- a fresh install has decided nothing -- but a file that is missing while
-    # a sibling checkout holds one means the app is reading the wrong place and
-    # is about to ask for feedback already given. Reported either way, because
-    # the failure is silent by construction: both loaders return empty for a
-    # file they cannot open, so "decided nothing" and "could not read your
-    # decisions" are the same value and only this line can tell them apart.
+    # The owner's decision record, REPORTED but deliberately not part of `ok`.
+    #
+    # Both loaders return an empty set for a file they cannot open, so "you have
+    # decided nothing" and "I am looking in the wrong place" are the same value,
+    # and something has to tell them apart. But absence is genuinely ambiguous:
+    # a fresh checkout has decided nothing and its files correctly do not exist.
+    # Gating `ok` on it fired on every dev machine and in CI -- the same false
+    # alarm the manifest arm above documents and avoids -- so the signal is
+    # published here with the remedy, and the loud warning lives on the Review
+    # page, where absence actually misleads and where the wording can be true
+    # in both cases: if you have made decisions, they are not being read.
     decisions = gates.decisions_sources()
     decisions_missing = [d["name"] for d in decisions if not d["exists"]]
     return {
-        "ok": (
-            corrupt_line_count == 0
-            and queues_invalid_count == 0
-            and drift_is_healthy
-            and not decisions_missing
-        ),
+        "ok": (corrupt_line_count == 0 and queues_invalid_count == 0 and drift_is_healthy),
         "decisions_sources": decisions,
         "decisions_missing": decisions_missing,
         "decisions_remedy": (
