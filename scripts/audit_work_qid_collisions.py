@@ -20,7 +20,8 @@ from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
     worst_offenders,
 )
 
-REPORT_SCHEMA_VERSION = 2
+# Version 3 adds `distinct_object_qids` to the serialized measures payload.
+REPORT_SCHEMA_VERSION = 3
 
 
 def load_sidecars(root: Path) -> list[dict[str, Any]]:
@@ -48,8 +49,8 @@ def report(root: Path) -> dict[str, Any]:
         "measures": measures_as_dict(measures),
         "worst_offenders": worst_offenders(metas),
         # What a review surface must read. `worst_offenders` lists every shared
-        # Q-ID including the complementary-crop groups, which are correct and
-        # have nothing to decide; this drops those.
+        # Q-ID including the complementary-crop and distinct-object groups,
+        # which are correct and have nothing to decide; this drops both.
         "actionable_offenders": actionable_offenders(metas),
     }
 

@@ -98,9 +98,10 @@ def actionable_offenders(
 
     :func:`worst_offenders` is the raw listing and deliberately hides nothing.
     This is what a surface that ASKS SOMEONE TO DECIDE must read instead: it
-    drops the complementary-crop groups, which are correct by construction and
-    have no remedy to choose between. Putting those in front of a person is how
-    the same two Tintoretto and Van Gogh pairs came back five weeks running.
+    drops complementary-crop and documented-distinct-object groups, which are
+    correct by construction and have no remedy to choose between. Putting those
+    in front of a person is how the same two Tintoretto and Van Gogh pairs came
+    back five weeks running.
     """
     materialized = [meta for meta in metas if isinstance(meta, Mapping)]
     excused = {group.work_qid for group in crop_sibling_groups(materialized)}

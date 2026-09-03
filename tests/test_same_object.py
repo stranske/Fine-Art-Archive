@@ -78,7 +78,7 @@ class TestWhatMustNotBeExcused:
         ]
         assert distinct_object_groups(metas) == []
 
-    def test_two_members_claiming_the_SAME_object_are_a_real_duplicate(self) -> None:
+    def test_two_members_claiming_the_same_object_are_a_real_duplicate(self) -> None:
         """Identical holder AND accession is one object recorded twice."""
         metas = [
             _meta("aaa", PRINT, "Cleveland Museum of Art", "1930.189"),
