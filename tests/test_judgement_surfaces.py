@@ -356,3 +356,96 @@ def test_the_inline_script_is_syntactically_valid(page: str) -> None:
         finally:
             path.unlink(missing_ok=True)
         assert result.returncode == 0, f"script block {i} does not parse:\n{result.stderr}"
+
+
+# --------------------------------------------------------------------------
+# The variant gate must not count work nobody can do
+# --------------------------------------------------------------------------
+def _variant_csv(tmp_path, rows):
+    import csv as _c
+
+    p = tmp_path / "variant_upgrade_candidates.csv"
+    cols = [
+        "existing_wid",
+        "title",
+        "artist",
+        "existing_master_mb",
+        "candidate_master_mb",
+        "ratio",
+        "candidate_path",
+        "candidate_meta",
+        "candidate_quarantined",
+        "candidate_canonical_q",
+    ]
+    with open(p, "w", encoding="utf-8", newline="") as fh:
+        w = _c.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        for r in rows:
+            w.writerow({c: r.get(c, "") for c in cols})
+    return p
+
+
+def test_a_candidate_whose_file_is_gone_is_not_counted_as_pending(monkeypatch, tmp_path) -> None:
+    """The latch this fixes.
+
+    The detector writes against a staging tree the app does not control, and a
+    quarantine purge deletes candidates on its TTL — five of six rows went
+    missing inside a day. Such a row cannot be accepted, so the gate could not
+    go down by doing the thing it asks for, and the only mechanism that clears
+    it (re-running the detector) was invoked by nothing. A gate blocking on
+    work nobody can do, with an uncalled drain, stays shut until someone
+    notices.
+    """
+    from fine_art_archive.api import main
+
+    present = tmp_path / "here.jpg"
+    present.write_bytes(b"x")
+    csv_path = _variant_csv(
+        tmp_path,
+        [
+            {"existing_wid": "aaaaaaa-live-work", "title": "Live", "candidate_path": str(present)},
+            {
+                "existing_wid": "bbbbbbb-gone-work",
+                "title": "Gone",
+                "candidate_path": str(tmp_path / "deleted.jpg"),
+            },
+        ],
+    )
+    monkeypatch.setattr(main, "VARIANT_UPGRADE_CSV", csv_path)
+    monkeypatch.setattr(main, "VARIANT_UPGRADE_DECISIONS", tmp_path / "decisions.jsonl")
+    monkeypatch.setattr(main, "VARIANT_CANDIDATE_ROOTS", (tmp_path,))
+    main._image_dims.cache_clear()
+
+    gate = main._variant_upgrade_gate()
+    assert gate.blocking == 1, "only the row whose file exists is a decision"
+    assert gate.drainable == 1
+    assert [i["id"] for i in gate.items] == ["aaaaaaa-live-work"]
+    # And the stale one is REPORTED, with the command that clears it.
+    assert "1 row(s)" in gate.note
+    assert "detect_variant_upgrades" in gate.note
+
+
+def test_the_variant_gate_names_a_drain_that_something_actually_invokes() -> None:
+    """A drain that exists but is never called leaves the gate shut anyway.
+
+    The quarantine purge is what deletes these candidates, so it is what must
+    refresh the list. Before this it deleted the files and walked away.
+    """
+    import os
+    from pathlib import Path
+
+    workspace = os.environ.get("FAA_ACQUISITION_WORKSPACE")
+    if not workspace:  # pragma: no cover - external workspace is opt-in in CI
+        pytest.skip("set FAA_ACQUISITION_WORKSPACE to check the external purge contract")
+    purge = Path(workspace) / "scripts" / "purge_expired_quarantines.py"
+    assert purge.is_file(), "FAA_ACQUISITION_WORKSPACE must name the acquisition workspace"
+    text = purge.read_text(encoding="utf-8")
+    assert "detect_variant_upgrades" in text, (
+        "the quarantine purge deletes variant candidates without refreshing the "
+        "list that names them, so the review gate keeps showing deleted files"
+    )
+
+
+def test_the_upgrade_card_holds_stale_rows_out_of_the_queue(page: str) -> None:
+    assert "candidate_present" in page
+    assert "no longer on disk" in page

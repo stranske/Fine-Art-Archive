@@ -1331,6 +1331,8 @@
     // that is obvious, side by side, before any number is quoted.
     let upgQueue = [];
     let upgIdx = 0;
+    let upgStale = [];
+    let upgStaleCommand = "";
 
     async function loadUpgrades() {
       const det = showDetailPanel();
@@ -1346,13 +1348,25 @@
         det.innerHTML = `<h2>Variant upgrade candidates</h2><p class="sub">Could not load.</p>`;
         return;
       }
-      upgQueue = d.candidates || [];
+      // Rows whose proposed file has been deleted are not decisions. They are
+      // held back and reported, not mixed into the queue: being asked "is this
+      // copy better" about a file that no longer exists wastes the only thing
+      // this screen costs, which is your attention.
+      const all = d.candidates || [];
+      upgStale = all.filter(c => c.candidate_present === false && !c.decision);
+      upgStaleCommand = d.stale_command || "";
+      upgQueue = all.filter(c => c.candidate_present !== false);
       upgIdx = 0;
       if (!upgQueue.length) {
         det.innerHTML = `<h2>Variant upgrade candidates</h2>
-          <p class="sub">No candidates right now. The detector found no
-          staged file that's materially larger (≥1.5×) than an existing
-          master with the same title/artist.</p>`;
+          ${upgStale.length ? `<p class="sub"><strong>${upgStale.length} row${upgStale.length === 1 ? "" : "s"}
+            in the candidate file name an image that is no longer on disk</strong> — the staging tree
+            moved on, most often a quarantine purge. Nothing here is waiting on you; the list itself
+            is out of date. From the acquisition workspace, refresh it with
+            <code style="font-size:11px">${acqEsc(upgStaleCommand)}</code>.</p>`
+          : `<p class="sub">No candidates right now. The detector found no
+             staged file that's materially larger (≥1.5×) than an existing
+             master with the same title/artist.</p>`}`;
         window.scrollTo({top: det.offsetTop - 20, behavior: "smooth"});
         return;
       }
@@ -1397,6 +1411,9 @@
       det.innerHTML = `<button onclick="closeDetail()">← Back to list</button>
         <h2>Better copy of a work you already hold?</h2>
         <div id="upg-card">
+        ${upgStale.length ? `<p class="sub">(${upgStale.length} further row${upgStale.length === 1 ? "" : "s"}
+          name a file that is no longer on disk and are not shown — from the acquisition workspace, refresh with
+          <code style="font-size:11px">${acqEsc(upgStaleCommand)}</code>.)</p>` : ""}
         <p class="sub">Candidate ${upgIdx + 1} of ${upgQueue.length}. The detector only checks that
         a staged file is ≥1.5× larger than the master, with the same title and artist — it does
         <strong>not</strong> check that it is the same painting. That is the judgement being asked

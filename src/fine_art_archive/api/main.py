@@ -71,6 +71,10 @@ FRESH_CHECKOUT_SIDECAR_WORKS = 1
 # would rebuild a manifest the running app never reads -- reporting success
 # while the drift it was meant to clear stayed exactly where it was.
 MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_manifest.py'}"
+#: The mechanism that clears a stale variant-upgrade row. Named here so the
+#: gate can print it: a gate that cannot say what would clear it is already
+#: defective, and this one had no stated drain at all.
+VARIANT_DETECT_COMMAND = "python3 scripts/detect_variant_upgrades.py"
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
@@ -1443,7 +1447,26 @@ def _variant_upgrade_gate() -> gates.Gate:
             item_kind="held_work",
             note="no candidate file present, so nothing could be counted",
         )
-    pending = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
+    undecided = [c for c in variant_upgrades().get("candidates", []) if not c.get("decision")]
+    # A row whose proposed file has been deleted is NOT a pending decision.
+    # Counting it as one is a latch: accepting is impossible, so the number
+    # cannot go down by doing the thing the gate asks for, and the only
+    # mechanism that clears it -- re-running the detector -- is invoked by
+    # nothing. The quarantine purge that deletes these files is precisely the
+    # process that ought to trigger it.
+    pending = [c for c in undecided if c.get("candidate_present")]
+    stale = [c for c in undecided if not c.get("candidate_present")]
+    note = (
+        "The detector reads a staging tree this app does not control, so rows "
+        "go stale on their own — a quarantine purge deletes candidates on its "
+        "TTL. Stale rows are excluded from the count above rather than "
+        "presented as decisions nobody can make."
+    )
+    if stale:
+        note += (
+            f" {len(stale)} row(s) name a file that is no longer on disk; "
+            f"clear them by re-running the detector: {VARIANT_DETECT_COMMAND}"
+        )
     return gates.Gate(
         name="variant_upgrades",
         label="Better copies of works already held",
@@ -1452,6 +1475,7 @@ def _variant_upgrade_gate() -> gates.Gate:
         clears_by="accepting or rejecting the upgrade",
         # `existing_wid` is an archive work id, not a Wikidata Q-ID.
         item_kind="held_work",
+        note=note,
         items=[
             {
                 "id": c.get("existing_wid", ""),
@@ -2915,8 +2939,17 @@ def variant_upgrades() -> dict:
             c["existing_px"] = _image_dims(_master_path(c.get("existing_wid") or ""))
         except HTTPException:
             c["existing_px"] = None
-        c["candidate_px"] = _image_dims(_variant_candidate_path(c.get("existing_wid") or ""))
-    return {"candidates": candidates}
+        cand_path = _variant_candidate_path(c.get("existing_wid") or "")
+        c["candidate_px"] = _image_dims(cand_path)
+        # Whether the proposed file is STILL THERE. The detector writes this
+        # CSV against a staging tree that keeps moving underneath it -- five of
+        # six rows went missing within a day, and a quarantine purge removes
+        # the rest on its TTL. A row whose file is gone is not a judgement
+        # anyone can make; it is evidence the CSV is out of date, and counting
+        # it as a pending decision is what left this gate showing work that
+        # could never be done.
+        c["candidate_present"] = cand_path is not None
+    return {"candidates": candidates, "stale_command": VARIANT_DETECT_COMMAND}
 
 
 def _variant_upgrade_fallback_work(existing_wid: str) -> dict | None:
