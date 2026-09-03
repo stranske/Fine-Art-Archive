@@ -236,7 +236,7 @@ class WikidataClient:
             except NETWORK_ERRORS:
                 # No retry: preserves timeout-bounded semantics for the caller.
                 return None
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, UnicodeDecodeError):
                 return None
         return None
 
