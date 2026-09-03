@@ -18,7 +18,9 @@ blocking number without the drainable one is what let it sit.
 
 So the totals are partitioned rather than filtered. ``qids_on_multiple`` still
 counts everything, which keeps #591's regression caught; ``crop_sibling_qids``
-names the subset that is correct by construction; and ``actionable_qids`` is
+names the subset that is correct by construction, ``distinct_object_qids`` the
+second such subset (two impressions of a print, two painted versions -- the
+Q-ID names the WORK, a sidecar describes an OBJECT); and ``actionable_qids`` is
 what is actually left to fix. Only the last one is allowed to drive a review
 surface, and only the last one can reach zero.
 """
@@ -31,6 +33,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from fine_art_archive.identity.crop_siblings import crop_sibling_groups
+from fine_art_archive.identity.same_object import distinct_object_groups
 from fine_art_archive.identity.variant_identity import work_qid_of
 from fine_art_archive.identity.variants import variant_links
 
@@ -59,8 +62,14 @@ class WorkQidCollisionMeasures:
     #: Correct by construction -- nothing here is a defect and nothing can
     #: clear it, so it must never be presented as outstanding work.
     crop_sibling_qids: int = 0
-    #: ``qids_on_multiple`` minus the above: the drainable count, and the only
-    #: one a review surface may act on. This is the number that reaches zero.
+    #: Of ``qids_on_multiple``, those shared by DOCUMENTED DIFFERENT OBJECTS --
+    #: two impressions of a print, two painted versions. Also correct by
+    #: construction: the archive wants both, and the Q-ID names the work, not
+    #: the object.
+    distinct_object_qids: int = 0
+    #: ``qids_on_multiple`` minus the two categories above: the drainable
+    #: count, and the only one a review surface may act on. This is the number
+    #: that reaches zero.
     actionable_qids: int = 0
 
 
@@ -89,12 +98,14 @@ def actionable_offenders(
 
     :func:`worst_offenders` is the raw listing and deliberately hides nothing.
     This is what a surface that ASKS SOMEONE TO DECIDE must read instead: it
-    drops the complementary-crop groups, which are correct by construction and
-    have no remedy to choose between. Putting those in front of a person is how
-    the same two Tintoretto and Van Gogh pairs came back five weeks running.
+    drops complementary-crop and documented-distinct-object groups, which are
+    correct by construction and have no remedy to choose between. Putting those
+    in front of a person is how the same two Tintoretto and Van Gogh pairs came
+    back five weeks running.
     """
     materialized = [meta for meta in metas if isinstance(meta, Mapping)]
     excused = {group.work_qid for group in crop_sibling_groups(materialized)}
+    excused |= {group.work_qid for group in distinct_object_groups(materialized)}
     kept = {
         qid: work_ids
         for qid, work_ids in worst_offenders(materialized, limit=limit + len(excused)).items()
@@ -131,8 +142,13 @@ def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCo
         1 for work_id in links.holdings if work_qid_of(by_work_id.get(work_id, {}))
     )
 
-    crop_sibling_qids = sum(
-        1 for group in crop_sibling_groups(materialized) if len(holders.get(group.work_qid, ())) > 1
+    crop_groups = crop_sibling_groups(materialized)
+    crop_sibling_qids = sum(1 for group in crop_groups if len(holders.get(group.work_qid, ())) > 1)
+    excused_as_crops = {group.work_qid for group in crop_groups}
+    distinct_object_qids = sum(
+        1
+        for group in distinct_object_groups(materialized)
+        if len(holders.get(group.work_qid, ())) > 1 and group.work_qid not in excused_as_crops
     )
 
     return WorkQidCollisionMeasures(
@@ -145,7 +161,8 @@ def measure_work_qid_collisions(metas: Iterable[Mapping[str, Any]]) -> WorkQidCo
         mutual_links_ambiguous=len(links.ambiguous),
         self_referential_variant_entries=len(links.self_referential),
         crop_sibling_qids=crop_sibling_qids,
-        actionable_qids=qids_on_multiple - crop_sibling_qids,
+        distinct_object_qids=distinct_object_qids,
+        actionable_qids=qids_on_multiple - crop_sibling_qids - distinct_object_qids,
     )
 
 

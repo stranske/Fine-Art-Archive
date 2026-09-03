@@ -418,8 +418,9 @@ class TestAmbiguityIsAPropertyOfThePair:
 
     def _metas(self) -> list[dict]:
         return [
-            self._meta("ccccccc-master", [self._crop_of("aaaaaaa-left"),
-                                          self._crop_of("bbbbbbb-right")]),
+            self._meta(
+                "ccccccc-master", [self._crop_of("aaaaaaa-left"), self._crop_of("bbbbbbb-right")]
+            ),
             self._meta("aaaaaaa-left", [self._crop_of("bbbbbbb-right")]),
             self._meta("bbbbbbb-right", [self._crop_of("aaaaaaa-left")]),
         ]
@@ -439,9 +440,11 @@ class TestAmbiguityIsAPropertyOfThePair:
 
     def test_a_bare_mutual_pair_is_still_ambiguous(self) -> None:
         """With no third claimant there is still nothing to settle the pair."""
-        links = variant_links([
-            self._meta("aaaaaaa-left", [self._crop_of("bbbbbbb-right")]),
-            self._meta("bbbbbbb-right", [self._crop_of("aaaaaaa-left")]),
-        ])
+        links = variant_links(
+            [
+                self._meta("aaaaaaa-left", [self._crop_of("bbbbbbb-right")]),
+                self._meta("bbbbbbb-right", [self._crop_of("aaaaaaa-left")]),
+            ]
+        )
         assert links.ambiguous == frozenset({"aaaaaaa-left", "bbbbbbb-right"})
         assert links.holdings == {}
