@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
+import time
 from pathlib import Path
 
 import pytest
@@ -696,6 +698,34 @@ def test_modality_image_serves_and_404s(
     # case-insensitive match works, unknown modality 404s
     assert client.get("/works/w1/modality/irr/image").status_code == 200
     assert client.get("/works/w1/modality/XR/image").status_code == 404
+
+
+def test_resized_cache_invalidates_when_master_changes_within_one_second(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A re-promoted master must not reuse a whole-second cache entry."""
+    from PIL import Image
+
+    source = tmp_path / "master.png"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", cache_dir)
+    second_ns = (time.time_ns() // 1_000_000_000) * 1_000_000_000
+
+    Image.new("RGB", (40, 20), "red").save(source)
+    os.utime(source, ns=(second_ns + 100, second_ns + 100))
+    api_main._serve_resized(source, "work-1", 64)
+    first_cache = next(cache_dir.glob("*.jpg"))
+
+    Image.new("RGB", (20, 40), "blue").save(source)
+    os.utime(source, ns=(second_ns + 200, second_ns + 200))
+    api_main._serve_resized(source, "work-1", 64)
+    cache_files = sorted(cache_dir.glob("*.jpg"))
+
+    assert len(cache_files) == 2
+    assert first_cache != cache_files[-1]
+    with Image.open(cache_files[-1]) as rendered:
+        assert rendered.size == (20, 40)
+        assert rendered.getpixel((10, 20))[2] > rendered.getpixel((10, 20))[0]
 
 
 def test_dossiers_lists_only_populated(
