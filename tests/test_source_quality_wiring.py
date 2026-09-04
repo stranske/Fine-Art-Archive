@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -13,7 +14,7 @@ import yaml
 
 from fine_art_archive.collect import acquisition_flow as af
 from fine_art_archive.collect.verify import verify
-from fine_art_archive.quality.source_quality import _infer_work_class
+from fine_art_archive.quality.source_quality import _infer_work_class, write_aggregates_atomically
 
 
 def _make_work(dirp: Path) -> Path:
@@ -308,3 +309,22 @@ def test_refresh_source_quality_cli_rebuilds_config_used_by_assessment(tmp_path:
         subprocess.run(assess, cwd=repo, check=True, text=True, capture_output=True).stdout
     )
     assert second == {"assessed": 2, "selected_source": "rijksmuseum"}
+
+    for option in ("--host-registry", "--source-quality"):
+        invalid_assess = [*assess]
+        invalid_assess[invalid_assess.index(option) + 1] = str(tmp_path)
+        completed = subprocess.run(
+            invalid_assess, cwd=repo, text=True, capture_output=True, check=False
+        )
+        assert completed.returncode != 0
+        assert f"{option} is not a file" in completed.stderr
+
+
+def test_write_aggregates_atomically_preserves_existing_permissions(tmp_path: Path) -> None:
+    output = tmp_path / "source_quality.yaml"
+    output.write_text("sources: {}\n")
+    output.chmod(0o640)
+
+    write_aggregates_atomically({"sources": {}}, output)
+
+    assert stat.S_IMODE(output.stat().st_mode) == 0o640

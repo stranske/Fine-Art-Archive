@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 import tempfile
 from contextlib import suppress
 from dataclasses import dataclass
@@ -570,6 +571,8 @@ def write_aggregates_atomically(aggregates: dict, out_path: Path) -> None:
             tmp.write(payload)
             tmp.flush()
             os.fsync(tmp.fileno())
+        if out_path.exists():
+            os.chmod(tmp_name, stat.S_IMODE(out_path.stat().st_mode))
         os.replace(tmp_name, out_path)
     except BaseException:
         with suppress(FileNotFoundError):

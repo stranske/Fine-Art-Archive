@@ -34,6 +34,12 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"{option} does not exist: {path}")
     if not args.works_root.is_dir():
         parser.error(f"--works-root is not a directory: {args.works_root}")
+    for option, path in (
+        ("--host-registry", args.host_registry),
+        ("--source-quality", args.source_quality),
+    ):
+        if not path.is_file():
+            parser.error(f"{option} is not a file: {path}")
 
     work_dirs = sorted(path for path in args.works_root.iterdir() if path.is_dir())
     results = run_acquisition_flow(
