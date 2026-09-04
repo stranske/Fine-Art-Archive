@@ -16,6 +16,18 @@
 #   FAA_MANIFEST_CSV     flat manifest path (default ./manifest.csv)
 #   FAA_RATINGS_LOG      ratings JSONL path (default ./data/ratings_log.jsonl)
 #   FAA_IMAGE_CACHE_DIR  resized image cache (default ./data/image_cache)
+#   FAA_VARIANT_UPGRADE_CSV
+#                        variant-upgrade candidates (default ./variant_upgrade_candidates.csv).
+#                        The detector is a WORKSPACE script and writes beside itself — point
+#                        this at its output or the upgrade screen stays empty and reports "no
+#                        candidates", which looks exactly like a detector that found nothing.
+#   FAA_VARIANT_UPGRADE_DECISIONS
+#                        accept/reject log (default ./data/variant_upgrade_decisions.jsonl).
+#                        scripts/promote_variant_upgrade.py reads the same path, so both halves
+#                        must agree — set them together or set neither.
+#   FAA_VARIANT_DETECT_COMMAND
+#                        what /review prints as the drain for a stale candidate row. Defaults
+#                        to the detector's absolute path in the standard workspace layout.
 # Extra args are passed through to uvicorn (e.g. --reload).
 set -euo pipefail
 

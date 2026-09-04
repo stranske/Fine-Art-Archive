@@ -41,8 +41,18 @@ from .config import DEFAULT_ART_WORKS_ROOT, REPO_ROOT, env_path
 UI_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "index.html"
 HTMX_VERSION = "1.9.10"
 HTMX_FILE = REPO_ROOT / "src" / "fine_art_archive" / "ui" / "vendor" / "htmx.min.js"
-VARIANT_UPGRADE_DECISIONS = REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
-VARIANT_UPGRADE_CSV = REPO_ROOT / "variant_upgrade_candidates.csv"
+# The detector that fills the upgrade CSV is a workspace script, not a repo one
+# (`Claude Project/scripts/detect_variant_upgrades.py`). Defaulting these to
+# REPO_ROOT with no override meant the producer wrote one file and the app read
+# another, so the review screen showed "no candidates" — indistinguishable from
+# a detector that had found nothing. Every other external path here already
+# takes a FAA_* override; these two were the outliers.
+VARIANT_UPGRADE_DECISIONS = env_path(
+    "FAA_VARIANT_UPGRADE_DECISIONS", REPO_ROOT / "data" / "variant_upgrade_decisions.jsonl"
+)
+VARIANT_UPGRADE_CSV = env_path(
+    "FAA_VARIANT_UPGRADE_CSV", REPO_ROOT / "variant_upgrade_candidates.csv"
+)
 
 # Canonical archive root where promoted masters live: Art/works/<wid>/master.<ext>
 ART_WORKS_ROOT = env_path("FAA_ART_WORKS_ROOT", DEFAULT_ART_WORKS_ROOT)
@@ -74,7 +84,18 @@ MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_ma
 #: The mechanism that clears a stale variant-upgrade row. Named here so the
 #: gate can print it: a gate that cannot say what would clear it is already
 #: defective, and this one had no stated drain at all.
-VARIANT_DETECT_COMMAND = "python3 scripts/detect_variant_upgrades.py"
+#:
+#: The detector is NOT a script in this repo -- it lives in the operator's
+#: workspace beside the staging tree it scans. Printing a bare
+#: a bare repo-relative path to it named a drain that does not exist here, so
+#: an operator following the gate's own advice from a checkout
+#: got "No such file": the same defect as the executor this endpoint used to
+#: name, and the same relative-path trap MANIFEST_REBUILD_COMMAND above exists
+#: to avoid. Absolute by default, overridable for a workspace laid out
+#: differently.
+VARIANT_DETECT_COMMAND = os.environ.get("FAA_VARIANT_DETECT_COMMAND") or (
+    f"python3 {DEFAULT_ART_WORKS_ROOT.parent.parent / 'Claude Project' / 'scripts' / 'detect_variant_upgrades.py'}"
+)
 
 app = FastAPI(
     title="Fine Art Archive — Companion API",
@@ -2872,10 +2893,8 @@ import csv as _csv  # noqa: E402  -- kept beside its only use (variant-upgrade e
 
 
 @functools.lru_cache(maxsize=256)
-def _image_dims(path: Path | None) -> str | None:
+def _image_dims_cached(path: Path, mtime_ns: int, size_bytes: int) -> str | None:
     """ "WxH" for a local image, or None. Header read only — never the full file."""
-    if path is None or not path.is_file():
-        return None
     try:
         from PIL import Image
 
@@ -2884,6 +2903,34 @@ def _image_dims(path: Path | None) -> str | None:
             return f"{im.size[0]}x{im.size[1]}"
     except Exception:  # noqa: BLE001
         return None
+
+
+def _image_dims(path: Path | None) -> str | None:
+    """ "WxH" for a local image, or None.
+
+    Keyed on mtime and size, never the path alone. Promoting a variant upgrade
+    rewrites `works/<wid>/master.*` in place: same path, different pixels. A
+    path-only cache would serve the superseded dimensions for the life of the
+    process — and this value is exactly what the upgrade screen shows to justify
+    the next swap. Size rides along because mtime resolution is not guaranteed
+    to separate two writes in one tick.
+    """
+    if path is None:
+        return None
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    if not stat.S_ISREG(st.st_mode):
+        return None
+    return _image_dims_cached(path, st.st_mtime_ns, st.st_size)
+
+
+# The cache moved to the inner function when mtime entered the key, but callers
+# (and tests) already reach for `_image_dims.cache_clear()`. Keep that working
+# rather than make every caller learn which of the two holds the cache.
+_image_dims.cache_clear = _image_dims_cached.cache_clear  # type: ignore[attr-defined]
+_image_dims.cache_info = _image_dims_cached.cache_info  # type: ignore[attr-defined]
 
 
 def _variant_candidate_path(existing_wid: str) -> Path | None:
@@ -2908,6 +2955,40 @@ def _variant_candidate_path(existing_wid: str) -> Path | None:
                     return cand if cand.is_file() else None
                 return None
     return None
+
+
+def _label_variant_candidate(candidate: dict) -> None:
+    """Fill a candidate row's title and artist from the archive, in place.
+
+    Column names in the detector CSV belong to an external producer this app
+    does not write. It emits `artist`; the review gate reads `artist_name`, so
+    every gate item rendered a blank artist while the same row showed the name
+    correctly in the upgrade table — one row, two readers, two guesses at a
+    header neither of them owns.
+
+    The archive owns both fields and is keyed by the one column that is load
+    bearing here, `existing_wid`. So resolve from it first and treat the CSV as
+    the fallback, accepting either spelling; both keys are then published so no
+    downstream reader has to know which one the detector chose.
+    """
+    wid = candidate.get("existing_wid") or ""
+    title = ""
+    artist = ""
+    if wid:
+        try:
+            work = _variant_upgrade_fallback_work(wid)
+        except (ValueError, HTTPException):
+            work = None
+        if work:
+            title = str(work.get("title") or "")
+            block = work.get("artist")
+            if isinstance(block, dict):
+                artist = str(block.get("name") or "")
+    title = title or str(candidate.get("title") or "")
+    artist = artist or str(candidate.get("artist_name") or candidate.get("artist") or "")
+    candidate["title"] = title
+    candidate["artist"] = artist
+    candidate["artist_name"] = artist
 
 
 @app.get("/variant_upgrades")
@@ -2949,6 +3030,7 @@ def variant_upgrades() -> dict:
         # it as a pending decision is what left this gate showing work that
         # could never be done.
         c["candidate_present"] = cand_path is not None
+        _label_variant_candidate(c)
     return {"candidates": candidates, "stale_command": VARIANT_DETECT_COMMAND}
 
 

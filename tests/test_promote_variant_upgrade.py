@@ -204,3 +204,47 @@ def test_no_decisions_log_means_nothing_accepted(
 ) -> None:
     monkeypatch.setattr(pvu, "VARIANT_UPGRADE_DECISIONS", tmp_path / "absent.jsonl")
     assert pvu.accepted_work_ids() == set()
+
+
+def test_a_display_crop_master_is_refused_even_with_matching_identity(archive) -> None:
+    """Identity confirms the WORK; it does not confirm the file is redundant.
+
+    `e2ed232-las-meninas-velazquez` holds a 9:16 crop cut for a frame, and the
+    candidate is the uncropped painting — same work, both wanted. Without the
+    crop test this swap passes every identity check and destroys the crop.
+    """
+    works, _staging, put_work, put_candidate = archive
+    work_dir = put_work("aaaaaaa-las-meninas", "Q297")
+    meta = json.loads((work_dir / "meta.json").read_text())
+    meta["files"]["master"]["dimensions_px"] = [16875, 30000]  # exactly 9:16
+    (work_dir / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+
+    cand = put_candidate("uncropped", "Q297")
+    cand_meta = json.loads((cand.parent / "meta.json").read_text())
+    cand_meta["files"]["master"]["dimensions_px"] = [26065, 30000]
+    (cand.parent / "meta.json").write_text(json.dumps(cand_meta), encoding="utf-8")
+
+    verdict = pvu.evaluate(
+        _row("aaaaaaa-las-meninas", cand), _claims(_row("aaaaaaa-las-meninas", cand))
+    )
+    assert verdict["status"] == "REFUSED"
+    assert "PROTECTED" in verdict["reason"]
+    assert verdict.get("overridable") is False
+
+
+def test_a_genuine_enlargement_still_passes_the_crop_test(archive) -> None:
+    """The gate must not refuse the case the feature exists for."""
+    works, _staging, put_work, put_candidate = archive
+    work_dir = put_work("aaaaaaa-a-work", "Q123")
+    meta = json.loads((work_dir / "meta.json").read_text())
+    meta["files"]["master"]["dimensions_px"] = [1000, 1200]
+    (work_dir / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+
+    cand = put_candidate("better", "Q123")
+    cand_meta = json.loads((cand.parent / "meta.json").read_text())
+    cand_meta["files"]["master"]["dimensions_px"] = [4000, 4800]
+    (cand.parent / "meta.json").write_text(json.dumps(cand_meta), encoding="utf-8")
+
+    verdict = pvu.evaluate(_row("aaaaaaa-a-work", cand), _claims(_row("aaaaaaa-a-work", cand)))
+    assert verdict["status"] == "READY", verdict["reason"]
+    assert "crop test clear" in verdict["reason"]

@@ -66,6 +66,7 @@ from fine_art_archive.api.main import (  # noqa: E402
     VARIANT_UPGRADE_CSV,
     VARIANT_UPGRADE_DECISIONS,
 )
+from fine_art_archive.variants import crop_gate  # noqa: E402
 
 APPLIED_LOG = ROOT / "data" / "variant_upgrade_applied.jsonl"
 
@@ -174,13 +175,28 @@ def evaluate(row: dict[str, str], claimed_by: Counter[str]) -> dict[str, Any]:
             "reason": f"different works: target {target_q} vs candidate {candidate_q}",
         }
 
+    # Identity says it is the same WORK. It does not say the file about to be
+    # overwritten is redundant. `e2ed232-las-meninas-velazquez` holds a master of
+    # exactly 9:16 -- a crop cut for a frame, with variants[] links -- and the
+    # candidate is the uncropped painting. Same work, both wanted, neither a
+    # duplicate. `display/crops.py` states the rule: nothing may be called a
+    # duplicate until classify_pair has been run on it.
+    gate = crop_gate(target_meta, candidate_meta or {})
+    if not gate.ok:
+        return {
+            **verdict,
+            "status": "REFUSED",
+            "reason": gate.reason,
+            "overridable": gate.overridable,
+        }
+
     return {
         **verdict,
         "status": "READY",
         "candidate": str(candidate),
         "master": str(masters[0]),
         "work_qid": target_q,
-        "reason": f"identity confirmed ({target_q})",
+        "reason": f"identity confirmed ({target_q}); crop test clear",
     }
 
 
@@ -232,6 +248,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--apply", action="store_true", help="perform the swap (needs --grant)")
     parser.add_argument("--grant", help="permissions.md grant ID authorising the replace")
+    parser.add_argument(
+        "--allow-unverified",
+        action="store_true",
+        help=(
+            "proceed where the crop test could not prove redundancy. Never lifts a "
+            "PROTECTED verdict, an identity mismatch, or a shared candidate."
+        ),
+    )
     parser.add_argument(
         "--wid",
         action="append",
