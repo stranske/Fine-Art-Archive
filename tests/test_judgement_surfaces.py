@@ -449,3 +449,185 @@ def test_the_variant_gate_names_a_drain_that_something_actually_invokes() -> Non
 def test_the_upgrade_card_holds_stale_rows_out_of_the_queue(page: str) -> None:
     assert "candidate_present" in page
     assert "no longer on disk" in page
+
+
+def test_a_gigapixel_master_is_not_reported_as_damaged(tmp_path) -> None:
+    """Pillow's decompression-bomb ceiling is a false alarm on this corpus.
+
+    These are museum scans we fetched ourselves, and several are hundreds of
+    megapixels. `_master_health` decodes every master and treats any exception
+    as truncation, so `DecompressionBombError` — a refusal on SIZE, not a
+    finding about the bytes — was reported as a damaged file.
+
+    It happened to a real work: Leonardo's *Virgin and Child with Saint Anne*,
+    13295x17828 (237 MP), decodes cleanly and is byte-identical to a fresh
+    download of its source. The review card told the owner it was truncated and
+    not to judge it.
+
+    Simulated here by lowering the ceiling rather than allocating 237 MP.
+    """
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (400, 400), (10, 20, 30)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    original = Image.MAX_IMAGE_PIXELS
+    try:
+        Image.MAX_IMAGE_PIXELS = 100  # any real image now trips the ceiling
+        assert store._master_health(src) == "ok", (
+            "a size refusal is not evidence about the bytes and must not be "
+            "reported as truncation"
+        )
+    finally:
+        Image.MAX_IMAGE_PIXELS = original
+
+
+def test_master_health_restores_pillow_pixel_ceiling(tmp_path) -> None:
+    """_master_health lifts the bomb ceiling only for its own decode."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (20, 20), (1, 2, 3)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    sentinel = 12345
+    original = Image.MAX_IMAGE_PIXELS
+    Image.MAX_IMAGE_PIXELS = sentinel
+    try:
+        assert store._master_health(src) == "ok"
+        assert sentinel == Image.MAX_IMAGE_PIXELS
+    finally:
+        Image.MAX_IMAGE_PIXELS = original
+
+
+def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -> None:
+    """The acquisition list is invalidated by ANY sidecar write, which the
+    growth tick does constantly. Re-opening every acquired master each time
+    cost 28 seconds on a Dropbox-synced volume, on the page whose whole purpose
+    is to be glanced at."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (64, 64), (1, 2, 3)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    store._MASTER_FACTS.clear()
+    first = store._master_facts(src)
+    assert len(store._MASTER_FACTS) == 1
+    calls = []
+    original = store._master_health
+    store._master_health = lambda p: calls.append(p) or "ok"  # type: ignore[assignment]
+    try:
+        again = store._master_facts(src)
+    finally:
+        store._master_health = original  # type: ignore[assignment]
+    assert again == first
+    assert calls == [], "an unchanged master must not be re-examined"
+
+    # A master that genuinely changes IS re-examined.
+    buf2 = BytesIO()
+    Image.new("RGB", (80, 80), (9, 9, 9)).save(buf2, format="JPEG")
+    src.write_bytes(buf2.getvalue())
+    assert store._master_facts(src)[0] == (80, 80)
+
+
+def test_master_facts_survive_a_restart_and_still_notice_a_changed_file(tmp_path) -> None:
+    """The in-memory memo died with the process, so every server start re-opened
+    all 132 acquired masters before the first /review could answer — 29 seconds
+    on a Dropbox-synced volume, paid far more often than the archive changed.
+
+    Persisting it must not cost correctness: each key carries the file's mtime
+    and size, so a master that actually changed misses and is re-examined.
+    """
+    import os
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+
+    def write(size: int) -> None:
+        buf = BytesIO()
+        Image.new("RGB", (size, size), (7, 7, 7)).save(buf, format="JPEG")
+        src.write_bytes(buf.getvalue())
+
+    write(64)
+    cache = tmp_path / "facts.json"
+    old_cache, old_loaded = store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED
+    try:
+        store.MASTER_FACTS_CACHE = cache
+        store._MASTER_FACTS.clear()
+        store._MASTER_FACTS_LOADED = False
+        assert store._master_facts(src)[0] == (64, 64)
+        store.flush_master_facts()
+        assert cache.exists(), "nothing persisted, so the next start pays again"
+
+        # A new process: memory empty, cache on disk, and the file untouched.
+        store._MASTER_FACTS.clear()
+        store._MASTER_FACTS_LOADED = False
+        calls: list = []
+        real = store._master_health
+        store._master_health = lambda p: calls.append(p) or "ok"  # type: ignore[assignment]
+        try:
+            assert store._master_facts(src)[0] == (64, 64)
+            assert calls == [], "a restart must not re-examine an unchanged master"
+
+            # Now the master genuinely changes.
+            write(96)
+            os.utime(src, (0, 0))  # force a distinct mtime
+            assert store._master_facts(src)[0] == (96, 96), "a changed master must be re-read"
+        finally:
+            store._master_health = real  # type: ignore[assignment]
+    finally:
+        store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED = old_cache, old_loaded
+        store._MASTER_FACTS.clear()
+
+
+def test_an_unreadable_facts_cache_is_a_miss_not_a_failure(tmp_path) -> None:
+    """Every entry is recomputable from the file it describes, so a corrupt
+    cache must cost speed and nothing else."""
+    bad = tmp_path / "corrupt.json"
+    bad.write_text("{not json at all", encoding="utf-8")
+    old_cache, old_loaded = store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED
+    try:
+        store.MASTER_FACTS_CACHE = bad
+        store._MASTER_FACTS.clear()
+        store._MASTER_FACTS_LOADED = False
+        store._load_master_facts()
+        assert store._MASTER_FACTS == {}
+    finally:
+        store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED = old_cache, old_loaded
+        store._MASTER_FACTS.clear()
+
+
+def test_could_not_look_is_never_persisted_as_a_verdict(tmp_path) -> None:
+    """"unchecked" means we could not read the file. Writing it down would turn
+    one transient failure into a permanent answer."""
+    old_cache, old_loaded = store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED
+    cache = tmp_path / "facts.json"
+    try:
+        store.MASTER_FACTS_CACHE = cache
+        store._MASTER_FACTS.clear()
+        store._MASTER_FACTS_LOADED = True
+        store._MASTER_FACTS[("/gone/master.jpeg", 1, 2)] = (None, None, "unchecked")
+        store._MASTER_FACTS[("/here/master.jpeg", 3, 4)] = ((10, 10), 0.1, "ok")
+        store._MASTER_FACTS_DIRTY = True
+        store.flush_master_facts()
+        import json as _j
+
+        entries = _j.loads(cache.read_text(encoding="utf-8"))["entries"]
+        assert len(entries) == 1
+        assert all("unchecked" not in str(v) for v in entries.values())
+    finally:
+        store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED = old_cache, old_loaded
+        store._MASTER_FACTS.clear()
