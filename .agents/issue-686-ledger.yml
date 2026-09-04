@@ -6,10 +6,10 @@ tasks:
   - id: task-01
     title: Run `black scripts/vision_tag_works.py tests/test_judgement_surfaces.py
       tests/test_sidecar_io.py tests/test_selection_lenses.py`.
-    status: doing
+    status: done
     started_at: '2026-09-04T22:57:10Z'
-    finished_at: null
-    commit: ''
+    finished_at: '2026-09-04T22:57:24Z'
+    commit: 8f15d29bab686e0ea3a59dd4bd159cf86fba3c79
     notes: []
   - id: task-02
     title: Verify `black --check scripts/vision_tag_works.py tests/test_judgement_surfaces.py
