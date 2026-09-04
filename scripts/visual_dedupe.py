@@ -28,15 +28,21 @@ import argparse
 import glob
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[1]
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
+
+from _paths import default_works_dir  # noqa: E402
+
 ART = ROOT.parent / "Art" / "works"
 STAGE = ROOT / "staging_acquisitions"
-SIDE = ROOT / "staging_sidecars"
+SIDE = default_works_dir()
 EMB = ROOT / "dinov2_embed_cache.npz"
 IDX = ROOT / "dinov2_embed_index.json"
 MODELS = {"base": "facebook/dinov2-base", "large": "facebook/dinov2-large"}
@@ -159,7 +165,7 @@ def embed_archive(budget=300, which="large"):
     arr = np.stack(vecs).astype("float16") if vecs else np.zeros((0, 1), "float16")
     np.savez_compressed(EMB, emb=arr)
     json.dump(idx, open(IDX, "w"))
-    print(f"embed-archive: +{done} | cached {len(idx)}/{len(dirs)} | {time.time()-t0:.1f}s")
+    print(f"embed-archive: +{done} | cached {len(idx)}/{len(dirs)} | {time.time() - t0:.1f}s")
 
 
 def match(wids, artist_block=False, topk=5, which="large"):

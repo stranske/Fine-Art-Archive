@@ -35,7 +35,10 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
+
+from _paths import default_works_dir  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment import medium_vocab  # noqa: E402
@@ -241,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--staging-dir",
         type=Path,
-        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+        default=default_works_dir(),
     )
     parser.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     parser.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))

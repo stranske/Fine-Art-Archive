@@ -36,9 +36,11 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
+from _paths import default_works_dir  # noqa: E402
 from jsonschema import ValidationError as _ValidationError  # noqa: E402
 from scripts.resolve_work_qids import SparqlClient  # noqa: E402
 
@@ -216,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--staging-dir",
         type=Path,
-        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+        default=default_works_dir(),
     )
     ap.add_argument("--art-works-root", type=Path, default=_env_path("FAA_ART_WORKS_ROOT"))
     ap.add_argument("--operations-log", type=Path, default=_env_path("FAA_OPERATIONS_LOG"))
