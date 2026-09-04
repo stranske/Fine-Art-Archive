@@ -498,9 +498,13 @@ def test_master_health_restores_pillow_pixel_ceiling(tmp_path) -> None:
     src.write_bytes(buf.getvalue())
 
     sentinel = 12345
+    original = Image.MAX_IMAGE_PIXELS
     Image.MAX_IMAGE_PIXELS = sentinel
-    assert store._master_health(src) == "ok"
-    assert Image.MAX_IMAGE_PIXELS == sentinel
+    try:
+        assert store._master_health(src) == "ok"
+        assert sentinel == Image.MAX_IMAGE_PIXELS
+    finally:
+        Image.MAX_IMAGE_PIXELS = original
 
 
 def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -> None:
