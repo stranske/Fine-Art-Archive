@@ -208,6 +208,78 @@ def test_symlinked_master_cannot_escape_work_directory(
     assert response.status_code == 400
 
 
+def test_eink_master_symlink_cannot_escape_work_directory(
+    isolated_archive: Path,
+) -> None:
+    """E-ink lookup must not follow a master symlink whose target leaves the work directory."""
+    outside_work_dir = isolated_archive / "works" / "other"
+    outside_work_dir.mkdir(parents=True)
+    outside_master = outside_work_dir / "master.jpg"
+    outside_master.write_bytes(b"not an archive image")
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    (work_dir / "master.jpg").symlink_to(outside_master)
+    write_sidecar(isolated_archive, "vermeer-little-street")
+
+    assert api_main._eink_master("vermeer-little-street") is None
+
+
+def test_eink_master_allows_a_symlink_to_an_in_tree_master(
+    isolated_archive: Path,
+) -> None:
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    source = work_dir / "source.jpg"
+    source.write_bytes(b"an archive image")
+    (work_dir / "master.jpg").symlink_to(source)
+    write_sidecar(isolated_archive, "vermeer-little-street")
+
+    assert api_main._eink_master("vermeer-little-street") == source.resolve()
+
+
+def test_eink_master_glob_fallback_accepts_contained_nonpreferred_extension(
+    isolated_archive: Path,
+) -> None:
+    """Glob fallback must resolve in-tree masters that use non-preferred extensions."""
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    source = work_dir / "source.bmp"
+    source.write_bytes(b"an archive image")
+    (work_dir / "master.bmp").symlink_to(source)
+    write_sidecar(isolated_archive, "vermeer-little-street")
+
+    assert api_main._eink_master("vermeer-little-street") == source.resolve()
+
+
+def test_eink_master_glob_fallback_rejects_escaping_nonpreferred_extension(
+    isolated_archive: Path,
+) -> None:
+    outside_master = isolated_archive / "outside-master.bmp"
+    outside_master.write_bytes(b"not an archive image")
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    (work_dir / "master.bmp").symlink_to(outside_master)
+    write_sidecar(isolated_archive, "vermeer-little-street")
+
+    assert api_main._eink_master("vermeer-little-street") is None
+
+
+def test_eink_master_glob_fallback_skips_escaping_candidate_before_contained_one(
+    isolated_archive: Path,
+) -> None:
+    outside_master = isolated_archive / "outside-master.bmp"
+    outside_master.write_bytes(b"not an archive image")
+    work_dir = isolated_archive / "works" / "vermeer-little-street"
+    work_dir.mkdir(parents=True)
+    contained = work_dir / "contained.bmp"
+    contained.write_bytes(b"an archive image")
+    (work_dir / "master.a").symlink_to(outside_master)
+    (work_dir / "master.bmp").symlink_to(contained)
+    write_sidecar(isolated_archive, "vermeer-little-street")
+
+    assert api_main._eink_master("vermeer-little-street") == contained.resolve()
+
+
 def test_unknown_nested_work_path_returns_404(
     client: TestClient,
     isolated_archive: Path,

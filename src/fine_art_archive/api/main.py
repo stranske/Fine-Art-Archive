@@ -447,12 +447,27 @@ def _eink_master(work_id: str) -> Path | None:
         return None
     if not work_dir.is_dir():
         return None
+    resolved_work_dir = work_dir.resolve(strict=False)
+
+    def contained_master(candidate: Path) -> Path | None:
+        """Return only masters whose resolved target remains in this work's directory."""
+        resolved_candidate = candidate.resolve(strict=False)
+        if not resolved_candidate.is_relative_to(resolved_work_dir):
+            return None
+        return resolved_candidate
+
     for ext in ("jpeg", "jpg", "png", "tif", "tiff", "webp"):
         cand = work_dir / f"master.{ext}"
         if cand.exists():
-            return cand
+            contained = contained_master(cand)
+            if contained is not None:
+                return contained
     found = sorted(work_dir.glob("master.*"))
-    return found[0] if found else None
+    for candidate in found:
+        contained = contained_master(candidate)
+        if contained is not None:
+            return contained
+    return None
 
 
 def _all_sidecars() -> list[tuple[str, dict]]:
