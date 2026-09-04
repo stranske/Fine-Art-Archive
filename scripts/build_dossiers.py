@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from _paths import default_works_dir  # noqa: E402
 from _sidecar_io import script_env_path as _env_path  # noqa: E402
 from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.enrichment import dossier as dossier_mod  # noqa: E402
@@ -228,11 +229,7 @@ def build(
             meta["dossier"] = doss.to_json()
             sidecar.validate(meta)
             sidecar.write(path, meta)
-            if art_works_root is not None:
-                for base in (art_works_root / "works", art_works_root):
-                    mp = base / str(meta["work_id"]) / "meta.json"
-                    if mp.is_file():
-                        sidecar.write(mp, meta)
+            _write_existing_mirrors(meta, art_works_root, exclude=path)
         if len(samples) < 6:
             samples.append(
                 {
