@@ -44,12 +44,17 @@ from typing import Any
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+from _paths import default_works_dir  # noqa: E402
+
 ROOT = Path(
     os.environ.get(
         "FAA_WORKSPACE", "/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Claude Project"
     )
 )
-STAGING = ROOT / "staging_sidecars"
+STAGING = default_works_dir()
 ART_WORKS = Path(os.environ.get("FAA_ART_WORKS", ROOT.parent / "Art" / "works"))
 CONFIG_PATH = Path(
     os.environ.get("FAA_TAGGER_CONFIG", REPO_ROOT / "config" / "clip_thresholds.yaml")
@@ -249,7 +254,9 @@ def _load_model() -> None:
     _device = (
         "mps"
         if torch.backends.mps.is_available()
-        else "cuda" if torch.cuda.is_available() else "cpu"
+        else "cuda"
+        if torch.cuda.is_available()
+        else "cpu"
     )
     print(f"Loading {MODEL_NAME} on {_device} ...", file=sys.stderr, flush=True)
     _model = CLIPModel.from_pretrained(MODEL_NAME).to(_device)
