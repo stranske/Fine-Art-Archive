@@ -25,6 +25,10 @@ def load_candidates(path: Path) -> list[dict[str, Any]]:
     candidates = payload.get("candidates") if isinstance(payload, dict) else payload
     if not isinstance(candidates, list) or not all(isinstance(row, dict) for row in candidates):
         raise ValueError("input must be a JSON candidate list or an object with a candidates list")
+    for index, row in enumerate(candidates):
+        qid = row.get("qid")
+        if not isinstance(qid, str) or not qid.strip():
+            raise ValueError(f"candidate at index {index} must include a non-empty string qid")
     return candidates
 
 

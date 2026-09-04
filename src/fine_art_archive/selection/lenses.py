@@ -167,7 +167,7 @@ def _series(cand: Mapping[str, Any]) -> float | None:
     """Prefer works that complete a set the archive already part-holds."""
     size = _finite_whole(_f(cand, "series_size"))
     held = _finite_whole(_f(cand, "series_held"))
-    if size is None or held is None or size <= 1 or held < 0:
+    if size is None or held is None or size <= 1 or held <= 0:
         return None
     # Most valuable when the archive holds some but not all of the series.
     fraction = held / size

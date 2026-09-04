@@ -84,6 +84,11 @@ def test_completed_series_stops_scoring() -> None:
     assert lenses._series(cand("Q3", series_size=1, series_held=0)) is None
 
 
+def test_series_with_zero_held_is_unscorable() -> None:
+    """A series the archive does not part-hold yet is not a completion opportunity."""
+    assert lenses._series(cand("Q4", series_size=36, series_held=0)) is None
+
+
 def test_canon_series_and_standing_reject_malformed_numeric_features() -> None:
     """Malformed feature values make the affected lens unavailable, not fatal."""
     assert lenses._canon({"qid": "Q1", "sitelinks": "not-a-number"}) is None
@@ -134,6 +139,29 @@ def test_selection_cli_emits_selected_set_and_reports_unavailable_malformed_lens
     series = next(item for item in report["lens_reports"] if item["name"] == "series")
     assert series["available"] is False
     assert series["reason"]
+
+
+def test_selection_cli_rejects_candidates_without_qid(tmp_path: Path) -> None:
+    input_path = tmp_path / "candidates.json"
+    output_path = tmp_path / "acquisition-plan.json"
+    input_path.write_text(json.dumps({"candidates": [{"sitelinks": 1}]}), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SELECT_SCRIPT),
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--batch-cap",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "non-empty string qid" in result.stderr
 
 
 # --------------------------------------------------------------------------
