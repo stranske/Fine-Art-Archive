@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -38,6 +37,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
@@ -101,12 +103,6 @@ class IdentifyStats:
     mirrored: int
 
 
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
-
-
 def _apply(meta: dict[str, Any], ident: ArtistId) -> None:
     artist = meta.setdefault("artist", {})
     if not isinstance(artist, dict):  # pragma: no cover - malformed guard
@@ -122,24 +118,6 @@ def _apply(meta: dict[str, Any], ident: ArtistId) -> None:
         source_ref=f"https://www.wikidata.org/wiki/{ident.qid}",
         note=ident.note,
     )
-
-
-def _write_existing_mirrors(
-    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
-) -> list[Path]:
-    if art_works_root is None:
-        return []
-    work_id = str(meta["work_id"])
-    candidates = {
-        art_works_root / "works" / work_id / "meta.json",
-        art_works_root / work_id / "meta.json",
-    }
-    written: list[Path] = []
-    for candidate in sorted(candidates):
-        if candidate.is_file() and candidate.resolve() != exclude.resolve():
-            sidecar.write(candidate, meta)
-            written.append(candidate)
-    return written
 
 
 def _append_operation(
@@ -192,11 +170,6 @@ def identify(
             if operations_log is not None:
                 _append_operation(operations_log, meta, ident, path, mirrors)
     return IdentifyStats(matched, changed, skipped, mirrored), outcomes
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

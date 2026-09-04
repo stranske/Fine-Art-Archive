@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import os
 import re
 import sys
 from collections import Counter
@@ -41,6 +40,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
 
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
@@ -76,12 +76,6 @@ def classify_blocker(meta: dict[str, Any]) -> str:
     if is_junk_title(str(meta.get("title") or ""), _artist_name(meta)):
         return "needs_title_fix"
     return "needs_work_qid"
-
-
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
 
 
 def _has_work_qid(meta: dict[str, Any]) -> bool:
@@ -162,11 +156,6 @@ def write_report(
         _write_csv(rows, handle)
     markdown_path.write_text(_render_markdown(rows, report_date=day), encoding="utf-8")
     return csv_path, markdown_path, rows
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

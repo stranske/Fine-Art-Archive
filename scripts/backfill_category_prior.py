@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -36,6 +35,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.creator_category_prior import (  # noqa: E402
@@ -55,30 +57,6 @@ class PriorBackfillStats:
     resolved: int  # works a single-category prior fired for
     updated_works: int  # sidecars written (0 in dry-run)
     mirrored: int  # canonical mirrors written
-
-
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
-
-
-def _write_existing_mirrors(
-    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
-) -> list[Path]:
-    if art_works_root is None:
-        return []
-    work_id = str(meta["work_id"])
-    candidates = {
-        art_works_root / "works" / work_id / "meta.json",
-        art_works_root / work_id / "meta.json",
-    }
-    written: list[Path] = []
-    for candidate in sorted(candidates):
-        if candidate.is_file() and candidate.resolve() != exclude.resolve():
-            sidecar.write(candidate, meta)
-            written.append(candidate)
-    return written
 
 
 def _append_operation(
@@ -163,11 +141,6 @@ def backfill(
         if attempted >= limit:
             break
     return PriorBackfillStats(attempted, resolved, updated, mirrored), by_category
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import Counter
 from datetime import UTC, datetime
@@ -41,6 +40,8 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 from jsonschema import ValidationError as _ValidationError  # noqa: E402
 from scripts.resolve_work_qids import SparqlClient  # noqa: E402
 
@@ -180,18 +181,6 @@ def apply_finding(
     return changes
 
 
-def _mirror(meta: dict[str, Any], art_root: Path | None, *, exclude: Path) -> list[Path]:
-    if art_root is None:
-        return []
-    wid = str(meta["work_id"])
-    out: list[Path] = []
-    for cand in sorted({art_root / "works" / wid / "meta.json", art_root / wid / "meta.json"}):
-        if cand.is_file() and cand.resolve() != exclude.resolve():
-            sidecar.write(cand, meta)
-            out.append(cand)
-    return out
-
-
 def _log(log_path: Path, meta: dict[str, Any], finding: dict[str, Any], changes: list[str]) -> None:
     entry = {
         "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -204,11 +193,6 @@ def _log(log_path: Path, meta: dict[str, Any], finding: dict[str, Any], changes:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8") as h:
         h.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -255,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  ! {wid}: invalid after edit: {str(exc)[:120]}")
                 continue
             sidecar.write(path, meta)
-            mirrored = _mirror(meta, args.art_works_root, exclude=path)
+            mirrored = _write_existing_mirrors(meta, args.art_works_root, exclude=path)
             counts["mirrored"] += len(mirrored)
             if args.operations_log:
                 _log(args.operations_log, meta, finding, changes)

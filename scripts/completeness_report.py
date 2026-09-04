@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import os
 import sys
 from datetime import date
 from pathlib import Path
@@ -18,6 +17,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 
@@ -51,12 +51,6 @@ def write_report(
         encoding="utf-8",
     )
     return csv_path, markdown_path, report
-
-
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
 
 
 def _write_csv(report: provenance.CompletenessReport, handle: TextIO) -> None:
@@ -141,11 +135,6 @@ def _display_value(value: Any) -> str:
 
 def _markdown_cell(value: str) -> str:
     return value.replace("|", "\\|").replace("\n", " ")
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:
