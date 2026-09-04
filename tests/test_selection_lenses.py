@@ -14,10 +14,16 @@ over the single `-sitelinks` sort it replaces:
 
 from __future__ import annotations
 
+import json
 import math
+import subprocess
+import sys
+from pathlib import Path
 from typing import Any
 
 from fine_art_archive.selection import lenses
+
+SELECT_SCRIPT = Path(__file__).parents[1] / "scripts" / "select_acquisition_candidates.py"
 
 
 def cand(qid: str, *, sitelinks: int | None = None, **features: Any) -> dict:
@@ -76,6 +82,90 @@ def test_completed_series_stops_scoring() -> None:
     assert lenses._series(cand("Q1", series_size=36, series_held=36)) is None
     assert lenses._series(cand("Q2", series_size=36, series_held=12)) == 12 / 36
     assert lenses._series(cand("Q3", series_size=1, series_held=0)) is None
+
+
+def test_series_with_zero_held_is_unscorable() -> None:
+    """A series the archive does not part-hold yet is not a completion opportunity."""
+    assert lenses._series(cand("Q4", series_size=36, series_held=0)) is None
+
+
+def test_canon_series_and_standing_reject_malformed_numeric_features() -> None:
+    """Malformed feature values make the affected lens unavailable, not fatal."""
+    assert lenses._canon({"qid": "Q1", "sitelinks": "not-a-number"}) is None
+    assert lenses._canon({"qid": "Q2", "sitelinks": math.inf}) is None
+    assert lenses._canon({"qid": "Q3", "sitelinks": -1}) is None
+    assert lenses._canon({"qid": "Q4", "sitelinks": 1.5}) is None
+    assert lenses._series(cand("Q5", series_size="many", series_held=1)) is None
+    assert lenses._series(cand("Q6", series_size=3, series_held=math.nan)) is None
+    assert lenses._standing(cand("Q7", holder_sitelinks="unknown")) is None
+    assert lenses._standing(cand("Q8", gac_curated=True, holder_sitelinks=math.inf)) is None
+    assert lenses._standing(cand("Q9", holder_sitelinks=-1)) is None
+    assert lenses._standing(cand("Q10", holder_sitelinks=1.5)) is None
+
+
+def test_selection_cli_emits_selected_set_and_reports_unavailable_malformed_lens(
+    tmp_path: Path,
+) -> None:
+    input_path = tmp_path / "candidates.json"
+    output_path = tmp_path / "acquisition-plan.json"
+    input_path.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {"qid": "Q-valid", "sitelinks": 10},
+                    {
+                        "qid": "Q-malformed-series",
+                        "sitelinks": 1,
+                        "lens_features": {"series_size": "many", "series_held": 1},
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(SELECT_SCRIPT),
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--batch-cap",
+            "2",
+        ],
+        check=True,
+    )
+
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["selected_ids"] == ["Q-valid", "Q-malformed-series"]
+    series = next(item for item in report["lens_reports"] if item["name"] == "series")
+    assert series["available"] is False
+    assert series["reason"]
+
+
+def test_selection_cli_rejects_candidates_without_qid(tmp_path: Path) -> None:
+    input_path = tmp_path / "candidates.json"
+    output_path = tmp_path / "acquisition-plan.json"
+    input_path.write_text(json.dumps({"candidates": [{"sitelinks": 1}]}), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SELECT_SCRIPT),
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--batch-cap",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "non-empty string qid" in result.stderr
 
 
 # --------------------------------------------------------------------------
@@ -263,9 +353,9 @@ def test_shares_land_over_a_month_even_at_a_small_batch() -> None:
     for name, share in lenses.LENS_SHARES.items():
         monthly_err = abs(spent[name] / total - share)
         batch_err = abs(per_batch[name] / 7 - share)
-        assert (
-            monthly_err <= batch_err + 1e-9
-        ), f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
+        assert monthly_err <= batch_err + 1e-9, (
+            f"{name}: monthly {monthly_err:.3f} should beat per-batch {batch_err:.3f}"
+        )
     # And the worst lens must land close, not merely closer.
     worst = max(abs(spent[n] / total - lenses.LENS_SHARES[n]) for n in names)
     assert worst < 0.02, f"realised shares drift by {worst:.3f}"

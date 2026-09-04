@@ -122,9 +122,33 @@ def _f(cand: Mapping[str, Any], key: str) -> Any:
     return (cand.get("lens_features") or {}).get(key)
 
 
+def _finite_float(value: Any) -> float | None:
+    """Coerce a numeric feature without letting malformed values rank a work."""
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _finite_whole(value: Any) -> int | None:
+    """Return a finite whole-number count, or mark the feature unavailable."""
+    number = _finite_float(value)
+    if number is None or not number.is_integer():
+        return None
+    return int(number)
+
+
+def _nonnegative_count(value: Any) -> int | None:
+    """Return a non-negative whole count, or mark the feature unavailable."""
+    count = _finite_whole(value)
+    return count if count is not None and count >= 0 else None
+
+
 def _canon(cand: Mapping[str, Any]) -> float | None:
-    sl = cand.get("sitelinks")
-    return None if sl is None else float(sl)
+    return _nonnegative_count(cand.get("sitelinks"))
 
 
 def _atypicality(cand: Mapping[str, Any]) -> float | None:
@@ -135,23 +159,24 @@ def _atypicality(cand: Mapping[str, Any]) -> float | None:
     finds the Oslo `Landscape with a Horseman`, which has zero sitelinks.
     """
     share = _f(cand, "genre_share_in_oeuvre")
+    share = _finite_float(share)
     if share is None:
         return None
     # Guard against a malformed share; a share of 0 would otherwise score 1.0
     # and let a genre the artist never painted outrank everything.
-    if not 0 < float(share) <= 1:
+    if not 0 < share <= 1:
         return None
-    return 1.0 - float(share)
+    return 1.0 - share
 
 
 def _series(cand: Mapping[str, Any]) -> float | None:
     """Prefer works that complete a set the archive already part-holds."""
-    size = _f(cand, "series_size")
-    held = _f(cand, "series_held")
-    if size is None or held is None or int(size) <= 1:
+    size = _finite_whole(_f(cand, "series_size"))
+    held = _finite_whole(_f(cand, "series_held"))
+    if size is None or held is None or size <= 1 or held <= 0:
         return None
     # Most valuable when the archive holds some but not all of the series.
-    fraction = int(held) / int(size)
+    fraction = held / size
     if fraction >= 1.0:
         return None
     return fraction
@@ -159,12 +184,8 @@ def _series(cand: Mapping[str, Any]) -> float | None:
 
 def _regional(cand: Mapping[str, Any]) -> float | None:
     """Under-representation of this work's country in the archive."""
-    share = _f(cand, "country_share_in_archive")
-    try:
-        share = float(share)
-    except (TypeError, ValueError, OverflowError):
-        return None
-    if not math.isfinite(share) or not 0 <= share <= 1:
+    share = _finite_float(_f(cand, "country_share_in_archive"))
+    if share is None or not 0 <= share <= 1:
         return None
     return 1.0 - share
 
@@ -191,10 +212,13 @@ def _standing(cand: Mapping[str, Any]) -> float | None:
     institution GA&C has never partnered with is not silently excluded.
     """
     curated = _f(cand, "gac_curated")
-    sl = _f(cand, "holder_sitelinks")
+    raw_sitelinks = _f(cand, "holder_sitelinks")
+    sl = _nonnegative_count(raw_sitelinks)
+    if raw_sitelinks is not None and sl is None:
+        return None
     if curated:
-        return _CURATED_BAND + float(sl or 0)
-    return None if sl is None else float(sl)
+        return _CURATED_BAND + (sl or 0)
+    return sl
 
 
 LENSES: tuple[Lens, ...] = (
