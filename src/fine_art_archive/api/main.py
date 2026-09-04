@@ -2349,8 +2349,13 @@ def _master_path(work_id: str) -> Path | None:
 def _serve_resized(src: Path, cache_stem: str, max: int) -> FileResponse:
     """Return a cached, resized JPEG of ``src`` (longest side ``max`` px)."""
     IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    mtime = int(src.stat().st_mtime)  # mtime in key so a re-promote invalidates
-    cache_p = IMAGE_CACHE_DIR / f"{cache_stem}_{max}_{mtime}.jpg"
+    source_stat = src.stat()
+    # A same-second replacement is a different image even when its whole-second
+    # mtime matches the prior master. Keep the cache key aligned with the
+    # source identity used elsewhere in this module: nanosecond mtime + size.
+    cache_p = IMAGE_CACHE_DIR / (
+        f"{cache_stem}_{max}_{source_stat.st_mtime_ns}_{source_stat.st_size}.jpg"
+    )
     if not cache_p.exists():
         try:
             from PIL import Image
