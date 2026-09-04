@@ -141,8 +141,14 @@ def _finite_whole(value: Any) -> int | None:
     return int(number)
 
 
+def _nonnegative_count(value: Any) -> int | None:
+    """Return a non-negative whole count, or mark the feature unavailable."""
+    count = _finite_whole(value)
+    return count if count is not None and count >= 0 else None
+
+
 def _canon(cand: Mapping[str, Any]) -> float | None:
-    return _finite_float(cand.get("sitelinks"))
+    return _nonnegative_count(cand.get("sitelinks"))
 
 
 def _atypicality(cand: Mapping[str, Any]) -> float | None:
@@ -207,7 +213,7 @@ def _standing(cand: Mapping[str, Any]) -> float | None:
     """
     curated = _f(cand, "gac_curated")
     raw_sitelinks = _f(cand, "holder_sitelinks")
-    sl = _finite_float(raw_sitelinks)
+    sl = _nonnegative_count(raw_sitelinks)
     if raw_sitelinks is not None and sl is None:
         return None
     if curated:

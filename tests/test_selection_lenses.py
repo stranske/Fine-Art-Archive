@@ -93,10 +93,14 @@ def test_canon_series_and_standing_reject_malformed_numeric_features() -> None:
     """Malformed feature values make the affected lens unavailable, not fatal."""
     assert lenses._canon({"qid": "Q1", "sitelinks": "not-a-number"}) is None
     assert lenses._canon({"qid": "Q2", "sitelinks": math.inf}) is None
-    assert lenses._series(cand("Q3", series_size="many", series_held=1)) is None
-    assert lenses._series(cand("Q4", series_size=3, series_held=math.nan)) is None
-    assert lenses._standing(cand("Q5", holder_sitelinks="unknown")) is None
-    assert lenses._standing(cand("Q6", gac_curated=True, holder_sitelinks=math.inf)) is None
+    assert lenses._canon({"qid": "Q3", "sitelinks": -1}) is None
+    assert lenses._canon({"qid": "Q4", "sitelinks": 1.5}) is None
+    assert lenses._series(cand("Q5", series_size="many", series_held=1)) is None
+    assert lenses._series(cand("Q6", series_size=3, series_held=math.nan)) is None
+    assert lenses._standing(cand("Q7", holder_sitelinks="unknown")) is None
+    assert lenses._standing(cand("Q8", gac_curated=True, holder_sitelinks=math.inf)) is None
+    assert lenses._standing(cand("Q9", holder_sitelinks=-1)) is None
+    assert lenses._standing(cand("Q10", holder_sitelinks=1.5)) is None
 
 
 def test_selection_cli_emits_selected_set_and_reports_unavailable_malformed_lens(
