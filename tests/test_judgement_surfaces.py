@@ -449,3 +449,72 @@ def test_the_variant_gate_names_a_drain_that_something_actually_invokes() -> Non
 def test_the_upgrade_card_holds_stale_rows_out_of_the_queue(page: str) -> None:
     assert "candidate_present" in page
     assert "no longer on disk" in page
+
+
+def test_a_gigapixel_master_is_not_reported_as_damaged(tmp_path) -> None:
+    """Pillow's decompression-bomb ceiling is a false alarm on this corpus.
+
+    These are museum scans we fetched ourselves, and several are hundreds of
+    megapixels. `_master_health` decodes every master and treats any exception
+    as truncation, so `DecompressionBombError` — a refusal on SIZE, not a
+    finding about the bytes — was reported as a damaged file.
+
+    It happened to a real work: Leonardo's *Virgin and Child with Saint Anne*,
+    13295x17828 (237 MP), decodes cleanly and is byte-identical to a fresh
+    download of its source. The review card told the owner it was truncated and
+    not to judge it.
+
+    Simulated here by lowering the ceiling rather than allocating 237 MP.
+    """
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (400, 400), (10, 20, 30)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    original = Image.MAX_IMAGE_PIXELS
+    try:
+        Image.MAX_IMAGE_PIXELS = 100  # any real image now trips the ceiling
+        assert store._master_health(src) == "ok", (
+            "a size refusal is not evidence about the bytes and must not be "
+            "reported as truncation"
+        )
+    finally:
+        Image.MAX_IMAGE_PIXELS = original
+
+
+def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -> None:
+    """The acquisition list is invalidated by ANY sidecar write, which the
+    growth tick does constantly. Re-opening every acquired master each time
+    cost 28 seconds on a Dropbox-synced volume, on the page whose whole purpose
+    is to be glanced at."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (64, 64), (1, 2, 3)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    store._MASTER_FACTS.clear()
+    first = store._master_facts(src)
+    assert len(store._MASTER_FACTS) == 1
+    calls = []
+    original = store._master_health
+    store._master_health = lambda p: calls.append(p) or "ok"  # type: ignore[assignment]
+    try:
+        again = store._master_facts(src)
+    finally:
+        store._master_health = original  # type: ignore[assignment]
+    assert again == first
+    assert calls == [], "an unchanged master must not be re-examined"
+
+    # A master that genuinely changes IS re-examined.
+    buf2 = BytesIO()
+    Image.new("RGB", (80, 80), (9, 9, 9)).save(buf2, format="JPEG")
+    src.write_bytes(buf2.getvalue())
+    assert store._master_facts(src)[0] == (80, 80)

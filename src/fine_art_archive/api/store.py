@@ -359,6 +359,17 @@ def _master_health(path: Path) -> str:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", Image.DecompressionBombWarning)
+            # This corpus is full of gigapixel museum scans that we fetched
+            # ourselves, so Pillow's bomb ceiling is a false alarm here --
+            # `_serve_resized`, `_image_dims` and the dedup cascade all lift it
+            # for the same reason. Leaving it in place made a PERFECTLY GOOD
+            # file report as damaged: Leonardo's *Virgin and Child with Saint
+            # Anne* is 13295x17828 (237 MP), decodes cleanly, is byte-identical
+            # to a fresh download of its source -- and was reported "truncated"
+            # because DecompressionBombError landed in the except below. The
+            # review card then told the owner not to judge a picture that was
+            # never damaged.
+            Image.MAX_IMAGE_PIXELS = None
             with Image.open(path) as im:
                 im.load()
         return "ok"
@@ -384,20 +395,51 @@ def _find_master(work_dir: Path) -> Path | None:
     return None
 
 
+#: Per-file facts, memoised on the file's own identity rather than on the
+#: sidecar cache below.
+#:
+#: `acquisitions_since_epoch` is invalidated whenever ANY sidecar changes, which
+#: the growth tick does constantly. Before this, that re-opened every acquired
+#: master to re-derive facts that had not moved: 132 files on a Dropbox-synced
+#: volume, where every open() goes through the sync provider. /review took 28
+#: seconds cold and paid it again after each tick — on the page whose whole
+#: purpose is to be glanced at.
+#:
+#: Keyed on (path, mtime_ns, size), so a master that is genuinely replaced is
+#: recomputed and one that is merely re-listed is not.
+_MASTER_FACTS: dict[tuple[str, int, int], tuple[tuple[int, int] | None, float | None, str]] = {}
+
+
+def _master_facts(
+    master: Path | None,
+) -> tuple[tuple[int, int] | None, float | None, str, bool]:
+    """(pixels, size_mb, health, stat_failed) for a master, cached by file identity."""
+    if master is None:
+        return None, None, "unchecked", False
+    try:
+        st = master.stat()
+    except OSError:
+        # A master can disappear between _find_master() and here. Keep the row
+        # useful and make the uncertainty explicit rather than reporting zero.
+        return None, None, "unchecked", True
+    key = (str(master), st.st_mtime_ns, st.st_size)
+    hit = _MASTER_FACTS.get(key)
+    if hit is None:
+        hit = (_image_pixels(master), round(st.st_size / 1e6, 1), _master_health(master))
+        # Bounded, so a long-lived process cannot grow without limit. The
+        # working set is the acquisition list, which is small.
+        if len(_MASTER_FACTS) > 4096:
+            _MASTER_FACTS.clear()
+        _MASTER_FACTS[key] = hit
+    return hit[0], hit[1], hit[2], False
+
+
 def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
     prov = meta.get("acquisition_provenance") or {}
     rights = meta.get("rights") or {}
     holder = meta.get("holder") or {}
     master = _find_master(work_dir)
-    px = _image_pixels(master) if master else None
-    stat_failed = False
-    try:
-        size_mb = round(master.stat().st_size / 1e6, 1) if master else None
-    except OSError:
-        # A master can disappear after _find_master() but before we assemble
-        # its evidence. Keep the row useful and make the uncertainty explicit.
-        size_mb = None
-        stat_failed = True
+    px, size_mb, health, stat_failed = _master_facts(master)
     return {
         "holder_name": holder.get("name") or "",
         "source": prov.get("source") or "",
@@ -415,7 +457,7 @@ def _acquisition_evidence(meta: dict, work_dir: Path) -> dict:
         "master_mb": size_mb,
         # "ok" | "truncated" | "unchecked". Never collapse the last into the
         # first: not looking is not a clean bill.
-        "file_health": _master_health(master) if master and not stat_failed else "unchecked",
+        "file_health": health,
     }
 
 
