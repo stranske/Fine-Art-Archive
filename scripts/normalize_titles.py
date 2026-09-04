@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -44,6 +43,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 
@@ -173,24 +174,6 @@ def _apply_fix(meta: dict[str, Any], fix: TitleFix) -> None:
     provenance.set(meta, "title", "available", "curated", note=fix.note)
 
 
-def _write_existing_mirrors(
-    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
-) -> list[Path]:
-    if art_works_root is None:
-        return []
-    work_id = str(meta["work_id"])
-    candidates = {
-        art_works_root / "works" / work_id / "meta.json",
-        art_works_root / work_id / "meta.json",
-    }
-    written: list[Path] = []
-    for candidate in sorted(candidates):
-        if candidate.is_file() and candidate.resolve() != exclude.resolve():
-            sidecar.write(candidate, meta)
-            written.append(candidate)
-    return written
-
-
 def _append_operation(
     log_path: Path,
     meta: dict[str, Any],
@@ -252,11 +235,6 @@ def normalize_titles(
             if operations_log is not None:
                 _append_operation(operations_log, meta, fix, path, mirror_paths)
     return stats
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

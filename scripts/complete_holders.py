@@ -21,6 +21,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import (  # noqa: E402
@@ -81,32 +84,8 @@ def complete_sidecars(
     return CompletionStats(attempted, updated_count, mirrored_count, skipped_invalid)
 
 
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
-
-
 def _eligible(meta: dict[str, Any]) -> bool:
     return provenance.needs_research(meta, "holder")
-
-
-def _write_existing_mirrors(
-    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
-) -> list[Path]:
-    if art_works_root is None:
-        return []
-    work_id = str(meta["work_id"])
-    candidates = {
-        art_works_root / "works" / work_id / "meta.json",
-        art_works_root / work_id / "meta.json",
-    }
-    written: list[Path] = []
-    for candidate in sorted(candidates):
-        if candidate.is_file() and candidate.resolve() != exclude.resolve():
-            sidecar.write(candidate, meta)
-            written.append(candidate)
-    return written
 
 
 def _append_operation(
@@ -150,11 +129,6 @@ def _record_invalid_sidecar(
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def _default_limit() -> int:

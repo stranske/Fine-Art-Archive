@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import Counter
 from datetime import UTC, datetime
@@ -41,6 +40,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
 from jsonschema import ValidationError as _ValidationError  # noqa: E402
 from scripts.resolve_work_qids import SparqlClient  # noqa: E402
 
@@ -204,11 +204,6 @@ def _log(log_path: Path, meta: dict[str, Any], finding: dict[str, Any], changes:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8") as h:
         h.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

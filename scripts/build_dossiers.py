@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
-import os
 import re
 import sys
 import time
@@ -29,6 +28,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
 
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.enrichment import dossier as dossier_mod  # noqa: E402
@@ -205,12 +206,6 @@ def _write_snapshots(meta_dir: Path, work_id: str, doss: dossier_mod.Dossier) ->
             ref.local_snapshot_path = fname
 
 
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
-
-
 def build(
     staging_dir: Path, *, client: Any, limit: int, apply: bool, art_works_root: Path | None = None
 ) -> dict[str, Any]:
@@ -252,11 +247,6 @@ def build(
                 }
             )
     return {"attempted": attempted, "built": built, "samples": samples}
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:

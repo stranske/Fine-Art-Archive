@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 import urllib.error
@@ -41,6 +40,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+from _sidecar_io import script_env_path as _env_path  # noqa: E402
+from _sidecar_io import sidecar_paths as _sidecar_paths  # noqa: E402
+from _sidecar_io import write_existing_mirrors as _write_existing_mirrors  # noqa: E402
 from jsonschema import ValidationError as _ValidationError  # noqa: E402
 
 from fine_art_archive import provenance, sidecar  # noqa: E402
@@ -128,12 +130,6 @@ class WorkQidBackfillStats:
     collisions: list[dict[str, Any]] = field(default_factory=list)
 
 
-def _sidecar_paths(staging_dir: Path) -> list[Path]:
-    paths = set(staging_dir.rglob("meta.json"))
-    paths.update(staging_dir.glob("*.json"))
-    return sorted(path for path in paths if path.is_file())
-
-
 def _work_qid(meta: dict[str, Any]) -> str | None:
     stable = meta.get("stable_identifiers")
     if isinstance(stable, dict):
@@ -164,24 +160,6 @@ def _apply_match(meta: dict[str, Any], match: WorkQidMatch) -> None:
         note=f"Work QID via SPARQL creator-work title match ({match.score:.2f}); "
         f"matched Wikidata label {match.label!r}.",
     )
-
-
-def _write_existing_mirrors(
-    meta: dict[str, Any], art_works_root: Path | None, *, exclude: Path
-) -> list[Path]:
-    if art_works_root is None:
-        return []
-    work_id = str(meta["work_id"])
-    candidates = {
-        art_works_root / "works" / work_id / "meta.json",
-        art_works_root / work_id / "meta.json",
-    }
-    written: list[Path] = []
-    for candidate in sorted(candidates):
-        if candidate.is_file() and candidate.resolve() != exclude.resolve():
-            sidecar.write(candidate, meta)
-            written.append(candidate)
-    return written
 
 
 def _append_operation(
@@ -381,11 +359,6 @@ def backfill(
         if stats.attempted >= limit:
             break
     return stats, reasons
-
-
-def _env_path(name: str) -> Path | None:
-    raw = os.environ.get(name)
-    return Path(raw).expanduser() if raw else None
 
 
 def main(argv: list[str] | None = None) -> int:
