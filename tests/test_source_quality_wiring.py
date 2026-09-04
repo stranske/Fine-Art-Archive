@@ -328,3 +328,23 @@ def test_write_aggregates_atomically_preserves_existing_permissions(tmp_path: Pa
     write_aggregates_atomically({"sources": {}}, output)
 
     assert stat.S_IMODE(output.stat().st_mode) == 0o640
+
+
+def test_write_aggregates_atomically_rejects_non_finite_scores(tmp_path: Path) -> None:
+    output = tmp_path / "source_quality.yaml"
+    original = "sources:\n  met:\n    western-painting-19c:\n      composite_score: 0.5\n"
+    output.write_text(original)
+
+    invalid = {
+        "sources": {
+            "met": {
+                "western-painting-19c": {
+                    "composite_score": float("nan"),
+                }
+            }
+        }
+    }
+    with pytest.raises(ValueError, match="composite_score must be finite"):
+        write_aggregates_atomically(invalid, output)
+
+    assert output.read_text() == original
