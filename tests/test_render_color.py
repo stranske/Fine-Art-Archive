@@ -6,6 +6,12 @@ import numpy as np
 from PIL import Image
 
 from fine_art_archive.display import render
+from fine_art_archive.eink.palette import get_palette
+
+# Colour output is quantized to the canonical Spectra-6 estimate, not the
+# saturated legacy primaries. Palette order is documented in eink/palette.py:
+# black, white, red, yellow, blue, green.
+CANONICAL_GREEN = tuple(int(v) for v in get_palette("spectra6").colours[5])
 
 
 def test_icc_gamut_mapping_runs_before_quantize_and_dither(monkeypatch, tmp_path: Path) -> None:
@@ -38,7 +44,7 @@ def test_icc_gamut_mapping_runs_before_quantize_and_dither(monkeypatch, tmp_path
 
     rendered = np.asarray(Image.open(result.path).convert("RGB"), dtype=np.uint8)
     assert rendered.shape[:2] == (1, 2)
-    assert {tuple(pixel) for row in rendered for pixel in row} == {(0, 255, 0)}
+    assert {tuple(int(v) for v in pixel) for row in rendered for pixel in row} == {CANONICAL_GREEN}
 
 
 def test_icc_mapping_normalizes_unprofiled_grayscale_before_transform(
@@ -66,7 +72,7 @@ def test_icc_mapping_normalizes_unprofiled_grayscale_before_transform(
     result = render.render_for_device(master, hints, "spectra6_test", out, native_size=(2, 1))
 
     rendered = np.asarray(Image.open(result.path).convert("RGB"), dtype=np.uint8)
-    assert {tuple(pixel) for row in rendered for pixel in row} == {(0, 255, 0)}
+    assert {tuple(int(v) for v in pixel) for row in rendered for pixel in row} == {CANONICAL_GREEN}
 
 
 def test_invalid_rendering_intent_is_rejected(tmp_path: Path) -> None:
