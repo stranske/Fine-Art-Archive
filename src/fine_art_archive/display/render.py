@@ -35,16 +35,9 @@ def _coerce_strategy_policy(
     return {key: _parse_render_strategy(value) for key, value in policy.items()}
 
 
-SPECTRA6_PALETTE: tuple[tuple[int, int, int], ...] = (
-    (0, 0, 0),
-    (255, 255, 255),
-    (255, 0, 0),
-    (0, 255, 0),
-    (0, 0, 255),
-    (255, 255, 0),
-)
-
-_PALETTE_ARRAY = np.asarray(SPECTRA6_PALETTE, dtype=np.float32)
+# Quantization must target the same six inks the gamut evidence is computed
+# against, so both come from the one canonical profile in eink.palette.
+_PALETTE_ARRAY = np.asarray(get_palette("spectra6").colours, dtype=np.float32)
 _BAYER_4X4 = np.asarray(
     [
         [0, 8, 2, 10],
