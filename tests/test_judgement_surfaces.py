@@ -486,6 +486,23 @@ def test_a_gigapixel_master_is_not_reported_as_damaged(tmp_path) -> None:
         Image.MAX_IMAGE_PIXELS = original
 
 
+def test_master_health_restores_pillow_pixel_ceiling(tmp_path) -> None:
+    """_master_health lifts the bomb ceiling only for its own decode."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    src = tmp_path / "master.jpeg"
+    buf = BytesIO()
+    Image.new("RGB", (20, 20), (1, 2, 3)).save(buf, format="JPEG")
+    src.write_bytes(buf.getvalue())
+
+    sentinel = 12345
+    Image.MAX_IMAGE_PIXELS = sentinel
+    assert store._master_health(src) == "ok"
+    assert Image.MAX_IMAGE_PIXELS == sentinel
+
+
 def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -> None:
     """The acquisition list is invalidated by ANY sidecar write, which the
     growth tick does constantly. Re-opening every acquired master each time

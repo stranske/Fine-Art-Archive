@@ -369,9 +369,13 @@ def _master_health(path: Path) -> str:
             # because DecompressionBombError landed in the except below. The
             # review card then told the owner not to judge a picture that was
             # never damaged.
-            Image.MAX_IMAGE_PIXELS = None
-            with Image.open(path) as im:
-                im.load()
+            prev_max = Image.MAX_IMAGE_PIXELS
+            try:
+                Image.MAX_IMAGE_PIXELS = None
+                with Image.open(path) as im:
+                    im.load()
+            finally:
+                Image.MAX_IMAGE_PIXELS = prev_max
         return "ok"
     except Exception:  # noqa: BLE001 - any decode failure means unusable
         return "truncated"
