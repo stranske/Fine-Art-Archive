@@ -83,7 +83,7 @@ def test_a_ulan_match_wins_even_over_a_perfect_name_match(monkeypatch):
     """ULAN is a claim of identity, not a guess. It has to be checked and accepted BEFORE fuzzy
     matching runs at all — otherwise a museum record with both an exact bridge and a merely
     similar name is decided by the weaker signal."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1", "Q2"),
         wbgetentities=_entities(
             Q1=_human(name="Rembrandt van Rijn", ulan="500011051"),
@@ -98,7 +98,7 @@ def test_a_ulan_match_wins_even_over_a_perfect_name_match(monkeypatch):
 
 
 def test_no_ulan_supplied_skips_straight_to_fuzzy_matching(monkeypatch):
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"),
         wbgetentities=_entities(Q1=_human(name="Rembrandt van Rijn", ulan="500011051")),
     )
@@ -112,7 +112,7 @@ def test_no_ulan_supplied_skips_straight_to_fuzzy_matching(monkeypatch):
 def test_a_ulan_that_matches_nobody_falls_through_to_fuzzy_matching():
     """The source's ULAN may simply be wrong or point at a record Wikidata does not carry P245
     for. Refusing to fall back would throw away a perfectly good name match."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"),
         wbgetentities=_entities(Q1=_human(name="Rembrandt van Rijn", ulan="500011051")),
     )
@@ -134,7 +134,7 @@ def test_ulan_values_are_cleaned_before_comparison():
     test passed for a reason that had nothing to do with what it claimed to check. Isolating the
     ULAN path means only a match via P245 can produce a result here at all.
     """
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"),
         wbgetentities=_entities(Q1=_human(name="An Unrelated Name", ulan="  500011051  ")),
     )
@@ -153,7 +153,7 @@ def test_ulan_values_are_cleaned_before_comparison():
 def test_the_best_scoring_human_candidate_wins():
     """Multiple search hits can plausibly be humans; the closest name to the query is the
     answer, not the first or the last in the list."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1", "Q2"),
         wbgetentities=_entities(
             Q1=_human(name="Rembrandt Harmenszoon"),
@@ -183,7 +183,7 @@ def test_a_match_at_the_shared_threshold_is_accepted():
     ratio = SequenceMatcher(None, fold_name(_QUERY), fold_name(_JUST_ABOVE)).ratio()
     assert ratio >= WikidataProvider.ARTIST_NAME_MATCH_MIN  # the fixture actually clears the bar
 
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"), wbgetentities=_entities(Q1=_human(name=_JUST_ABOVE))
     )
 
@@ -197,7 +197,7 @@ def test_a_match_just_below_the_shared_threshold_is_rejected():
     ratio = SequenceMatcher(None, fold_name(_QUERY), fold_name(_JUST_BELOW)).ratio()
     assert ratio < WikidataProvider.ARTIST_NAME_MATCH_MIN  # the fixture actually misses the bar
 
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"), wbgetentities=_entities(Q1=_human(name=_JUST_BELOW))
     )
 
@@ -212,7 +212,7 @@ def test_the_endpoints_threshold_is_governed_by_the_shared_constant_not_a_privat
     endpoint accepts too. A private copy of the literal held the same value today and would
     have gone on doing so right up until someone tuned the constant and reasonably expected
     both callers to move — which is exactly the drift this test exists to make impossible."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"), wbgetentities=_entities(Q1=_human(name=_JUST_ABOVE))
     )
     ratio = SequenceMatcher(None, fold_name(_QUERY), fold_name(_JUST_ABOVE)).ratio()
@@ -234,7 +234,7 @@ def test_aliases_are_matched_too_not_only_the_primary_label():
     """A search hit's Wikidata LABEL may be formal ("Rembrandt Harmenszoon van Rijn") while a
     museum record uses a common form ("Rembrandt"). Aliases are what bridge the two without
     dragging the acceptance threshold down for everyone."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"),
         wbgetentities=_entities(
             Q1=_human(name="Rembrandt Harmenszoon van Rijn", extra_names=("Rembrandt",))
@@ -249,7 +249,7 @@ def test_aliases_are_matched_too_not_only_the_primary_label():
 def test_a_non_human_candidate_is_excluded_from_fuzzy_matching_even_with_a_perfect_name():
     """A painting or an award can share a name with its subject. Only P31=Q5 candidates may be
     matched, however close the name."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1"),
         wbgetentities=_entities(Q1=_non_human(name="Rembrandt van Rijn")),
     )
@@ -261,7 +261,7 @@ def test_a_non_human_candidate_is_excluded_from_fuzzy_matching_even_with_a_perfe
 
 
 def test_a_non_human_candidate_does_not_block_a_human_one_further_down(monkeypatch):
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1", "Q2"),
         wbgetentities=_entities(
             Q1=_non_human(name="Rembrandt van Rijn"),
@@ -288,7 +288,7 @@ def test_a_failed_search_request_yields_no_match_not_an_exception():
 
 @pytest.mark.parametrize("hits", [{}, {"search": "not a list"}, {"search": None}])
 def test_a_malformed_search_response_yields_no_match(hits):
-    provider, client = _provider(wbsearchentities=hits)
+    provider, _ = _provider(wbsearchentities=hits)
 
     assert provider.find_artist("Someone", ulan=None) == (None, None)
 
@@ -304,7 +304,7 @@ def test_an_empty_search_result_set_yields_no_match_without_a_second_request():
 def test_search_hits_with_unusable_ids_are_dropped_not_fatal():
     """A hit missing an `id`, or one that isn't a clean QID, must not crash the batch — it is
     simply not a candidate."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities={"search": [{"id": "not-a-qid"}, {}, {"id": "Q1"}]},
         wbgetentities=_entities(Q1=_human(name="Someone")),
     )
@@ -315,7 +315,7 @@ def test_search_hits_with_unusable_ids_are_dropped_not_fatal():
 
 
 def test_a_failed_entities_lookup_yields_no_match():
-    provider, client = _provider(wbsearchentities=_search("Q1"), wbgetentities=None)
+    provider, _ = _provider(wbsearchentities=_search("Q1"), wbgetentities=None)
 
     assert provider.find_artist("Someone", ulan=None) == (None, None)
 
@@ -323,7 +323,7 @@ def test_a_failed_entities_lookup_yields_no_match():
 def test_an_entity_missing_from_the_response_is_skipped_not_fatal():
     """`wbgetentities` can omit an id it was asked for (a redirect, a deleted item). The
     remaining candidates must still be considered."""
-    provider, client = _provider(
+    provider, _ = _provider(
         wbsearchentities=_search("Q1", "Q2"),
         wbgetentities=_entities(Q2=_human(name="Someone")),  # Q1 absent
     )
