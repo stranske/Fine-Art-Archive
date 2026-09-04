@@ -16,6 +16,10 @@ GETTY_URIS = {
 }
 
 
+def _json_object(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 @dataclass(frozen=True)
 class GettyIds:
     ulan: str | None = None
@@ -127,10 +131,15 @@ def _getty_id_from_wikidata(qid: str | None, *, vocabulary: str, timeout: int) -
         data = _read_json(url, timeout=timeout)
     except Exception:
         return None
-    entity = (data.get("entities") or {}).get(qid) or {}
-    claims = entity.get("claims") or {}
-    for claim in claims.get(property_id, []) or []:
-        value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+    entity = _json_object(_json_object(data.get("entities")).get(qid))
+    claims = _json_object(entity.get("claims"))
+    property_claims = claims.get(property_id)
+    if not isinstance(property_claims, list):
+        return None
+    for claim in property_claims:
+        mainsnak = _json_object(_json_object(claim).get("mainsnak"))
+        datavalue = _json_object(mainsnak.get("datavalue"))
+        value = datavalue.get("value")
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
@@ -156,8 +165,8 @@ def _getty_id_from_reconcile(name: str | None, *, vocabulary: str, timeout: int)
         data = _read_json(url, timeout=timeout)
     except Exception:
         return None
-    results = (data.get("q0") or {}).get("result") or []
-    if not results:
+    results = _json_object(data.get("q0")).get("result")
+    if not isinstance(results, list) or not results:
         return None
     return _extract_getty_id(results[0])
 
@@ -165,7 +174,8 @@ def _getty_id_from_reconcile(name: str | None, *, vocabulary: str, timeout: int)
 def _read_json(url: str, *, timeout: int) -> dict[str, Any]:
     req = urllib.request.Request(url, headers={"User-Agent": "FAA/0.2"})
     with urllib.request.urlopen(req, timeout=timeout) as response:
-        return json.loads(response.read())
+        payload = json.loads(response.read())
+    return _json_object(payload)
 
 
 def _extract_getty_id(value: Any) -> str | None:

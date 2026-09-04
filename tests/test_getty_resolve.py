@@ -5,13 +5,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from fine_art_archive.identity.getty import enrich_sidecar_getty  # noqa: E402
+from fine_art_archive.identity import getty  # noqa: E402
+from fine_art_archive.identity.getty import (  # noqa: E402
+    GettyIds,
+    enrich_sidecar_getty,
+    resolve_getty_ids,
+)
 
 
 class _Response:
-    def __init__(self, payload: dict[str, Any]):
+    def __init__(self, payload: Any):
         self._payload = payload
 
     def __enter__(self) -> _Response:
@@ -142,6 +149,89 @@ def test_plain_string_content_tags_are_cleaned_before_reconcile(monkeypatch):
 
     assert enriched["stable_identifiers"]["aat"] == "http://vocab.getty.edu/aat/300041273"
     assert not any("%22+++%22" in url for url in seen_urls)
+
+
+def test_malformed_wikidata_claim_is_skipped_before_a_valid_claim(monkeypatch):
+    ulan_uri = "http://vocab.getty.edu/ulan/500030502"
+
+    def fake_urlopen(request, timeout):  # noqa: ANN001
+        assert "Special:EntityData/Q173223.json" in request.full_url
+        return _Response(
+            {
+                "entities": {
+                    "Q173223": {
+                        "claims": {
+                            "P245": [
+                                None,
+                                {"mainsnak": {"datavalue": {"value": ulan_uri}}},
+                            ]
+                        }
+                    }
+                }
+            }
+        )
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    resolved = resolve_getty_ids(
+        name="Mary Cassatt",
+        wikidata_q="Q173223",
+        vocabulary="ulan",
+    )
+
+    assert resolved.ulan == ulan_uri
+
+
+def test_malformed_reconcile_shapes_degrade_to_null(monkeypatch):
+    payloads = iter([[], {"q0": {"result": {"id": "not-a-result-list"}}}])
+
+    def fake_urlopen(request, timeout):  # noqa: ANN001
+        assert "services.getty.edu/vocab/reconcile" in request.full_url
+        return _Response(next(payloads))
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    top_level = resolve_getty_ids(name="Unknown Artist", vocabulary="ulan")
+    nested_result = resolve_getty_ids(name="Unknown Artist", vocabulary="ulan")
+
+    assert top_level.ulan is None
+    assert nested_result.ulan is None
+
+
+def test_content_tag_resolution_skips_unusable_entries(monkeypatch):
+    seen: list[str | None] = []
+
+    def fake_resolve_getty_ids(**kwargs):  # noqa: ANN003
+        name = kwargs["name"]
+        seen.append(name)
+        if name == "painting":
+            return GettyIds(aat="http://vocab.getty.edu/aat/300033618")
+        return GettyIds()
+
+    monkeypatch.setattr(getty, "resolve_getty_ids", fake_resolve_getty_ids)
+
+    resolved = getty._resolve_first_content_tag(
+        {"content_tags": [17, {"label": "unknown"}, {"name": "painting"}]},
+        timeout=3,
+    )
+
+    assert resolved == "http://vocab.getty.edu/aat/300033618"
+    assert seen == ["unknown", "painting"]
+    assert getty._resolve_first_content_tag({"content_tags": "painting"}, timeout=3) is None
+    assert (
+        getty._resolve_first_content_tag({"content_tags": [None, {"label": "unknown"}]}, timeout=3)
+        is None
+    )
+
+
+def test_unsupported_getty_vocabulary_is_rejected_before_network(monkeypatch):
+    def fail_urlopen(*_args, **_kwargs):
+        raise AssertionError("unsupported vocabulary must not make a request")
+
+    monkeypatch.setattr("urllib.request.urlopen", fail_urlopen)
+
+    with pytest.raises(ValueError, match="unsupported Getty vocabulary: people"):
+        resolve_getty_ids(name="Mary Cassatt", vocabulary="people")
 
 
 def test_schema_allows_getty_stable_identifier_fields():
