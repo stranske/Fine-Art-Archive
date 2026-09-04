@@ -248,3 +248,75 @@ def test_a_genuine_enlargement_still_passes_the_crop_test(archive) -> None:
     verdict = pvu.evaluate(_row("aaaaaaa-a-work", cand), _claims(_row("aaaaaaa-a-work", cand)))
     assert verdict["status"] == "READY", verdict["reason"]
     assert "crop test clear" in verdict["reason"]
+
+
+def test_allow_unverified_promotes_only_an_overridable_refusal(archive) -> None:
+    """The flag must do what it advertises — and no more.
+
+    Advertising `--allow-unverified` while never reading it, as the first cut
+    did, is this area's recurring defect in miniature: an operator told to run
+    something that does nothing.
+    """
+    works, _staging, put_work, put_candidate = archive
+    # Same aspect on both sides but the candidate is SMALLER, so the crop test
+    # can prove nothing either way -> an overridable refusal.
+    work_dir = put_work("aaaaaaa-a-work", "Q123")
+    meta = json.loads((work_dir / "meta.json").read_text())
+    meta["files"]["master"]["dimensions_px"] = [4000, 4800]
+    (work_dir / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+    cand = put_candidate("smaller", "Q123")
+    cand_meta = json.loads((cand.parent / "meta.json").read_text())
+    cand_meta["files"]["master"]["dimensions_px"] = [1000, 1200]
+    (cand.parent / "meta.json").write_text(json.dumps(cand_meta), encoding="utf-8")
+
+    row = _row("aaaaaaa-a-work", cand)
+    verdict = pvu.evaluate(row, _claims(row))
+    assert verdict["status"] == "REFUSED"
+    assert verdict["overridable"] is True
+    # Everything apply_swap needs must survive an overridable refusal, or the
+    # flag would have nothing to act on.
+    assert verdict["candidate"] and verdict["master"] and verdict["work_qid"]
+
+
+def test_allow_unverified_never_lifts_a_protected_verdict(archive) -> None:
+    works, _staging, put_work, put_candidate = archive
+    work_dir = put_work("aaaaaaa-las-meninas", "Q297")
+    meta = json.loads((work_dir / "meta.json").read_text())
+    meta["files"]["master"]["dimensions_px"] = [16875, 30000]  # 9:16 display crop
+    (work_dir / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
+    cand = put_candidate("uncropped", "Q297")
+    cand_meta = json.loads((cand.parent / "meta.json").read_text())
+    cand_meta["files"]["master"]["dimensions_px"] = [26065, 30000]
+    (cand.parent / "meta.json").write_text(json.dumps(cand_meta), encoding="utf-8")
+
+    row = _row("aaaaaaa-las-meninas", cand)
+    verdict = pvu.evaluate(row, _claims(row))
+    assert verdict["status"] == "REFUSED"
+    assert verdict["overridable"] is False, "no flag may lift a protected crop"
+
+
+def test_an_unmeasured_pass_does_not_claim_the_crop_test_was_clear(archive) -> None:
+    """ "Nothing to compare" and "compared, and clear" must not read the same."""
+    _works, _staging, put_work, put_candidate = archive
+    put_work("aaaaaaa-a-work", "Q123")  # no dimensions_px on either side
+    cand = put_candidate("better", "Q123")
+    row = _row("aaaaaaa-a-work", cand)
+    verdict = pvu.evaluate(row, _claims(row))
+    assert verdict["status"] == "READY"
+    assert verdict["crop_measured"] is False
+    assert "crop test clear" not in verdict["reason"]
+    assert "no dimensions" in verdict["reason"]
+
+
+def test_a_malformed_candidate_sidecar_is_refused_not_raised(archive) -> None:
+    """One bad sidecar must not abort the whole evaluation."""
+    _works, _staging, put_work, put_candidate = archive
+    put_work("aaaaaaa-a-work", "Q123")
+    cand = put_candidate("broken", "Q123")
+    cand_meta = json.loads((cand.parent / "meta.json").read_text())
+    cand_meta["files"]["master"]["dimensions_px"] = [None, 100]
+    (cand.parent / "meta.json").write_text(json.dumps(cand_meta), encoding="utf-8")
+
+    row = _row("aaaaaaa-a-work", cand)
+    verdict = pvu.evaluate(row, _claims(row))  # must not raise
+    assert verdict["status"] in {"READY", "REFUSED"}

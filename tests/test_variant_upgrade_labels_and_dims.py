@@ -149,12 +149,17 @@ def test_stale_row_command_names_a_script_that_exists(
     detector is a WORKSPACE script — no such file in a checkout. A gate that
     names a drain nobody can run is the defect this whole area keeps repeating.
     """
-    command = api_main.VARIANT_DETECT_COMMAND
-    script = command.split(" ", 1)[1]
-    assert Path(
-        script
-    ).is_absolute(), "a relative command runs in whatever directory the shell is in"
-    assert Path(script).name == "detect_variant_upgrades.py"
+    import shlex
+
+    # shlex.split, not a split on the first space: the workspace directory is
+    # named "Claude Project", so a naive split reports a path that looks right
+    # while a shell would tear it in half. Tokenising the way a shell does is
+    # the only way this test can tell a runnable command from a broken one.
+    tokens = shlex.split(api_main.VARIANT_DETECT_COMMAND)
+    assert len(tokens) == 2, f"command must be interpreter + one path, got {tokens}"
+    script = Path(tokens[1])
+    assert script.is_absolute(), "a relative command runs in whatever directory the shell is in"
+    assert script.name == "detect_variant_upgrades.py"
 
 
 # --------------------------------------------------------------------------

@@ -50,14 +50,45 @@ class CropGate:
     measured: bool = True
 
 
+def _positive_int(value: Any) -> int | None:
+    """A usable pixel count, or None for anything that is not one.
+
+    Sidecars are written by several tools and one of them is a workspace script
+    this repo does not own, so `dimensions_px` arrives as whatever they put
+    there. `[None, 100]` and `[nan, 100]` both raise inside `int()`, and this
+    runs on the path to a REFUSAL — a malformed candidate sidecar aborting the
+    whole evaluation instead of being refused is the opposite of what a safety
+    gate is for. Zero and negatives are rejected too: they parse fine and then
+    produce an aspect of 0.0 or -0.05, which is worse than no aspect at all
+    because the crop test would reason from it.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if value != value or value in (float("inf"), float("-inf")):  # NaN / infinities
+        return None
+    number = int(value)
+    return number if number > 0 else None
+
+
 def master_facts(meta: dict[str, Any]) -> tuple[float | None, int | None, tuple[int, int] | None]:
-    """(aspect, size_bytes, pixels) for a sidecar's master, as far as it records them."""
+    """(aspect, size_bytes, pixels) for a sidecar's master, as far as it records them.
+
+    Anything unusable comes back None. Never raises: see `_positive_int`.
+    """
     block = (meta.get("files") or {}).get("master") or {}
     px = block.get("dimensions_px")
-    pixels = (int(px[0]), int(px[1])) if isinstance(px, (list, tuple)) and len(px) == 2 else None
-    aspect = pixels[0] / pixels[1] if pixels and pixels[1] else None
+    pixels = None
+    if isinstance(px, (list, tuple)) and len(px) == 2:
+        width, height = _positive_int(px[0]), _positive_int(px[1])
+        if width is not None and height is not None:
+            pixels = (width, height)
+    aspect = pixels[0] / pixels[1] if pixels else None
     size = block.get("size_bytes")
-    return aspect, (int(size) if isinstance(size, int) else None), pixels
+    return (
+        aspect,
+        (int(size) if isinstance(size, int) and not isinstance(size, bool) else None),
+        pixels,
+    )
 
 
 def crop_gate(held: dict[str, Any], candidate: dict[str, Any]) -> CropGate:

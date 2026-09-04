@@ -182,21 +182,34 @@ def evaluate(row: dict[str, str], claimed_by: Counter[str]) -> dict[str, Any]:
     # duplicate. `display/crops.py` states the rule: nothing may be called a
     # duplicate until classify_pair has been run on it.
     gate = crop_gate(target_meta, candidate_meta or {})
+    # Every field apply_swap needs, carried even on an overridable refusal so
+    # `--allow-unverified` has something to act on.
+    resolved = {
+        **verdict,
+        "candidate": str(candidate),
+        "master": str(masters[0]),
+        "work_qid": target_q,
+        "crop_measured": gate.measured,
+    }
     if not gate.ok:
         return {
-            **verdict,
+            **resolved,
             "status": "REFUSED",
             "reason": gate.reason,
             "overridable": gate.overridable,
         }
 
+    # Do not say "clear" about a test that had nothing to compare. `measured` is
+    # the whole point of the flag: a pass on ignorance that reads like a pass on
+    # evidence is how a silent gate gets built, and rendering both the same way
+    # here would have thrown away the distinction the gate went to the trouble
+    # of reporting.
+    crop_note = "crop test clear" if gate.measured else gate.reason
     return {
-        **verdict,
+        **resolved,
         "status": "READY",
-        "candidate": str(candidate),
-        "master": str(masters[0]),
-        "work_qid": target_q,
-        "reason": f"identity confirmed ({target_q}); crop test clear",
+        "overridable": False,
+        "reason": f"identity confirmed ({target_q}); {crop_note}",
     }
 
 
@@ -292,11 +305,33 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     verdicts = [evaluate(row, claimed_by) for row in selected]
+    # `--allow-unverified` promotes ONLY a refusal the gate marked overridable —
+    # the crop test could not prove redundancy either way. It never reaches a
+    # PROTECTED verdict, an identity mismatch, a shared candidate or a
+    # containment failure, none of which set `overridable`. Advertising the flag
+    # without consuming it, as the first cut of this did, is its own version of
+    # the defect this whole area keeps repeating: an operator told to run
+    # something that does nothing.
+    overridden = []
+    if args.allow_unverified:
+        for v in verdicts:
+            if v["status"] == "REFUSED" and v.get("overridable"):
+                v["status"] = "READY"
+                v["reason"] = f"{v['reason']} — proceeding under --allow-unverified"
+                overridden.append(v)
     ready = [v for v in verdicts if v["status"] == "READY"]
 
     for v in verdicts:
         print(f"  {v['status']:8} {v['wid'][:46]:46} {v['reason']}")
-    print(f"\n{len(ready)} ready, {len(verdicts) - len(ready)} refused")
+    refused = [v for v in verdicts if v["status"] == "REFUSED"]
+    clearable = [v for v in refused if v.get("overridable")]
+    # Blocking beside drainable: "3 refused" reads as bad luck, "3 refused, 0 of
+    # them clearable" says the refusals rest on evidence and no flag will help.
+    print(
+        f"\n{len(ready)} ready, {len(refused)} refused "
+        f"({len(clearable)} clearable with --allow-unverified)"
+        + (f"; {len(overridden)} proceeding unverified" if overridden else "")
+    )
 
     if not args.apply:
         print("\nDRY RUN — nothing changed. Re-run with --apply --grant <ID>.")

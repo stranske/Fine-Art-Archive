@@ -14,6 +14,7 @@ import json
 import math
 import os
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -93,8 +94,20 @@ MANIFEST_REBUILD_COMMAND = f"{sys.executable} {REPO_ROOT / 'scripts' / 'build_ma
 #: name, and the same relative-path trap MANIFEST_REBUILD_COMMAND above exists
 #: to avoid. Absolute by default, overridable for a workspace laid out
 #: differently.
+#: Quoted, because the workspace directory is literally named "Claude Project".
+#: An absolute path that a shell splits on its own space is no more runnable
+#: than the relative one it replaced — the same defect twice, the second time
+#: with a path that is correct and still fails on paste.
 VARIANT_DETECT_COMMAND = os.environ.get("FAA_VARIANT_DETECT_COMMAND") or (
-    f"python3 {DEFAULT_ART_WORKS_ROOT.parent.parent / 'Claude Project' / 'scripts' / 'detect_variant_upgrades.py'}"
+    "python3 "
+    + shlex.quote(
+        str(
+            DEFAULT_ART_WORKS_ROOT.parent.parent
+            / "Claude Project"
+            / "scripts"
+            / "detect_variant_upgrades.py"
+        )
+    )
 )
 
 app = FastAPI(

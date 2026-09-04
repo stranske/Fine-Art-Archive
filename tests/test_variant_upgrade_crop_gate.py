@@ -106,3 +106,70 @@ def test_variant_links_alone_are_enough_evidence_to_refuse() -> None:
 def test_one_sided_dimensions_still_get_a_verdict() -> None:
     gate = crop_gate(meta(pixels=[16875, 30000]), meta())
     assert gate.measured, "one side measurable is still evidence"
+
+
+# --------------------------------------------------------------------------
+# Malformed sidecars. This runs on the path to a REFUSAL, so it must not raise.
+# --------------------------------------------------------------------------
+import math  # noqa: E402
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "px",
+    [
+        [None, 100],
+        [math.nan, 100],
+        [100, math.nan],
+        [math.inf, 100],
+        [0, 100],
+        [100, 0],
+        [-5, 100],
+        ["1000", 100],
+        [100],
+        [],
+        "1000x100",
+        None,
+    ],
+    ids=[
+        "none",
+        "nan-w",
+        "nan-h",
+        "inf",
+        "zero-w",
+        "zero-h",
+        "negative",
+        "string",
+        "one-value",
+        "empty",
+        "not-a-list",
+        "missing",
+    ],
+)
+def test_unusable_dimensions_are_none_never_an_exception(px) -> None:
+    """A workspace tool writes these sidecars; they arrive as whatever it put there.
+
+    `[None, 100]` and `[nan, 100]` both raised inside `int()`. One malformed
+    candidate sidecar aborting the evaluation, instead of being refused, is the
+    opposite of what a safety gate is for.
+    """
+    assert master_facts({"files": {"master": {"dimensions_px": px}}}) == (None, None, None)
+
+
+def test_a_malformed_sidecar_still_gets_a_verdict() -> None:
+    gate = crop_gate(
+        {"files": {"master": {"dimensions_px": [None, 100]}}},
+        meta(pixels=[4000, 4800]),
+    )
+    assert gate.ok is False or gate.ok is True  # the point is that it returned
+    assert isinstance(gate.reason, str)
+
+
+def test_zero_and_negative_never_reach_the_aspect_maths() -> None:
+    """They parse fine and then produce an aspect of 0.0 or -0.05.
+
+    That is worse than no aspect, because the crop test would reason from it.
+    """
+    assert master_facts({"files": {"master": {"dimensions_px": [0, 100]}}})[0] is None
+    assert master_facts({"files": {"master": {"dimensions_px": [-5, 100]}}})[0] is None
