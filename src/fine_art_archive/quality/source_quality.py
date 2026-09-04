@@ -23,7 +23,10 @@ into a SourceQualityAggregate.
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -545,6 +548,33 @@ def write_aggregates(aggregates: dict, out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         yaml.safe_dump(aggregates, f, sort_keys=False, default_flow_style=False, allow_unicode=True)
+
+
+def write_aggregates_atomically(aggregates: dict, out_path: Path) -> None:
+    """Validate and replace an aggregate config without exposing a partial YAML file."""
+    if not isinstance(aggregates, dict) or not isinstance(aggregates.get("sources"), dict):
+        raise ValueError("source-quality aggregates must contain a sources mapping")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = yaml.safe_dump(
+        aggregates, sort_keys=False, default_flow_style=False, allow_unicode=True
+    )
+    # Parse the exact bytes that will be published before replacing the live config.
+    loaded = yaml.safe_load(payload)
+    if not isinstance(loaded, dict) or not isinstance(loaded.get("sources"), dict):
+        raise ValueError("serialized source-quality aggregates are invalid")
+
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{out_path.name}.", suffix=".tmp", dir=out_path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
+            tmp.write(payload)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        os.replace(tmp_name, out_path)
+    except BaseException:
+        with suppress(FileNotFoundError):
+            os.unlink(tmp_name)
+        raise
 
 
 def load_aggregates(path: Path) -> dict:

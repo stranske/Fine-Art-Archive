@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import math
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -222,3 +225,86 @@ def test_host_registry_qid_without_source_chain_fails_loudly(tmp_path: Path) -> 
 
     with pytest.raises(ValueError, match="no acquisition source chain"):
         af.run_acquisition_flow("met", [work], host_qid="Q999", host_registry_path=registry)
+
+
+def _quality_sidecar(path: Path, *, source: str, passes: bool) -> None:
+    if not path.exists():
+        _make_work(path)
+    (path / "meta.json").write_text(
+        json.dumps(
+            {
+                "work_id": path.name,
+                "category": "painting",
+                "year": "1850",
+                "acquisition_provenance": {"source": source, "ts": "2020-01-01T00:00:00+00:00"},
+                "verification": {
+                    "source_quality_inputs": {
+                        "verify_match": passes,
+                        "attribution_match": passes,
+                        "link_alive": passes,
+                        "metadata_completeness": 1.0 if passes else 0.0,
+                    }
+                },
+            }
+        )
+    )
+
+
+def test_refresh_source_quality_cli_rebuilds_config_used_by_assessment(tmp_path: Path) -> None:
+    repo = Path(__file__).resolve().parents[1]
+    works = tmp_path / "works"
+    _quality_sidecar(works / "met-work", source="met", passes=True)
+    _quality_sidecar(works / "rijks-work", source="rijksmuseum", passes=False)
+    registry = tmp_path / "host_registry.yaml"
+    registry.write_text(
+        yaml.safe_dump(
+            {
+                "hosts": {
+                    "met": {
+                        "wikidata_q": "Q1",
+                        "primary_acquisition": {"adapter": "met"},
+                        "fallback_chain": ["rijksmuseum"],
+                    }
+                }
+            },
+            sort_keys=False,
+        )
+    )
+    output = tmp_path / "source_quality.yaml"
+    refresh = [
+        sys.executable,
+        "scripts/refresh_source_quality.py",
+        "--works-root",
+        str(works),
+        "--host-registry",
+        str(registry),
+        "--output",
+        str(output),
+    ]
+    assess = [
+        sys.executable,
+        "scripts/assess_acquisitions.py",
+        "--works-root",
+        str(works),
+        "--host-registry",
+        str(registry),
+        "--source-quality",
+        str(output),
+        "--host-qid",
+        "Q1",
+        "--source",
+        "met",
+    ]
+    subprocess.run(refresh, cwd=repo, check=True, text=True, capture_output=True)
+    first = json.loads(
+        subprocess.run(assess, cwd=repo, check=True, text=True, capture_output=True).stdout
+    )
+    assert first == {"assessed": 2, "selected_source": "met"}
+
+    _quality_sidecar(works / "met-work", source="met", passes=False)
+    _quality_sidecar(works / "rijks-work", source="rijksmuseum", passes=True)
+    subprocess.run(refresh, cwd=repo, check=True, text=True, capture_output=True)
+    second = json.loads(
+        subprocess.run(assess, cwd=repo, check=True, text=True, capture_output=True).stdout
+    )
+    assert second == {"assessed": 2, "selected_source": "rijksmuseum"}
