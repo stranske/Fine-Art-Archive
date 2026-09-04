@@ -413,11 +413,80 @@ def _find_master(work_dir: Path) -> Path | None:
 #: recomputed and one that is merely re-listed is not.
 _MASTER_FACTS: dict[tuple[str, int, int], tuple[tuple[int, int] | None, float | None, str]] = {}
 
+#: Where the memo survives a restart. Keeping it only in memory meant every
+#: server start re-opened all 132 acquired masters before the first /review
+#: could answer -- 29 seconds, on a Dropbox-synced volume where each open()
+#: goes through the sync provider. The runner restarts the server routinely, so
+#: that cost was paid far more often than the archive actually changed.
+MASTER_FACTS_CACHE = env_path(
+    "FAA_MASTER_FACTS_CACHE", REPO_ROOT / "data" / "master_facts_cache.json"
+)
+_MASTER_FACTS_LOADED = False
+_MASTER_FACTS_DIRTY = False
+#: Bounded, so neither the process nor the file grows without limit. The
+#: working set is the acquisition list, which is small.
+_MASTER_FACTS_MAX = 4096
+
+
+def _load_master_facts() -> None:
+    """Warm the memo from disk, once, and never fail because of it.
+
+    A cache that cannot be read is a cache miss, not an error: every entry is
+    recomputable from the file it describes. It is also never trusted blindly --
+    each key carries the file's mtime and size, so a master that has actually
+    changed misses and is re-examined.
+    """
+    global _MASTER_FACTS_LOADED
+    if _MASTER_FACTS_LOADED:
+        return
+    _MASTER_FACTS_LOADED = True
+    try:
+        raw = json.loads(MASTER_FACTS_CACHE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(raw, dict):
+        return
+    for key, value in list(raw.get("entries", {}).items())[:_MASTER_FACTS_MAX]:
+        try:
+            path, mtime, size = key.rsplit("\u0000", 2)
+            px, size_mb, health = value
+            pixels = (int(px[0]), int(px[1])) if px else None
+            # "unchecked" means we could not look. Persisting it would turn one
+            # transient read failure into a permanent verdict, so it is dropped
+            # and recomputed instead.
+            if health not in {"ok", "truncated"}:
+                continue
+            _MASTER_FACTS[(path, int(mtime), int(size))] = (pixels, size_mb, str(health))
+        except (ValueError, TypeError, IndexError):
+            continue
+
+
+def flush_master_facts() -> None:
+    """Persist newly computed facts. Best effort: a failure costs only speed."""
+    global _MASTER_FACTS_DIRTY
+    if not _MASTER_FACTS_DIRTY:
+        return
+    _MASTER_FACTS_DIRTY = False
+    entries = {
+        "\u0000".join((path, str(mtime), str(size))): [list(px) if px else None, mb, health]
+        for (path, mtime, size), (px, mb, health) in _MASTER_FACTS.items()
+        if health in {"ok", "truncated"}
+    }
+    try:
+        MASTER_FACTS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = MASTER_FACTS_CACHE.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps({"entries": entries}), encoding="utf-8")
+        # Atomic, so a torn write cannot replace a good cache.
+        tmp.replace(MASTER_FACTS_CACHE)
+    except OSError:
+        return
+
 
 def _master_facts(
     master: Path | None,
 ) -> tuple[tuple[int, int] | None, float | None, str, bool]:
     """(pixels, size_mb, health, stat_failed) for a master, cached by file identity."""
+    global _MASTER_FACTS_DIRTY
     if master is None:
         return None, None, "unchecked", False
     try:
@@ -426,15 +495,15 @@ def _master_facts(
         # A master can disappear between _find_master() and here. Keep the row
         # useful and make the uncertainty explicit rather than reporting zero.
         return None, None, "unchecked", True
+    _load_master_facts()
     key = (str(master), st.st_mtime_ns, st.st_size)
     hit = _MASTER_FACTS.get(key)
     if hit is None:
         hit = (_image_pixels(master), round(st.st_size / 1e6, 1), _master_health(master))
-        # Bounded, so a long-lived process cannot grow without limit. The
-        # working set is the acquisition list, which is small.
-        if len(_MASTER_FACTS) > 4096:
+        if len(_MASTER_FACTS) > _MASTER_FACTS_MAX:
             _MASTER_FACTS.clear()
         _MASTER_FACTS[key] = hit
+        _MASTER_FACTS_DIRTY = True
     return hit[0], hit[1], hit[2], False
 
 
@@ -524,6 +593,10 @@ def acquisitions_since_epoch(epoch: str | None = None) -> list[dict]:
     rows.sort(key=lambda r: str(r["acquired_at"]), reverse=True)
     _acq_cache["sig"] = sig
     _acq_cache["rows"] = rows
+    # Persist whatever this pass had to compute, so the NEXT process start does
+    # not re-open every master. Written once per rebuild rather than per file:
+    # one write for a scan that touched up to 132 of them.
+    flush_master_facts()
     return list(rows)
 
 

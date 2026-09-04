@@ -73,6 +73,12 @@ automation_logs/
 /data/work_decisions.jsonl
 /data/acquisition_review_events.jsonl
 
+# Per-file facts (pixels, size, whether the master decodes) memoised so a
+# server restart does not re-open every acquired master. Generated-local and
+# derivable: each entry is keyed on its file's path, mtime and size, so a
+# missing or stale cache costs speed and nothing else.
+/data/master_facts_cache.json
+
 # =============================================================================
 # Workflows Consumer Repo - Shared Status Files
 # =============================================================================
