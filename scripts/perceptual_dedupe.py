@@ -32,8 +32,12 @@ from typing import Any, cast
 
 # Paths derive from this file's location (scripts/ lives at the workspace root),
 # so the tool runs unchanged on the Mac and inside the Cowork sandbox mount.
-WS = Path(__file__).resolve().parents[1]
+HERE = Path(__file__).resolve().parent
+WS = HERE.parent
+sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(WS / "src"))
+
+from _paths import default_works_dir  # noqa: E402
 
 from fine_art_archive.collect.dedup_cascade import (  # noqa: E402
     PHASH_BITS,
@@ -44,7 +48,7 @@ from fine_art_archive.collect.dedup_cascade import (  # noqa: E402
 
 ART = WS.parent / "Art" / "works"  # Dropbox/Pictures/Art/works
 STAGE = WS / "staging_acquisitions"
-SIDE = WS / "staging_sidecars"
+SIDE = default_works_dir()
 CACHE = WS / "archive_phash_cache.json"
 HS = PHASH_BITS  # 16x16 -> 256-bit
 SCRIPT_DUPLICATE_DHAM = 10

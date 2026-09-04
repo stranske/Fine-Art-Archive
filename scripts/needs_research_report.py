@@ -37,7 +37,10 @@ from typing import Any, TextIO
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "src"))
+
+from _paths import default_works_dir  # noqa: E402
 
 from fine_art_archive import sidecar  # noqa: E402
 from fine_art_archive.enrichment.holder import _creator_qid  # noqa: E402
@@ -171,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--staging-dir",
         type=Path,
-        default=_env_path("FAA_STAGING_DIR") or ROOT / "staging_sidecars",
+        default=default_works_dir(),
     )
     parser.add_argument("--output-dir", type=Path, default=Path.cwd())
     args = parser.parse_args(argv)

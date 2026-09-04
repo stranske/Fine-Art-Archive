@@ -43,6 +43,11 @@ import urllib.request
 from datetime import UTC
 from pathlib import Path
 
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+from _paths import default_works_dir  # noqa: E402
+
 # Operational data root (the Cowork workspace). Overridable so the committed
 # script isn't pinned to one machine's absolute path.
 ROOT = Path(
@@ -50,7 +55,7 @@ ROOT = Path(
         "FAA_WORKSPACE", "/Users/teacher/Library/CloudStorage/Dropbox/Pictures/Claude Project"
     )
 )
-STAGING = ROOT / "staging_sidecars"
+STAGING = default_works_dir()
 RATINGS_LOG = ROOT / "data" / "ratings_log.jsonl"
 PREVIEW_CSV = ROOT / "subject_tags_v1_preview.csv"
 TAG_METHOD_VERSION = "v1.0"

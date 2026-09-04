@@ -12,8 +12,8 @@
     # list what is available to filter on
     python3 scripts/make_eink_card.py --list
 
-Reads sidecars from FAA_STAGING_DIR (the app's own metadata root — see
-faa_app_data_roots_env) and masters from FAA_ART_WORKS_ROOT, so a card always
+Reads sidecars from FAA_WORKS_DIR (falling back to the retired FAA_STAGING_DIR
+name when explicitly set) and masters from FAA_ART_WORKS_ROOT, so a card always
 reflects what the app shows.
 
 Dry run is the default for --out; you must pass --write to touch the card.
@@ -28,7 +28,12 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(ROOT / "src"))
+
+from _paths import default_works_dir  # noqa: E402
 
 from fine_art_archive.eink import (  # noqa: E402
     MOODS,
@@ -43,12 +48,7 @@ from fine_art_archive.eink import (  # noqa: E402
 )
 from fine_art_archive.eink.sdcard import card_free_space  # noqa: E402
 
-STAGING = Path(
-    os.environ.get(
-        "FAA_STAGING_DIR",
-        Path.home() / "Library/CloudStorage/Dropbox/Pictures/Claude Project/staging_sidecars",
-    )
-).expanduser()
+STAGING = default_works_dir()
 ART = Path(
     os.environ.get(
         "FAA_ART_WORKS_ROOT",
@@ -195,10 +195,7 @@ def main() -> int:
     }
     res = build(sidecars, spec, ratings=load_ratings(RATINGS), dossier_ids=dossier_ids)
 
-    print(
-        f"candidates {res.total_candidates}  matched {res.matched}"
-        f"  selected {len(res.work_ids)}"
-    )
+    print(f"candidates {res.total_candidates}  matched {res.matched}  selected {len(res.work_ids)}")
     if res.coverage["excluded_for_missing_metadata"]:
         print(
             "  dropped for missing metadata: "
