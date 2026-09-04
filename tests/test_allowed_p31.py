@@ -92,3 +92,56 @@ def test_allowed_p31_audit_reports_non_artwork_and_missing() -> None:
 )
 def test_live_allowed_p31_members_are_work_of_art_subclasses() -> None:
     assert audit_allowed_p31_against_wikidata() == []
+
+
+def test_series_of_prints_is_a_group_class() -> None:
+    """Q19960510 is what Hokusai's "Thirty-six Views of Mount Fuji" carries.
+
+    Labels confirmed against live Wikidata 2026-09-02: Q19960510 is "series of
+    prints", a subclass of Q15709879 "artwork series". Q227494 declares it
+    alongside Q1396354 "colour woodcut" — so an acquisition gate that asks
+    whether ANY class is an artwork class sees the woodcut and says yes, and a
+    SERIES identity lands on a single print's sidecar. Being a set is not
+    cancelled by also being a medium.
+    """
+    from fine_art_archive.known_works.artwork_classes import (
+        GROUP_P31,
+        SINGLE_WORK_P31,
+        is_group_class,
+        is_single_work_class,
+    )
+
+    assert "Q19960510" in GROUP_P31
+    assert is_group_class("Q19960510")
+    assert "Q19960510" not in SINGLE_WORK_P31
+    assert not is_single_work_class("Q19960510")
+
+
+def test_an_entity_that_is_both_a_series_and_a_woodcut_classifies_as_a_series() -> None:
+    from fine_art_archive.known_works.artwork_classes import is_series_qid
+
+    def entity(p31=None, p279=None) -> dict:
+        def claim(pid, qids):
+            return {
+                pid: [
+                    {"mainsnak": {"snaktype": "value", "datavalue": {"value": {"id": q}}}}
+                    for q in qids
+                ]
+            }
+
+        claims: dict = {}
+        if p31:
+            claims.update(claim("P31", p31))
+        if p279:
+            claims.update(claim("P279", p279))
+        return {"claims": claims}
+
+    entities = {
+        "Q227494": entity(p31=["Q19960510", "Q1396354"]),
+        "Q19960510": entity(p279=["Q15709879"]),
+        "Q1396354": entity(p279=["Q18219090"]),
+    }
+    assert is_series_qid("Q227494", entities)
+    assert not is_series_qid(
+        "Q1", {"Q1": entity(p31=["Q3305213"]), "Q3305213": entity()}
+    ), "a plain painting is not a series"

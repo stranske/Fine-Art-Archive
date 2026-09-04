@@ -55,7 +55,8 @@ ALLOWED_P31: frozenset[str] = frozenset(
 GROUP_P31: frozenset[str] = frozenset(
     {
         "Q15727816",  # painting series
-        "Q15709879",  # group of paintings
+        "Q15709879",  # artwork series ("thematic group of an artist's works")
+        "Q19960510",  # series of prints ("works of art produced using a print technique")
         "Q18573970",  # artwork series
         "Q17489659",  # group of works of art
     }

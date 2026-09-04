@@ -66,6 +66,7 @@ from fine_art_archive.api.main import (  # noqa: E402
     VARIANT_UPGRADE_CSV,
     VARIANT_UPGRADE_DECISIONS,
 )
+from fine_art_archive.variants import crop_gate  # noqa: E402
 
 APPLIED_LOG = ROOT / "data" / "variant_upgrade_applied.jsonl"
 
@@ -174,13 +175,41 @@ def evaluate(row: dict[str, str], claimed_by: Counter[str]) -> dict[str, Any]:
             "reason": f"different works: target {target_q} vs candidate {candidate_q}",
         }
 
-    return {
+    # Identity says it is the same WORK. It does not say the file about to be
+    # overwritten is redundant. `e2ed232-las-meninas-velazquez` holds a master of
+    # exactly 9:16 -- a crop cut for a frame, with variants[] links -- and the
+    # candidate is the uncropped painting. Same work, both wanted, neither a
+    # duplicate. `display/crops.py` states the rule: nothing may be called a
+    # duplicate until classify_pair has been run on it.
+    gate = crop_gate(target_meta, candidate_meta or {})
+    # Every field apply_swap needs, carried even on an overridable refusal so
+    # `--allow-unverified` has something to act on.
+    resolved = {
         **verdict,
-        "status": "READY",
         "candidate": str(candidate),
         "master": str(masters[0]),
         "work_qid": target_q,
-        "reason": f"identity confirmed ({target_q})",
+        "crop_measured": gate.measured,
+    }
+    if not gate.ok:
+        return {
+            **resolved,
+            "status": "REFUSED",
+            "reason": gate.reason,
+            "overridable": gate.overridable,
+        }
+
+    # Do not say "clear" about a test that had nothing to compare. `measured` is
+    # the whole point of the flag: a pass on ignorance that reads like a pass on
+    # evidence is how a silent gate gets built, and rendering both the same way
+    # here would have thrown away the distinction the gate went to the trouble
+    # of reporting.
+    crop_note = "crop test clear" if gate.measured else gate.reason
+    return {
+        **resolved,
+        "status": "READY",
+        "overridable": False,
+        "reason": f"identity confirmed ({target_q}); {crop_note}",
     }
 
 
@@ -233,6 +262,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--apply", action="store_true", help="perform the swap (needs --grant)")
     parser.add_argument("--grant", help="permissions.md grant ID authorising the replace")
     parser.add_argument(
+        "--allow-unverified",
+        action="store_true",
+        help=(
+            "proceed where the crop test could not prove redundancy. Never lifts a "
+            "PROTECTED verdict, an identity mismatch, or a shared candidate."
+        ),
+    )
+    parser.add_argument(
         "--wid",
         action="append",
         default=[],
@@ -268,11 +305,33 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     verdicts = [evaluate(row, claimed_by) for row in selected]
+    # `--allow-unverified` promotes ONLY a refusal the gate marked overridable —
+    # the crop test could not prove redundancy either way. It never reaches a
+    # PROTECTED verdict, an identity mismatch, a shared candidate or a
+    # containment failure, none of which set `overridable`. Advertising the flag
+    # without consuming it, as the first cut of this did, is its own version of
+    # the defect this whole area keeps repeating: an operator told to run
+    # something that does nothing.
+    overridden = []
+    if args.allow_unverified:
+        for v in verdicts:
+            if v["status"] == "REFUSED" and v.get("overridable"):
+                v["status"] = "READY"
+                v["reason"] = f"{v['reason']} — proceeding under --allow-unverified"
+                overridden.append(v)
     ready = [v for v in verdicts if v["status"] == "READY"]
 
     for v in verdicts:
         print(f"  {v['status']:8} {v['wid'][:46]:46} {v['reason']}")
-    print(f"\n{len(ready)} ready, {len(verdicts) - len(ready)} refused")
+    refused = [v for v in verdicts if v["status"] == "REFUSED"]
+    clearable = [v for v in refused if v.get("overridable")]
+    # Blocking beside drainable: "3 refused" reads as bad luck, "3 refused, 0 of
+    # them clearable" says the refusals rest on evidence and no flag will help.
+    print(
+        f"\n{len(ready)} ready, {len(refused)} refused "
+        f"({len(clearable)} clearable with --allow-unverified)"
+        + (f"; {len(overridden)} proceeding unverified" if overridden else "")
+    )
 
     if not args.apply:
         print("\nDRY RUN — nothing changed. Re-run with --apply --grant <ID>.")
