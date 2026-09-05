@@ -7,6 +7,7 @@ import math
 import stat
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,50 @@ import yaml
 
 from fine_art_archive.collect import acquisition_flow as af
 from fine_art_archive.collect.verify import verify
+from fine_art_archive.quality import source_quality
 from fine_art_archive.quality.source_quality import _infer_work_class, write_aggregates_atomically
+
+
+@pytest.mark.parametrize(
+    ("first_seen", "expected"),
+    [
+        ("2026-08-01T12:00:00", 0.5),
+        ("2026-08-01T12:00:00Z", 0.5),
+        ("2026-08-01T17:30:00+05:30", 0.5),
+        ("2026-08-17T12:00:00", 0.2),
+        ("2026-07-01T12:00:00", 0.8),
+        ("invalid timestamp", 0.2),
+    ],
+)
+def test_score_for_blends_timestamp_formats_in_utc(
+    monkeypatch: pytest.MonkeyPatch, first_seen: str, expected: float
+) -> None:
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 8, 16, 12, tzinfo=UTC).astimezone(tz)
+
+    monkeypatch.setattr(source_quality, "datetime", FrozenDatetime)
+    aggregates = {
+        "warmup_days": 30,
+        "tier_priors": {1: {"verify_pass_rate": 0.2}},
+        "composite_weights": {"verify_pass_rate": 1.0},
+        "confidence_floor_weight": 0.0,
+        "sources": {
+            "cleveland": {
+                "western-painting-19c": {
+                    "host_tier": 1,
+                    "first_seen": first_seen,
+                    "empirical": {"verify_pass_rate": 0.8},
+                }
+            }
+        },
+    }
+
+    score = source_quality.score_for("cleveland", "western-painting-19c", aggregates=aggregates)
+
+    assert math.isfinite(score)
+    assert score == pytest.approx(expected)
 
 
 def _make_work(dirp: Path) -> Path:

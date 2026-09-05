@@ -263,7 +263,10 @@ def _record_blended_stats(rec: dict, aggregates: dict) -> dict[str, float]:
 
     try:
         first = datetime.fromisoformat(str(first_seen).replace("Z", "+00:00"))
-    except ValueError:
+        if first.tzinfo is None:
+            first = first.replace(tzinfo=UTC)
+        first = first.astimezone(UTC)
+    except (ValueError, TypeError):
         blended = rec.get("blended")
         if isinstance(blended, dict):
             return {k: float(v) for k, v in blended.items()}
