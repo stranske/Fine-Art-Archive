@@ -112,6 +112,16 @@ class SignalRow:
         return all(gates)
 
 
+def _parse_source_timestamp(value: object) -> datetime:
+    """Parse source timestamps as UTC without coercing non-string values."""
+    if not isinstance(value, str):
+        raise TypeError("source timestamp must be a string")
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
 @dataclass
 class SourceQualityAggregate:
     source: str
@@ -190,8 +200,8 @@ class SourceQualityAggregate:
             return dict(prior)
         now = now or datetime.now(UTC)
         try:
-            first = datetime.fromisoformat(self.first_seen.replace("Z", "+00:00"))
-        except ValueError:
+            first = _parse_source_timestamp(self.first_seen)
+        except (ValueError, TypeError):
             return dict(prior)
         age_days = (now - first).total_seconds() / 86400.0
         t = max(0.0, min(1.0, age_days / WARMUP_DAYS))
@@ -262,8 +272,8 @@ def _record_blended_stats(rec: dict, aggregates: dict) -> dict[str, float]:
         return dict(prior)
 
     try:
-        first = datetime.fromisoformat(str(first_seen).replace("Z", "+00:00"))
-    except ValueError:
+        first = _parse_source_timestamp(first_seen)
+    except (ValueError, TypeError):
         blended = rec.get("blended")
         if isinstance(blended, dict):
             return {k: float(v) for k, v in blended.items()}
