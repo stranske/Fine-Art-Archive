@@ -28,10 +28,11 @@ from fine_art_archive.quality.source_quality import _infer_work_class, write_agg
         ("2026-08-17T12:00:00", 0.2),
         ("2026-07-01T12:00:00", 0.8),
         ("invalid timestamp", 0.2),
+        (20260801, 0.2),
     ],
 )
 def test_score_for_blends_timestamp_formats_in_utc(
-    monkeypatch: pytest.MonkeyPatch, first_seen: str, expected: float
+    monkeypatch: pytest.MonkeyPatch, first_seen: object, expected: float
 ) -> None:
     class FrozenDatetime(datetime):
         @classmethod

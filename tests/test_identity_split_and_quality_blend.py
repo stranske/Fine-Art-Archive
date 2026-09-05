@@ -11,6 +11,7 @@ source's quality looks like when its own timestamp is unreadable.
 
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -198,3 +199,21 @@ def test_rows_missing_either_half_are_skipped(tmp_path):
         "work_id,master_ingested_from\nw1,bucket/a\n,bucket/orphan\nw3,\n", encoding="utf-8"
     )
     assert _load_legacy_bucket_lookup(csv_path) == {"w1": "bucket/a"}
+
+
+@pytest.mark.parametrize(
+    "first_seen",
+    ["2026-08-01T12:00:00", "2026-08-01T12:00:00Z", "2026-08-01T17:30:00+05:30"],
+)
+def test_aggregate_blends_timestamp_formats_in_utc(first_seen: str) -> None:
+    agg = _agg(first_seen=first_seen, n_verify_total=10, n_verify_pass=8)
+    stats = agg.blended_stats(now=datetime(2026, 8, 16, 12, tzinfo=UTC))
+    assert stats["verify_pass_rate"] == pytest.approx(
+        (0.8 + DEFAULT_TIER_PRIORS[1]["verify_pass_rate"]) / 2
+    )
+    assert all(math.isfinite(value) for value in agg.to_dict()["blended"].values())
+
+
+def test_aggregate_rejects_non_string_timestamp() -> None:
+    agg = _agg(first_seen=20260801, n_verify_total=10, n_verify_pass=8)
+    assert agg.blended_stats(now=datetime(2026, 8, 16, 12, tzinfo=UTC)) == DEFAULT_TIER_PRIORS[1]
