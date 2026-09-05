@@ -1,0 +1,38 @@
+version: 1
+issue: 686
+base: main
+branch: codex/issue-686
+tasks:
+  - id: task-01
+    title: Run `black scripts/vision_tag_works.py tests/test_judgement_surfaces.py
+      tests/test_sidecar_io.py tests/test_selection_lenses.py`.
+    status: done
+    started_at: '2026-09-04T22:57:10Z'
+    finished_at: '2026-09-04T22:57:24Z'
+    commit: 8f15d29bab686e0ea3a59dd4bd159cf86fba3c79
+    notes: []
+  - id: task-02
+    title: Verify `black --check scripts/vision_tag_works.py tests/test_judgement_surfaces.py
+      tests/test_sidecar_io.py tests/test_selection_lenses.py` passes locally.
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-03
+    title: '`black --check scripts/vision_tag_works.py tests/test_judgement_surfaces.py
+      tests/test_sidecar_io.py tests/test_selection_lenses.py` passes in a fresh clone.'
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []
+  - id: task-04
+    title: Main branch `CI` workflow passes on push. *(Agent cannot retry CI pipelines
+      or guarantee CI passes - this depends on external infrastructure and the correctness
+      of the formatting changes.)*
+    status: todo
+    started_at: null
+    finished_at: null
+    commit: ''
+    notes: []

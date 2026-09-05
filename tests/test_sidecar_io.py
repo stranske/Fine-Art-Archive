@@ -64,4 +64,6 @@ def test_script_env_path_handles_empty_home_and_relative(monkeypatch, tmp_path: 
     monkeypatch.setenv("FAA_TEST_PATH", "~/archive")
     assert script_env_path("FAA_TEST_PATH") == Path.home() / "archive"
     monkeypatch.setenv("FAA_TEST_PATH", "relative/archive")
-    assert script_env_path("FAA_TEST_PATH") == Path(__file__).resolve().parents[1] / "relative/archive"
+    assert (
+        script_env_path("FAA_TEST_PATH") == Path(__file__).resolve().parents[1] / "relative/archive"
+    )

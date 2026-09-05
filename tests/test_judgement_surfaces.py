@@ -611,7 +611,7 @@ def test_an_unreadable_facts_cache_is_a_miss_not_a_failure(tmp_path) -> None:
 
 
 def test_could_not_look_is_never_persisted_as_a_verdict(tmp_path) -> None:
-    """"unchecked" means we could not read the file. Writing it down would turn
+    """ "unchecked" means we could not read the file. Writing it down would turn
     one transient failure into a permanent answer."""
     old_cache, old_loaded = store.MASTER_FACTS_CACHE, store._MASTER_FACTS_LOADED
     cache = tmp_path / "facts.json"
