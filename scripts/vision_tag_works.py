@@ -254,9 +254,7 @@ def _load_model() -> None:
     _device = (
         "mps"
         if torch.backends.mps.is_available()
-        else "cuda"
-        if torch.cuda.is_available()
-        else "cpu"
+        else "cuda" if torch.cuda.is_available() else "cpu"
     )
     print(f"Loading {MODEL_NAME} on {_device} ...", file=sys.stderr, flush=True)
     _model = CLIPModel.from_pretrained(MODEL_NAME).to(_device)
