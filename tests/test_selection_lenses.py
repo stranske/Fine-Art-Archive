@@ -21,6 +21,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from fine_art_archive.selection import lenses
 
 SELECT_SCRIPT = Path(__file__).parents[1] / "scripts" / "select_acquisition_candidates.py"
@@ -194,6 +196,63 @@ def test_allocation_renormalises_over_available_lenses() -> None:
 def test_allocation_with_no_available_lenses_is_empty_not_a_crash() -> None:
     assert lenses.allocate(7, [], lenses.LENS_SHARES) == {}
     assert lenses.allocate(0, ["canon"], lenses.LENS_SHARES) == {}
+
+
+@pytest.mark.parametrize("invalid", [math.nan, math.inf, -math.inf, -1.0, 0.0])
+@pytest.mark.parametrize("monthly", [False, True])
+def test_allocation_invalid_shares_use_positive_defaults(invalid: float, monthly: bool) -> None:
+    names = ["canon", "atypicality"]
+    shares = {"canon": invalid, "atypicality": 1.0}
+    defaults = {"canon": lenses.LENS_SHARES["canon"], "atypicality": 1.0}
+    for cap in (1, 2, 10):
+        if monthly:
+            got, _ = lenses.allocate_monthly(cap, names, shares, monthly_cap=100, spent={})
+            expected, _ = lenses.allocate_monthly(cap, names, defaults, monthly_cap=100, spent={})
+        else:
+            got = lenses.allocate(cap, names, shares)
+            expected = lenses.allocate(cap, names, defaults)
+        assert got == expected
+        assert sum(got.values()) == cap
+        assert all(isinstance(value, int) and value >= 0 for value in got.values())
+
+
+@pytest.mark.parametrize("monthly", [False, True])
+def test_allocation_invalid_custom_shares_fall_back_to_equal_weights(monthly: bool) -> None:
+    names = ["custom-a", "custom-b"]
+    for shares in ({"custom-a": math.nan, "custom-b": -1.0}, {}):
+        if monthly:
+            got, _ = lenses.allocate_monthly(10, names, shares, monthly_cap=100, spent={})
+        else:
+            got = lenses.allocate(10, names, shares)
+        assert got == {"custom-a": 5, "custom-b": 5}
+
+
+@pytest.mark.parametrize("monthly", [False, True])
+@pytest.mark.parametrize("other, expected", [(5e307, (8, 4)), (1e308, (6, 6))])
+def test_allocation_large_finite_shares_preserve_proportions(
+    monthly: bool, other: float, expected: tuple[int, int]
+) -> None:
+    names = ["canon", "atypicality"]
+    shares = {"canon": 1e308, "atypicality": other}
+    if monthly:
+        got, _ = lenses.allocate_monthly(12, names, shares, monthly_cap=120, spent={})
+    else:
+        got = lenses.allocate(12, names, shares)
+    assert got == dict(zip(names, expected, strict=True))
+
+
+def test_monthly_invalid_shares_keep_quota_and_fallback_behavior() -> None:
+    names = ["canon", "atypicality"]
+    shares = {"canon": math.nan, "atypicality": -1.0}
+    got, notes = lenses.allocate_monthly(10, names, shares, monthly_cap=100, spent={"canon": 100})
+    assert got == {"canon": 0, "atypicality": 10}
+    assert "monthly share" in notes["canon"]
+
+    got, notes = lenses.allocate_monthly(
+        10, names, shares, monthly_cap=100, spent=dict.fromkeys(names, 100)
+    )
+    assert got == lenses.allocate(10, names, lenses.LENS_SHARES)
+    assert "_all" in notes
 
 
 # --------------------------------------------------------------------------

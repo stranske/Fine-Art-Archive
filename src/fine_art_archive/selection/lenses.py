@@ -276,6 +276,22 @@ def apply_saturation_cap(
 # --------------------------------------------------------------------------
 # Allocation
 # --------------------------------------------------------------------------
+def _allocation_weights(available: Sequence[str], shares: Mapping[str, float]) -> dict[str, float]:
+    """Use positive finite shares, with defaults for invalid or missing values.
+
+    Named lenses fall back to their declared share; custom lenses use 1.0.
+    Scale before summing so even large finite shares cannot overflow the total.
+    """
+    weights: dict[str, float] = {}
+    for name in available:
+        weight = _finite_float(shares.get(name))
+        if weight is None or weight <= 0.0:
+            weight = LENS_SHARES.get(name, 1.0)
+        weights[name] = weight
+    scale = max(weights.values())
+    return {name: weight / scale for name, weight in weights.items()}
+
+
 def allocate(
     batch_cap: int, available: Sequence[str], shares: Mapping[str, float]
 ) -> dict[str, int]:
@@ -288,13 +304,10 @@ def allocate(
     """
     if batch_cap <= 0 or not available:
         return {}
-    weights = {n: float(shares.get(n, 0.0)) for n in available}
+    weights = _allocation_weights(available, shares)
     total = sum(weights.values())
-    if total <= 0:
-        weights = dict.fromkeys(available, 1.0)
-        total = float(len(available))
 
-    exact = {n: batch_cap * w / total for n, w in weights.items()}
+    exact = {n: batch_cap * (w / total) for n, w in weights.items()}
     out = {n: int(v) for n, v in exact.items()}
 
     if batch_cap >= len(available):
@@ -348,13 +361,10 @@ def allocate_monthly(
     if batch_cap <= 0 or not available:
         return {}, {}
 
-    weights = {n: float(shares.get(n, 0.0)) for n in available}
+    weights = _allocation_weights(available, shares)
     total = sum(weights.values())
-    if total <= 0:
-        weights = dict.fromkeys(available, 1.0)
-        total = float(len(available))
 
-    entitlement = {n: monthly_cap * w / total for n, w in weights.items()}
+    entitlement = {n: monthly_cap * (w / total) for n, w in weights.items()}
     left = {n: entitlement[n] - float(spent.get(n, 0)) for n in available}
 
     notes: dict[str, str] = {}
