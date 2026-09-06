@@ -450,7 +450,7 @@ def rated_work_ids() -> set[str]:
     if not RATINGS_LOG.exists():
         return set()
     out = set()
-    for line in RATINGS_LOG.read_text().splitlines():
+    for line in RATINGS_LOG.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -506,7 +506,7 @@ def main() -> int:
             print(f"  [{i}/{len(wids)}] MISSING SIDECAR: {wid}", file=sys.stderr)
             continue
         try:
-            sc = json.loads(sc_path.read_text())
+            sc = json.loads(sc_path.read_text(encoding="utf-8"))
         except Exception as e:
             print(f"  [{i}/{len(wids)}] load failed {wid}: {e}", file=sys.stderr)
             continue
@@ -534,11 +534,12 @@ def main() -> int:
         )
         if args.apply:
             sc["subject"] = subj
-            sc_path.write_text(json.dumps(sc, indent=2, ensure_ascii=False))
+            sc_path.write_text(json.dumps(sc, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # Always emit preview CSV
     if rows:
-        with open(PREVIEW_CSV, "w", newline="") as f:
+        PREVIEW_CSV.parent.mkdir(parents=True, exist_ok=True)
+        with open(PREVIEW_CSV, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
             w.writeheader()
             w.writerows(rows)
