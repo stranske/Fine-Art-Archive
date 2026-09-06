@@ -103,6 +103,49 @@ class TestItAsksTheUsefulQuestion:
         assert next_pair(["a"], []) is None
 
 
+class TestInvalidStrengthsUseTheNeutralDefault:
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), -float("inf")])
+    @pytest.mark.parametrize("key", ["work-a", "work-b"])
+    def test_the_only_pair_is_still_available(self, invalid: float | None, key: str) -> None:
+        strengths: dict[str, float | None] = {"work-a": 1.0, "work-b": 1.0}
+        strengths[key] = invalid
+        assert next_pair(["work-a", "work-b"], [], strengths) == ("work-a", "work-b")
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), -float("inf")])
+    def test_an_invalid_first_gap_does_not_hide_a_closer_pair(self, invalid: float | None) -> None:
+        strengths = {"a": invalid, "b": 4.0, "c": 1.0, "d": 6.0}
+        assert next_pair(["a", "b", "c", "d"], [], strengths) == ("a", "c")
+        assert strengths["a"] is invalid  # Choosing a pair must not rewrite model output.
+
+    @pytest.mark.parametrize("invalid", [None, float("nan"), float("inf"), -float("inf")])
+    def test_a_later_invalid_strength_can_win_in_a_connected_graph(
+        self, invalid: float | None
+    ) -> None:
+        comparisons = [("a", "c"), ("c", "d"), ("d", "b")]
+        strengths = {"a": 4.0, "b": 1.0, "c": invalid, "d": 2.0}
+        assert next_pair(["a", "b", "c", "d"], comparisons, strengths) == ("b", "c")
+
+    def test_missing_strength_uses_the_same_default(self) -> None:
+        assert next_pair(["a", "b", "c"], [], {"b": 4.0, "c": 1.0}) == ("a", "c")
+
+    def test_finite_zero_is_preserved(self) -> None:
+        assert next_pair(["a", "b", "c"], [], {"a": 0.0, "b": 1.0, "c": 0.1}) == (
+            "a",
+            "c",
+        )
+
+    def test_unseen_work_still_connects_first(self) -> None:
+        assert next_pair(["a", "b", "c"], [("a", "b")], {"a": None, "c": float("nan")}) == (
+            "c",
+            "a",
+        )
+
+    def test_disconnected_components_still_bridge_first(self) -> None:
+        assert next_pair(
+            ["a", "b", "c", "d"], [("a", "b"), ("c", "d")], {"a": None, "c": float("nan")}
+        ) == ("a", "c")
+
+
 class TestItSaysHowMuchIsEnough:
     def test_the_floor_is_what_connecting_requires(self) -> None:
         assert minimum_comparisons(17) == 16

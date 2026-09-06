@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 #: Iterations of the MM update. Convergence is fast for the small graphs this
@@ -175,10 +176,18 @@ def fit(comparisons: list[tuple[str, str]]) -> BradleyTerryResult:
     return BradleyTerryResult(p, comps, len(comparisons), iterations, converged, notes)
 
 
+def _get_finite_strength(
+    strengths: Mapping[str, float | None], key: str, default: float = 1.0
+) -> float:
+    """Treat missing or unusable estimates as an un-fitted item's strength."""
+    value = strengths.get(key)
+    return default if value is None or not math.isfinite(value) else value
+
+
 def next_pair(
     candidates: list[str],
     comparisons: list[tuple[str, str]],
-    strengths: dict[str, float] | None = None,
+    strengths: Mapping[str, float | None] | None = None,
 ) -> tuple[str, str] | None:
     """Choose the most informative pair to ask about next.
 
@@ -189,7 +198,8 @@ def next_pair(
        spanning them is defensible at all.
     2. Then ask about the pair whose outcome is least predictable — closest in
        current strength. Comparing an obvious favourite against an obvious
-       also-ran spends a question to learn nothing.
+       also-ran spends a question to learn nothing. Missing, None, or non-finite
+       strength estimates use the neutral default of 1.0.
 
     Returns None when every pair has been asked.
     """
@@ -212,7 +222,11 @@ def next_pair(
             key = (a, b) if a < b else (b, a)
             if key in asked:
                 continue
-            gap = abs(strengths.get(a, 1.0) - strengths.get(b, 1.0)) if strengths else 0.0
+            gap = (
+                abs(_get_finite_strength(strengths, a) - _get_finite_strength(strengths, b))
+                if strengths
+                else 0.0
+            )
             if best is None or gap < best[0]:
                 best = (gap, (a, b))
     return best[1] if best else None
