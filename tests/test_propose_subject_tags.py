@@ -142,8 +142,16 @@ def test_main_preserves_unicode_with_ascii_default(monkeypatch: Any, tmp_path: P
         io_patch.setattr(pst, "open", ascii_csv_open, raising=False)
         assert pst.main() == 0
 
-    assert "中文 · Café" in output.read_bytes().decode("utf-8")
-    assert "Édouard Manet" in output.read_bytes().decode("utf-8")
-    updated = json.loads(sidecar.read_bytes().decode("utf-8"))
+    output_bytes = output.read_bytes()
+    assert "中文 · Café" in output_bytes.decode("utf-8")
+    assert "Édouard Manet" in output_bytes.decode("utf-8")
+
+    sidecar_bytes = sidecar.read_bytes()
+    sidecar_text = sidecar_bytes.decode("utf-8")
+    assert "中文 · Café" in sidecar_text
+    assert "Édouard Manet" in sidecar_text
+    assert "\\u" not in sidecar_text  # ensure_ascii=True would escape these
+
+    updated = json.loads(sidecar_text)
     assert updated["title"] == "中文 · Café"
     assert updated["subject"]["genre"] == "unknown"
