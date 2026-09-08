@@ -205,6 +205,42 @@ def test_parse_semantic_suffix_artist(canonical_corpus):
     assert result.ambiguous is False
 
 
+@pytest.mark.parametrize(
+    "suffix_entry",
+    [
+        pytest.param("", id="surname-only-suffix"),
+        pytest.param("  - name: William Turner\n", id="inventory-only-suffix"),
+        pytest.param(
+            "  - name: William Turner\n    wikidata_qid: Q1\n",
+            id="equally-attested-suffix",
+        ),
+    ],
+)
+def test_parse_semantic_preserves_attested_full_artist(tmp_path, reset_corpus, suffix_entry):
+    # Synthetic corpus: a shorter name must not consume part of an already
+    # attested full name, even when the shorter name is also attested.
+    corpus = tmp_path / "artists.yaml"
+    corpus.write_text(
+        "artists:\n  - name: Joseph Mallord William Turner\n    wikidata_qid: Q1\n" + suffix_entry,
+        encoding="utf-8",
+    )
+    load_canonical_corpus(corpus)
+    stem = "a coastal scene; Joseph Mallord William Turner; 1840; oil on canvas"
+
+    result = parse_semantic(stem)
+
+    assert result.artist == "Joseph Mallord William Turner"
+    assert result.title == "a coastal scene"
+    assert result.year == "1840"
+    assert result.medium == "oil on canvas"
+    assert result.ambiguous is False
+    assert result.notes == []
+    assert [fragment.text for fragment in result.fragments] == stem.split("; ")
+    assert canonical_artist_first(result) == (
+        "Joseph Mallord William Turner; a coastal scene; 1840; oil on canvas"
+    )
+
+
 def test_parse_semantic_ambiguous_competing_artists(canonical_corpus):
     result = parse_semantic("Mary Cassatt; Claude Monet; 1880")
     assert result.ambiguous is True
