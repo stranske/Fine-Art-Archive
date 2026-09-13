@@ -35,6 +35,7 @@ jobs:
     with:
       python-versions: '["3.12", "3.13"]'
       typecheck: true
+      format_check: true
       coverage: true
       # Post-port baseline; ratchet toward 80 as issues #3/#4/#5 add module tests.
       # RAISED 25 -> 81 on 2026-08-26. Measured coverage is 81.45%, so 25 sat 56 points below
