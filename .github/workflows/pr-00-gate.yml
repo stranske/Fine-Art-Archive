@@ -74,7 +74,7 @@ jobs:
       # `false` traces to the initial library-port commit, so it is scaffolding default
       # rather than judgement.
       coverage: true
-      format_check: false  # Using ruff for formatting
+      format_check: true  # Black format check (must match ci.yml)
       # Keep PR feedback fast by skipping heavy integration suites here.
       # Full test coverage remains enforced on main branch CI.
       pytest_markers: "not release and not slow"
