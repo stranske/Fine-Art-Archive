@@ -507,7 +507,7 @@ def test_master_health_restores_pillow_pixel_ceiling(tmp_path) -> None:
         Image.MAX_IMAGE_PIXELS = original
 
 
-def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -> None:
+def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path, monkeypatch) -> None:
     """The acquisition list is invalidated by ANY sidecar write, which the
     growth tick does constantly. Re-opening every acquired master each time
     cost 28 seconds on a Dropbox-synced volume, on the page whose whole purpose
@@ -521,7 +521,13 @@ def test_master_facts_are_not_recomputed_when_only_a_sidecar_changes(tmp_path) -
     Image.new("RGB", (64, 64), (1, 2, 3)).save(buf, format="JPEG")
     src.write_bytes(buf.getvalue())
 
-    store._MASTER_FACTS.clear()
+    # This is an in-memory reuse test. A cache file left by another test may
+    # otherwise repopulate the cleared dict on the first lookup. Isolate both
+    # cache layers and restore the caller's globals when this test finishes.
+    monkeypatch.setattr(store, "MASTER_FACTS_CACHE", tmp_path / "master-facts.json")
+    monkeypatch.setattr(store, "_MASTER_FACTS", {})
+    monkeypatch.setattr(store, "_MASTER_FACTS_LOADED", False)
+    monkeypatch.setattr(store, "_MASTER_FACTS_DIRTY", False)
     first = store._master_facts(src)
     assert len(store._MASTER_FACTS) == 1
     calls = []
