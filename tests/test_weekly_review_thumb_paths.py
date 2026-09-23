@@ -373,3 +373,86 @@ def test_build_weekly_review_writes_json_renderable_by_renderer(
     renderer.main()
     rendered = (reports / f"weekly_review_{DATE}.html").read_text(encoding="utf-8")
     assert ">2</b>works" in rendered
+
+
+def test_builder_uses_valid_raw_artist_qid_when_canonical_qid_is_invalid() -> None:
+    builder = load_builder()
+    meta = {
+        "artist": {
+            "canonical": {"wikidata_q": "not-a-qid"},
+            "wikidata_q": "Q42",
+        }
+    }
+
+    assert builder._artist_qid(meta) == "Q42"
+
+
+def test_collision_totals_are_not_capped_with_display_rows(tmp_path: Path) -> None:
+    builder = load_builder()
+    sidecars = []
+    for index in range(7):
+        qid = f"Q{100 + index}"
+        for copy in range(2):
+            work_id = f"work-{index}-{copy}"
+            (tmp_path / work_id).mkdir()
+            sidecars.append(
+                {
+                    "work_id": work_id,
+                    "title": {"canonical": work_id},
+                    "stable_identifiers": {"wikidata_q": qid},
+                }
+            )
+
+    collisions = builder.collect_collisions(sidecars, tmp_path, limit=6)
+
+    assert collisions["qids_on_multiple"] == 7
+    assert collisions["extra_assignments"] == 7
+    assert len(collisions["worst"]) == 6
+
+
+def test_relative_staging_root_is_resolved_against_repo_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    builder = load_builder()
+    monkeypatch.setenv("FAA_STAGING_ROOT", "tmp/staging")
+
+    assert builder._default_staging_root(Path("/archive/works")) == builder.ROOT / "tmp/staging"
+
+
+def test_builder_normalizes_compact_iso_dates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    builder = load_builder()
+    captured: dict[str, object] = {}
+
+    def fake_build_review(**kwargs: object) -> dict[str, object]:
+        captured.update(kwargs)
+        return {"generated": kwargs["review_date"]}
+
+    def fake_write_review(payload: dict[str, object], reports_dir: Path, review_date: str) -> Path:
+        captured["write_date"] = review_date
+        return reports_dir / f"weekly_review_{review_date}.json"
+
+    monkeypatch.setattr(builder, "build_review", fake_build_review)
+    monkeypatch.setattr(builder, "write_review", fake_write_review)
+
+    assert (
+        builder.main(
+            [
+                "--date",
+                "20990101",
+                "--since",
+                "20981225",
+                "--works-root",
+                str(tmp_path / "works"),
+                "--staging-root",
+                str(tmp_path / "staging"),
+                "--reports-dir",
+                str(tmp_path / "reports"),
+            ]
+        )
+        == 0
+    )
+    assert captured["review_date"] == "2099-01-01"
+    assert captured["since"] == "2098-12-25"
+    assert captured["write_date"] == "2099-01-01"

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 import unicodedata
@@ -23,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fine_art_archive.api.config import DEFAULT_ART_WORKS_ROOT, env_path  # noqa: E402
+from fine_art_archive.identity.artist_qid import artist_qid  # noqa: E402
 from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
     actionable_offenders,
     measure_work_qid_collisions,
@@ -77,13 +77,7 @@ def _artist(meta: Mapping[str, Any]) -> str:
 
 
 def _artist_qid(meta: Mapping[str, Any]) -> str:
-    value = meta.get("artist")
-    if not isinstance(value, Mapping):
-        return ""
-    canonical = value.get("canonical")
-    if isinstance(canonical, Mapping) and canonical.get("wikidata_q"):
-        return str(canonical["wikidata_q"])
-    return str(value.get("wikidata_q") or "")
+    return artist_qid(dict(meta)) or ""
 
 
 def _master(work_dir: Path) -> Path | None:
@@ -331,8 +325,9 @@ def collect_unpromoted(
 def collect_collisions(
     sidecars: Sequence[Mapping[str, Any]], works_root: Path, limit: int = 6
 ) -> dict[str, Any]:
-    actionable = actionable_offenders(sidecars, limit=limit)
     measures = measure_work_qid_collisions(sidecars)
+    all_actionable = actionable_offenders(sidecars, limit=max(len(sidecars), 1))
+    actionable = dict(list(all_actionable.items())[:limit])
     by_id = {str(meta["work_id"]): meta for meta in sidecars}
     worst = []
     for qid, work_ids in actionable.items():
@@ -354,8 +349,8 @@ def collect_collisions(
         )
     return {
         "worst": worst,
-        "qids_on_multiple": len(actionable),
-        "extra_assignments": sum(len(work_ids) - 1 for work_ids in actionable.values()),
+        "qids_on_multiple": measures.actionable_qids,
+        "extra_assignments": sum(len(work_ids) - 1 for work_ids in all_actionable.values()),
         "raw_measures": measures_as_dict(measures),
     }
 
@@ -422,8 +417,7 @@ def write_review(payload: Mapping[str, Any], reports_dir: Path, review_date: str
 
 
 def _default_staging_root(works_root: Path) -> Path:
-    raw = os.environ.get("FAA_STAGING_ROOT")
-    return Path(raw).expanduser() if raw else works_root.parent / "staging_acquisitions"
+    return env_path("FAA_STAGING_ROOT", works_root.parent / "staging_acquisitions")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -441,10 +435,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         review_day = date.fromisoformat(args.date)
-        since = args.since or (review_day - timedelta(days=7)).isoformat()
+        review_date = review_day.isoformat()
+        since = (
+            date.fromisoformat(args.since) if args.since else review_day - timedelta(days=7)
+        ).isoformat()
         staging_root = args.staging_root or _default_staging_root(args.works_root)
         payload = build_review(
-            review_date=args.date,
+            review_date=review_date,
             since=since,
             works_root=args.works_root,
             staging_root=staging_root,
@@ -452,7 +449,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             operations_log=args.operations_log,
             permissions_path=args.permissions,
         )
-        destination = write_review(payload, args.reports_dir, args.date)
+        destination = write_review(payload, args.reports_dir, review_date)
     except (OSError, ValueError, TypeError) as exc:
         parser.error(str(exc))
     print(f"wrote {destination}")
