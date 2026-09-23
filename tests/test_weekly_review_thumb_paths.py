@@ -28,6 +28,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 RENDERER = ROOT / "scripts" / "render_weekly_review.py"
+BUILDER = ROOT / "scripts" / "build_weekly_review.py"
 
 DATE = "2099-01-01"
 MASTER = "/archive/works/wid-001/master.tif"
@@ -42,6 +43,15 @@ G47_SCOPE = "6 sidecars with wrong artist Q-IDs; modify-in-place only"
 def load_renderer() -> ModuleType:
     """`scripts/` is not an importable package, so load the script by path."""
     spec = importlib.util.spec_from_file_location("render_weekly_review", RENDERER)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_builder() -> ModuleType:
+    """Load the repo-owned producer by path, matching the renderer helper."""
+    spec = importlib.util.spec_from_file_location("build_weekly_review", BUILDER)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -283,7 +293,83 @@ def test_filed_issues_block_is_omitted_when_the_payload_carries_none(
 def test_weekly_review_scripts_exist_in_repo() -> None:
     root = Path(__file__).resolve().parents[1]
     assert (root / "scripts/render_weekly_review.py").is_file()
+    assert (root / "scripts/build_weekly_review.py").is_file()
     assert (root / "scripts/make_review_thumbs.py").is_file()
     render = (root / "scripts/render_weekly_review.py").read_text()
     assert "_ACTIVE_REL" in render
     assert "thumbs_{d}/" in render
+
+
+def test_build_weekly_review_writes_json_renderable_by_renderer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    works = tmp_path / "archive" / "works"
+    staging = tmp_path / "archive" / "staging_acquisitions"
+    reports = tmp_path / "reports"
+    works.mkdir(parents=True)
+    staging.mkdir(parents=True)
+    for work_id, title in (("wid-001", "First Work"), ("wid-002", "Second Work")):
+        work_dir = works / work_id
+        work_dir.mkdir()
+        (work_dir / "master.jpg").write_bytes(work_id.encode())
+        (work_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "work_id": work_id,
+                    "title": {"canonical": title},
+                    "artist": {"canonical": {"display_name": "An Artist", "wikidata_q": "Q42"}},
+                }
+            ),
+            encoding="utf-8",
+        )
+    frontier = tmp_path / "discovery_frontier.json"
+    frontier.write_text(json.dumps({"candidates": [], "runs": []}), encoding="utf-8")
+    operations = tmp_path / "operations.log"
+    operations.write_text("", encoding="utf-8")
+    permissions = tmp_path / "permissions.md"
+    permissions.write_text(
+        "| Grant | Owner | Scope | Operation | Term |\n"
+        "| G55 | owner | promote acquisitions | write-new to Art/works | standing |\n",
+        encoding="utf-8",
+    )
+
+    builder = load_builder()
+    assert (
+        builder.main(
+            [
+                "--date",
+                DATE,
+                "--works-root",
+                str(works),
+                "--staging-root",
+                str(staging),
+                "--frontier",
+                str(frontier),
+                "--operations-log",
+                str(operations),
+                "--permissions",
+                str(permissions),
+                "--reports-dir",
+                str(reports),
+            ]
+        )
+        == 0
+    )
+    output = reports / f"weekly_review_{DATE}.json"
+    generated = json.loads(output.read_text(encoding="utf-8"))
+    assert generated["live_works"] == 2
+    assert set(generated) >= {
+        "ungranted",
+        "candidates",
+        "unpromoted",
+        "collisions",
+        "allowed_p31",
+        "live_works",
+    }
+
+    renderer = load_renderer()
+    monkeypatch.setattr(renderer, "REPORTS", reports)
+    monkeypatch.setattr(sys, "argv", ["render_weekly_review.py", "--date", DATE, "--serve-dir", ""])
+    renderer.main()
+    rendered = (reports / f"weekly_review_{DATE}.html").read_text(encoding="utf-8")
+    assert ">2</b>works" in rendered
