@@ -28,6 +28,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 RENDERER = ROOT / "scripts" / "render_weekly_review.py"
+BUILDER = ROOT / "scripts" / "build_weekly_review.py"
 
 DATE = "2099-01-01"
 MASTER = "/archive/works/wid-001/master.tif"
@@ -42,6 +43,15 @@ G47_SCOPE = "6 sidecars with wrong artist Q-IDs; modify-in-place only"
 def load_renderer() -> ModuleType:
     """`scripts/` is not an importable package, so load the script by path."""
     spec = importlib.util.spec_from_file_location("render_weekly_review", RENDERER)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_builder() -> ModuleType:
+    """Load the repo-owned producer by path, matching the renderer helper."""
+    spec = importlib.util.spec_from_file_location("build_weekly_review", BUILDER)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -283,7 +293,166 @@ def test_filed_issues_block_is_omitted_when_the_payload_carries_none(
 def test_weekly_review_scripts_exist_in_repo() -> None:
     root = Path(__file__).resolve().parents[1]
     assert (root / "scripts/render_weekly_review.py").is_file()
+    assert (root / "scripts/build_weekly_review.py").is_file()
     assert (root / "scripts/make_review_thumbs.py").is_file()
     render = (root / "scripts/render_weekly_review.py").read_text()
     assert "_ACTIVE_REL" in render
     assert "thumbs_{d}/" in render
+
+
+def test_build_weekly_review_writes_json_renderable_by_renderer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    works = tmp_path / "archive" / "works"
+    staging = tmp_path / "archive" / "staging_acquisitions"
+    reports = tmp_path / "reports"
+    works.mkdir(parents=True)
+    staging.mkdir(parents=True)
+    for work_id, title in (("wid-001", "First Work"), ("wid-002", "Second Work")):
+        work_dir = works / work_id
+        work_dir.mkdir()
+        (work_dir / "master.jpg").write_bytes(work_id.encode())
+        (work_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "work_id": work_id,
+                    "title": {"canonical": title},
+                    "artist": {"canonical": {"display_name": "An Artist", "wikidata_q": "Q42"}},
+                }
+            ),
+            encoding="utf-8",
+        )
+    frontier = tmp_path / "discovery_frontier.json"
+    frontier.write_text(json.dumps({"candidates": [], "runs": []}), encoding="utf-8")
+    operations = tmp_path / "operations.log"
+    operations.write_text("", encoding="utf-8")
+    permissions = tmp_path / "permissions.md"
+    permissions.write_text(
+        "| Grant | Owner | Scope | Operation | Term |\n"
+        "| G55 | owner | promote acquisitions | write-new to Art/works | standing |\n",
+        encoding="utf-8",
+    )
+
+    builder = load_builder()
+    assert (
+        builder.main(
+            [
+                "--date",
+                DATE,
+                "--works-root",
+                str(works),
+                "--staging-root",
+                str(staging),
+                "--frontier",
+                str(frontier),
+                "--operations-log",
+                str(operations),
+                "--permissions",
+                str(permissions),
+                "--reports-dir",
+                str(reports),
+            ]
+        )
+        == 0
+    )
+    output = reports / f"weekly_review_{DATE}.json"
+    generated = json.loads(output.read_text(encoding="utf-8"))
+    assert generated["live_works"] == 2
+    assert set(generated) >= {
+        "ungranted",
+        "candidates",
+        "unpromoted",
+        "collisions",
+        "allowed_p31",
+        "live_works",
+    }
+
+    renderer = load_renderer()
+    monkeypatch.setattr(renderer, "REPORTS", reports)
+    monkeypatch.setattr(sys, "argv", ["render_weekly_review.py", "--date", DATE, "--serve-dir", ""])
+    renderer.main()
+    rendered = (reports / f"weekly_review_{DATE}.html").read_text(encoding="utf-8")
+    assert ">2</b>works" in rendered
+
+
+def test_builder_uses_valid_raw_artist_qid_when_canonical_qid_is_invalid() -> None:
+    builder = load_builder()
+    meta = {
+        "artist": {
+            "canonical": {"wikidata_q": "not-a-qid"},
+            "wikidata_q": "Q42",
+        }
+    }
+
+    assert builder._artist_qid(meta) == "Q42"
+
+
+def test_collision_totals_are_not_capped_with_display_rows(tmp_path: Path) -> None:
+    builder = load_builder()
+    sidecars = []
+    for index in range(7):
+        qid = f"Q{100 + index}"
+        for copy in range(2):
+            work_id = f"work-{index}-{copy}"
+            (tmp_path / work_id).mkdir()
+            sidecars.append(
+                {
+                    "work_id": work_id,
+                    "title": {"canonical": work_id},
+                    "stable_identifiers": {"wikidata_q": qid},
+                }
+            )
+
+    collisions = builder.collect_collisions(sidecars, tmp_path, limit=6)
+
+    assert collisions["qids_on_multiple"] == 7
+    assert collisions["extra_assignments"] == 7
+    assert len(collisions["worst"]) == 6
+
+
+def test_relative_staging_root_is_resolved_against_repo_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    builder = load_builder()
+    monkeypatch.setenv("FAA_STAGING_ROOT", "tmp/staging")
+
+    assert builder._default_staging_root(Path("/archive/works")) == builder.ROOT / "tmp/staging"
+
+
+def test_builder_normalizes_compact_iso_dates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    builder = load_builder()
+    captured: dict[str, object] = {}
+
+    def fake_build_review(**kwargs: object) -> dict[str, object]:
+        captured.update(kwargs)
+        return {"generated": kwargs["review_date"]}
+
+    def fake_write_review(payload: dict[str, object], reports_dir: Path, review_date: str) -> Path:
+        captured["write_date"] = review_date
+        return reports_dir / f"weekly_review_{review_date}.json"
+
+    monkeypatch.setattr(builder, "build_review", fake_build_review)
+    monkeypatch.setattr(builder, "write_review", fake_write_review)
+
+    assert (
+        builder.main(
+            [
+                "--date",
+                "20990101",
+                "--since",
+                "20981225",
+                "--works-root",
+                str(tmp_path / "works"),
+                "--staging-root",
+                str(tmp_path / "staging"),
+                "--reports-dir",
+                str(tmp_path / "reports"),
+            ]
+        )
+        == 0
+    )
+    assert captured["review_date"] == "2099-01-01"
+    assert captured["since"] == "2098-12-25"
+    assert captured["write_date"] == "2099-01-01"
