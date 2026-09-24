@@ -118,6 +118,21 @@ class TestDimCompat:
     def test_tolerance_is_configurable(self) -> None:
         assert dim_compat("21 x 17 inches", "53 x 46 cm", tolerance=0.10)[0] == "match"
 
+    @pytest.mark.parametrize(
+        "tolerance",
+        [float("nan"), float("inf"), float("-inf"), -0.1, True, "0.05", None],
+    )
+    def test_invalid_tolerance_raises_value_error(self, tolerance: object) -> None:
+        with pytest.raises(ValueError, match="finite non-negative"):
+            dim_compat(
+                "50 x 50 cm",
+                "50 x 50 cm",
+                tolerance=tolerance,  # type: ignore[arg-type]
+            )
+
+    def test_zero_tolerance_is_valid(self) -> None:
+        assert dim_compat("50 x 50 cm", "50 x 50 cm", tolerance=0.0) == ("match", 0.0)
+
 
 class TestDedupeReExports:
     """The workspace ops script imports these private names from `dedupe`."""

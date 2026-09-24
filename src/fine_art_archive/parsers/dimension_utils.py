@@ -17,6 +17,7 @@ dependency cycle.
 
 from __future__ import annotations
 
+import math
 import re
 
 DimCompat = str  # "match" | "mismatch" | "absent"
@@ -102,7 +103,18 @@ def dim_compat(a: str, b: str, *, tolerance: float = 0.05) -> tuple[DimCompat, f
     ``"absent"`` is deliberately distinct from ``"mismatch"``: a missing
     dimension is not evidence of difference, and callers must not treat it as
     such.
+
+    Raises ``ValueError`` when ``tolerance`` is not a finite, non-boolean,
+    non-negative number.
     """
+    if (
+        not isinstance(tolerance, (int, float))
+        or isinstance(tolerance, bool)
+        or not math.isfinite(tolerance)
+        or tolerance < 0.0
+    ):
+        raise ValueError("tolerance must be a finite non-negative number")
+
     parsed_a = parse_dimension_pair(a)
     parsed_b = parse_dimension_pair(b)
     if parsed_a is None or parsed_b is None:
