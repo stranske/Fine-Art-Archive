@@ -264,7 +264,10 @@ def apply_saturation_cap(
         valid_shares[bucket] = finite_share
         # At least one slot for any bucket the archive holds at all: a cap that
         # rounds a real subject down to zero is a ban wearing a cap's clothes.
-        allowed[bucket] = max(1, int(round(batch_cap * finite_share * finite_tolerance)))
+        effective_share = finite_share * finite_tolerance
+        allowed[bucket] = (
+            batch_cap if effective_share >= 1.0 else max(1, int(round(batch_cap * effective_share)))
+        )
 
     taken: dict[str, int] = {}
     held: dict[str, int] = {}

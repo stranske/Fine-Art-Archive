@@ -389,6 +389,22 @@ def test_invalid_saturation_tolerance_uses_neutral_default(tolerance: float) -> 
     assert report.headroom == {"madonna": 0}
 
 
+def test_large_finite_saturation_tolerance_is_bounded_by_batch_capacity() -> None:
+    pool = [{"qid": f"M{i}", "bucket": "madonna"} for i in range(12)]
+
+    kept, report = lenses.apply_saturation_cap(
+        pool,
+        batch_cap=10,
+        archive_shares={"madonna": 1.0},
+        bucket_of=_bucket,
+        tolerance=1e308,
+    )
+
+    assert len(kept) == 10
+    assert report.held == {"madonna": 2}
+    assert report.headroom == {"madonna": 0}
+
+
 # --------------------------------------------------------------------------
 # Monthly allocation — what makes the shares actually bind
 # --------------------------------------------------------------------------
