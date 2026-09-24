@@ -67,6 +67,26 @@ class TestTheSplitAdaptsToTheData:
         assert v.weights == {}
         assert v.notes and math.isnan(v.split_value)
 
+    def test_non_finite_and_non_numeric_ratings_are_ignored(self) -> None:
+        rated = [
+            (_work("Invalid NaN", ["invalid:nan"]), float("nan")),
+            (_work("Invalid positive infinity", ["invalid:positive-infinity"]), float("inf")),
+            (_work("Invalid negative infinity", ["invalid:negative-infinity"]), float("-inf")),
+            (_work("Invalid boolean", ["invalid:boolean"]), True),
+            (_work("Invalid text", ["invalid:text"]), "9"),
+            (_work("Liked", ["valid:liked"]), 9.0),
+            (_work("Disliked", ["valid:disliked"]), 3.0),
+        ]
+
+        v = build(rated)  # type: ignore[arg-type]
+
+        assert v.split_value == 6.0
+        assert v.positive_support == 1
+        assert v.negative_support == 1
+        assert v.weights["tag:valid:liked"] > 0
+        assert v.weights["tag:valid:disliked"] < 0
+        assert not any("invalid:" in feature for feature in v.weights)
+
 
 class TestItSaysWhenItIsUnderpowered:
     def test_a_thin_negative_class_is_flagged(self) -> None:
