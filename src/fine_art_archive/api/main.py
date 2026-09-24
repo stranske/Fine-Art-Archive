@@ -1400,7 +1400,7 @@ def _write_sidecar_atomic(path: Path, payload: dict) -> None:
     fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     tmp_path = Path(tmp_name)
     try:
-        with os.fdopen(fd, "w") as handle:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(encoded)
         if path.exists():
             tmp_path.chmod(stat.S_IMODE(path.stat().st_mode))
@@ -1412,7 +1412,7 @@ def _write_sidecar_atomic(path: Path, payload: dict) -> None:
 
 def _append_subject_tag_event(event: dict) -> None:
     SUBJECT_TAG_EVENTS.parent.mkdir(parents=True, exist_ok=True)
-    with open(SUBJECT_TAG_EVENTS, "a") as f:
+    with open(SUBJECT_TAG_EVENTS, "a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 

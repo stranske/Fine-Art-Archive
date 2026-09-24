@@ -83,6 +83,54 @@ def _save(client: TestClient, **body) -> dict:
     return response.json()
 
 
+def test_atomic_sidecar_writer_forces_utf8_under_ascii_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An ASCII process locale must not prevent sidecars from preserving artist names."""
+    real_fdopen = api_main.os.fdopen
+    encodings: list[str | None] = []
+
+    def ascii_default_fdopen(fd: int, mode: str = "r", *args, **kwargs):
+        encoding = kwargs.get("encoding")
+        encodings.append(encoding)
+        if "b" not in mode and encoding in (None, "locale"):
+            kwargs["encoding"] = "ascii"
+        return real_fdopen(fd, mode, *args, **kwargs)
+
+    monkeypatch.setattr(api_main.os, "fdopen", ascii_default_fdopen)
+    sidecar = tmp_path / "meta.json"
+
+    api_main._write_sidecar_atomic(sidecar, {"artist": {"name": "Albrecht Dürer"}})
+
+    assert encodings == ["utf-8"]
+    assert json.loads(sidecar.read_bytes().decode("utf-8"))["artist"]["name"] == "Albrecht Dürer"
+
+
+def test_subject_tag_event_writer_forces_utf8_under_ascii_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Subject-tag audit events use the same explicit encoding guarantee as sidecars."""
+    events = tmp_path / "subject_tag_events.jsonl"
+    real_open = open
+    encodings: list[str | None] = []
+
+    def ascii_default_open(file, mode: str = "r", *args, **kwargs):
+        encoding = kwargs.get("encoding")
+        if Path(file) == events:
+            encodings.append(encoding)
+            if "b" not in mode and encoding in (None, "locale"):
+                kwargs["encoding"] = "ascii"
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr(api_main, "SUBJECT_TAG_EVENTS", events)
+    monkeypatch.setattr(api_main, "open", ascii_default_open, raising=False)
+
+    api_main._append_subject_tag_event({"reviewer": "Björk", "tag": "café"})
+
+    assert encodings == ["utf-8"]
+    assert json.loads(events.read_bytes().decode("utf-8"))["reviewer"] == "Björk"
+
+
 # ---------------------------------------------------------------------------------------------
 # A feed only advertises what it can serve.
 # ---------------------------------------------------------------------------------------------
