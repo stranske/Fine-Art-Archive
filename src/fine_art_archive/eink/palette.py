@@ -426,6 +426,12 @@ def acuity_blur_radius(ppi: float, viewing_distance_cm: float) -> float:
     resolution limit at that distance. Below this the eye integrates; above it
     the eye resolves. That is exactly the boundary a dither metric must model.
     """
+    geometry = (ppi, viewing_distance_cm)
+    if any(
+        not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value)
+        for value in geometry
+    ):
+        raise ValueError("ppi and viewing_distance_cm must be finite positive numbers")
     if ppi <= 0 or viewing_distance_cm <= 0:
         raise ValueError("ppi and viewing_distance_cm must be positive")
     distance_inches = viewing_distance_cm / 2.54
