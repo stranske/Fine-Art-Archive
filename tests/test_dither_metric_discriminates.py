@@ -184,6 +184,16 @@ class TestTheRadiusComesFromTheViewingGeometry:
         with pytest.raises(ValueError, match="must be positive"):
             acuity_blur_radius(131, bad)
 
+    @pytest.mark.parametrize(
+        "bad",
+        [float("nan"), float("inf"), float("-inf"), True, "150", None],
+    )
+    def test_non_finite_or_non_numeric_geometry_is_refused(self, bad: object) -> None:
+        with pytest.raises(ValueError, match="finite positive numbers"):
+            acuity_blur_radius(bad, 150)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match="finite positive numbers"):
+            acuity_blur_radius(131, bad)  # type: ignore[arg-type]
+
     @pytest.mark.parametrize("bad", [-1, float("nan"), float("inf")])
     def test_a_nonsense_radius_is_still_refused(self, bad: float) -> None:
         src = _plate(32, 32)
