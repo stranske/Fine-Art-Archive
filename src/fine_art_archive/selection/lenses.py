@@ -248,11 +248,26 @@ def apply_saturation_cap(
     bucket with no recorded archive share is uncapped rather than blocked —
     an unknown share must not silently forbid a subject.
     """
+    if batch_cap <= 0:
+        return [], SaturationReport(bucket_shares={}, held={}, headroom={})
+
+    finite_tolerance = _finite_float(tolerance)
+    if finite_tolerance is None or finite_tolerance < 0.0:
+        finite_tolerance = 1.0
+
+    valid_shares: dict[str, float] = {}
     allowed: dict[str, int] = {}
     for bucket, share in archive_shares.items():
+        finite_share = _finite_float(share)
+        if finite_share is None or not 0.0 <= finite_share <= 1.0:
+            continue
+        valid_shares[bucket] = finite_share
         # At least one slot for any bucket the archive holds at all: a cap that
         # rounds a real subject down to zero is a ban wearing a cap's clothes.
-        allowed[bucket] = max(1, int(round(batch_cap * float(share) * tolerance)))
+        effective_share = finite_share * finite_tolerance
+        allowed[bucket] = (
+            batch_cap if effective_share >= 1.0 else max(1, int(round(batch_cap * effective_share)))
+        )
 
     taken: dict[str, int] = {}
     held: dict[str, int] = {}
@@ -270,7 +285,7 @@ def apply_saturation_cap(
         kept.append(cand)
 
     headroom = {b: max(0, allowed[b] - taken.get(b, 0)) for b in allowed}
-    return kept, SaturationReport(bucket_shares=dict(archive_shares), held=held, headroom=headroom)
+    return kept, SaturationReport(bucket_shares=valid_shares, held=held, headroom=headroom)
 
 
 # --------------------------------------------------------------------------

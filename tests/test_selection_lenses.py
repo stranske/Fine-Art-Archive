@@ -345,6 +345,66 @@ def test_bucket_with_no_recorded_share_is_uncapped_not_blocked() -> None:
     assert report.held == {}
 
 
+@pytest.mark.parametrize("batch_cap", [0, -1])
+def test_saturation_cap_with_no_capacity_returns_an_empty_report(batch_cap: int) -> None:
+    pool = [{"qid": "M1", "bucket": "madonna"}]
+
+    kept, report = lenses.apply_saturation_cap(
+        pool, batch_cap=batch_cap, archive_shares={"madonna": 0.5}, bucket_of=_bucket
+    )
+
+    assert kept == []
+    assert report.held == {}
+    assert report.headroom == {}
+
+
+@pytest.mark.parametrize("share", [math.nan, math.inf, -math.inf, -0.1, 1.1])
+def test_non_finite_or_out_of_range_saturation_share_is_uncapped(share: float) -> None:
+    pool = [{"qid": f"M{i}", "bucket": "madonna"} for i in range(3)]
+
+    kept, report = lenses.apply_saturation_cap(
+        pool, batch_cap=1, archive_shares={"madonna": share}, bucket_of=_bucket
+    )
+
+    assert kept == pool
+    assert report.bucket_shares == {}
+    assert report.held == {}
+    assert report.headroom == {}
+
+
+@pytest.mark.parametrize("tolerance", [math.nan, math.inf, -math.inf, -1.0])
+def test_invalid_saturation_tolerance_uses_neutral_default(tolerance: float) -> None:
+    pool = [{"qid": f"M{i}", "bucket": "madonna"} for i in range(3)]
+
+    kept, report = lenses.apply_saturation_cap(
+        pool,
+        batch_cap=10,
+        archive_shares={"madonna": 0.1},
+        bucket_of=_bucket,
+        tolerance=tolerance,
+    )
+
+    assert len(kept) == 1
+    assert report.held == {"madonna": 2}
+    assert report.headroom == {"madonna": 0}
+
+
+def test_large_finite_saturation_tolerance_is_bounded_by_batch_capacity() -> None:
+    pool = [{"qid": f"M{i}", "bucket": "madonna"} for i in range(12)]
+
+    kept, report = lenses.apply_saturation_cap(
+        pool,
+        batch_cap=10,
+        archive_shares={"madonna": 1.0},
+        bucket_of=_bucket,
+        tolerance=1e308,
+    )
+
+    assert len(kept) == 10
+    assert report.held == {"madonna": 2}
+    assert report.headroom == {"madonna": 0}
+
+
 # --------------------------------------------------------------------------
 # Monthly allocation — what makes the shares actually bind
 # --------------------------------------------------------------------------
