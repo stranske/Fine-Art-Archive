@@ -103,6 +103,8 @@ _YEAR_RE = re.compile(r"\b(\d{3,4})\b")
 
 def parse_year(value: Any) -> int | None:
     """Best-effort year from the messy strings real records carry."""
+    if isinstance(value, (int, float)) and value == 0:
+        return 0
     if isinstance(value, (int, float)) and value:
         return int(value)
     if isinstance(value, str):
@@ -398,7 +400,10 @@ def build(
         if spec.sort == "year":
             return (row["year"] if row["year"] is not None else 9999, row["title"])
         if spec.sort == "artist":
-            return (row["artist"].lower(), row["year"] or 9999)
+            return (
+                row["artist"].lower(),
+                row["year"] if row["year"] is not None else 9999,
+            )
         if spec.sort == "title":
             return (row["title"].lower(),)
         return (0,)

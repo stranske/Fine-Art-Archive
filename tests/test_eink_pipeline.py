@@ -192,9 +192,21 @@ def test_artist_filter_unifies_source_spelling_variants():
     assert res.work_ids == ["a", "b"]
 
 
+def test_artist_sort_preserves_astronomical_year_zero():
+    rows = [
+        sidecar("year-1500", artist="Same Artist", year=1500),
+        sidecar("year-zero", artist="Same Artist", year=0),
+    ]
+
+    result = build(rows, PlaylistSpec(sort="artist"))
+
+    assert result.work_ids == ["year-zero", "year-1500"]
+
+
 @pytest.mark.parametrize(
     "raw,expected",
     [
+        (0, 0),
         (1648, 1648),
         ("1648", 1648),
         ("c. 1648", 1648),
