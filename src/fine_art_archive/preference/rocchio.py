@@ -121,7 +121,11 @@ def build(
     question ("do I want this on the wall") and is the one D6 is about; quality
     is about the reproduction, not the choice.
     """
-    scored = [(features_of(sc), s) for sc, s in rated if s is not None]
+    scored = [
+        (features_of(sc), s)
+        for sc, s in rated
+        if isinstance(s, (int, float)) and not isinstance(s, bool) and math.isfinite(s)
+    ]
     notes: list[str] = []
     if not scored:
         return PreferenceVector({}, 0, 0, math.nan, axis, 0, ["no rated works supplied"])
