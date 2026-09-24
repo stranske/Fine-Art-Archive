@@ -166,6 +166,29 @@ class TestInherit:
         assert meta["medium"] == "oil on canvas"
         assert filled == ["year"]
 
+    def test_inherited_mutable_metadata_is_independent_from_the_parent(self) -> None:
+        parent = work(
+            "bbbbbbb-master",
+            artist={"name": "Claude Monet", "aliases": ["Oscar-Claude Monet"]},
+            rights={"credit": {"line": "Example Museum"}},
+        )
+        detail = detail_of("aaaaaaa-detail", "bbbbbbb-master")
+
+        meta, filled, conflicts = inherit(detail, parent)
+
+        assert conflicts == []
+        assert filled == ["artist", "rights"]
+
+        meta["artist"]["name"] = "Changed locally"
+        meta["artist"]["aliases"].append("Local alias")
+        meta["rights"]["credit"]["line"] = "Local credit"
+
+        assert parent["artist"] == {
+            "name": "Claude Monet",
+            "aliases": ["Oscar-Claude Monet"],
+        }
+        assert parent["rights"] == {"credit": {"line": "Example Museum"}}
+
     def test_per_file_facts_do_not_travel(self) -> None:
         parent = work(
             "bbbbbbb-master",

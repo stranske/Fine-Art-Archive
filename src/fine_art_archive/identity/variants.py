@@ -40,6 +40,7 @@ work, which is what the queue rule here supplies.
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -425,7 +426,7 @@ def inherit(
             continue
 
         if _is_empty(meta.get(field)):
-            meta[field] = parent_value
+            meta[field] = copy.deepcopy(parent_value)
             filled.append(field)
         elif meta[field] != parent_value:
             conflicts.append(field)
