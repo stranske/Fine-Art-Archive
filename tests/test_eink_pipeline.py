@@ -219,6 +219,7 @@ def test_artist_sort_preserves_astronomical_year_zero():
         ("2100", 2100),
         ("299", None),
         ("2101", None),
+        (False, None),
     ],
 )
 def test_parse_year_handles_real_record_messiness(raw, expected):

@@ -103,7 +103,11 @@ _YEAR_RE = re.compile(r"\b(\d{3,4})\b")
 
 def parse_year(value: Any) -> int | None:
     """Best-effort year from the messy strings real records carry."""
-    if isinstance(value, (int, float)) and value == 0:
+    if (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and value == 0
+    ):
         return 0
     if isinstance(value, (int, float)) and value:
         return int(value)
