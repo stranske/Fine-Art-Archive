@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fine_art_archive.api.config import DEFAULT_ART_WORKS_ROOT, env_path  # noqa: E402
+from fine_art_archive.api.gates import assert_workspace_files_unforked  # noqa: E402
 from fine_art_archive.identity.artist_qid import artist_qid  # noqa: E402
 from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
     actionable_offenders,
@@ -432,8 +433,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--operations-log", type=Path, default=ROOT / "operations.log")
     parser.add_argument("--permissions", type=Path, default=ROOT / "permissions.md")
     parser.add_argument("--reports-dir", type=Path, default=REPORTS)
+    parser.add_argument(
+        "--skip-workspace-conflict-check",
+        action="store_true",
+        help=(
+            "Skip the default preflight that aborts when Dropbox 'conflicted copy' "
+            "siblings exist beside --operations-log or --frontier."
+        ),
+    )
     args = parser.parse_args(argv)
     try:
+        if not args.skip_workspace_conflict_check:
+            assert_workspace_files_unforked(args.operations_log, args.frontier)
         review_day = date.fromisoformat(args.date)
         review_date = review_day.isoformat()
         since = (
