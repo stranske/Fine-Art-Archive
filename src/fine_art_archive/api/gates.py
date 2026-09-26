@@ -55,9 +55,7 @@ ARTIST_ALLOWLIST = env_path("FAA_ARTIST_ALLOWLIST", REPO_ROOT / "data" / "artist
 # Track A automation (weekly review builder, growth tick) must not place POSIX lock
 # files beside Dropbox-synced workspace state — conflict resolution forks both the
 # data file and any co-located lock. Host-local leases use FAA_AUTOMATION_LOCK_DIR.
-_DEFAULT_AUTOMATION_LOCK_DIR = (
-    Path.home() / ".cache" / "fine-art-archive" / "automation-locks"
-)
+_DEFAULT_AUTOMATION_LOCK_DIR = Path.home() / ".cache" / "fine-art-archive" / "automation-locks"
 AUTOMATION_LOCK_DIR = env_path("FAA_AUTOMATION_LOCK_DIR", _DEFAULT_AUTOMATION_LOCK_DIR)
 
 # Dropbox Desktop embeds this substring in forked filenames.
@@ -113,8 +111,7 @@ def assert_workspace_files_unforked(*data_paths: Path) -> None:
     if problems:
         raise ValueError(
             "Dropbox conflict copies detected beside workspace files; reconcile forks "
-            "before running automation. "
-            + "; ".join(problems)
+            "before running automation. " + "; ".join(problems)
         )
 
 
