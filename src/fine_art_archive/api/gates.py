@@ -52,6 +52,72 @@ FRONTIER_JSON = env_path("FAA_FRONTIER_JSON", DEFAULT_FRONTIER)
 # someone else's schedule.
 ARTIST_ALLOWLIST = env_path("FAA_ARTIST_ALLOWLIST", REPO_ROOT / "data" / "artist_allowlist.jsonl")
 
+# Track A automation (weekly review builder, growth tick) must not place POSIX lock
+# files beside Dropbox-synced workspace state — conflict resolution forks both the
+# data file and any co-located lock. Host-local leases use FAA_AUTOMATION_LOCK_DIR.
+_DEFAULT_AUTOMATION_LOCK_DIR = (
+    Path.home() / ".cache" / "fine-art-archive" / "automation-locks"
+)
+AUTOMATION_LOCK_DIR = env_path("FAA_AUTOMATION_LOCK_DIR", _DEFAULT_AUTOMATION_LOCK_DIR)
+
+# Dropbox Desktop embeds this substring in forked filenames.
+CONFLICTED_COPY_MARKER = "conflicted copy"
+
+
+def is_cloud_synced_workspace_path(path: Path) -> bool:
+    """True when ``path`` sits under a Dropbox CloudStorage sync tree."""
+    parts = {part.casefold() for part in path.expanduser().resolve().parts}
+    return "cloudstorage" in parts and "dropbox" in parts
+
+
+def automation_lock_path(lock_name: str) -> Path:
+    """Return a host-local lock path for Track A automation (never on Dropbox)."""
+    safe = re.sub(r"[^\w.\-]+", "_", lock_name.strip()) or "automation.lock"
+    directory = AUTOMATION_LOCK_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / safe
+
+
+def resolve_automation_lock_path(candidate: Path, lock_name: str) -> Path:
+    """Honor ``candidate`` when safe; otherwise redirect to :func:`automation_lock_path`."""
+    if is_cloud_synced_workspace_path(candidate):
+        return automation_lock_path(lock_name)
+    return candidate.expanduser()
+
+
+def conflicted_copy_siblings(data_path: Path) -> list[str]:
+    """Basenames of Dropbox conflict forks beside ``data_path`` in the same directory."""
+    directory = data_path.parent
+    if not directory.is_dir():
+        return []
+    base = data_path.name
+    marker = CONFLICTED_COPY_MARKER.casefold()
+    found: list[str] = []
+    for entry in directory.iterdir():
+        name = entry.name
+        if name == base:
+            continue
+        lowered = name.casefold()
+        if marker in lowered and name.startswith(base):
+            found.append(name)
+    return sorted(found)
+
+
+def assert_workspace_files_unforked(*data_paths: Path) -> None:
+    """Abort when conflicted-copy siblings exist beside workspace state files."""
+    problems: list[str] = []
+    for path in data_paths:
+        siblings = conflicted_copy_siblings(path)
+        if siblings:
+            problems.append(f"{path}: {', '.join(siblings)}")
+    if problems:
+        raise ValueError(
+            "Dropbox conflict copies detected beside workspace files; reconcile forks "
+            "before running automation. "
+            + "; ".join(problems)
+        )
+
+
 #: Sentinel for "this gate could not measure itself". Distinct from 0.
 UNMEASURED = None
 
