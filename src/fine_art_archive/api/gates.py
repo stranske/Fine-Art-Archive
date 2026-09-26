@@ -71,7 +71,9 @@ def is_cloud_synced_workspace_path(path: Path) -> bool:
 def automation_lock_path(lock_name: str) -> Path:
     """Return a host-local lock path for Track A automation (never on Dropbox)."""
     safe = re.sub(r"[^\w.\-]+", "_", lock_name.strip()) or "automation.lock"
-    directory = AUTOMATION_LOCK_DIR
+    directory = AUTOMATION_LOCK_DIR.expanduser()
+    if is_cloud_synced_workspace_path(directory):
+        directory = _DEFAULT_AUTOMATION_LOCK_DIR
     directory.mkdir(parents=True, exist_ok=True)
     return directory / safe
 
@@ -89,6 +91,8 @@ def conflicted_copy_siblings(data_path: Path) -> list[str]:
     if not directory.is_dir():
         return []
     base = data_path.name
+    stem = data_path.stem
+    suffix = data_path.suffix
     marker = CONFLICTED_COPY_MARKER.casefold()
     found: list[str] = []
     for entry in directory.iterdir():
@@ -96,7 +100,11 @@ def conflicted_copy_siblings(data_path: Path) -> list[str]:
         if name == base:
             continue
         lowered = name.casefold()
-        if marker in lowered and name.startswith(base):
+        follows_full_name = lowered.startswith(base.casefold())
+        inserted_before_suffix = bool(suffix) and (
+            lowered.startswith(stem.casefold()) and lowered.endswith(suffix.casefold())
+        )
+        if marker in lowered and (follows_full_name or inserted_before_suffix):
             found.append(name)
     return sorted(found)
 

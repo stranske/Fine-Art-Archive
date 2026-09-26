@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+import fine_art_archive.api.gates as gates
 from fine_art_archive.api.gates import (
     assert_workspace_files_unforked,
     automation_lock_path,
@@ -20,8 +21,10 @@ def test_conflicted_copy_siblings_detects_dropbox_fork_names(tmp_path: Path) -> 
     ops.write_text("ok\n", encoding="utf-8")
     fork = tmp_path / "operations.log (Teacher's conflicted copy 2026-09-21)"
     fork.write_text("stale\n", encoding="utf-8")
+    before_extension = tmp_path / "operations (Teacher's conflicted copy 2026-09-21).log"
+    before_extension.write_text("older\n", encoding="utf-8")
 
-    assert conflicted_copy_siblings(ops) == [fork.name]
+    assert conflicted_copy_siblings(ops) == sorted([fork.name, before_extension.name])
 
 
 def test_conflicted_copy_siblings_empty_when_clean(tmp_path: Path) -> None:
@@ -49,6 +52,18 @@ def test_assert_workspace_files_unforked_passes_clean_fixture(tmp_path: Path) ->
 
 def test_automation_lock_path_is_not_on_dropbox_tree() -> None:
     lock = automation_lock_path("growth_tick.lock")
+    assert not is_cloud_synced_workspace_path(lock)
+
+
+def test_automation_lock_path_rejects_configured_dropbox_directory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configured = Path.home() / "Library" / "CloudStorage" / "Dropbox" / "faa-locks"
+    monkeypatch.setattr(gates, "AUTOMATION_LOCK_DIR", configured)
+
+    lock = gates.automation_lock_path("growth_tick.lock")
+
+    assert lock.parent == gates._DEFAULT_AUTOMATION_LOCK_DIR
     assert not is_cloud_synced_workspace_path(lock)
 
 
