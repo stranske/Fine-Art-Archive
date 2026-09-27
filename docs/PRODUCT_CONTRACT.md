@@ -13,7 +13,7 @@ Stage works and sidecars → build manifest → browse and filter selection → 
 | C1 | an owner can stage works and sees every valid sidecar as a manifest row and browsable work | manifest CLI; `GET /works` | stage five pairs; compare expected valid IDs and count to manifest and `/works` response | WORKS |
 | C2 | an owner can render a selected work and sees a panel-sized palette-quantized e-ink image | e-ink card CLI; `GET /works/{id}/eink_preview` | render red vs blue masters and request previews; compare hashes/palette | WORKS |
 | C3 | an owner can build a playlist and sees selection and coverage change with filters | `POST /eink/playlists` | compare open-air vs nocturne filters; verify saved selection, metadata and rendering | WORKS |
-| C4 | an owner can generate weekly review and sees a decision page based on current archive measurements | `scripts/build_weekly_review.py --date DATE`; `scripts/render_weekly_review.py --date DATE` | build from explicit 5- vs 2-record archive roots, render the dated JSON, and diff measured claims | WORKS |
+| C4 | an owner can generate weekly review and sees a decision page based on current archive measurements | set `FAA_WORKSPACE`, then run `scripts/build_weekly_review.py --date DATE`; `scripts/render_weekly_review.py --date DATE` | build from a workspace containing the frontier, operations log, permissions and staging inputs; override one path explicitly; render the dated JSON and compare measured claims | WORKS |
 | C5 | an owner can serve companion and feed and sees archive health, works and playable selection | companion script; `/healthz`, `/works`, `/feed/{id}/next` | serve synthetic archive; compare filtered previews and feed result | WORKS |
 
 ## Known gaps at draft time

@@ -35,15 +35,10 @@ from .config import REPO_ROOT, env_path
 # The discovery frontier lives in the acquisition workspace, outside this repo.
 # Configurable because the repo and the workspace are separate trees and CI has
 # neither.
-DEFAULT_FRONTIER = (
-    Path.home()
-    / "Library"
-    / "CloudStorage"
-    / "Dropbox"
-    / "Pictures"
-    / "Claude Project"
-    / "discovery_frontier.json"
+DEFAULT_WORKSPACE = (
+    Path.home() / "Library" / "CloudStorage" / "Dropbox" / "Pictures" / "Claude Project"
 )
+DEFAULT_FRONTIER = DEFAULT_WORKSPACE / "discovery_frontier.json"
 FRONTIER_JSON = env_path("FAA_FRONTIER_JSON", DEFAULT_FRONTIER)
 
 # Artists a person has approved for acquisition despite not yet being

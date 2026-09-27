@@ -419,6 +419,104 @@ def test_relative_staging_root_is_resolved_against_repo_root(
     assert builder._default_staging_root(Path("/archive/works")) == builder.ROOT / "tmp/staging"
 
 
+def test_workspace_file_environment_overrides_take_precedence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    builder = load_builder()
+    frontier = tmp_path / "frontier.json"
+    staging = tmp_path / "staging"
+    monkeypatch.setenv("FAA_WORKSPACE", str(tmp_path / "workspace"))
+    monkeypatch.setenv("FAA_FRONTIER_JSON", str(frontier))
+    monkeypatch.setenv("FAA_STAGING_ROOT", str(staging))
+
+    assert builder._default_frontier() == frontier
+    assert builder._default_staging_root(tmp_path / "unrelated-works") == staging
+
+
+def _write_workspace_inputs(workspace: Path, works: Path) -> None:
+    workspace.mkdir()
+    (workspace / "staging_acquisitions").mkdir()
+    (workspace / "discovery_frontier.json").write_text(
+        json.dumps({"candidates": [], "runs": []}), encoding="utf-8"
+    )
+    (workspace / "permissions.md").write_text(
+        "| Grant | Owner | Scope | Operation | Term |\n"
+        "| G55 | owner | promote acquisitions | write-new to Art/works | standing |\n",
+        encoding="utf-8",
+    )
+    (workspace / "operations.log").write_text(
+        "2026-09-26T12:00:00Z | G55 | promote | /staging/wid-001/master.jpg | "
+        f"{works}/wid-001/master.jpg | automation | promoted\n",
+        encoding="utf-8",
+    )
+
+
+def test_build_weekly_review_uses_workspace_defaults_and_explicit_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    builder = load_builder()
+    workspace = tmp_path / "workspace"
+    works = tmp_path / "archive" / "works"
+    reports = tmp_path / "reports"
+    works.mkdir(parents=True)
+    (works / "wid-001").mkdir()
+    _write_workspace_inputs(workspace, works)
+    monkeypatch.setenv("FAA_WORKSPACE", str(workspace))
+    monkeypatch.delenv("FAA_FRONTIER_JSON", raising=False)
+    monkeypatch.delenv("FAA_STAGING_ROOT", raising=False)
+
+    assert (
+        builder.main(
+            ["--date", "2026-09-27", "--works-root", str(works), "--reports-dir", str(reports)]
+        )
+        == 0
+    )
+    generated = json.loads((reports / "weekly_review_2026-09-27.json").read_text())
+    assert len(generated["ops"]["promotions"]) == 1
+
+    explicit_operations = tmp_path / "explicit-operations.log"
+    explicit_operations.write_text("", encoding="utf-8")
+    assert (
+        builder.main(
+            [
+                "--date",
+                "2026-09-28",
+                "--works-root",
+                str(works),
+                "--operations-log",
+                str(explicit_operations),
+                "--reports-dir",
+                str(reports),
+            ]
+        )
+        == 0
+    )
+    overridden = json.loads((reports / "weekly_review_2026-09-28.json").read_text())
+    assert overridden["ops"]["promotions"] == []
+
+
+def test_build_weekly_review_empty_workspace_fails_without_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    builder = load_builder()
+    workspace = tmp_path / "empty-workspace"
+    works = tmp_path / "works"
+    reports = tmp_path / "reports"
+    workspace.mkdir()
+    works.mkdir()
+    monkeypatch.setenv("FAA_WORKSPACE", str(workspace))
+    monkeypatch.delenv("FAA_FRONTIER_JSON", raising=False)
+    monkeypatch.delenv("FAA_STAGING_ROOT", raising=False)
+
+    with pytest.raises(SystemExit, match="2"):
+        builder.main(
+            ["--date", "2026-09-27", "--works-root", str(works), "--reports-dir", str(reports)]
+        )
+
+    assert "permissions.md" in capsys.readouterr().err
+    assert not (reports / "weekly_review_2026-09-27.json").exists()
+
+
 def test_builder_normalizes_compact_iso_dates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -449,6 +547,7 @@ def test_builder_normalizes_compact_iso_dates(
                 str(tmp_path / "staging"),
                 "--reports-dir",
                 str(tmp_path / "reports"),
+                "--skip-workspace-conflict-check",
             ]
         )
         == 0

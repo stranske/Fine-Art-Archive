@@ -22,7 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fine_art_archive.api.config import DEFAULT_ART_WORKS_ROOT, env_path  # noqa: E402
-from fine_art_archive.api.gates import assert_workspace_files_unforked  # noqa: E402
+from fine_art_archive.api.gates import (  # noqa: E402
+    DEFAULT_WORKSPACE,
+    assert_workspace_files_unforked,
+)
 from fine_art_archive.identity.artist_qid import artist_qid  # noqa: E402
 from fine_art_archive.identity.work_qid_collision_audit import (  # noqa: E402
     actionable_offenders,
@@ -417,8 +420,16 @@ def write_review(payload: Mapping[str, Any], reports_dir: Path, review_date: str
     return destination
 
 
-def _default_staging_root(works_root: Path) -> Path:
-    return env_path("FAA_STAGING_ROOT", works_root.parent / "staging_acquisitions")
+def _default_workspace() -> Path:
+    return env_path("FAA_WORKSPACE", DEFAULT_WORKSPACE)
+
+
+def _default_staging_root(_works_root: Path) -> Path:
+    return env_path("FAA_STAGING_ROOT", _default_workspace() / "staging_acquisitions")
+
+
+def _default_frontier() -> Path:
+    return env_path("FAA_FRONTIER_JSON", _default_workspace() / "discovery_frontier.json")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -429,9 +440,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--works-root", type=Path, default=env_path("FAA_WORKS_DIR", DEFAULT_ART_WORKS_ROOT)
     )
     parser.add_argument("--staging-root", type=Path)
-    parser.add_argument("--frontier", type=Path, default=ROOT / "discovery_frontier.json")
-    parser.add_argument("--operations-log", type=Path, default=ROOT / "operations.log")
-    parser.add_argument("--permissions", type=Path, default=ROOT / "permissions.md")
+    workspace = _default_workspace()
+    parser.add_argument("--frontier", type=Path, default=_default_frontier())
+    parser.add_argument("--operations-log", type=Path, default=workspace / "operations.log")
+    parser.add_argument("--permissions", type=Path, default=workspace / "permissions.md")
     parser.add_argument("--reports-dir", type=Path, default=REPORTS)
     parser.add_argument(
         "--skip-workspace-conflict-check",
