@@ -230,12 +230,19 @@ fleet `missing`/`invalid`/`stale`/`valid` rollup:
 
 ## Validation
 
-Run validation locally without any cloud key (deterministic, offline — the same
-guarantee as `langsmith_fleet.py`):
+Run the bundled fixture suite locally without any cloud key (deterministic,
+offline — the same guarantee as `langsmith_fleet.py`):
 
 ```bash
-python scripts/validate_run_contract.py tests/fixtures/backplane/valid_run.json
+python scripts/validate_run_contract.py \
+  --self-smoke \
+  --registry config/backplane_participants.json \
+  --repo stranske/Fine-Art-Archive
 ```
+
+The command checks the valid envelope plus the bundled negative fixtures. The
+repository test fails if any expected fixture is absent, preventing a silent
+schema-only self-smoke.
 
 Validate against a specific participant's registry requirements and its manifest:
 
