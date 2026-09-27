@@ -1,0 +1,21 @@
+{
+  "schema_version": "backplane-participants/v1",
+  "contract": "run-contract/v1",
+  "note": "Local self-smoke registry subset. The canonical fleet registry lives in stranske/Workflows.",
+  "participants": [
+    {
+      "repo": "stranske/Pension-Data",
+      "contract_version": "run-contract/v1",
+      "role": "producer",
+      "required_sections": [
+        "cost",
+        "latency",
+        "warnings",
+        "evidence_refs",
+        "identity_refs",
+        "data_quality"
+      ],
+      "status": "conformant"
+    }
+  ]
+}
