@@ -335,7 +335,10 @@ def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
                 existing.sitelinks = max(existing.sitelinks, w.sitelinks)
             else:
                 merged[key] = w
-    return sorted(merged.values(), key=lambda w: (w.year or 9999, w.title or ""))
+    return sorted(
+        merged.values(),
+        key=lambda w: (w.year if w.year is not None else 9999, w.title or ""),
+    )
 
 
 # --------------------------------------------------------------------------

@@ -537,6 +537,18 @@ def test_merge_works():
     assert merged[3].year == 1510
 
 
+def test_merge_works_sorts_astronomical_year_zero_before_year_one():
+    merged = merge_works(
+        [
+            KnownWork(title="Unknown year", year=None),
+            KnownWork(title="Year one", year=1),
+            KnownWork(title="Year zero", year=0),
+        ]
+    )
+
+    assert [work.title for work in merged] == ["Year zero", "Year one", "Unknown year"]
+
+
 def test_merge_metadata():
     w1 = KnownWork(title="Mona Lisa", year=1503, sources=["wikidata"])
     w2 = KnownWork(
