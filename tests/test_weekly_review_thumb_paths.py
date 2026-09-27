@@ -433,6 +433,74 @@ def test_workspace_file_environment_overrides_take_precedence(
     assert builder._default_staging_root(tmp_path / "unrelated-works") == staging
 
 
+def test_build_weekly_review_main_honors_frontier_and_staging_env_overrides(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    builder = load_builder()
+    workspace = tmp_path / "workspace"
+    works = tmp_path / "works"
+    reports = tmp_path / "reports"
+    works.mkdir()
+    workspace.mkdir()
+    (workspace / "permissions.md").write_text(
+        "| Grant | Owner | Scope | Operation | Term |\n"
+        "| G55 | owner | promote acquisitions | write-new to Art/works | standing |\n",
+        encoding="utf-8",
+    )
+    (workspace / "operations.log").write_text("", encoding="utf-8")
+
+    env_frontier = tmp_path / "env-frontier.json"
+    env_frontier.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "qid": "Q999",
+                        "title": "Env frontier candidate",
+                        "status": "screened",
+                        "sitelinks": 12,
+                        "artist_qid": "Q42",
+                        "artist": "Test Artist",
+                    }
+                ],
+                "runs": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    env_staging = tmp_path / "env-staging"
+    staged = env_staging / "wid-staged-001"
+    staged.mkdir(parents=True)
+    (staged / "master.jpg").write_bytes(b"jpeg-bytes")
+    (staged / "meta.json").write_text(
+        json.dumps({"title": {"canonical": "Staged work from env"}}),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("FAA_WORKSPACE", str(workspace))
+    monkeypatch.setenv("FAA_FRONTIER_JSON", str(env_frontier))
+    monkeypatch.setenv("FAA_STAGING_ROOT", str(env_staging))
+
+    assert (
+        builder.main(
+            [
+                "--date",
+                "2026-09-29",
+                "--works-root",
+                str(works),
+                "--reports-dir",
+                str(reports),
+                "--skip-workspace-conflict-check",
+            ]
+        )
+        == 0
+    )
+    generated = json.loads((reports / "weekly_review_2026-09-29.json").read_text())
+    assert [row["qid"] for row in generated["candidates"]["top"]] == ["Q999"]
+    assert [row["wid"] for row in generated["unpromoted"]] == ["wid-staged-001"]
+
+
 def _write_workspace_inputs(workspace: Path, works: Path) -> None:
     workspace.mkdir()
     (workspace / "staging_acquisitions").mkdir()
