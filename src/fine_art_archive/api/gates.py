@@ -21,6 +21,7 @@ row is always optional; the surface exists so the *option* is visible.
 from __future__ import annotations
 
 import glob
+import hashlib
 import json
 import math
 import os
@@ -71,6 +72,13 @@ def automation_lock_path(lock_name: str) -> Path:
         directory = _DEFAULT_AUTOMATION_LOCK_DIR
     directory.mkdir(parents=True, exist_ok=True)
     return directory / safe
+
+
+def sidecar_lock_name(path: Path) -> str:
+    """Return a stable host-local lock name unique to the sidecar path."""
+    normalized = str(path.expanduser().resolve())
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+    return f"sidecar-{digest}.lock"
 
 
 def resolve_automation_lock_path(candidate: Path, lock_name: str) -> Path:
