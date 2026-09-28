@@ -74,3 +74,41 @@ def test_resolve_automation_lock_path_redirects_synced_candidate(tmp_path: Path)
     resolved = resolve_automation_lock_path(candidate, "growth_tick.lock")
     assert resolved != candidate
     assert not is_cloud_synced_workspace_path(resolved)
+
+
+def test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """_sidecar_file_lock must not place the lock file beside a Dropbox-synced sidecar.
+
+    Deliberate-break: comment out the gates.resolve_automation_lock_path call in
+    _sidecar_file_lock (reverting to path.with_suffix) — this assertion fails because
+    the lock file lands in tmp_path instead of the host-local automation lock dir.
+    """
+    import fine_art_archive.api.main as main_mod
+
+    # Treat tmp_path as a cloud-synced workspace so resolve_automation_lock_path
+    # redirects any lock that would land there to the host-local automation dir.
+    monkeypatch.setattr(gates, "is_cloud_synced_workspace_path", lambda p: str(tmp_path) in str(p))
+
+    sidecar_path = tmp_path / "meta.json"
+    sidecar_path.write_text("{}", encoding="utf-8")
+
+    lock_files_created: list[Path] = []
+    original_open = Path.open
+
+    def _tracking_open(self: Path, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if self.suffix == ".lock":
+            lock_files_created.append(self)
+        return original_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", _tracking_open)
+
+    with main_mod._sidecar_file_lock(sidecar_path):
+        pass
+
+    assert lock_files_created, "No lock file was created"
+    for lock_file in lock_files_created:
+        assert str(tmp_path) not in str(lock_file), (
+            f"Lock file landed beside Dropbox sidecar: {lock_file}"
+        )

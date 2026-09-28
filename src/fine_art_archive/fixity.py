@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from fine_art_archive import sidecar
+from fine_art_archive.api import gates
 
 CHUNK_SIZE = 1024 * 1024
 BAGIT_VERSION = "0.97"
@@ -137,7 +138,10 @@ def _append_fixity_event(
 
 @contextmanager
 def _sidecar_file_lock(path: Path):
-    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path = gates.resolve_automation_lock_path(
+        path.with_suffix(path.suffix + ".lock"),
+        path.name + ".lock",
+    )
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a") as lock_file:
         try:

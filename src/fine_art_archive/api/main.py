@@ -1381,7 +1381,10 @@ class SubjectActionIn(BaseModel):
 
 @contextmanager
 def _sidecar_file_lock(path: Path):
-    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path = gates.resolve_automation_lock_path(
+        path.with_suffix(path.suffix + ".lock"),
+        path.name + ".lock",
+    )
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a") as lock_file:
         try:
