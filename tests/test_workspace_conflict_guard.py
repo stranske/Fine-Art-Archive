@@ -86,6 +86,7 @@ def test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox(
     the lock file lands in tmp_path instead of the host-local automation lock dir.
     """
     import fine_art_archive.api.main as main_mod
+    import fine_art_archive.fixity as fixity_mod
 
     # Treat tmp_path as a cloud-synced workspace so resolve_automation_lock_path
     # redirects any lock that would land there to the host-local automation dir.
@@ -104,11 +105,21 @@ def test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox(
 
     monkeypatch.setattr(Path, "open", _tracking_open)
 
-    with main_mod._sidecar_file_lock(sidecar_path):
-        pass
+    for module in (main_mod, fixity_mod):
+        with module._sidecar_file_lock(sidecar_path):
+            pass
 
     assert lock_files_created, "No lock file was created"
     for lock_file in lock_files_created:
-        assert str(tmp_path) not in str(lock_file), (
-            f"Lock file landed beside Dropbox sidecar: {lock_file}"
-        )
+        assert str(tmp_path) not in str(
+            lock_file
+        ), f"Lock file landed beside Dropbox sidecar: {lock_file}"
+
+
+def test_sidecar_lock_name_distinguishes_equal_basenames(tmp_path: Path) -> None:
+    first = tmp_path / "first" / "meta.json"
+    second = tmp_path / "second" / "meta.json"
+
+    assert gates.sidecar_lock_name(first) != gates.sidecar_lock_name(second)
+    assert gates.sidecar_lock_name(first) == gates.sidecar_lock_name(first)
+    assert gates.sidecar_lock_name(first).endswith(".lock")

@@ -140,7 +140,7 @@ def _append_fixity_event(
 def _sidecar_file_lock(path: Path):
     lock_path = gates.resolve_automation_lock_path(
         path.with_suffix(path.suffix + ".lock"),
-        path.name + ".lock",
+        gates.sidecar_lock_name(path),
     )
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a") as lock_file:
