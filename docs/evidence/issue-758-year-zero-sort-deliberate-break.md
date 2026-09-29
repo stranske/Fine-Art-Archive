@@ -59,7 +59,7 @@ The production expression was restored exactly. The same command then passed:
 Cleanup proof:
 
 ```text
-git diff --exit-code -- src/fine_art_archive/known_works/fetchers.py tests/test_known_works_fetchers.py
+git diff --exit-code HEAD -- src/fine_art_archive/known_works/fetchers.py tests/test_known_works_fetchers.py
 ```
 
 The command exited 0 with no output, proving the deliberate break left no source
