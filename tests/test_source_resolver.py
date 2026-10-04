@@ -26,6 +26,7 @@ from fine_art_archive.enrichment.source_resolver import (
     WikidataProvider,
     apply_resolution,
     parse_dimensions,
+    resolve_field,
 )
 
 MINIMAL_SIDECAR: dict[str, Any] = {
@@ -315,6 +316,50 @@ def test_all_failed_or_inapplicable_sources_leave_field_researchable() -> None:
     assert resolution.status == "not_researched"
     assert resolution.value is None
     assert resolution.source_id is None
+
+
+def test_network_failure_preserves_existing_value_as_unverified() -> None:
+    class OfflineProvider:
+        source_id = "offline-catalogue"
+
+        def resolve(self, meta: dict[str, Any], field: str) -> ProviderResult:
+            assert meta is not None
+            assert field == "year"
+            raise urllib.error.URLError("offline")
+
+    meta = deepcopy(MINIMAL_SIDECAR)
+    meta["year"] = "1872"
+    provenance.set(
+        meta,
+        "year",
+        "not_researched",
+        checked_at="2026-07-24T00:00:00Z",
+    )
+
+    resolution = SourceResolver(
+        museum=OfflineProvider(),  # type: ignore[arg-type]
+        wikidata=StaticProvider("wikidata", checked=False),
+        iiif=StaticProvider("iiif", checked=False),
+        europeana=StaticProvider("europeana", checked=False),
+        commons=StaticProvider("commons", checked=False),
+    ).research(meta, "year")
+
+    assert resolution == Resolution(
+        "1872", "filename_parse", None, "unverified", Tier.FILENAME, None
+    )
+
+
+def test_resolver_rejects_unknown_field_and_wrapper_uses_injected_resolver() -> None:
+    resolver = _resolver(museum=StaticProvider("met", value="1873", tier=Tier.MUSEUM))
+
+    with pytest.raises(ValueError, match="unsupported metadata field: unknown"):
+        resolver.research(deepcopy(MINIMAL_SIDECAR), "unknown")
+
+    assert resolve_field(deepcopy(MINIMAL_SIDECAR), "year", resolver=resolver) == (
+        "1873",
+        "met",
+        "https://example.test/met",
+    )
 
 
 def test_wikidata_claim_is_available_with_source_identity() -> None:
