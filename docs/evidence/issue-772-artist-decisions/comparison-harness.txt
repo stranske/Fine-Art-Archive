@@ -1,0 +1,30 @@
+import hashlib
+import json
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
+root = Path('/tmp/issue-772-round')
+
+def suite(name):
+    tree = ET.parse(root / f'{name}.xml')
+    suites = list(tree.iter('testsuite'))
+    counts = {key: sum(int(s.attrib.get(key, 0)) for s in suites) for key in ['tests', 'failures', 'errors', 'skipped']}
+    counts['passed'] = counts['tests'] - counts['failures'] - counts['errors'] - counts['skipped']
+    counts['failed_nodes'] = [c.attrib['classname'] + '::' + c.attrib['name'] for c in tree.iter('testcase') if c.find('failure') is not None or c.find('error') is not None]
+    return counts
+
+result = {}
+coverages = {}
+for name in ['baseline', 'candidate']:
+    cov = json.loads((root / f'{name}-coverage.json').read_text())
+    coverages[name] = cov
+    result[name] = {'exit': 1, 'suite': suite(name), 'totals': cov['totals'], 'main': cov['files']['src/fine_art_archive/api/main.py']['summary'], 'artist_decision': cov['files']['src/fine_art_archive/api/main.py']['functions']['artist_decision']['summary']}
+assert result['baseline']['suite']['failed_nodes'] == result['candidate']['suite']['failed_nodes']
+assert coverages['baseline']['files'].keys() == coverages['candidate']['files'].keys()
+assert result['baseline']['totals']['num_statements'] == result['candidate']['totals']['num_statements']
+assert result['baseline']['totals']['num_branches'] == result['candidate']['totals']['num_branches']
+result['coverage_regressions'] = [p for p in coverages['baseline']['files'] if coverages['candidate']['files'][p]['summary']['percent_covered'] < coverages['baseline']['files'][p]['summary']['percent_covered']]
+assert not result['coverage_regressions'], result['coverage_regressions']
+result['candidate_sha256'] = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path('src/fine_art_archive/api/main.py'), Path('src/fine_art_archive/api/gates.py'), Path('tests/test_api_artist_decisions.py')]}
+(root / 'comparison.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps(result, indent=2))

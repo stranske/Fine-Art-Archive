@@ -705,3 +705,211 @@ committed in an isolated local repository at
 `/tmp/issue-772-research-commit-repo`, with this baseline HEAD as parent, and
 exported to `/tmp/issue-772-research.patch`. The receiving lane must apply the
 patch in its writable checkout. No primary-branch update or remote push is claimed.
+
+
+## Artist-decision continuation, 2026-10-06
+
+This bounded round starts at `95f9895c4d433704c89c36e070d1aa0c13f59319` on
+`codex/issue-772-research-request-recovery`. Historical pairs above are not this
+round's baseline. The measured baseline is **88.12154696132596% combined
+line-and-branch coverage**, below 90%; the broader #772 initiative stays open.
+Statement-only coverage is 90.7669616519174%, separately
+reported because the repository enables branch measurement.
+
+### Current ranking and bounded selection
+
+The [ranking](issue-772-artist-decisions/ranking.json) covers every measured
+`src/fine_art_archive` Python module with missing lines or branches. The named
+**repair-history proxy** counts distinct path touches per commit whose subject
+matches case-insensitive `\b(fix|bug|correct|repair|guard|regression)\w*`.
+It includes formatting repairs and is not a verified escaped-defect count.
+Churn counts all distinct path touches in the same latest 500-commit window,
+from `95f9895c4d433704c89c36e070d1aa0c13f59319` through `594d67f1078ed90ed07df9f57e6b08d7144531e9`. Ranking sorts descending by repair
+proxy, churn, then missing lines (uncovered mass), with path as a stable tie
+breaker. Missing branches are also reported. The exact
+[history](issue-772-artist-decisions/history.txt.gz) and executable
+[ranking computation](issue-772-artist-decisions/ranking-harness.txt) are retained.
+
+| Rank | Module under src/fine_art_archive | Repair proxy | Churn | Missing lines | Missing branches |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `api/main.py` | 21 | 51 | 148 | 71 |
+| 2 | `api/store.py` | 6 | 19 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+Within first-ranked `api/main.py`, `artist_decision` had **0/5 statements and
+0/2 branches covered** (lines 1934, 1935, 1936, 1944 and 1945). Artist approvals
+control which creators growth may acquire. `ad70313ac1465e8e280be41d7e369653189389e9`
+introduced the per-artist drain; `b94eae32c7ad08ec7df1509b05dd11d678d7910b` repaired
+unreported missing decision inputs. This history and the untested write path
+make the endpoint a bounded behavioral selection. Candidate-image retries and
+the atomic sidecar writer already have focused tests; the latter measures 100%
+in this baseline, so it was not selected.
+
+Eight new cases in `tests/test_api_artist_decisions.py` exercise real HTTP
+routing, real temporary JSONL storage and real decision readers. They verify
+approve/reject persistence, the recorded artist/reviewer/note/time, live approval
+counts, independent approved/refused sets, later reversal with intact history,
+four malformed Q-IDs and one unsupported decision rejected before append.
+The fixture writes its own seed records, independently of the production writer;
+no network, archive images or operator records are used. All cases pass on
+unchanged production source; **no reproduced defect needs a production fix**.
+
+### Identical baseline/candidate measurements
+
+Both completed full measurements ran:
+
+```bash
+PYTHONPATH=/tmp/issue-772-round/shim:src PYTEST_ADDOPTS='-m "not slow"' \
+  python -m pytest -q --cov=src --cov-report=json:coverage.json \
+  --junitxml=/tmp/issue-772-round/<baseline-or-candidate>.xml
+```
+
+The marker deselects zero tests. Interpreter, installed dependencies, test
+selection, source paths, coverage configuration, exclusions and 25% floor are
+identical. Python 3.14.8, pytest 9.1.1, pytest-cov 7.1.0 and coverage.py 7.16.2
+are recorded in [runtime metadata](issue-772-artist-decisions/metadata.json).
+Both runs use the same external
+[polling shim](issue-772-artist-decisions/polling-shim.txt) retained from earlier
+sandbox evidence: selector waits are capped at 0.01 seconds so blocked wakeup
+socket writes do not strand asyncio callbacks. No application or test code is
+changed by that shim.
+
+| Metric | Baseline | Candidate |
+| --- | ---: | ---: |
+| Collected | 2170 | 2178 |
+| Passed | 2154 | 2162 |
+| Failed | 4 | 4 |
+| Skipped | 12 | 12 |
+| Warnings | 1 | 1 |
+| Exit | 1 | 1 |
+| covered_lines | 9231 | 9236 |
+| num_statements | 10170 | 10170 |
+| missing_lines | 939 | 934 |
+| covered_branches | 2891 | 2893 |
+| num_branches | 3586 | 3586 |
+| missing_branches | 695 | 693 |
+| percent_covered | 88.12154696132596 | 88.17243384704857 |
+| percent_statements_covered | 90.7669616519174 | 90.81612586037365 |
+
+All measured production paths and denominators are identical, and no module's
+coverage regresses. The candidate adds eight tests and covers five previously
+missing statements and both branch exits. `artist_decision` measures **100% lines
+and branches** in both targeted and full candidate runs, up from 0%.
+
+The four existing failures are identical in both runs, each caused by
+`OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'`:
+
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree`
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory`
+- `tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate`
+- `tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`
+
+There are **no new failures**; the whole suite is not green in this sandbox.
+Lossless console, JUnit and coverage JSON captures are retained as
+`baseline.*.gz`, `candidate.*.gz` and `*-coverage.json.gz` in
+[the evidence directory](issue-772-artist-decisions). The
+[comparison](issue-772-artist-decisions/comparison.json) records totals, failed
+nodes, function/module coverage, paths and denominator checks. The tracked
+historical `coverage.json` was restored after preserving these measurements.
+
+Targeted verification ran:
+
+```bash
+PYTHONPATH=/tmp/issue-772-round/shim:src python -m pytest \
+  tests/test_api_artist_decisions.py tests/test_review_gates.py \
+  tests/test_companion_app_api.py -o addopts='' -m 'not slow' \
+  --cov=fine_art_archive.api.main --cov-report=term-missing \
+  --cov-report=json:/tmp/issue-772-round/targeted-coverage.json -q
+```
+
+Result: **118 passed, one warning, exit 0**. The coverage table reports
+`src/fine_art_archive/api/main.py` at **48%** (47.76613348041919% combined).
+The selected endpoint measures 100%; this does not claim 90% for the whole
+module. [Targeted output](issue-772-artist-decisions/targeted.log.gz) and
+[coverage JSON](issue-772-artist-decisions/targeted-coverage.json.gz) retain both.
+
+### Actual source mutation controls
+
+The [executed harness](issue-772-artist-decisions/mutation-harness.txt) and
+[receipts](issue-772-artist-decisions/mutations.json) record exact production
+replacements, commands, every named parameterized result, hashes and exits.
+All mutations alter real production code. Each control runs its named nodes,
+restores exact original source bytes in `finally`, verifies both production
+files and the test are byte-identical to their captured inputs, then reruns the
+same nodes. Derived bytecode for the two production modules is removed between
+runs and bytecode writes are disabled to prevent stale imports.
+
+All nodes below belong to `tests/test_api_artist_decisions.py`; the two choice
+cases are `[approve]` and `[reject]`, and the invalid-Q-ID cases are `[Q0]`,
+`[Q01]`, `[q42]` and `[Q1000000000000]`. The exact command for each phase is
+`python -m pytest <named-nodes> -m 'not slow' --no-cov -q --junitxml=<capture>`
+with `PYTHONPATH=/tmp/issue-772-round/shim:src` and
+`PYTHONDONTWRITEBYTECODE=1`; receipts retain the absolute interpreter and capture
+paths actually executed. Every RED is a test assertion failure (no collection
+errors or skips) and every restored GREEN passes. **13 controls cover all eight
+unique new cases, with 31 failing executions and 31 restored passes**.
+
+| Real production break | Named nodes | Cases | RED / GREEN exit |
+| --- | --- | ---: | --- |
+| `omit-append` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `wrong-artist` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `reverse-choice` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `discard-name` | `test_artist_decision_persists_choice_and_reports_current_approvals` | 2 | 1 / 0 |
+| `discard-note` | `test_artist_decision_persists_choice_and_reports_current_approvals` | 2 | 1 / 0 |
+| `discard-reviewer` | `test_artist_decision_persists_choice_and_reports_current_approvals` | 2 | 1 / 0 |
+| `wrong-timestamp` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `wrong-default-reviewer` | `test_later_artist_decision_reverses_choice_without_erasing_history` | 1 | 1 / 0 |
+| `wrong-approval-count` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `omit-qid-validation` | `test_invalid_artist_qid_is_rejected_before_log_append` | 4 | 1 / 0 |
+| `accept-unsupported-choice` | `test_unsupported_artist_decision_is_rejected_before_log_append` | 1 | 1 / 0 |
+| `overwrite-history` | `test_artist_decision_persists_choice_and_reports_current_approvals`, `test_later_artist_decision_reverses_choice_without_erasing_history` | 3 | 1 / 0 |
+| `keep-rejected-approval` | `test_later_artist_decision_reverses_choice_without_erasing_history` | 1 | 1 / 0 |
+
+`overwrite-history` changes the actual allowlist writer from append to overwrite;
+`keep-rejected-approval` removes its reader's rejection update. These controls
+also verify the endpoint's end-to-end persistence assertions. Other controls
+change the selected endpoint or its request model. Full RED/GREEN logs and
+JUnit captures are retained losslessly alongside the receipts.
+
+Every restored `api/main.py` has SHA256
+`f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3`;
+every restored `api/gates.py` has SHA256
+`efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37`.
+The test remains SHA256
+`b7c45dfc1a2e1915c95a72f4c2d5d95f2abea1a69f055ea8a6839d713cda3cbd` throughout.
+Both production files are also byte-identical to baseline HEAD; the final full
+candidate measurement runs only after every mutation has been restored.
+[The compressed manifest](issue-772-artist-decisions/compressed-manifest.json)
+records decoded sizes and compressed/decoded hashes.
+
+### Verified bounded checklist and handoff
+
+Relevant-file Black at line length 100, the required whole-repository
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+(343 files), touched-file Ruff and `git diff --check` pass. Black uses
+`BLACK_NUM_WORKERS=1` and the same polling shim because process-worker sockets
+are restricted. Validation output is retained in the evidence directory.
+
+- [x] Run current full-src coverage and rank gaps by named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected production symbols; no reproduced defect needs a source fix.
+- [x] Actually break each new behavior, run named tests, restore exact bytes and capture results.
+- [x] Complete identical-scope baseline/candidate measurements with no new failures and record exact counts, percentages, ranking and existing failures.
+- [x] Verify every new case fails under a real source mutation and passes after byte-identical restoration, retaining nodes, commands and exits.
+- [x] Apply the conditional 90% criterion: retain one bounded change and keep the broader initiative open because baseline combined coverage is below 90%.
+
+Remote readiness/checklist lookup with
+`gh pr view codex/issue-772-research-request-recovery --repo stranske/Fine-Art-Archive --json number,state,isDraft`
+failed to connect to `api.github.com` (exit 1). This run creates or changes no
+remote PR, makes no remote readiness claim and does not close #772.
+
+Primary-checkout staging failed (exit 128): `.git/index.lock` cannot be created
+on the read-only Git mount. The test and evidence changes are committed in an
+isolated local repository at `/tmp/issue-772-artist-commit.git`, using the
+primary workspace as its worktree and baseline HEAD as its parent, and exported
+as `/tmp/issue-772-artist-decisions.patch`. The receiving lane must apply the
+patch in its writable checkout; no primary branch update or remote push is
+claimed. [Validation receipts](issue-772-artist-decisions/validation.json) record
+the checks and environment limitations.
