@@ -1976,6 +1976,13 @@ def propose_tags(work_id: str) -> dict:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
 
+    if (
+        not isinstance(payload, dict)
+        or (payload.get("works") is not None and not isinstance(payload["works"], list))
+        or any(not isinstance(work, dict) for work in (payload.get("works") or []))
+        or (payload.get("gate") is not None and not isinstance(payload["gate"], dict))
+    ):
+        raise HTTPException(500, "tagger produced invalid JSON structure")
     works = payload.get("works") or []
     w = works[0] if works else {}
     # No cache to invalidate: store keys sidecar reads on the file's

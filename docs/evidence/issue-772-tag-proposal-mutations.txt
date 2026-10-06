@@ -1,0 +1,1310 @@
+
+MUTATION work-id COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_invalid_work_id_never_launches_tagger', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+__________________ test_invalid_work_id_never_launches_tagger __________________
+
+tagger = (<starlette.testclient.TestClient object at 0x1128e8860>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-759/test_invalid_work_id_never_lau0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1128ea660>
+
+    def test_invalid_work_id_never_launches_tagger(tagger, monkeypatch):
+        client, _ = tagger
+
+        def forbidden(*args, **kwargs):
+            pytest.fail("invalid identity launched tagger")
+
+        monkeypatch.setattr(main.subprocess, "run", forbidden)
+>       response = client.post("/works/bad%20id/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:38:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/fine_art_archive/api/main.py:1961: in propose_tags
+    proc = subprocess.run(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['isolated-python', '/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-759/test_invalid_work_id_never_lau0/vision_tag_works.py', '--wid', 'bad id', '--json', '--apply'],)
+kwargs = {'capture_output': True, 'text': True, 'timeout': 7, 'check': False}
+
+    def forbidden(*args, **kwargs):
+>       pytest.fail("invalid identity launched tagger")
+E       Failed: invalid identity launched tagger
+
+tests/test_api_tag_proposals.py:35: Failed
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_invalid_work_id_never_launches_tagger
+======================== 1 failed, 2 warnings in 0.75s =========================
+
+MUTATION missing-script COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_missing_script_reports_unavailable_without_launch', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+____________ test_missing_script_reports_unavailable_without_launch ____________
+
+tagger = (<starlette.testclient.TestClient object at 0x1188c00e0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-760/test_missing_script_reports_un0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1188c21b0>
+
+    def test_missing_script_reports_unavailable_without_launch(tagger, monkeypatch):
+        client, script = tagger
+        script.unlink()
+
+        def forbidden(*args, **kwargs):
+            pytest.fail("missing script launched tagger")
+
+        monkeypatch.setattr(main.subprocess, "run", forbidden)
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 503
+E       assert 502 == 503
+E        +  where 502 = <Response [502 Bad Gateway]>.status_code
+
+tests/test_api_tag_proposals.py:52: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_missing_script_reports_unavailable_without_launch
+======================== 1 failed, 2 warnings in 0.46s =========================
+
+MUTATION timeout COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_timeout_is_a_gateway_timeout', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+______________________ test_timeout_is_a_gateway_timeout _______________________
+
+tagger = (<starlette.testclient.TestClient object at 0x111e0eed0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-761/test_timeout_is_a_gateway_time0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x111e0ec00>
+
+    def test_timeout_is_a_gateway_timeout(tagger, monkeypatch):
+        client, _ = tagger
+
+        def expired(*args, **kwargs):
+            raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+        monkeypatch.setattr(main.subprocess, "run", expired)
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 504
+E       assert 500 == 504
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests/test_api_tag_proposals.py:64: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_timeout_is_a_gateway_timeout - a...
+======================== 1 failed, 2 warnings in 0.39s =========================
+
+MUTATION process-failure COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_failed_process_reports_only_last_four_error_lines', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+____________ test_failed_process_reports_only_last_four_error_lines ____________
+
+tagger = (<starlette.testclient.TestClient object at 0x104e61460>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-762/test_failed_process_reports_on0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106862c90>
+
+    def test_failed_process_reports_only_last_four_error_lines(tagger, monkeypatch):
+        client, _ = tagger
+        respond(monkeypatch, returncode=1, stdout='{"works": []}', stderr="old\na\nb\nc\nd\n")
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:72: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_failed_process_reports_only_last_four_error_lines
+======================== 1 failed, 2 warnings in 0.36s =========================
+
+MUTATION final-json COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 3 items
+
+tests/test_api_tag_proposals.py FFF                                      [100%]
+
+=================================== FAILURES ===================================
+______________ test_missing_final_json_reports_controlled_error[] ______________
+
+tagger = (<starlette.testclient.TestClient object at 0x110a34530>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-763/test_missing_final_json_report0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x110a365a0>
+stdout = ''
+
+    @pytest.mark.parametrize("stdout", ["", "progress only", '{"works": []}\ntrailing noise'])
+    def test_missing_final_json_reports_controlled_error(tagger, monkeypatch, stdout):
+        client, _ = tagger
+        respond(monkeypatch, stdout=stdout, stderr="diagnostic")
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 400 == 500
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_api_tag_proposals.py:81: AssertionError
+_______ test_missing_final_json_reports_controlled_error[progress only] ________
+
+tagger = (<starlette.testclient.TestClient object at 0x110a34230>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-763/test_missing_final_json_report1/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x110a36d80>
+stdout = 'progress only'
+
+    @pytest.mark.parametrize("stdout", ["", "progress only", '{"works": []}\ntrailing noise'])
+    def test_missing_final_json_reports_controlled_error(tagger, monkeypatch, stdout):
+        client, _ = tagger
+        respond(monkeypatch, stdout=stdout, stderr="diagnostic")
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 400 == 500
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_api_tag_proposals.py:81: AssertionError
+_ test_missing_final_json_reports_controlled_error[{"works": []}\ntrailing noise] _
+
+tagger = (<starlette.testclient.TestClient object at 0x110a0ef30>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-763/test_missing_final_json_report2/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x110a0f7d0>
+stdout = '{"works": []}\ntrailing noise'
+
+    @pytest.mark.parametrize("stdout", ["", "progress only", '{"works": []}\ntrailing noise'])
+    def test_missing_final_json_reports_controlled_error(tagger, monkeypatch, stdout):
+        client, _ = tagger
+        respond(monkeypatch, stdout=stdout, stderr="diagnostic")
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 400 == 500
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_api_tag_proposals.py:81: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[]
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[progress only]
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[{"works": []}\ntrailing noise]
+======================== 3 failed, 2 warnings in 0.37s =========================
+
+MUTATION json-shape COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 7 items
+
+tests/test_api_tag_proposals.py FFFFFFF                                  [100%]
+
+=================================== FAILURES ===================================
+____________ test_invalid_json_shape_reports_controlled_error[null] ____________
+
+tagger = (<starlette.testclient.TestClient object at 0x1047d81a0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1047da240>
+payload = None
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+>       response = client.post("/works/work-1/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+work_id = 'work-1'
+
+    @app.post("/works/{work_id}/propose_tags")
+    def propose_tags(work_id: str) -> dict:
+        """Run the CLIP tagger for one work and return what it proposed."""
+        try:
+            store.validate_work_id(work_id)
+        except ValueError:
+            raise HTTPException(400, "invalid work_id") from None
+        if not TAGGER_SCRIPT.exists():
+            raise HTTPException(
+                503,
+                f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+                f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+            )
+        cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+            )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+        try:
+            payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+>       works = payload.get("works") or []
+                ^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get'
+
+src/fine_art_archive/api/main.py:1979: AttributeError
+____________ test_invalid_json_shape_reports_controlled_error[list] ____________
+
+tagger = (<starlette.testclient.TestClient object at 0x10481e8a0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report1/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10481e630>
+payload = []
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+>       response = client.post("/works/work-1/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+work_id = 'work-1'
+
+    @app.post("/works/{work_id}/propose_tags")
+    def propose_tags(work_id: str) -> dict:
+        """Run the CLIP tagger for one work and return what it proposed."""
+        try:
+            store.validate_work_id(work_id)
+        except ValueError:
+            raise HTTPException(400, "invalid work_id") from None
+        if not TAGGER_SCRIPT.exists():
+            raise HTTPException(
+                503,
+                f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+                f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+            )
+        cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+            )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+        try:
+            payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+>       works = payload.get("works") or []
+                ^^^^^^^^^^^
+E       AttributeError: 'list' object has no attribute 'get'
+
+src/fine_art_archive/api/main.py:1979: AttributeError
+___________ test_invalid_json_shape_reports_controlled_error[string] ___________
+
+tagger = (<starlette.testclient.TestClient object at 0x10485be00>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report2/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10485b8c0>
+payload = 'text'
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+>       response = client.post("/works/work-1/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+work_id = 'work-1'
+
+    @app.post("/works/{work_id}/propose_tags")
+    def propose_tags(work_id: str) -> dict:
+        """Run the CLIP tagger for one work and return what it proposed."""
+        try:
+            store.validate_work_id(work_id)
+        except ValueError:
+            raise HTTPException(400, "invalid work_id") from None
+        if not TAGGER_SCRIPT.exists():
+            raise HTTPException(
+                503,
+                f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+                f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+            )
+        cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+            )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+        try:
+            payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+>       works = payload.get("works") or []
+                ^^^^^^^^^^^
+E       AttributeError: 'str' object has no attribute 'get'
+
+src/fine_art_archive/api/main.py:1979: AttributeError
+________ test_invalid_json_shape_reports_controlled_error[works-object] ________
+
+tagger = (<starlette.testclient.TestClient object at 0x1048dbdd0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report3/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1048daba0>
+payload = {'works': {}}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:94: AssertionError
+________ test_invalid_json_shape_reports_controlled_error[works-string] ________
+
+tagger = (<starlette.testclient.TestClient object at 0x1048ac140>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report4/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1048ae510>
+payload = {'works': 'text'}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+>       response = client.post("/works/work-1/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+work_id = 'work-1'
+
+    @app.post("/works/{work_id}/propose_tags")
+    def propose_tags(work_id: str) -> dict:
+        """Run the CLIP tagger for one work and return what it proposed."""
+        try:
+            store.validate_work_id(work_id)
+        except ValueError:
+            raise HTTPException(400, "invalid work_id") from None
+        if not TAGGER_SCRIPT.exists():
+            raise HTTPException(
+                503,
+                f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+                f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+            )
+        cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+            )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+        try:
+            payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+        works = payload.get("works") or []
+        w = works[0] if works else {}
+        # No cache to invalidate: store keys sidecar reads on the file's
+        # (mtime, size) signature, so the subprocess's write is picked up on the
+        # next read without help.
+        return {
+            "work_id": work_id,
+            "model": payload.get("model"),
+>           "written": w.get("written", False),
+                       ^^^^^
+            "error": w.get("error"),
+            "proposals": w.get("proposals") or [],
+            "clip_tags_added": w.get("clip_tags_added", 0),
+            "genre": w.get("genre"),
+            "genre_source": w.get("genre_source"),
+            # Surfaced so the UI can explain an empty result: most of the taxonomy
+            # is deliberately suppressed by the calibration quality gate.
+            "tags_enabled": (payload.get("gate") or {}).get("tags_enabled") or [],
+            "elapsed_ms": w.get("elapsed_ms"),
+        }
+E       AttributeError: 'str' object has no attribute 'get'
+
+src/fine_art_archive/api/main.py:1987: AttributeError
+_________ test_invalid_json_shape_reports_controlled_error[null-work] __________
+
+tagger = (<starlette.testclient.TestClient object at 0x10487b770>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report5/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x104879940>
+payload = {'works': [None]}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+>       response = client.post("/works/work-1/propose_tags")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_tag_proposals.py:93:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv/lib/python3.12/site-packages/starlette/testclient.py:560: in post
+    return super().post(
+.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:459: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:362: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:359: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/anaconda3/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1310: in handle
+    await super().handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:276: in handle
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:32: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+work_id = 'work-1'
+
+    @app.post("/works/{work_id}/propose_tags")
+    def propose_tags(work_id: str) -> dict:
+        """Run the CLIP tagger for one work and return what it proposed."""
+        try:
+            store.validate_work_id(work_id)
+        except ValueError:
+            raise HTTPException(400, "invalid work_id") from None
+        if not TAGGER_SCRIPT.exists():
+            raise HTTPException(
+                503,
+                f"tagger not available: {TAGGER_SCRIPT} not found. Set "
+                f"FAA_TAGGER_SCRIPT to vision_tag_works.py.",
+            )
+        cmd = [TAGGER_PYTHON, str(TAGGER_SCRIPT), "--wid", work_id, "--json", "--apply"]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=TAGGER_TIMEOUT_S, check=False
+            )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger failed: " + " / ".join(tail))
+        try:
+            payload = json.loads((proc.stdout or "").strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            tail = (proc.stderr or "").strip().splitlines()[-4:]
+            raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
+
+        works = payload.get("works") or []
+        w = works[0] if works else {}
+        # No cache to invalidate: store keys sidecar reads on the file's
+        # (mtime, size) signature, so the subprocess's write is picked up on the
+        # next read without help.
+        return {
+            "work_id": work_id,
+            "model": payload.get("model"),
+>           "written": w.get("written", False),
+                       ^^^^^
+            "error": w.get("error"),
+            "proposals": w.get("proposals") or [],
+            "clip_tags_added": w.get("clip_tags_added", 0),
+            "genre": w.get("genre"),
+            "genre_source": w.get("genre_source"),
+            # Surfaced so the UI can explain an empty result: most of the taxonomy
+            # is deliberately suppressed by the calibration quality gate.
+            "tags_enabled": (payload.get("gate") or {}).get("tags_enabled") or [],
+            "elapsed_ms": w.get("elapsed_ms"),
+        }
+E       AttributeError: 'NoneType' object has no attribute 'get'
+
+src/fine_art_archive/api/main.py:1987: AttributeError
+_________ test_invalid_json_shape_reports_controlled_error[gate-list] __________
+
+tagger = (<starlette.testclient.TestClient object at 0x1048ad340>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-764/test_invalid_json_shape_report6/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1048afa40>
+payload = {'gate': []}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
+        ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    )
+    def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
+        client, _ = tagger
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:94: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[null]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[list]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[string]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-object]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-string]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[null-work]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-list]
+======================== 7 failed, 2 warnings in 1.79s =========================
+
+MUTATION success-fields COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_valid_result_preserves_proposals_and_launch_contract', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+__________ test_valid_result_preserves_proposals_and_launch_contract ___________
+
+tagger = (<starlette.testclient.TestClient object at 0x106adee10>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-765/test_valid_result_preserves_pr0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106adeb40>
+
+    def test_valid_result_preserves_proposals_and_launch_contract(tagger, monkeypatch):
+        client, script = tagger
+        payload = {
+            "model": "clip-local",
+            "gate": {"tags_enabled": ["theme:sea"]},
+            "works": [
+                {
+                    "written": True,
+                    "error": None,
+                    "proposals": [{"tag": "theme:sea", "score": 0.9}],
+                    "clip_tags_added": 1,
+                    "genre": "seascape",
+                    "genre_source": "clip",
+                    "elapsed_ms": 42,
+                }
+            ],
+        }
+        calls = []
+
+        def completed(cmd, **kwargs):
+            calls.append((cmd, kwargs))
+            return subprocess.CompletedProcess(cmd, 0, "loading model\n" + json.dumps(payload), "")
+
+        monkeypatch.setattr(main.subprocess, "run", completed)
+        response = client.post("/works/work-1/propose_tags")
+        assert response.status_code == 200
+>       assert response.json() == {
+            "work_id": "work-1",
+            "model": "clip-local",
+            **payload["works"][0],
+            "tags_enabled": ["theme:sea"],
+        }
+E       AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+E
+E         Omitting 9 identical items, use -vv to show
+E         Differing items:
+E         {'written': False} != {'written': True}
+E         Use -v to get more diff
+
+tests/test_api_tag_proposals.py:124: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_valid_result_preserves_proposals_and_launch_contract
+======================== 1 failed, 2 warnings in 0.35s =========================
+
+MUTATION empty-defaults COMMAND ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 1 item
+
+tests/test_api_tag_proposals.py F                                        [100%]
+
+=================================== FAILURES ===================================
+___________________ test_empty_result_uses_explicit_defaults ___________________
+
+tagger = (<starlette.testclient.TestClient object at 0x113aa4980>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-766/test_empty_result_uses_explici0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113aa6720>
+
+    def test_empty_result_uses_explicit_defaults(tagger, monkeypatch):
+        client, _ = tagger
+        respond(monkeypatch, stdout='{"model":"clip-local","works":[],"gate":null}')
+        response = client.post("/works/work-1/propose_tags")
+        assert response.status_code == 200
+>       assert response.json() == {
+            "work_id": "work-1",
+            "model": "clip-local",
+            "written": False,
+            "error": None,
+            "proposals": [],
+            "clip_tags_added": 0,
+            "genre": None,
+            "genre_source": None,
+            "tags_enabled": [],
+            "elapsed_ms": None,
+        }
+E       AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+E
+E         Omitting 9 identical items, use -vv to show
+E         Differing items:
+E         {'clip_tags_added': 1} != {'clip_tags_added': 0}
+E         Use -v to get more diff
+
+tests/test_api_tag_proposals.py:143: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults
+======================== 1 failed, 2 warnings in 0.35s =========================
+
+RESTORED ['/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python', '-m', 'pytest', 'tests/test_api_tag_proposals.py', '-q', '--no-cov']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, platformdirs-4.12.3, anyio-4.15.1
+collected 16 items
+
+tests/test_api_tag_proposals.py ................                         [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:59
+  /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/lib/python3.12/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 16 passed, 2 warnings in 0.36s ========================
