@@ -288,3 +288,213 @@ be compared within each identical-scope pair, not mixed across environments.
 This follow-up changes documentation only and claims no new package coverage
 measurement or package-wide PASS. The broader 90% initiative remains open;
 current-head hosted checks, review and comparison disposition remain required.
+
+## Current-checkout queue-detail regression protection (2026-10-06)
+
+This is a new, bounded test change on baseline
+`100b0e539c69c609dba9d318283b5eec40f77469`, branch
+`codex/issue-772-nested-array-mutation-evidence`. All preceding comparisons are
+historical and are not inputs to this round's percentages. The baseline was
+completed before adding `tests/test_api_queue_details.py`.
+
+### Measured selection
+
+The repair-history proxy counts touched Python production paths once per commit
+when the subject matches case-insensitive `\b(?:fix|bug|correct|repair|guard|regression)`.
+It is not a verified escaped-defect count. Churn counts all touches in the same
+500-commit window. Inputs are
+`git log -500 --format='%H%x09%s' 100b0e539c69c609dba9d318283b5eec40f77469`
+and `git diff-tree --no-commit-id --name-only -r <sha>` for each commit; the
+oldest commit is `d718d40c575b44443208a24938c6977d076e3931`. Retain modules
+with missing lines or branches in the new baseline JSON, then sort descending
+by repair proxy, churn, missing lines, and ascending path for ties. Missing
+branches are reported separately. The [full ranking](issue-772-queue-gap-ranking.csv)
+contains all 65 modules with measured gaps.
+
+| Rank | File under `src/fine_art_archive/` | Repair-history proxy | Churn | Missing lines | Missing branches |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `api/main.py` | 21 | 48 | 168 | 80 |
+| 2 | `api/store.py` | 6 | 19 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+Within the first-ranked module, `get_queue` had only 5/16 lines and 2/8 branches
+covered (29.166666666666668% combined). Its eleven missing lines are
+`1221, 1223, 1225, 1226, 1227, 1228, 1229, 1233, 1234, 1249, 1250`.
+Repair-history context includes `df35046` (Handle corrupt queue JSON consistently,
+#228) and `fba402b` (surface autonomous acquisitions, #495). Existing tests
+protected corrupt queue files and dynamic ordering but did not exercise valid
+queue-detail HTTP responses. This choice protects behavior, rather than adding
+tests merely to raise the aggregate metric.
+
+The six new cases use temporary queue files, sidecars and a real ratings log.
+Only the acquisition inventory is stubbed for the dynamic queue case. They
+require file order, omission of missing works, sidecar metadata,
+legacy and two-axis latest-rating badges, counts for the specific work,
+dynamic-queue precedence over a stale same-named file, new arrivals on the next
+request, empty defaults, and a controlled missing-queue response. All six pass
+on the baseline production source; no defect was reproduced, so no production
+fix is retained.
+
+### Identical-scope measurement
+
+Both completed full-suite measurements used:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src PYTEST_ADDOPTS="-m 'not slow'" \
+  python -m pytest -q --cov=src --cov-report=json:coverage.json
+```
+
+Python 3.14.7, pytest 9.1.1, pytest-cov 7.1.0 and coverage.py 7.16.2 were
+identical. The existing combined line-and-branch configuration, exclusions and
+25% floor were unchanged. The required `not slow` selection deselected no tests.
+An unassisted initial run stalled at the first HTTP test and was interrupted
+(exit 130); it is not counted as a measurement. Both completed runs used the
+same external polling shim, shown in full below:
+
+```python
+import selectors
+
+_original_select = selectors.DefaultSelector.select
+
+
+def _poll_select(self, timeout=None):
+    return _original_select(self, 0.01 if timeout is None else min(timeout, 0.01))
+
+
+selectors.DefaultSelector.select = _poll_select
+```
+
+This lets asyncio observe queued callbacks when sandbox wakeup socket writes
+are denied. The shim is outside the repository and changes no assertions or
+application code. Full output is retained in the
+[baseline transcript](issue-772-queue-baseline.txt) and
+[candidate transcript](issue-772-queue-candidate.txt); exact coverage summaries
+and selected-symbol line/branch details are in the
+[measurement receipt](issue-772-queue-coverage-summary.json). The complete JSON
+artifacts are also saved at `/tmp/issue-772-queue-{baseline,candidate}-coverage.json`.
+The tracked historical `coverage.json` was restored after saving those artifacts.
+Transcript files trim trailing whitespace and prefix pytest separator lines
+with `| ` so Git does not mistake test output for conflict markers. Original
+console captures are retained as `/tmp/issue-772-queue-*-raw.txt`.
+
+| Metric | Baseline | Candidate |
+| --- | ---: | ---: |
+| collected | 2133 | 2139 |
+| passed | 2117 | 2123 |
+| failed | 4 | 4 |
+| skipped | 12 | 12 |
+| warnings | 1 | 1 |
+| exit status | 1 | 1 |
+| covered_lines | 9209 | 9220 |
+| num_statements | 10168 | 10168 |
+| covered_branches | 2880 | 2886 |
+| num_branches | 3584 | 3584 |
+| missing_lines | 959 | 948 |
+| missing_branches | 704 | 698 |
+| percent_covered | 87.90721349621873 | 88.03083187899942 |
+| api/main.py covered_lines | 1251 | 1262 |
+| api/main.py missing_lines | 168 | 157 |
+| api/main.py covered_branches | 310 | 316 |
+| api/main.py missing_branches | 80 | 74 |
+| api/main.py percent_covered | 86.29076838032061 | 87.23051409618574 |
+| get_queue covered lines / statements | 5/16 | 16/16 |
+| get_queue covered branches / branches | 2/8 | 8/8 |
+| get_queue percent_covered | 29.166666666666668 | 100 |
+
+The failed-node sets were compared and are identical. Each existing failure is
+an `OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'`:
+
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree`
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory`
+- `tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate`
+- `tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`
+
+There are no new failures. This is not a package-wide green claim; the receiving
+runner still needs a writable host-local lock directory. Statement-only baseline
+coverage is 90.5684500393391%, but the repository's combined baseline metric is
+87.90721349621873%, below 90%. Retain this bounded PR and the broader #772
+initiative; do not claim completion of the broader 90% goal.
+
+### Actual source-mutation controls
+
+All 17 controls change only the real `get_queue` function. Tests and assertions
+remain byte-identical throughout. Every control runs its named node against the
+mutation (exit 1 with an assertion failure), restores exact source bytes in a
+`finally` block, asserts byte equality, and reruns the same node (exit 0).
+Only derived `api/__pycache__/main.*.pyc` files are removed before runs to avoid
+timestamp-valid stale bytecode. The [full control transcript](issue-772-queue-controls.txt)
+records exact replacements, commands, failing nodes, counts, exit statuses and
+restoration hashes; the [per-control receipts](issue-772-queue-controls.json)
+record the same nodes and statuses in machine-readable form.
+
+Every execution uses the named node under `tests/test_api_queue_details.py`:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 \
+  python -m pytest tests/test_api_queue_details.py::<node> -m "not slow" --no-cov -q
+```
+
+| Deliberate source break | Named node | RED / restored GREEN |
+| --- | --- | --- |
+| Sort work IDs instead of preserving file order | `test_file_queue_preserves_work_order_and_skips_missing` | 1 failed / 1 passed |
+| Stop at the first missing work | `test_file_queue_preserves_work_order_and_skips_missing` | 1 failed / 1 passed |
+| Blank title, artist name, artist QID, or year (four separate controls) | `test_file_queue_preserves_work_order_and_skips_missing` | each 1 failed / 1 passed |
+| Force variant count to zero | `test_file_queue_preserves_work_order_and_skips_missing` | 1 failed / 1 passed |
+| Drop latest legacy rating | `test_queue_badges_use_latest_event_and_count_all_ratings[legacy]` | 1 failed / 1 passed |
+| Drop latest quality or fit (two separate controls) | `test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]` | each 1 failed / 1 passed |
+| Force work rating count to zero | `test_queue_badges_use_latest_event_and_count_all_ratings` | 2 failed / 2 passed |
+| Bypass dynamic queue lookup | `test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file` | 1 failed / 1 passed |
+| Lose filename name fallback or empty description fallback (two separate controls) | `test_empty_queue_uses_filename_and_default_description` | each 1 failed / 1 passed |
+| Count requested IDs instead of readable works | `test_file_queue_preserves_work_order_and_skips_missing` | 1 failed / 1 passed |
+| Use the display name as the addressable key | `test_file_queue_preserves_work_order_and_skips_missing` | 1 failed / 1 passed |
+| Return HTTP 422 for an unknown queue | `test_unknown_queue_returns_not_found` | 1 failed / 1 passed |
+
+Source before and after every restoration has SHA256
+`d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3`.
+The final production source was also compared byte for byte with baseline HEAD.
+
+### Validation and verified checklist
+
+The focused six-case gate passed. Targeted measured verification, with the
+unchanged 25% floor and explicit module scope, used:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src python -m pytest \
+  tests/test_api_queue_details.py tests/test_companion_app_api.py \
+  tests/test_judgement_surfaces.py -o addopts='' -m "not slow" \
+  --cov=fine_art_archive.api.main --cov-report=term-missing \
+  --cov-report=json:/tmp/issue-772-queue-targeted-coverage.json -q
+```
+
+Result: **107 passed, 1 skipped, exit 0**. The coverage table reports
+`src/fine_art_archive/api/main.py` at **50%** (49.53012714206744% combined);
+`get_queue` measures **100%** lines and branches in both targeted and full runs.
+This targeted selection makes no whole-module 90% claim. The one skip is the
+existing external acquisition-workspace purge-contract check (the workspace is
+not configured in this runner). Relevant-file Black at line length 100,
+the required whole-repository
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+(340 files, `BLACK_NUM_WORKERS=1` and the polling shim), touched-file Ruff and
+`git diff --check` passed. [Validation output](issue-772-queue-validation.txt)
+retains the targeted coverage table and Black result.
+
+- [x] Run current full-src coverage and rank gaps by named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected production symbols; no reproduced defect requires a source fix.
+- [x] Actually break each newly covered behavior, execute named tests, restore exact source bytes, and capture results.
+- [x] Complete identical-scope baseline/candidate coverage with no new failures and record exact counts, percentages, ranking, and existing failures.
+- [x] Verify every new test fails for a real source mutation and passes after byte-identical restoration, recording nodes, commands, and exit statuses.
+- [x] Apply the conditional 90% criterion: baseline combined coverage is below 90%, so retain a bounded change and the broader initiative.
+
+Remote PR metadata/checklist access failed (exit 1, unable to connect to
+`api.github.com`) for
+`gh pr view codex/issue-772-nested-array-mutation-evidence --repo stranske/Fine-Art-Archive --json number,state,isDraft,body`.
+This run creates or changes no remote PR and makes no remote readiness claim.
+Staging in the primary checkout failed (exit 128): `.git/index.lock` cannot be
+created on its read-only filesystem. The tests and evidence are committed in
+the isolated local repository `/tmp/issue-772-queue-commit-repo`, with this
+baseline HEAD as parent, and exported as `/tmp/issue-772-queue-details.patch`.
+The receiving lane must apply that patch in its writable checkout; no primary
+branch update or remote push is claimed.

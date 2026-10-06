@@ -1,0 +1,155 @@
+[
+  {
+    "control": "queue-order",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "for wid in wids_ordered:",
+    "after": "for wid in sorted(wids_ordered):",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "missing-work",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "if w_full is None:\n            continue",
+    "after": "if w_full is None:\n            break",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "sidecar-title",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"title\": w_full.get(\"title\", \"\"),",
+    "after": "\"title\": \"\",",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "sidecar-artist",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"artist_name\": (w_full.get(\"artist\") or {}).get(\"name\", \"\"),",
+    "after": "\"artist_name\": \"\",",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "sidecar-artist-qid",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"artist_wikidata_q\": (w_full.get(\"artist\") or {}).get(\"wikidata_q\", \"\"),",
+    "after": "\"artist_wikidata_q\": \"\",",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "sidecar-year",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"year\": w_full.get(\"year\", \"\"),",
+    "after": "\"year\": \"\",",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "variant-count",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"n_variants\": len((w_full.get(\"files\") or {}).get(\"variants\") or []),",
+    "after": "\"n_variants\": 0,",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "legacy-badge",
+    "node": "tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[legacy]",
+    "before": "\"_last_rating\": (latest or {}).get(\"rating\"),",
+    "after": "\"_last_rating\": None,",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "quality-badge",
+    "node": "tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]",
+    "before": "\"_last_quality\": (latest or {}).get(\"quality\"),",
+    "after": "\"_last_quality\": None,",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "fit-badge",
+    "node": "tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]",
+    "before": "\"_last_fit\": (latest or {}).get(\"fit\"),",
+    "after": "\"_last_fit\": None,",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "rating-count",
+    "node": "tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings",
+    "before": "\"_n_ratings\": store.count_ratings_for(wid),",
+    "after": "\"_n_ratings\": 0,",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "dynamic-precedence",
+    "node": "tests/test_api_queue_details.py::test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file",
+    "before": "q = _dynamic_queue(name)",
+    "after": "q = None",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "default-name",
+    "node": "tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description",
+    "before": "\"name\": q.get(\"name\", name),",
+    "after": "\"name\": q.get(\"name\", \"\"),",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "default-description",
+    "node": "tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description",
+    "before": "\"description\": q.get(\"description\", \"\"),",
+    "after": "\"description\": q.get(\"description\"),",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "queue-total",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "\"total\": len(works_out),",
+    "after": "\"total\": len(wids_ordered),",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "addressable-key",
+    "node": "tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing",
+    "before": "key = name",
+    "after": "key = q.get(\"name\", name)",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "missing-queue-status",
+    "node": "tests/test_api_queue_details.py::test_unknown_queue_returns_not_found",
+    "before": "raise HTTPException(404, f\"no queue named {name!r}\")",
+    "after": "raise HTTPException(422, f\"no queue named {name!r}\")",
+    "red_exit": 1,
+    "green_exit": 0,
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  }
+]

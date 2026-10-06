@@ -1,0 +1,246 @@
+{
+  "baseline_head": "100b0e539c69c609dba9d318283b5eec40f77469",
+  "command": "PYTHONPATH=/tmp/issue-772-verification:src PYTEST_ADDOPTS=\"-m 'not slow'\" python -m pytest -q --cov=src --cov-report=json:coverage.json",
+  "baseline": {
+    "meta": {
+      "format": 3,
+      "version": "7.16.2",
+      "timestamp": "2026-10-06T15:49:16.723934",
+      "branch_coverage": true,
+      "show_contexts": false
+    },
+    "totals": {
+      "covered_lines": 9209,
+      "num_statements": 10168,
+      "percent_covered": 87.90721349621873,
+      "percent_covered_display": "88",
+      "missing_lines": 959,
+      "excluded_lines": 4,
+      "percent_statements_covered": 90.5684500393391,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3584,
+      "num_partial_branches": 532,
+      "covered_branches": 2880,
+      "missing_branches": 704,
+      "percent_branches_covered": 80.35714285714286,
+      "percent_branches_covered_display": "80"
+    },
+    "api_main": {
+      "covered_lines": 1251,
+      "num_statements": 1419,
+      "percent_covered": 86.29076838032061,
+      "percent_covered_display": "86",
+      "missing_lines": 168,
+      "excluded_lines": 0,
+      "percent_statements_covered": 88.16067653276956,
+      "percent_statements_covered_display": "88",
+      "num_branches": 390,
+      "num_partial_branches": 50,
+      "covered_branches": 310,
+      "missing_branches": 80,
+      "percent_branches_covered": 79.48717948717949,
+      "percent_branches_covered_display": "79"
+    },
+    "get_queue": {
+      "executed_lines": [
+        1217,
+        1218,
+        1219,
+        1220,
+        1222
+      ],
+      "summary": {
+        "covered_lines": 5,
+        "num_statements": 16,
+        "percent_covered": 29.166666666666668,
+        "percent_covered_display": "29",
+        "missing_lines": 11,
+        "excluded_lines": 0,
+        "percent_statements_covered": 31.25,
+        "percent_statements_covered_display": "31",
+        "num_branches": 8,
+        "num_partial_branches": 2,
+        "covered_branches": 2,
+        "missing_branches": 6,
+        "percent_branches_covered": 25.0,
+        "percent_branches_covered_display": "25"
+      },
+      "missing_lines": [
+        1221,
+        1223,
+        1225,
+        1226,
+        1227,
+        1228,
+        1229,
+        1233,
+        1234,
+        1249,
+        1250
+      ],
+      "excluded_lines": [],
+      "start_line": 1211,
+      "executed_branches": [
+        [
+          1218,
+          1219
+        ],
+        [
+          1220,
+          1222
+        ]
+      ],
+      "missing_branches": [
+        [
+          1218,
+          1223
+        ],
+        [
+          1220,
+          1221
+        ],
+        [
+          1226,
+          1227
+        ],
+        [
+          1226,
+          1249
+        ],
+        [
+          1228,
+          1229
+        ],
+        [
+          1228,
+          1233
+        ]
+      ]
+    },
+    "collected": 2133,
+    "passed": 2117,
+    "failed": 4,
+    "skipped": 12,
+    "exit_status": 1
+  },
+  "candidate": {
+    "meta": {
+      "format": 3,
+      "version": "7.16.2",
+      "timestamp": "2026-10-06T15:54:14.530711",
+      "branch_coverage": true,
+      "show_contexts": false
+    },
+    "totals": {
+      "covered_lines": 9220,
+      "num_statements": 10168,
+      "percent_covered": 88.03083187899942,
+      "percent_covered_display": "88",
+      "missing_lines": 948,
+      "excluded_lines": 4,
+      "percent_statements_covered": 90.67663257277734,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3584,
+      "num_partial_branches": 530,
+      "covered_branches": 2886,
+      "missing_branches": 698,
+      "percent_branches_covered": 80.52455357142857,
+      "percent_branches_covered_display": "81"
+    },
+    "api_main": {
+      "covered_lines": 1262,
+      "num_statements": 1419,
+      "percent_covered": 87.23051409618574,
+      "percent_covered_display": "87",
+      "missing_lines": 157,
+      "excluded_lines": 0,
+      "percent_statements_covered": 88.93587033121916,
+      "percent_statements_covered_display": "89",
+      "num_branches": 390,
+      "num_partial_branches": 48,
+      "covered_branches": 316,
+      "missing_branches": 74,
+      "percent_branches_covered": 81.02564102564102,
+      "percent_branches_covered_display": "81"
+    },
+    "get_queue": {
+      "executed_lines": [
+        1217,
+        1218,
+        1219,
+        1220,
+        1221,
+        1222,
+        1223,
+        1225,
+        1226,
+        1227,
+        1228,
+        1229,
+        1233,
+        1234,
+        1249,
+        1250
+      ],
+      "summary": {
+        "covered_lines": 16,
+        "num_statements": 16,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 8,
+        "num_partial_branches": 0,
+        "covered_branches": 8,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "missing_lines": [],
+      "excluded_lines": [],
+      "start_line": 1211,
+      "executed_branches": [
+        [
+          1218,
+          1219
+        ],
+        [
+          1218,
+          1223
+        ],
+        [
+          1220,
+          1221
+        ],
+        [
+          1220,
+          1222
+        ],
+        [
+          1226,
+          1227
+        ],
+        [
+          1226,
+          1249
+        ],
+        [
+          1228,
+          1229
+        ],
+        [
+          1228,
+          1233
+        ]
+      ],
+      "missing_branches": []
+    },
+    "collected": 2139,
+    "passed": 2123,
+    "failed": 4,
+    "skipped": 12,
+    "exit_status": 1
+  }
+}

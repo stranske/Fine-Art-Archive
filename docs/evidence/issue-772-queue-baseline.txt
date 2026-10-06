@@ -1,0 +1,484 @@
+Baseline HEAD: 100b0e539c69c609dba9d318283b5eec40f77469
+Command: PYTHONPATH=/tmp/issue-772-verification:src PYTEST_ADDOPTS="-m 'not slow'" python -m pytest -q --cov=src --cov-report=json:coverage.json
+Exit status: 1
+
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+testpaths: tests
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 2133 items
+
+tests/test_acquisition_flow.py .........                                 [  0%]
+tests/test_acquisition_review.py ...................                     [  1%]
+tests/test_acquisition_routing.py ..                                     [  1%]
+tests/test_allowed_p31.py ......s..                                      [  1%]
+tests/test_api_sidecar_cache.py ..........                               [  2%]
+tests/test_api_tag_proposals.py ......................................   [  4%]
+tests/test_apply_lens_recovery.py .........                              [  4%]
+tests/test_artist_from_work.py ..........                                [  4%]
+tests/test_artist_lookup.py .......                                      [  5%]
+tests/test_artist_qid_write_guard.py ............                        [  5%]
+tests/test_artist_resolver.py ....s                                      [  6%]
+tests/test_backfill_artist_canonical.py ........                         [  6%]
+tests/test_backfill_categories_from_image.py ....                        [  6%]
+tests/test_bradley_terry.py ............................................ [  8%]
+                                                                         [  8%]
+tests/test_build_manifest.py .....................                       [  9%]
+tests/test_candidate_image_proxy.py .................................... [ 11%]
+..........                                                               [ 11%]
+tests/test_catalog_floor_attribution.py .......                          [ 12%]
+tests/test_category_infer.py ...................                         [ 13%]
+tests/test_ci_gate_alignment.py .                                        [ 13%]
+tests/test_companion_api.py ...                                          [ 13%]
+tests/test_companion_app_api.py ........................................ [ 15%]
+........................                                                 [ 16%]
+tests/test_companion_app_config.py ....                                  [ 16%]
+tests/test_companion_app_security.py ............................        [ 17%]
+tests/test_completeness_report.py ..                                     [ 17%]
+tests/test_conflict_resolution.py .........                              [ 18%]
+tests/test_contrastive_scoring.py ..........                             [ 18%]
+tests/test_corpus_gamut_fit.py .............                             [ 19%]
+tests/test_creator_category_prior.py ......                              [ 19%]
+tests/test_creator_provenance.py ......................                  [ 20%]
+tests/test_crop_siblings.py .............................                [ 22%]
+tests/test_crosswalk.py ..............                                   [ 22%]
+tests/test_dedup_cascade.py .............                                [ 23%]
+tests/test_dedupe.py ..........                                          [ 23%]
+tests/test_deepzoom_tile_host_allowlist.py ............                  [ 24%]
+tests/test_dependency_version_alignment.py .                             [ 24%]
+tests/test_dimension_utils.py .........................................  [ 26%]
+tests/test_discovery.py ......                                           [ 26%]
+tests/test_display_crops.py ...........................                  [ 27%]
+tests/test_display_hints.py ...............                              [ 28%]
+tests/test_dither_metric_discriminates.py ...........................    [ 29%]
+tests/test_dossier.py .......                                            [ 30%]
+tests/test_eink_export_format.py ...........                             [ 30%]
+tests/test_eink_feed_endpoints.py ...................................... [ 32%]
+.............                                                            [ 33%]
+tests/test_eink_pipeline.py ............................................ [ 35%]
+....................................................                     [ 37%]
+tests/test_exhibition_selection.py ......                                [ 37%]
+tests/test_finalize_acquisition.py .....                                 [ 38%]
+tests/test_finalize_acquisition_dimensions.py .................          [ 38%]
+tests/test_fix_attribution_relations.py ....                             [ 39%]
+tests/test_fixity.py .......                                             [ 39%]
+tests/test_gate_commit_status_fork_tolerance.py ......                   [ 39%]
+tests/test_getty_resolve.py .........                                    [ 40%]
+tests/test_group_vs_single_work_classes.py .....                         [ 40%]
+tests/test_healthz_manifest_drift.py .......                             [ 40%]
+tests/test_holder_by_creator.py ..............                           [ 41%]
+tests/test_holder_completion.py ...........                              [ 41%]
+tests/test_holder_helpers.py ......................................      [ 43%]
+tests/test_holder_wikidata_client.py ...                                 [ 43%]
+tests/test_host_registry.py ..............                               [ 44%]
+tests/test_identify_artists.py .....                                     [ 44%]
+tests/test_identity_split_and_quality_blend.py ......................... [ 45%]
+....                                                                     [ 45%]
+tests/test_iiif.py .........                                             [ 46%]
+tests/test_issue_format.py .........                                     [ 46%]
+tests/test_judgement_surfaces.py ..............................s.......  [ 48%]
+tests/test_known_works.py ......                                         [ 48%]
+tests/test_known_works_fetchers.py ........................              [ 50%]
+tests/test_manifest_search_and_artists.py .............................. [ 51%]
+......                                                                   [ 51%]
+tests/test_meural_filename.py .........................                  [ 52%]
+tests/test_misresolved_work_qid.py ...........                           [ 53%]
+tests/test_misresolved_work_qid_guard.py ......                          [ 53%]
+tests/test_needs_research_report.py ....                                 [ 53%]
+tests/test_normalize_titles.py .........                                 [ 54%]
+tests/test_operator_messages_name_real_artifacts.py ....                 [ 54%]
+tests/test_palette_sensitivity.py .........................              [ 55%]
+tests/test_partial_crop_role.py ..................                       [ 56%]
+tests/test_perceptual_dedupe.py .......                                  [ 56%]
+tests/test_promote_variant_upgrade.py ................                   [ 57%]
+tests/test_propose_subject_tags.py ........                              [ 57%]
+tests/test_provenance.py ..................                              [ 58%]
+tests/test_quality.py sssss...........                                   [ 59%]
+tests/test_quarantine_ttl_report.py ......                               [ 59%]
+tests/test_rank_known_works.py ...............                           [ 60%]
+tests/test_remediate_variant_identity.py ...                             [ 60%]
+tests/test_render.py ...                                                 [ 60%]
+tests/test_render_color.py ....                                          [ 60%]
+tests/test_render_color_strategy.py ..                                   [ 61%]
+tests/test_render_strategy.py ....                                       [ 61%]
+tests/test_repair_provenance_keys.py ...                                 [ 61%]
+tests/test_repo_hygiene.py .                                             [ 61%]
+tests/test_reresolve_work_qids.py ........                               [ 61%]
+tests/test_resolve_artist_cascade.py ................................... [ 63%]
+.....                                                                    [ 63%]
+tests/test_resolve_work_qids_guards.py .......................           [ 64%]
+tests/test_review_gates.py ............................................. [ 66%]
+.                                                                        [ 66%]
+tests/test_rocchio_preference.py .............                           [ 67%]
+tests/test_same_object.py ...........                                    [ 68%]
+tests/test_script_defaults.py ...                                        [ 68%]
+tests/test_selection_lenses.py ......................................... [ 70%]
+..............                                                           [ 70%]
+tests/test_semantic_parser.py .........................                  [ 71%]
+tests/test_series_position_migration.py ....                             [ 72%]
+tests/test_shared_work_qid_classifier.py ..                              [ 72%]
+tests/test_sidecar.py .................................................. [ 74%]
+......................                                                   [ 75%]
+tests/test_sidecar_io.py ....                                            [ 75%]
+tests/test_site_anchored.py ......                                       [ 76%]
+tests/test_source_adapter_helpers.py .....                               [ 76%]
+tests/test_source_quality.py ...............                             [ 77%]
+tests/test_source_quality_wiring.py .....................                [ 78%]
+tests/test_source_resolver.py .................................          [ 79%]
+tests/test_source_resolver_dimensions.py ......................          [ 80%]
+tests/test_source_resolver_remote_providers.py ...                       [ 80%]
+tests/test_source_resolver_transport.py .............                    [ 81%]
+tests/test_store_cache_reload.py .....                                   [ 81%]
+tests/test_subject_action_state.py .................................     [ 83%]
+tests/test_title_artist_swap.py ..........                               [ 83%]
+tests/test_validate_run_contract_self_smoke.py .                         [ 83%]
+tests/test_variant_candidate_path_confinement.py ....................... [ 84%]
+.......                                                                  [ 85%]
+tests/test_variant_identity.py .......                                   [ 85%]
+tests/test_variant_upgrade_crop_gate.py .......................          [ 86%]
+tests/test_variant_upgrade_labels_and_dims.py ...............            [ 87%]
+tests/test_variants.py ...........................................       [ 89%]
+tests/test_verify.py ............sss..s.                                 [ 90%]
+tests/test_verify_embeddings.py .....                                    [ 90%]
+tests/test_weekly_review_thumb_paths.py ...............                  [ 90%]
+tests/test_wikidata_find_artist.py ...................                   [ 91%]
+tests/test_wikidata_value_parsing.py ................................... [ 93%]
+..............................................                           [ 95%]
+tests/test_work_qid_by_creator.py ........................               [ 96%]
+tests/test_work_qid_collision_audit.py ......                            [ 97%]
+tests/test_work_qid_collision_audit_cli.py ...                           [ 97%]
+tests/test_work_qid_collision_guard.py ......                            [ 97%]
+tests/test_work_qid_search.py ...............                            [ 98%]
+tests/test_work_qid_title_variants.py ........................           [ 99%]
+tests/test_work_qid_uniqueness_guard.py .....                            [ 99%]
+tests/test_workspace_conflict_guard.py ....FFFF.                         [100%]
+
+| =================================== FAILURES ===================================
+_______________ test_automation_lock_path_is_not_on_dropbox_tree _______________
+
+self = PosixPath('/home/runner/.cache/fine-art-archive/automation-locks')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/.cache/fine-art-archive/automation-locks'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+    def test_automation_lock_path_is_not_on_dropbox_tree() -> None:
+>       lock = automation_lock_path("growth_tick.lock")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_workspace_conflict_guard.py:54:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/fine_art_archive/api/gates.py:73: in automation_lock_path
+    directory.mkdir(parents=True, exist_ok=True)
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1015: in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/home/runner/.cache/fine-art-archive'), mode = 511
+parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: OSError
+________ test_automation_lock_path_rejects_configured_dropbox_directory ________
+
+self = PosixPath('/home/runner/.cache/fine-art-archive/automation-locks')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/.cache/fine-art-archive/automation-locks'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f992077e660>
+
+    def test_automation_lock_path_rejects_configured_dropbox_directory(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        configured = Path.home() / "Library" / "CloudStorage" / "Dropbox" / "faa-locks"
+        monkeypatch.setattr(gates, "AUTOMATION_LOCK_DIR", configured)
+
+>       lock = gates.automation_lock_path("growth_tick.lock")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_workspace_conflict_guard.py:64:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/fine_art_archive/api/gates.py:73: in automation_lock_path
+    directory.mkdir(parents=True, exist_ok=True)
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1015: in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/home/runner/.cache/fine-art-archive'), mode = 511
+parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: OSError
+_________ test_resolve_automation_lock_path_redirects_synced_candidate _________
+
+self = PosixPath('/home/runner/.cache/fine-art-archive/automation-locks')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/.cache/fine-art-archive/automation-locks'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-1/test_resolve_automation_lock_p0')
+
+    def test_resolve_automation_lock_path_redirects_synced_candidate(tmp_path: Path) -> None:
+        # Simulate a lock file colocated with workspace data on a Dropbox path.
+        dropbox_like = Path.home() / "Library" / "CloudStorage" / "Dropbox" / "tmp-faa-test"
+        candidate = dropbox_like / "growth_tick.lock"
+>       resolved = resolve_automation_lock_path(candidate, "growth_tick.lock")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_workspace_conflict_guard.py:74:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/fine_art_archive/api/gates.py:87: in resolve_automation_lock_path
+    return automation_lock_path(lock_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fine_art_archive/api/gates.py:73: in automation_lock_path
+    directory.mkdir(parents=True, exist_ok=True)
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1015: in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/home/runner/.cache/fine-art-archive'), mode = 511
+parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: OSError
+_______ test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox _______
+
+self = PosixPath('/home/runner/.cache/fine-art-archive/automation-locks')
+mode = 511, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/.cache/fine-art-archive/automation-locks'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-1/test_sidecar_file_lock_redirec0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f99203e3e70>
+
+    def test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """_sidecar_file_lock must not place the lock file beside a Dropbox-synced sidecar.
+
+        Deliberate-break: comment out the gates.resolve_automation_lock_path call in
+        _sidecar_file_lock (reverting to path.with_suffix) — this assertion fails because
+        the lock file lands in tmp_path instead of the host-local automation lock dir.
+        """
+        import fine_art_archive.api.main as main_mod
+        import fine_art_archive.fixity as fixity_mod
+
+        # Treat tmp_path as a cloud-synced workspace so resolve_automation_lock_path
+        # redirects any lock that would land there to the host-local automation dir.
+        monkeypatch.setattr(gates, "is_cloud_synced_workspace_path", lambda p: str(tmp_path) in str(p))
+
+        sidecar_path = tmp_path / "meta.json"
+        sidecar_path.write_text("{}", encoding="utf-8")
+
+        lock_files_created: list[Path] = []
+        original_open = Path.open
+
+        def _tracking_open(self: Path, *args, **kwargs):  # type: ignore[no-untyped-def]
+            if self.suffix == ".lock":
+                lock_files_created.append(self)
+            return original_open(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "open", _tracking_open)
+
+        for module in (main_mod, fixity_mod):
+>           with module._sidecar_file_lock(sidecar_path):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_workspace_conflict_guard.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+src/fine_art_archive/api/main.py:1384: in _sidecar_file_lock
+    lock_path = gates.resolve_automation_lock_path(
+src/fine_art_archive/api/gates.py:87: in resolve_automation_lock_path
+    return automation_lock_path(lock_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fine_art_archive/api/gates.py:73: in automation_lock_path
+    directory.mkdir(parents=True, exist_ok=True)
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1015: in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/home/runner/.cache/fine-art-archive'), mode = 511
+parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+
+/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/pathlib/__init__.py:1011: OSError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.7-final-0 ________________
+
+Name                                                          Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------------------------------------------
+src/fine_art_archive/__init__.py                                  1      0      0      0   100%
+src/fine_art_archive/api/__init__.py                              0      0      0      0   100%
+src/fine_art_archive/api/config.py                               11      0      2      0   100%
+src/fine_art_archive/api/gates.py                               374     66    136     21    78%   74, 95, 253, 256-257, 259, 263, 321-323, 334, 427-442, 448, 497, 500, 618, 741-751, 760-767, 806, 809-810, 812->803, 857, 867, 873-876, 879, 881, 908-912, 923->921, 934-935
+src/fine_art_archive/api/main.py                               1419    168    390     50    86%   204, 221, 262-264, 377, 431, 446-447, 503, 515, 597, 617-623, 630-631, 659->661, 672-673, 726-764, 776-778, 782-783, 793-794, 823-855, 883, 932, 933->935, 954, 998-999, 1028, 1064, 1099, 1105-1107, 1173->1190, 1194->1190, 1221, 1223-1250, 1285, 1313-1314, 1344, 1630, 1698, 1770, 1808, 1839, 1847, 1860, 1906-1914, 1932-1943, 2054-2055, 2089, 2092-2093, 2096, 2104-2105, 2178-2180, 2185-2187, 2204-2205, 2365->2369, 2367-2368, 2382->2396, 2385-2386, 2392, 2394-2395, 2407-2409, 2421, 2435, 2484, 2504, 2532-2533, 2546-2547, 2549, 2610, 2820, 2887-2889, 2905->2910, 2908, 2936, 3013, 3033->3043, 3041->3043, 3053, 3059-3067, 3100->3105, 3119
+src/fine_art_archive/api/store.py                               433     20    110      6    95%   69, 273-274, 336-337, 389-390, 449, 459, 461-462, 482-483, 505, 560-561, 627-628, 732, 758->756, 807
+src/fine_art_archive/collect/__init__.py                          0      0      0      0   100%
+src/fine_art_archive/collect/acquisition_flow.py                127      5     38      7    93%   87, 90, 118, 164->162, 166-167, 249->258
+src/fine_art_archive/collect/dedup_cascade.py                    99      1     32      3    97%   126->160, 130, 181->186
+src/fine_art_archive/collect/dedupe.py                          132     26     40      5    75%   120-124, 139, 182, 198->208, 209-211, 216-218, 255-276
+src/fine_art_archive/collect/discovery.py                       195     51     48     10    74%   66-79, 83-88, 92-101, 109, 112, 115, 118, 145, 148, 185->180, 199-200, 214, 217, 232-233, 256, 262-263, 274-275, 296-297, 382-390
+src/fine_art_archive/collect/host_registry.py                   166     20     86     23    83%   66-69, 116, 123, 129, 139, 142, 149, 153, 159, 166, 173, 174->181, 178, 182, 184, 197, 200, 207, 214, 217, 249->252, 254->257, 255->254, 257->262
+src/fine_art_archive/collect/quality.py                         221     27     68     12    85%   189-200, 261, 278-286, 300, 302, 304, 322, 335, 337-340, 370, 391, 395, 444
+src/fine_art_archive/collect/reference.py                         5      5      0      0     0%   19-38
+src/fine_art_archive/collect/sources/__init__.py                  0      0      0      0   100%
+src/fine_art_archive/collect/sources/_shared.py                  24      4      8      2    75%   17, 33-35
+src/fine_art_archive/collect/sources/artic.py                    21      2      0      0    90%   40, 44
+src/fine_art_archive/collect/sources/cleveland.py                20      2      0      0    90%   35, 39
+src/fine_art_archive/collect/sources/google_arts_culture.py      15      4      0      0    73%   46, 62-63, 77
+src/fine_art_archive/collect/sources/met.py                      20      2      0      0    90%   72-73
+src/fine_art_archive/collect/sources/rijksmuseum.py              58     22      8      2    58%   55, 59, 63, 73-78, 82, 92, 102, 113-117, 133-135, 181, 183
+src/fine_art_archive/collect/verify.py                          238     42     60      8    83%   55, 81, 177-180, 223-229, 233-239, 252-267, 274, 279, 321-322, 349, 356, 389, 399-400, 432-433, 441-442, 450->428, 591-592
+src/fine_art_archive/crosswalk.py                                91      0     26      6    95%   125->128, 129->132, 133->139, 140->152, 147->150, 153->156
+src/fine_art_archive/display/__init__.py                          0      0      0      0   100%
+src/fine_art_archive/display/crops.py                            72      0     32      0   100%
+src/fine_art_archive/display/hints.py                            25      0      8      0   100%
+src/fine_art_archive/display/render.py                          170     17     48     11    86%   26, 35, 74-76, 90, 160, 171-174, 180, 192->195, 207, 210, 222, 228, 259
+src/fine_art_archive/eink/__init__.py                             6      0      0      0   100%
+src/fine_art_archive/eink/feed.py                                96      4     12      0    96%   116-117, 129-130
+src/fine_art_archive/eink/gamut.py                               64      2     16      1    96%   144-145
+src/fine_art_archive/eink/palette.py                            170      2     40      2    98%   364, 596
+src/fine_art_archive/eink/playlist.py                           271     28    142     21    86%   153, 245->249, 248, 261, 268, 284->286, 328-329, 333-337, 345, 347, 349, 351, 353, 368-372, 374, 399, 407-409, 416->419, 427, 490->485, 495
+src/fine_art_archive/eink/render_strategy.py                     19      2      4      2    83%   32, 36
+src/fine_art_archive/eink/sdcard.py                             107     11     32      1    90%   104, 191, 216-219, 289-293
+src/fine_art_archive/eink/targets.py                             69      5     12      3    90%   54, 183, 187, 223->225, 230-231
+src/fine_art_archive/enrichment/__init__.py                       2      0      0      0   100%
+src/fine_art_archive/enrichment/artist_from_work.py              76     10     38     12    81%   38->exit, 57, 60, 63, 73->67, 75->67, 88, 94-95, 104, 115, 118, 121
+src/fine_art_archive/enrichment/category_infer.py               114      2     62      5    96%   220, 288->292, 307->exit, 325, 329->327, 331->327
+src/fine_art_archive/enrichment/creator_category_prior.py        43      4     24      7    84%   65, 87->exit, 98, 101, 104, 108->106, 110->106
+src/fine_art_archive/enrichment/creator_provenance.py           103      4     40      7    92%   44->exit, 104, 131, 142->141, 180->175, 194, 231
+src/fine_art_archive/enrichment/dossier.py                      128      4     50     19    87%   144, 171, 180->181, 180->exit, 181->182, 181->exit, 182->183, 182->exit, 183->184, 183->exit, 184->exit, 205->207, 207->209, 209->211, 212->215, 236, 252->256, 283->297, 293->297, 300->313, 311
+src/fine_art_archive/enrichment/holder.py                       282     24    118     29    87%   74, 102->106, 102->exit, 106->exit, 143, 151, 155, 181->188, 183->188, 235, 241, 256, 258, 264, 270, 275, 322, 325, 329, 331->327, 347, 350, 352->345, 361, 363->359, 431, 437->442, 441, 462-464, 475-476
+src/fine_art_archive/enrichment/holder_by_creator.py            168      5     60      6    95%   47->exit, 129, 134, 218, 348, 440
+src/fine_art_archive/enrichment/medium_vocab.py                  57      5     30      5    89%   116, 125, 133, 135, 148
+src/fine_art_archive/enrichment/misresolved_work_qid.py          72      3     20      5    91%   53->exit, 105, 108, 136, 139->137
+src/fine_art_archive/enrichment/source_resolver.py              782     95    346     66    84%   120->exit, 155, 178, 181->186, 184, 188-197, 200, 203, 224, 231, 235, 238-239, 275->280, 278->280, 295, 298, 359->357, 431, 434-437, 442-447, 450, 462, 498, 501, 535, 546, 582, 596, 725, 727, 731->733, 742, 768-772, 787, 885, 912-916, 924-928, 955, 977, 979, 994, 1010-1011, 1013->1036, 1016->1036, 1024-1025, 1028, 1038->1045, 1049, 1057-1062, 1133->1125, 1147-1155, 1175, 1188, 1191, 1194->1189, 1197->1199, 1227->1226, 1229-1231, 1235, 1275->1273, 1277, 1339, 1341, 1354->1346, 1356, 1390-1396, 1468, 1476, 1514
+src/fine_art_archive/enrichment/title_artist_swap.py             62      3     24      5    91%   62->exit, 68->exit, 86, 114, 128
+src/fine_art_archive/enrichment/wikidata_identity.py             31      1     16      5    87%   18->exit, 26->24, 28->24, 30->24, 49
+src/fine_art_archive/enrichment/work_qid_by_creator.py           91     11     42     10    84%   57, 61-62, 70, 74, 78, 90, 141, 145, 149->146, 196, 207
+src/fine_art_archive/enrichment/work_qid_search.py               71      5     26      7    88%   43->exit, 49->exit, 68, 83, 114, 165, 168
+src/fine_art_archive/enrichment/work_qid_title_variants.py      136      4     58      6    95%   175, 221->224, 249, 286->269, 290->265, 352, 358
+src/fine_art_archive/fixity.py                                  202     20     42      8    88%   39, 63, 75, 89-94, 166->168, 169-171, 262, 265, 287, 302, 335, 349-350, 356->362, 373
+src/fine_art_archive/identity/__init__.py                         3      0      0      0   100%
+src/fine_art_archive/identity/artist_lookup.py                   77      6     44      8    87%   67->exit, 78->80, 94->96, 97-99, 138, 156, 158, 163->161
+src/fine_art_archive/identity/artist_qid.py                      13      0      2      0   100%
+src/fine_art_archive/identity/artist_resolver.py                189      8     76      8    93%   298->302, 300->302, 304->311, 327-344, 451->446, 525->527, 636->634, 646->643, 652->649
+src/fine_art_archive/identity/crop_siblings.py                  143      6     56      5    94%   210, 212->205, 239, 350-351, 354-355
+src/fine_art_archive/identity/getty.py                          129      7     46      6    93%   30, 108->91, 145, 150, 184, 187, 190-191
+src/fine_art_archive/identity/same_object.py                     47      0     20      0   100%
+src/fine_art_archive/identity/variant_identity.py                69      7     20      3    89%   92-93, 138, 141, 161-163
+src/fine_art_archive/identity/variants.py                       155      7     66      5    94%   161, 180, 198, 415-416, 424-425
+src/fine_art_archive/identity/work_qid_collision_audit.py        64      0      8      0   100%
+src/fine_art_archive/identity/work_qid_uniqueness.py             38      3      8      0    93%   62-65, 95
+src/fine_art_archive/iiif.py                                    104     11     34      6    83%   18, 29, 45, 65->69, 72, 80-86
+src/fine_art_archive/issue_format.py                             78     19     38      0    75%   93-111, 166-174
+src/fine_art_archive/known_works/__init__.py                      3      0      0      0   100%
+src/fine_art_archive/known_works/artwork_classes.py             114     18     50     12    80%   120, 123, 127, 130, 132->125, 140, 143, 147, 150, 152->145, 167, 209, 250-268
+src/fine_art_archive/known_works/fetchers.py                    206      2     76      1    99%   129-130
+src/fine_art_archive/parsers/__init__.py                          0      0      0      0   100%
+src/fine_art_archive/parsers/dimension_utils.py                  39      2     10      0    96%   73-74
+src/fine_art_archive/parsers/meural_filename.py                  74      2     22      3    95%   62, 99->106, 118->130, 147
+src/fine_art_archive/parsers/semantic.py                        319     43    164     22    84%   70, 74, 77, 79->exit, 91-105, 129->134, 135-138, 152, 159->163, 270, 285, 313, 315, 322, 324, 330, 404, 455, 464, 484-486, 503-512, 617, 648
+src/fine_art_archive/parsers/year_utils.py                       48      2     24      2    94%   53, 57
+src/fine_art_archive/preference/__init__.py                       3      0      0      0   100%
+src/fine_art_archive/preference/bradley_terry.py                118      2     46      3    97%   148->166, 167, 248
+src/fine_art_archive/preference/exhibition.py                    82      6     32      6    89%   64, 68, 75, 83, 91, 94
+src/fine_art_archive/preference/rocchio.py                       82      4     34      4    93%   70, 73, 90, 94->88, 169->167, 188
+src/fine_art_archive/provenance.py                              121      9     36      6    90%   42, 48, 106-107, 146, 227, 230, 234-235
+src/fine_art_archive/quality/__init__.py                          2      0      0      0   100%
+src/fine_art_archive/quality/source_quality.py                  328     45    146     24    82%   165->exit, 255->257, 272, 279, 284, 351, 360, 386, 437-439, 477, 481-482, 485, 490->496, 505-520, 560-562, 569, 573-575, 579, 583, 584->581, 586, 592-598, 606, 615, 624->626, 627-630, 635
+src/fine_art_archive/selection/__init__.py                        2      0      0      0   100%
+src/fine_art_archive/selection/lenses.py                        236      9     98      6    95%   85, 128, 333-340, 377, 459->458, 509, 518
+src/fine_art_archive/sidecar.py                                  74      2     18      3    95%   59, 94->96, 111, 145->148
+src/fine_art_archive/variants/__init__.py                         2      0      0      0   100%
+src/fine_art_archive/variants/upgrade_gates.py                   47      1     16      1    97%   138
+---------------------------------------------------------------------------------------------------------
+TOTAL                                                         10168    959   3584    532    88%
+Coverage XML written to file coverage.xml
+Coverage JSON written to file coverage.json
+Required test coverage of 25.0% reached. Total coverage: 87.91%
+| =========================== short test summary info ============================
+FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'
+| ======= 4 failed, 2117 passed, 12 skipped, 1 warning in 73.64s (0:01:13) =======
