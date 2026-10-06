@@ -1,0 +1,36 @@
+[
+  {
+    "command": "PYTHONPATH=/tmp/issue-772-current/shim:src BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_api_research_requests.py",
+    "exit": 0,
+    "log": "black-format.log.gz"
+  },
+  {
+    "command": "PYTHONPATH=/tmp/issue-772-current/shim:src BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "exit": 0,
+    "log": "black-check.log.gz"
+  },
+  {
+    "command": "ruff check src/fine_art_archive/api/main.py tests/test_api_research_requests.py",
+    "exit": 0,
+    "log": "ruff.log.gz"
+  },
+  {
+    "command": "git diff --check",
+    "exit": 0
+  },
+  {
+    "command": "PYTHONPATH=/tmp/issue-772-current/shim:src python -m pytest tests/test_api_research_requests.py tests/test_companion_app_api.py -o addopts='' -m 'not slow' --cov=fine_art_archive.api.main --cov-report=term-missing --cov-report=json:/tmp/issue-772-current/targeted-coverage.json -q",
+    "exit": 0,
+    "log": "targeted.log.gz"
+  },
+  {
+    "command": "gh pr view --json number,state,isDraft",
+    "exit": 1,
+    "error": "Unable to connect to api.github.com"
+  },
+  {
+    "command": "git add src/fine_art_archive/api/main.py tests/test_api_research_requests.py docs/evidence/issue-772-identity-coverage.md docs/evidence/issue-772-research",
+    "exit": 128,
+    "error": ".git/index.lock: Read-only file system"
+  }
+]
