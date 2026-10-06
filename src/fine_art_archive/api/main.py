@@ -1967,6 +1967,8 @@ def propose_tags(work_id: str) -> dict:
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+    except OSError:
+        raise HTTPException(503, "tagger could not be started") from None
     if proc.returncode != 0:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger failed: " + " / ".join(tail))
@@ -1976,6 +1978,21 @@ def propose_tags(work_id: str) -> dict:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger produced no JSON: " + " / ".join(tail)) from None
 
+    if (
+        not isinstance(payload, dict)
+        or ("works" in payload and not isinstance(payload["works"], list))
+        or any(
+            not isinstance(work, dict)
+            or ("proposals" in work and not isinstance(work["proposals"], list))
+            for work in (payload.get("works") or [])
+        )
+        or ("gate" in payload and not isinstance(payload["gate"], dict))
+        or (
+            "tags_enabled" in payload.get("gate", {})
+            and not isinstance(payload["gate"]["tags_enabled"], list)
+        )
+    ):
+        raise HTTPException(500, "tagger produced invalid JSON structure")
     works = payload.get("works") or []
     w = works[0] if works else {}
     # No cache to invalidate: store keys sidecar reads on the file's
