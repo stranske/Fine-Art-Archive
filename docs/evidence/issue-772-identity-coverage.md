@@ -67,3 +67,181 @@ The initial guard accepted explicit `works: null` and `gate: null`. Field-presen
 Verification used Python 3.14.8 with `pytest tests/test_api_tag_proposals.py tests/test_companion_app_api.py tests/test_companion_app_security.py tests/test_subject_action_state.py -m "not slow" --no-cov -q`. The sandbox denies socketpair sends, preventing asyncio thread wakeups; a temporary verification-only selector polling shim let the unchanged HTTP tests execute. It was kept outside the repository and did not change application behavior or assertions.
 
 Whole-repository Black check passed for **339 files** (line length 100, the required exclusions, one worker and the same polling shim). Touched-file Ruff, source-module mypy and `git diff --check` passed. GitHub API access was unavailable, so remote checklist updates and PR-state verification remain for the receiving lane.
+
+## Keepalive verification, 2026-10-06
+
+This round's baseline is `3cfc764d12a722dd2a7da8ff2bb821cf36599273` on
+`codex/issue-772-identity-coverage`. The earlier main comparison above is historical;
+the following comparison measures the source and tests available in this runner.
+
+### Current gap ranking
+
+The repair-history proxy is explicitly **not an escaped-production-defect count**.
+The input is the latest 500 commit subjects reachable from the baseline, ending at
+`d718d40c575b44443208a24938c6977d076e3931`:
+`git log -500 --format='%H%x09%s' 3cfc764d12a722dd2a7da8ff2bb821cf36599273`.
+For each commit, `git diff-tree --no-commit-id --name-only -r <sha>` supplies touched
+paths. Count each Python production path once per commit for churn, and once for
+the repair proxy when the subject matches the case-insensitive expression
+`\b(?:fix|bug|correct|repair|guard|regression)`. Keep modules with missing lines or
+branches from the full baseline coverage JSON, then sort by descending proxy,
+churn, and missing lines, using ascending path for ties. Missing branches are
+reported separately. The [complete ranking](issue-772-current-gap-ranking.csv)
+contains all **65** modules with measured gaps.
+
+| Rank | File under `src/fine_art_archive/` | Repair-history proxy | Churn | Missing lines | Missing branches |
+|---|---|---:|---:|---:|---:|
+| 1 | `api/main.py` | 22 | 49 | 168 | 80 |
+| 2 | `api/store.py` | 6 | 19 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+The first-ranked module remains the selected scope. Its `propose_tags` symbol
+already measured 100% line and branch coverage, but launching a missing,
+non-executable, or otherwise unavailable configured Python process still raised
+an uncaught `OSError`. This is a behavioral gap that the aggregate metric cannot
+represent. The three new HTTP cases reproduced it on the baseline source:
+`python -m pytest tests/test_api_tag_proposals.py::test_launch_failure_reports_tagger_unavailable -m "not slow" --no-cov -q`
+returned **exit 1, 3 failed** (`missing-executable`, `permission-denied`, `os-error`).
+The two-line fix catches launch `OSError` and returns HTTP 503 with
+`{"detail": "tagger could not be started"}`. The tests also require exactly one
+launch attempt. The existing timeout case continues to require HTTP 504.
+
+### Identical-scope full-suite comparison
+
+Both executions ran the exact requested command:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src PYTEST_ADDOPTS="-m 'not slow'" \
+  python -m pytest -q --cov=src --cov-report=json:coverage.json
+```
+
+Python **3.14.7**, pytest **9.1.1**, pytest-cov **7.1.0** and the repository's
+unchanged combined line+branch coverage configuration were used for both.
+`PYTEST_ADDOPTS` applies the required `not slow` selection identically; it
+deselected no tests. No coverage exclusions or full-suite coverage floor changed.
+The baseline JSON was saved before the candidate overwrote `coverage.json`.
+
+The sandbox denies wakeup socket sends, so the unassisted baseline stalled at
+the first HTTP test and was interrupted (exit 130); it is not a completed
+measurement. Both completed measurements used the same external
+`/tmp/issue-772-verification/sitecustomize.py`: wrap
+`selectors.DefaultSelector.select` to call the original selector with
+`0.01 if timeout is None else min(timeout, 0.01)`. This permits asyncio to observe
+queued callbacks without changing repository source, assertions, or test mocks.
+
+| Metric | Baseline | Candidate |
+|---|---:|---:|
+| collected | 2124 | 2127 |
+| passed | 2108 | 2111 |
+| failed | 4 | 4 |
+| skipped | 12 | 12 |
+| warnings | 1 | 1 |
+| exit status | 1 | 1 |
+| covered_lines | 9207 | 9209 |
+| num_statements | 10166 | 10168 |
+| covered_branches | 2880 | 2880 |
+| num_branches | 3584 | 3584 |
+| missing_lines | 959 | 959 |
+| missing_branches | 704 | 704 |
+| percent_covered | 87.90545454545455 | 87.90721349621873 |
+| api/main.py covered_lines | 1249 | 1251 |
+| api/main.py missing_lines | 168 | 168 |
+| api/main.py covered_branches | 310 | 310 |
+| api/main.py missing_branches | 80 | 80 |
+| api/main.py percent_covered | 86.27559490868843 | 86.29076838032061 |
+| propose_tags percent_covered | 100 | 100 |
+
+The exact failed-node sets match. All four existing failures are in
+`tests/test_workspace_conflict_guard.py`, each raising
+`OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'`:
+
+- `test_automation_lock_path_is_not_on_dropbox_tree`
+- `test_automation_lock_path_rejects_configured_dropbox_directory`
+- `test_resolve_automation_lock_path_redirects_synced_candidate`
+- `test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`
+
+These environmental failures remain visible; no existing test was skipped or
+disabled to make the comparison pass. There are **no new failures**. A fully
+green suite still needs a runner with a writable host-local lock directory.
+
+### Repeated actual source mutation proof
+
+All **32** tag-proposal cases, including the previous follow-up's expanded shape
+cases and all three new launch cases, were exercised against real source edits.
+Every row ran the following command with its named function node, first mutated
+and then restored, using the same polling shim:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 \
+  python -m pytest tests/test_api_tag_proposals.py::<function> -m "not slow" --no-cov -q
+```
+
+| Actual source mutation | Function | Mutated result | Restored result |
+|---|---|---|---|
+| Replace work-id validation call with `pass` | `test_invalid_work_id_never_launches_tagger` | 1 failed, exit 1 | 1 passed, exit 0 |
+| Make missing-script condition false | `test_missing_script_reports_unavailable_without_launch` | 1 failed, exit 1 | 1 passed, exit 0 |
+| Change timeout HTTP 504 to 500 | `test_timeout_is_a_gateway_timeout` | 1 failed, exit 1 | 1 passed, exit 0 |
+| Remove the new `except OSError` handler | `test_launch_failure_reports_tagger_unavailable` | 3 failed, exit 1 | 3 passed, exit 0 |
+| Change failed-process HTTP 500 to 502 | `test_failed_process_reports_only_last_four_error_lines` | 1 failed, exit 1 | 1 passed, exit 0 |
+| Change missing-JSON HTTP 500 to 502 | `test_missing_final_json_reports_controlled_error` | 3 failed, exit 1 | 3 passed, exit 0 |
+| Remove the complete JSON shape guard | `test_invalid_json_shape_reports_controlled_error` | 17 failed, exit 1 | 17 passed, exit 0 |
+| Replace selected work with an empty object | `test_valid_result_preserves_proposals_and_launch_contract` | 1 failed, exit 1 | 1 passed, exit 0 |
+| Change default `written` from false to true | `test_empty_result_uses_explicit_defaults` | 4 failed, exit 1 | 4 passed, exit 0 |
+
+The harness retained original bytes and restored them in `finally` after each
+mutation. Byte equality was asserted before every restored execution. Only
+`api/__pycache__/main.*.pyc` was removed before executions to prevent stale
+bytecode. Every restoration had SHA256
+`1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91`.
+[Captured console results](issue-772-tag-proposal-followup-mutations.txt) include
+the exact commands, individual failing parameter nodes, counts, statuses, and
+restoration hashes.
+
+### Validation and task status
+
+The focused module produced **32 passed**. An initial focused coverage invocation
+also inherited the configured `--cov=src`, producing exit 1 despite all tests
+passing because the full-src 25% floor was not met by this tiny selection. The
+corrected targeted coverage gate removed only the default command arguments,
+kept the 25% floor, and covered the specific module:
+
+```bash
+PYTHONPATH=/tmp/issue-772-verification:src python -m pytest \
+  tests/test_api_tag_proposals.py tests/test_companion_app_api.py \
+  tests/test_companion_app_security.py tests/test_subject_action_state.py \
+  -o addopts='' -m "not slow" --cov=fine_art_archive.api.main --cov-report=term-missing -q
+```
+
+Result: **157 passed, exit 0**, `src/fine_art_archive/api/main.py` **54%** in the
+targeted table (**54.06%** combined as printed), with `propose_tags` **100%** in
+the final full-suite JSON. No 90% claim is made for this targeted selection.
+
+Black formatted both touched Python files at line length 100. The required
+whole-repository command
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+passed for **339 files**, with `BLACK_NUM_WORKERS=1` and the polling shim because
+the sandbox also denies multiprocessing socket binds. Touched-file
+`ruff check src/fine_art_archive/api/main.py tests/test_api_tag_proposals.py`,
+`mypy src/fine_art_archive/api/main.py`, and `git diff --check` passed.
+
+- [x] Run the current full-src coverage baseline and rank gaps by the named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected production symbols and minimally fix the reproduced launch defect.
+- [x] Deliberately break every tag-proposal case, run its named test, restore exact source bytes, and capture proof here.
+- [x] Complete identical-scope baseline/candidate coverage with no new failures, recording exact counts, percentages, ranking, and existing failures.
+- [x] Verify each new case fails for its actual source mutation and passes after byte-identical restoration, recording nodes, commands, and exits.
+- [x] Apply the conditional 90% criterion: the measured baseline is below 90%, so retain this bounded PR and the broader #772 initiative.
+
+Remote checklist updates and PR readiness could not be checked:
+`gh pr view 774 --repo stranske/Fine-Art-Archive --json number,state,isDraft,body`
+failed to connect to `api.github.com` (exit 1). This round did not change remote
+PR state or close the broader issue.
+
+The primary checkout's `.git` is read-only: staging failed to create
+`.git/index.lock`. The five changed files are committed using an isolated local
+repository at `/tmp/issue-772-commit-repo`, with the baseline tree as parent and
+the primary working files as input. The receiving lane can apply the exported
+`/tmp/issue-772-keepalive.patch` to its writable checkout. No commit or push to
+the primary checkout or remote is claimed.

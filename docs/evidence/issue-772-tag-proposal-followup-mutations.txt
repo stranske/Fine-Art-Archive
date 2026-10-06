@@ -1,0 +1,104 @@
+MUTATION work-id
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_invalid_work_id_never_launches_tagger", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_invalid_work_id_never_launches_tagger - Failed: invalid identity launched tagger
+========================= 1 failed, 1 warning in 0.74s =========================
+EXIT 1
+RESTORED work-id
+========================= 1 passed, 1 warning in 0.31s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION missing-script
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_missing_script_reports_unavailable_without_launch", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_missing_script_reports_unavailable_without_launch - Failed: missing script launched tagger
+========================= 1 failed, 1 warning in 0.69s =========================
+EXIT 1
+RESTORED missing-script
+========================= 1 passed, 1 warning in 0.30s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION timeout
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_timeout_is_a_gateway_timeout", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_timeout_is_a_gateway_timeout - assert 500 == 504
+========================= 1 failed, 1 warning in 0.40s =========================
+EXIT 1
+RESTORED timeout
+========================= 1 passed, 1 warning in 0.32s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION launch-error
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_launch_failure_reports_tagger_unavailable", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_launch_failure_reports_tagger_unavailable[missing-executable] - FileNotFoundError: configured Python executable is missing
+FAILED tests/test_api_tag_proposals.py::test_launch_failure_reports_tagger_unavailable[permission-denied] - PermissionError: configured Python executable is not executable
+FAILED tests/test_api_tag_proposals.py::test_launch_failure_reports_tagger_unavailable[os-error] - OSError: process resources are unavailable
+========================= 3 failed, 1 warning in 1.53s =========================
+EXIT 1
+RESTORED launch-error
+========================= 3 passed, 1 warning in 0.44s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION process-failure
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_failed_process_reports_only_last_four_error_lines", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_failed_process_reports_only_last_four_error_lines - assert 502 == 500
+========================= 1 failed, 1 warning in 0.41s =========================
+EXIT 1
+RESTORED process-failure
+========================= 1 passed, 1 warning in 0.30s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION final-json
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[] - assert 502 == 500
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[progress only] - assert 502 == 500
+FAILED tests/test_api_tag_proposals.py::test_missing_final_json_reports_controlled_error[{"works": []}\ntrailing noise] - assert 502 == 500
+========================= 3 failed, 1 warning in 0.49s =========================
+EXIT 1
+RESTORED final-json
+========================= 3 passed, 1 warning in 0.44s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION json-shape
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[null] - AttributeError: 'NoneType' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[list] - AttributeError: 'list' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[string] - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[boolean] - AttributeError: 'bool' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[number] - AttributeError: 'int' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-null] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-object] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-string] - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-boolean] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[works-number] - TypeError: 'int' object is not subscriptable
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[null-work] - AttributeError: 'NoneType' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[invalid-later-work] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-null] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-list] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-string] - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-boolean] - assert 200 == 500
+FAILED tests/test_api_tag_proposals.py::test_invalid_json_shape_reports_controlled_error[gate-number] - AttributeError: 'int' object has no attribute 'get'
+======================== 17 failed, 1 warning in 4.41s =========================
+EXIT 1
+RESTORED json-shape
+======================== 17 passed, 1 warning in 1.00s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION success-fields
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_valid_result_preserves_proposals_and_launch_contract", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_valid_result_preserves_proposals_and_launch_contract - AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+========================= 1 failed, 1 warning in 0.37s =========================
+EXIT 1
+RESTORED success-fields
+========================= 1 passed, 1 warning in 0.29s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91
+MUTATION empty-defaults
+COMMAND ["/opt/hostedtoolcache/Python/3.14.7/x64/bin/python", "-m", "pytest", "tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults", "-m", "not slow", "--no-cov", "-q"]
+FAILED tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults[fields0] - AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+FAILED tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults[fields1] - AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+FAILED tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults[fields2] - AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+FAILED tests/test_api_tag_proposals.py::test_empty_result_uses_explicit_defaults[fields3] - AssertionError: assert {'work_id': '...r': None, ...} == {'work_id': '...r': None, ...}
+========================= 4 failed, 1 warning in 0.55s =========================
+EXIT 1
+RESTORED empty-defaults
+========================= 4 passed, 1 warning in 0.44s =========================
+EXIT 0
+RESTORED_SHA256 1eadae1e35bb42d6fc6b7ddf3439ebc7c595d38975c725a88257325b03e8eb91

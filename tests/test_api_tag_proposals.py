@@ -65,6 +65,30 @@ def test_timeout_is_a_gateway_timeout(tagger, monkeypatch):
     assert response.json() == {"detail": "tagger timed out after 7s"}
 
 
+@pytest.mark.parametrize(
+    "launch_error",
+    [
+        FileNotFoundError("configured Python executable is missing"),
+        PermissionError("configured Python executable is not executable"),
+        OSError("process resources are unavailable"),
+    ],
+    ids=["missing-executable", "permission-denied", "os-error"],
+)
+def test_launch_failure_reports_tagger_unavailable(tagger, monkeypatch, launch_error):
+    client, _ = tagger
+    calls = []
+
+    def cannot_launch(cmd, **kwargs):
+        calls.append(cmd)
+        raise launch_error
+
+    monkeypatch.setattr(main.subprocess, "run", cannot_launch)
+    response = client.post("/works/work-1/propose_tags")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "tagger could not be started"}
+    assert len(calls) == 1
+
+
 def test_failed_process_reports_only_last_four_error_lines(tagger, monkeypatch):
     client, _ = tagger
     respond(monkeypatch, returncode=1, stdout='{"works": []}', stderr="old\na\nb\nc\nd\n")

@@ -1967,6 +1967,8 @@ def propose_tags(work_id: str) -> dict:
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(504, f"tagger timed out after {TAGGER_TIMEOUT_S}s") from None
+    except OSError:
+        raise HTTPException(503, "tagger could not be started") from None
     if proc.returncode != 0:
         tail = (proc.stderr or "").strip().splitlines()[-4:]
         raise HTTPException(500, "tagger failed: " + " / ".join(tail))
