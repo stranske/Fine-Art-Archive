@@ -1,0 +1,277 @@
+{
+  "baseline-coverage.json.gz": {
+    "decoded_sha256": "7c81fe80f7e8a5e8ed03aae07eaf611f7bb62950ad314cdd69d865556e5a04e4",
+    "decoded_bytes": 981776,
+    "compressed_bytes": 88797
+  },
+  "candidate-coverage.json.gz": {
+    "decoded_sha256": "497f370d9d0d51de3ebd71a43d82d814c70d3d2f128b689b8b90e8dfeaa9900a",
+    "decoded_bytes": 981750,
+    "compressed_bytes": 88716
+  },
+  "baseline.log.gz": {
+    "decoded_sha256": "e366b98c064c87923072f06920c3faba2d2dbd57ccc3c5e6b631a048b7d19888",
+    "decoded_bytes": 26737,
+    "compressed_bytes": 6433
+  },
+  "candidate.log.gz": {
+    "decoded_sha256": "c9a0090b35419588067e066856a0b923ab5c3d8bde6651fea8de9bdd3aa96dd0",
+    "decoded_bytes": 26779,
+    "compressed_bytes": 6427
+  },
+  "baseline.xml.gz": {
+    "decoded_sha256": "7b8e73cbc09ab4c1e8047f7530be53c77d1d40f3273fbe9cbf5112d4b0de7e2b",
+    "decoded_bytes": 281107,
+    "compressed_bytes": 39132
+  },
+  "candidate.xml.gz": {
+    "decoded_sha256": "338d96d4f83436cb311698b0a2cb1cd6f6b04e769752af8e4bd1c5d49354bdbe",
+    "decoded_bytes": 283790,
+    "compressed_bytes": 39391
+  },
+  "history.txt.gz": {
+    "decoded_sha256": "1443718fa4f10f1b04a91d320ad7cef41a2b151c38aaa698bd89fa19e3dfc65a",
+    "decoded_bytes": 168427,
+    "compressed_bytes": 41806
+  },
+  "reuse-red.log.gz": {
+    "decoded_sha256": "a014222d02935c463f9e86c2b812a664135fd85545e781213969d9389a3882cb",
+    "decoded_bytes": 3100,
+    "compressed_bytes": 1091
+  },
+  "reuse-red.xml.gz": {
+    "decoded_sha256": "7d51920f19225c400aa27d2a6f42aa2f3f60c920b678c74d7af5a49de6eb522f",
+    "decoded_bytes": 1938,
+    "compressed_bytes": 642
+  },
+  "reuse-green.log.gz": {
+    "decoded_sha256": "64774fae355f847b7e30875233e13108a071320919a5a4e1ca9429786c97a140",
+    "decoded_bytes": 1682,
+    "compressed_bytes": 669
+  },
+  "reuse-green.xml.gz": {
+    "decoded_sha256": "c735707580a6769711bef194e82180fb8e66fc41307e4e35ab57d1384f47de28",
+    "decoded_bytes": 389,
+    "compressed_bytes": 258
+  },
+  "layer-case-red.log.gz": {
+    "decoded_sha256": "a4387b7b92855ac6567c24a8c5212930cdcd1b0598e9010dc5012daf0312fe48",
+    "decoded_bytes": 3105,
+    "compressed_bytes": 1099
+  },
+  "layer-case-red.xml.gz": {
+    "decoded_sha256": "73c00b751126a9f3b82357b00aa0a3a17896e13678158f56df083dd67cdf4bf1",
+    "decoded_bytes": 1938,
+    "compressed_bytes": 648
+  },
+  "layer-case-green.log.gz": {
+    "decoded_sha256": "88e0dfa205fc0615e0ef2ecbd224d21237c68df2d3750abb6d3ba3cee7dad1db",
+    "decoded_bytes": 1687,
+    "compressed_bytes": 672
+  },
+  "layer-case-green.xml.gz": {
+    "decoded_sha256": "747c0ea849222c9474c0fcbccf0a00a936075fdc5d6d61f2128ab0f92cfe1e98",
+    "decoded_bytes": 389,
+    "compressed_bytes": 259
+  },
+  "replacement-red.log.gz": {
+    "decoded_sha256": "d4d9238b770bf9bb33cbec1409b3de898c8086d2f37d9a65f7414735a919b58b",
+    "decoded_bytes": 3640,
+    "compressed_bytes": 1220
+  },
+  "replacement-red.xml.gz": {
+    "decoded_sha256": "62bc0de5aa77ab2d39911dc4b678a3f81c004b92baa3ce864395910dfab7a6d7",
+    "decoded_bytes": 2691,
+    "compressed_bytes": 768
+  },
+  "replacement-green.log.gz": {
+    "decoded_sha256": "639008abb620c15966de23c9ac409405d3a319403255b27bc43f0c6deb36ce83",
+    "decoded_bytes": 1688,
+    "compressed_bytes": 672
+  },
+  "replacement-green.xml.gz": {
+    "decoded_sha256": "93e8c3230d540662fd184817375d20791016e8a7e82400281dfedc5a590f0f0c",
+    "decoded_bytes": 385,
+    "compressed_bytes": 256
+  },
+  "disappearance-red.log.gz": {
+    "decoded_sha256": "8d7231f8bce7bf679674a12aa935fc8cf086b7792fbd73140dbbd58cb8bb2fd8",
+    "decoded_bytes": 3758,
+    "compressed_bytes": 1129
+  },
+  "disappearance-red.xml.gz": {
+    "decoded_sha256": "1dd9a484abb8af6141332674fc6157bf5530c89d20acecb47fdeb86b1b038198",
+    "decoded_bytes": 3210,
+    "compressed_bytes": 691
+  },
+  "disappearance-green.log.gz": {
+    "decoded_sha256": "be37433c75d415653132c18fcde747718627a78aa044dd7037cb9fc70d94baf0",
+    "decoded_bytes": 1690,
+    "compressed_bytes": 673
+  },
+  "disappearance-green.xml.gz": {
+    "decoded_sha256": "5c82720c61c4744bde6a13bae00f2801fe768653c154b6341f94328bc92b1ffe",
+    "decoded_bytes": 391,
+    "compressed_bytes": 255
+  },
+  "corrupt-red.log.gz": {
+    "decoded_sha256": "62d639f11cbbbbb268122c53a644de644b33a9edec13c479486922cbc64e4a5c",
+    "decoded_bytes": 3694,
+    "compressed_bytes": 1333
+  },
+  "corrupt-red.xml.gz": {
+    "decoded_sha256": "ad186547b9fcde2444690699a957d887e1cb08cd2a031cb4fd8fbfd517e99878",
+    "decoded_bytes": 2162,
+    "compressed_bytes": 897
+  },
+  "corrupt-green.log.gz": {
+    "decoded_sha256": "8f82715874f987919ff5d35086970c489458193e07ac365aed118216339b1f82",
+    "decoded_bytes": 1684,
+    "compressed_bytes": 670
+  },
+  "corrupt-green.xml.gz": {
+    "decoded_sha256": "0233d852b717228b3c15db5afb03dad349d8479b7e8b297478f92322300b68ed",
+    "decoded_bytes": 388,
+    "compressed_bytes": 258
+  },
+  "unreadable-red.log.gz": {
+    "decoded_sha256": "c5b99c29c9352fe80a04cf306b0f3b1ccd0f80cc7cc31d09da4664fc753587ca",
+    "decoded_bytes": 3786,
+    "compressed_bytes": 1272
+  },
+  "unreadable-red.xml.gz": {
+    "decoded_sha256": "78d6173a506c81bb517a3b354858be4c686add4704f4b0eb7ef246241a92ebb9",
+    "decoded_bytes": 2255,
+    "compressed_bytes": 827
+  },
+  "unreadable-green.log.gz": {
+    "decoded_sha256": "af0b6ef2632387c6884a3cf05abac06209b54e5728f1fb587dfee2c18e98a3e0",
+    "decoded_bytes": 1687,
+    "compressed_bytes": 671
+  },
+  "unreadable-green.xml.gz": {
+    "decoded_sha256": "37145a5ffa7a152a844c6da7ef4ec6b0d456be52dad588c66ff23d75d49294e0",
+    "decoded_bytes": 394,
+    "compressed_bytes": 263
+  },
+  "directory-error-red.log.gz": {
+    "decoded_sha256": "53f2a03bd73645a8e755fb51981ee736a9835e5803e0a897893ff35f6f603fe4",
+    "decoded_bytes": 5690,
+    "compressed_bytes": 1397
+  },
+  "directory-error-red.xml.gz": {
+    "decoded_sha256": "f1fdb421980df9d09916714c73d88f4fe493baf55f455595e969932beb31251c",
+    "decoded_bytes": 4249,
+    "compressed_bytes": 946
+  },
+  "directory-error-green.log.gz": {
+    "decoded_sha256": "c29d7abb5806c6b3e6e67ac7d34785d6615c536b5d36fbd8449c100764eaa279",
+    "decoded_bytes": 1693,
+    "compressed_bytes": 675
+  },
+  "directory-error-green.xml.gz": {
+    "decoded_sha256": "ae38fad5830588ab291fd93a490082668ee7e1aee574969aa2332ecbc2e25eed",
+    "decoded_bytes": 553,
+    "compressed_bytes": 287
+  },
+  "eviction-red.log.gz": {
+    "decoded_sha256": "6a050d24b39577a1204b387cdcb76349499f5d946e298d70fcd311699a4b775f",
+    "decoded_bytes": 3615,
+    "compressed_bytes": 1253
+  },
+  "eviction-red.xml.gz": {
+    "decoded_sha256": "6dd3a84e2592848eaad48d7306cb4e4737f05257e444150da39fec4a188af70d",
+    "decoded_bytes": 2688,
+    "compressed_bytes": 830
+  },
+  "eviction-green.log.gz": {
+    "decoded_sha256": "0fb7e828d40444f385c5ef1db2d272954990051431fa89ad9f852dd49db594ca",
+    "decoded_bytes": 1685,
+    "compressed_bytes": 669
+  },
+  "eviction-green.xml.gz": {
+    "decoded_sha256": "52c8425ce4703fb82a669929ab247a0a23c79e9f440775d72d51eeea49eb92ae",
+    "decoded_bytes": 393,
+    "compressed_bytes": 260
+  },
+  "manifest-missing-red.log.gz": {
+    "decoded_sha256": "c696ddb3b18a5c6edc8e5b897f8cb88f465684a34afdc71ad8f229aeb395dd5e",
+    "decoded_bytes": 2824,
+    "compressed_bytes": 1142
+  },
+  "manifest-missing-red.xml.gz": {
+    "decoded_sha256": "2acc10fb2d0ca139a7bd701d75cf086497edad23c017ea81e5ccf43cf22fdcba",
+    "decoded_bytes": 1339,
+    "compressed_bytes": 704
+  },
+  "manifest-missing-green.log.gz": {
+    "decoded_sha256": "fb0167a7a5acc4481415d711f6251850729d13afd97d7ffc5b2b5e5e75d18b52",
+    "decoded_bytes": 1693,
+    "compressed_bytes": 675
+  },
+  "manifest-missing-green.xml.gz": {
+    "decoded_sha256": "a17c79cde0485fddb9fd668f4e42452b65cc6d41a86ae2fedb097480ef06b9a0",
+    "decoded_bytes": 381,
+    "compressed_bytes": 255
+  },
+  "tile-missing-red.log.gz": {
+    "decoded_sha256": "82dfdc7a7a951f374d82b034b05db98b195fe1d4df74dee49bf39792386dca2e",
+    "decoded_bytes": 2838,
+    "compressed_bytes": 1143
+  },
+  "tile-missing-red.xml.gz": {
+    "decoded_sha256": "4d3ced9c84ba93484e1f1774445c1ecff6f993dd0b178dd010d5570c1a2b1aaf",
+    "decoded_bytes": 1357,
+    "compressed_bytes": 707
+  },
+  "tile-missing-green.log.gz": {
+    "decoded_sha256": "2df743bf9acfb2c24e1e5e93c7e101ff8c7741d1b2e3d8168169a01867fc4c93",
+    "decoded_bytes": 1689,
+    "compressed_bytes": 673
+  },
+  "tile-missing-green.xml.gz": {
+    "decoded_sha256": "c9178713e8d8c34d8e8be47ee92aadfd1ec89ec2850a97ffaf84e2fc3ea582aa",
+    "decoded_bytes": 390,
+    "compressed_bytes": 269
+  },
+  "absent-layer-red.log.gz": {
+    "decoded_sha256": "c89f8c2bec7efc12d0ca2181f702683bd3d00c3abc25e3b2f0ce4e55184ee96d",
+    "decoded_bytes": 5619,
+    "compressed_bytes": 1367
+  },
+  "absent-layer-red.xml.gz": {
+    "decoded_sha256": "5fc37aac79a52b07e62654bb5dbcf7f12e46de854d29dcf89825f6a8f7467ea7",
+    "decoded_bytes": 4365,
+    "compressed_bytes": 920
+  },
+  "absent-layer-green.log.gz": {
+    "decoded_sha256": "b90a27e7778aa95bdae7bf5cab257b7aa9b44e97340b9d6abeb592dcd61b8a52",
+    "decoded_bytes": 1690,
+    "compressed_bytes": 676
+  },
+  "absent-layer-green.xml.gz": {
+    "decoded_sha256": "a05e24668fbfd7d0b429a5a8b07c0f273e89ace35b94b254a3a0a570635faa8b",
+    "decoded_bytes": 633,
+    "compressed_bytes": 280
+  },
+  "invalid-tile-red.log.gz": {
+    "decoded_sha256": "e4b74d046978ca7e447b0ee08c853332118cb61ab47a1c993f106ae94d24fa86",
+    "decoded_bytes": 42094,
+    "compressed_bytes": 3745
+  },
+  "invalid-tile-red.xml.gz": {
+    "decoded_sha256": "a0588982fed2e917cabad7218a53335a85319e9489eb1d966501f7031b2fb2e0",
+    "decoded_bytes": 40908,
+    "compressed_bytes": 3328
+  },
+  "invalid-tile-green.log.gz": {
+    "decoded_sha256": "cebf7d4c520d05c435ca2f16d42f27ffe5699217d673fc1a40a1500ef9741d3c",
+    "decoded_bytes": 1690,
+    "compressed_bytes": 675
+  },
+  "invalid-tile-green.xml.gz": {
+    "decoded_sha256": "87b0f0431c1f086b369bb09dd4abfff8fef53ceaa9a62f365ddd5ec153976460",
+    "decoded_bytes": 1182,
+    "compressed_bytes": 317
+  }
+}

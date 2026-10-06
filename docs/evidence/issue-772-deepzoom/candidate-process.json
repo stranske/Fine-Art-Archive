@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "--cov=src",
+    "--cov-report=json:/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/candidate-coverage.json",
+    "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/candidate.xml"
+  ],
+  "cwd": "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-api-regression",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "COVERAGE_FILE": "/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/candidate.coverage"
+  },
+  "exit": 0,
+  "elapsed": 93.57986783981323
+}

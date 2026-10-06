@@ -498,3 +498,14 @@ the isolated local repository `/tmp/issue-772-queue-commit-repo`, with this
 baseline HEAD as parent, and exported as `/tmp/issue-772-queue-details.patch`.
 The receiving lane must apply that patch in its writable checkout; no primary
 branch update or remote push is claimed.
+
+## DeepZoom continuation, 2026-10-06
+
+The next bounded API chunk adds 19 cache-lifecycle and HTTP rejection regressions.
+[The complete report](issue-772-deepzoom/README.md) records current repair-history
+ranking, identical full-suite baseline/candidate commands (2127/2146 passed,
+12 skipped each), exact combined coverage (88.1326352530541% to
+88.20535194880745%), all named mutation nodes/exit codes, and byte-identical source
+restoration. Full console, JUnit and coverage captures are losslessly retained
+there. All 19 cases fail under their actual mutations and pass after restoration.
+No production change or initiative completion is claimed; #772 stays open.

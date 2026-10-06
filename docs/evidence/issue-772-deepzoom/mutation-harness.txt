@@ -1,0 +1,81 @@
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import xml.etree.ElementTree as ET
+
+root = Path('/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-api-regression')
+evidence = Path(__file__).parent
+source = root / 'src/fine_art_archive/api/main.py'
+test = root / 'tests/test_deepzoom_archive_cache.py'
+python = '/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python'
+original = source.read_bytes()
+tests = test.read_bytes()
+start = original.index(b'def _dz_container(')
+end = original.index(b'\n\n@app.get', start)
+container = original[start:end].decode()
+mutations = [
+ ('reuse', 'test_unchanged_container_reuses_handle_across_layer_case', 'if cached is not None and cached[0] == mtime:', 'if False:'),
+ ('layer-case', 'test_unchanged_container_reuses_handle_across_layer_case', 'f"deepzoom-{layer.lower()}.zip"', 'f"deepzoom-{layer}.zip"'),
+ ('replacement', 'test_replaced_container_reopens_and_serves_new_bytes', 'if cached is not None and cached[0] == mtime:', 'if cached is not None:'),
+ ('disappearance', 'test_missing_container_clears_stale_cache_and_can_reappear', '_dz_zip_cache.pop(key, None)', 'pass'),
+ ('corrupt', 'test_corrupt_container_allows_fallback_and_later_repair', 'except (OSError, zipfile.BadZipFile):\n        return None', 'except OSError:\n        return None'),
+ ('unreadable', 'test_unreadable_container_allows_fallback_without_cache_entry', 'except (OSError, zipfile.BadZipFile):\n        return None', 'except zipfile.BadZipFile:\n        return None'),
+ ('directory-error', 'test_unavailable_work_directory_allows_container_fallback', 'except HTTPException:\n        return None', 'except HTTPException:\n        raise'),
+ ('eviction', 'test_container_cache_evicts_old_entries_and_keeps_new_handle', '_dz_zip_cache.clear()', 'pass'),
+]
+receipts = []
+env = os.environ.copy()
+env['PYTHONDONTWRITEBYTECODE'] = '1'
+
+def run(name, node, state):
+    stem = name + '-' + state
+    junit = evidence / (stem + '.xml')
+    command = [python, '-m', 'pytest', 'tests/test_deepzoom_archive_cache.py::' + node,
+               '-q', '--no-cov', '--junitxml=' + str(junit)]
+    for pyc in (source.parent / '__pycache__').glob('main.*.pyc'):
+        pyc.unlink()
+    with (evidence / (stem + '.log')).open('w') as log:
+        code = subprocess.run(command, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+    tree = ET.parse(junit)
+    cases = [{'name': x.attrib['name'], 'failed': x.find('failure') is not None,
+              'error': x.find('error') is not None} for x in tree.findall('.//testcase')]
+    return {'command': command, 'exit': code, 'cases': cases, 'log': stem + '.log', 'junit': junit.name}
+
+def control(name, node, mutant, old, new):
+    try:
+        source.write_bytes(mutant)
+        red = run(name, node, 'red')
+    finally:
+        source.write_bytes(original)
+    assert source.read_bytes() == original and test.read_bytes() == tests
+    green = run(name, node, 'green')
+    receipt = {'control': name, 'node': node, 'old': old, 'new': new,
+               'red': red, 'green': green, 'restored_sha256': hashlib.sha256(original).hexdigest()}
+    receipts.append(receipt)
+    (evidence / 'mutations.json').write_text(json.dumps(receipts, indent=2))
+    assert red['exit'] == 1 and red['cases'] and all(x['failed'] and not x['error'] for x in red['cases']), receipt
+    assert green['exit'] == 0 and not any(x['failed'] or x['error'] for x in green['cases']), receipt
+    print(name, 'RED', len(red['cases']), 'GREEN', len(green['cases']), flush=True)
+
+for name, node, old, new in mutations:
+    assert container.count(old) == 1, (name, old)
+    mutant = original[:start] + container.replace(old, new, 1).encode() + original[end:]
+    control(name, node, mutant, old, new)
+
+for name, node, function, old, new in [
+ ('manifest-missing', 'test_missing_sidecar_returns_not_found[deepzoom]', 'deepzoom_manifest', 'raise HTTPException(404, f"no sidecar for {work_id}")', 'raise HTTPException(418, f"no sidecar for {work_id}")'),
+ ('tile-missing', 'test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]', '_dz_layer_entry', 'raise HTTPException(404, f"no sidecar for {work_id}")', 'raise HTTPException(418, f"no sidecar for {work_id}")'),
+ ('absent-layer', 'test_absent_layer_returns_not_found', '_dz_layer_entry', 'raise HTTPException(404, f"no {layer} deepzoom layer for {work_id}")', 'raise HTTPException(418, f"no {layer} deepzoom layer for {work_id}")'),
+ ('invalid-tile', 'test_invalid_tile_request_is_rejected_before_archive_or_network', 'deepzoom_tile', 'raise HTTPException(404, "bad tile request")', 'pass'),
+]:
+    a = original.index(('def ' + function + '(').encode())
+    b = original.index(b'\n\n', original.index(old.encode(), a))
+    section = original[a:b].decode()
+    assert section.count(old) == 1
+    mutant = original[:a] + section.replace(old, new, 1).encode() + original[b:]
+    control(name, node, mutant, old, new)
+
+assert source.read_bytes() == original and test.read_bytes() == tests
+print('ALL CONTROLS PASSED', len(receipts), flush=True)
