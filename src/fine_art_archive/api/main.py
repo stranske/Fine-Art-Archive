@@ -994,6 +994,8 @@ def _active_research_requests(cutoff: float) -> list[dict]:
     for line in text.splitlines():
         try:
             rec = json.loads(line)
+            if not isinstance(rec, dict):
+                continue
             ts = datetime.fromisoformat(str(rec.get("ts"))).timestamp()
         except (json.JSONDecodeError, TypeError, ValueError):
             continue

@@ -1,0 +1,67 @@
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+
+root = Path('/tmp/issue-772-current')
+source = Path('src/fine_art_archive/api/main.py')
+test = Path('tests/test_api_research_requests.py')
+original = source.read_bytes()
+test_bytes = test.read_bytes()
+sha = lambda data: hashlib.sha256(data).hexdigest()
+base = 'tests/test_api_research_requests.py::'
+malformed = 'test_malformed_record_does_not_block_read_or_destroy_active_requests'
+cutoff = 'test_cutoff_is_inclusive_and_latest_request_is_specific_to_work'
+failed = 'test_failed_compaction_returns_retryable_error_and_preserves_log'
+controls = [
+    ('shape-guard', '            if not isinstance(rec, dict):\n                continue\n', '', [malformed + '[' + case + ']' for case in ['null', 'empty-array', 'array', 'number', 'boolean', 'string']]),
+    ('invalid-date-recovery', '        except (json.JSONDecodeError, TypeError, ValueError):\n            continue\n', '        except (json.JSONDecodeError, TypeError, ValueError):\n            raise\n', [malformed + '[' + case + ']' for case in ['invalid-json', 'missing-date', 'invalid-date']]),
+    ('retain-existing', '            active.append(rec)\n            _replace_research_requests(active)', '            active = [rec]\n            _replace_research_requests(active)', [malformed]),
+    ('inclusive-cutoff', '        if ts >= cutoff:', '        if ts > cutoff:', [cutoff]),
+    ('expire-old', '        if ts >= cutoff:', '        if True:', [cutoff]),
+    ('latest-request', 'rec for rec in reversed(records) if rec.get("work_id") == work_id', 'rec for rec in records if rec.get("work_id") == work_id', [cutoff]),
+    ('work-filter', 'rec for rec in reversed(records) if rec.get("work_id") == work_id', 'rec for rec in reversed(records)', [cutoff]),
+    ('retryable-storage-error', '        503,\n        {\n            "error": "research_request_storage",', '        500,\n        {\n            "error": "research_request_storage",', [failed]),
+    ('atomic-replacement', '    tmp.write_text(payload, encoding="utf-8")\n    tmp.replace(RESEARCH_REQUESTS)', '    RESEARCH_REQUESTS.write_text(payload, encoding="utf-8")\n    tmp.replace(RESEARCH_REQUESTS)', [failed + '[replace]']),
+]
+env = dict(os.environ, PYTHONPATH=str(root / 'shim') + ':src', PYTHONDONTWRITEBYTECODE='1')
+env.pop('PYTEST_ADDOPTS', None)
+receipts = []
+
+def clear_bytecode():
+    for path in source.parent.glob('__pycache__/main.*.pyc'):
+        path.unlink()
+
+
+def run(name, phase, nodes):
+    clear_bytecode()
+    command = [sys.executable, '-m', 'pytest', *[base + node for node in nodes], '-m', 'not slow', '--no-cov', '-q', '--junitxml=' + str(root / (name + '-' + phase + '.xml'))]
+    result = subprocess.run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
+    (root / (name + '-' + phase + '.log')).write_bytes(result.stdout)
+    xml = ET.parse(root / (name + '-' + phase + '.xml'))
+    cases = [{'node': case.attrib['classname'].replace('.', '/') + '.py::' + case.attrib['name'], 'status': 'failed' if case.find('failure') is not None else 'error' if case.find('error') is not None else 'skipped' if case.find('skipped') is not None else 'passed'} for case in xml.iter('testcase')]
+    return {'command': command, 'environment': {'PYTHONPATH': env['PYTHONPATH'], 'PYTHONDONTWRITEBYTECODE': '1'}, 'exit': result.returncode, 'cases': cases}
+
+for name, before, after, nodes in controls:
+    assert original.decode().count(before) == 1, name
+    mutated = original.decode().replace(before, after).encode()
+    try:
+        source.write_bytes(mutated)
+        red = run(name, 'red', nodes)
+    finally:
+        source.write_bytes(original)
+        clear_bytecode()
+    assert source.read_bytes() == original
+    assert test.read_bytes() == test_bytes
+    green = run(name, 'green', nodes)
+    receipt = {'name': name, 'before': before, 'after': after, 'mutated_sha256': sha(mutated), 'restored_sha256': sha(source.read_bytes()), 'test_sha256': sha(test.read_bytes()), 'red': red, 'green': green}
+    receipts.append(receipt)
+    (root / 'mutations.json').write_text(json.dumps(receipts, indent=2) + '\n')
+    print(name, 'red', red['exit'], [c['status'] for c in red['cases']], 'green', green['exit'], flush=True)
+    assert red['exit'] == 1 and all(c['status'] == 'failed' for c in red['cases']), name
+    assert green['exit'] == 0 and all(c['status'] == 'passed' for c in green['cases']), name
+assert source.read_bytes() == original and test.read_bytes() == test_bytes
+print('Restored exact source SHA256:', sha(original), flush=True)
