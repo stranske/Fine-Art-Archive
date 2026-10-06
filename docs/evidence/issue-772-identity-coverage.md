@@ -169,8 +169,11 @@ green suite still needs a runner with a writable host-local lock directory.
 
 ### Repeated actual source mutation proof
 
-All **32** tag-proposal cases, including the previous follow-up's expanded shape
-cases and all three new launch cases, were exercised against real source edits.
+The **32 cases listed in the mutation table below**, including the earlier
+expanded-shape and three launch cases, were exercised against real source edits.
+The six `test_nested_array_fields_reject_non_arrays` cases added in the closer
+source repair are outside this table; this table does not claim mutation
+coverage for the current 38-case inventory.
 Every row ran the following command with its named function node, first mutated
 and then restored, using the same polling shim:
 
@@ -245,3 +248,6 @@ repository at `/tmp/issue-772-commit-repo`, with the baseline tree as parent and
 the primary working files as input. The receiving lane can apply the exported
 `/tmp/issue-772-keepalive.patch` to its writable checkout. No commit or push to
 the primary checkout or remote is claimed.
+
+
+2026-10-06 current-head check: `python3.12 -m pytest tests/test_api_tag_proposals.py -q --no-cov` passed all38 tests. The first focused run also passed38 tests but exited1 because this single module reached5.98percent against the package-wide25percent coverage floor. This focused check disables aggregate coverage only for the narrow run; no package-wide coverage PASS is claimed. Prior full-suite host cache limitations remain documented above.
