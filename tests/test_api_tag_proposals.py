@@ -84,8 +84,44 @@ def test_missing_final_json_reports_controlled_error(tagger, monkeypatch, stdout
 
 @pytest.mark.parametrize(
     "payload",
-    [None, [], "text", {"works": {}}, {"works": "text"}, {"works": [None]}, {"gate": []}],
-    ids=["null", "list", "string", "works-object", "works-string", "null-work", "gate-list"],
+    [
+        None,
+        [],
+        "text",
+        False,
+        42,
+        {"works": None},
+        {"works": {}},
+        {"works": "text"},
+        {"works": False},
+        {"works": 42},
+        {"works": [None]},
+        {"works": [{"proposals": []}, "invalid later row"]},
+        {"gate": None},
+        {"gate": []},
+        {"gate": "text"},
+        {"gate": False},
+        {"gate": 42},
+    ],
+    ids=[
+        "null",
+        "list",
+        "string",
+        "boolean",
+        "number",
+        "works-null",
+        "works-object",
+        "works-string",
+        "works-boolean",
+        "works-number",
+        "null-work",
+        "invalid-later-work",
+        "gate-null",
+        "gate-list",
+        "gate-string",
+        "gate-boolean",
+        "gate-number",
+    ],
 )
 def test_invalid_json_shape_reports_controlled_error(tagger, monkeypatch, payload):
     client, _ = tagger
@@ -135,9 +171,10 @@ def test_valid_result_preserves_proposals_and_launch_contract(tagger, monkeypatc
     ]
 
 
-def test_empty_result_uses_explicit_defaults(tagger, monkeypatch):
+@pytest.mark.parametrize("fields", [{}, {"works": []}, {"gate": {}}, {"works": [], "gate": {}}])
+def test_empty_result_uses_explicit_defaults(tagger, monkeypatch, fields):
     client, _ = tagger
-    respond(monkeypatch, stdout='{"model":"clip-local","works":[],"gate":null}')
+    respond(monkeypatch, stdout=json.dumps({"model": "clip-local", **fields}))
     response = client.post("/works/work-1/propose_tags")
     assert response.status_code == 200
     assert response.json() == {

@@ -2,7 +2,7 @@
 
 Baseline main: `eb1ef51fa121329cebc90fcf4acbada464608b83`. One low risk chunk of #772, which stays open; no 90 percent claim.
 
-The first-ranked production module is `src/fine_art_archive/api/main.py`. Its tagger endpoint accepted empty dictionaries as work lists and empty lists as gate objects; other valid JSON shapes raised uncaught attribute errors. The seven new shape cases failed on original source (7 failed / 9 passed). A seven-line guard now returns HTTP 500 with a controlled invalid-structure detail before using those values. Existing valid response fields and null/empty defaults are preserved.
+The first-ranked production module is `src/fine_art_archive/api/main.py`. Its tagger endpoint accepted empty dictionaries as work lists and empty lists as gate objects; other valid JSON shapes raised uncaught attribute errors. The seven new shape cases failed on original source (7 failed / 9 passed). The initial seven-line guard returned HTTP 500 with a controlled invalid-structure detail before using those values, but preserved null/empty defaults. The acceptance follow-up below closes the remaining null-field gap.
 
 ## Ranking
 
@@ -56,3 +56,14 @@ Each listed test function (all parameterized cases included) was run against its
 Restored source SHA256: `55730a0d3151fb87bbe316aa8ba4ca307f73f043397676119fd8236a302f6abc`.
 
 An initial proof attempt was incomplete because same-size, same-second source edits reused timestamp-valid Python bytecode. The corrected harness disables bytecode writes and removes only this source module derived cache before each execution; all eight mutation groups then failed and the restored gate passed. The incomplete attempt is retained in local run evidence and is not counted as proof.
+
+## Acceptance follow-up
+
+- [x] **Bug Fixes**
+  - [x] Tag proposals return a controlled HTTP 500 for invalid JSON structures: the response must be an object, any present `works` must be a list of objects, and any present `gate` must be an object.
+
+The initial guard accepted explicit `works: null` and `gate: null`. Field-presence checks now reject both while allowing omitted fields, empty work lists and empty gate objects. Expanded HTTP regressions also cover boolean/numeric envelopes and fields, string gates, and an invalid later work row. Against the initial guard, the expanded module returned **2 failed, 27 passed**: both null cases incorrectly returned HTTP 200. After the fix, the module and adjacent endpoint/security/subject-state gate returned **154 passed**, including all **29 tag-proposal cases**. No broader coverage target is claimed by this follow-up.
+
+Verification used Python 3.14.8 with `pytest tests/test_api_tag_proposals.py tests/test_companion_app_api.py tests/test_companion_app_security.py tests/test_subject_action_state.py -m "not slow" --no-cov -q`. The sandbox denies socketpair sends, preventing asyncio thread wakeups; a temporary verification-only selector polling shim let the unchanged HTTP tests execute. It was kept outside the repository and did not change application behavior or assertions.
+
+Whole-repository Black check passed for **339 files** (line length 100, the required exclusions, one worker and the same polling shim). Touched-file Ruff, source-module mypy and `git diff --check` passed. GitHub API access was unavailable, so remote checklist updates and PR-state verification remain for the receiving lane.
