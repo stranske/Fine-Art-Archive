@@ -1,0 +1,306 @@
+{
+  "src/fine_art_archive/api/main.py": {
+    "repairs": 21,
+    "churn": 48
+  },
+  "src/fine_art_archive/api/gates.py": {
+    "repairs": 5,
+    "churn": 8
+  },
+  "src/fine_art_archive/fixity.py": {
+    "repairs": 2,
+    "churn": 2
+  },
+  "src/fine_art_archive/known_works/fetchers.py": {
+    "repairs": 1,
+    "churn": 4
+  },
+  "src/fine_art_archive/eink/playlist.py": {
+    "repairs": 1,
+    "churn": 4
+  },
+  "src/fine_art_archive/eink/palette.py": {
+    "repairs": 2,
+    "churn": 4
+  },
+  "src/fine_art_archive/parsers/dimension_utils.py": {
+    "repairs": 2,
+    "churn": 3
+  },
+  "src/fine_art_archive/identity/variants.py": {
+    "repairs": 5,
+    "churn": 7
+  },
+  "src/fine_art_archive/preference/rocchio.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/selection/lenses.py": {
+    "repairs": 2,
+    "churn": 6
+  },
+  "src/fine_art_archive/preference/bradley_terry.py": {
+    "repairs": 1,
+    "churn": 3
+  },
+  "src/fine_art_archive/provenance.py": {
+    "repairs": 3,
+    "churn": 5
+  },
+  "src/fine_art_archive/api/store.py": {
+    "repairs": 6,
+    "churn": 19
+  },
+  "src/fine_art_archive/crosswalk.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/identity/artist_qid.py": {
+    "repairs": 1,
+    "churn": 1
+  },
+  "src/fine_art_archive/quality/source_quality.py": {
+    "repairs": 1,
+    "churn": 4
+  },
+  "src/fine_art_archive/display/render.py": {
+    "repairs": 2,
+    "churn": 4
+  },
+  "src/fine_art_archive/identity/getty.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/known_works/artwork_classes.py": {
+    "repairs": 4,
+    "churn": 4
+  },
+  "src/fine_art_archive/variants/__init__.py": {
+    "repairs": 1,
+    "churn": 1
+  },
+  "src/fine_art_archive/variants/upgrade_gates.py": {
+    "repairs": 1,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/holder.py": {
+    "repairs": 2,
+    "churn": 5
+  },
+  "src/fine_art_archive/identity/same_object.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/identity/work_qid_collision_audit.py": {
+    "repairs": 1,
+    "churn": 3
+  },
+  "src/fine_art_archive/display/crops.py": {
+    "repairs": 2,
+    "churn": 3
+  },
+  "src/fine_art_archive/identity/crop_siblings.py": {
+    "repairs": 2,
+    "churn": 2
+  },
+  "src/fine_art_archive/identity/variant_identity.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/source_resolver.py": {
+    "repairs": 5,
+    "churn": 9
+  },
+  "src/fine_art_archive/identity/artist_resolver.py": {
+    "repairs": 2,
+    "churn": 3
+  },
+  "src/fine_art_archive/selection/__init__.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/creator_provenance.py": {
+    "repairs": 1,
+    "churn": 4
+  },
+  "src/fine_art_archive/enrichment/title_artist_swap.py": {
+    "repairs": 2,
+    "churn": 3
+  },
+  "src/fine_art_archive/enrichment/work_qid_by_creator.py": {
+    "repairs": 0,
+    "churn": 5
+  },
+  "src/fine_art_archive/enrichment/work_qid_title_variants.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/preference/__init__.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/preference/exhibition.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/eink/render_strategy.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/eink/__init__.py": {
+    "repairs": 0,
+    "churn": 3
+  },
+  "src/fine_art_archive/sidecar.py": {
+    "repairs": 1,
+    "churn": 4
+  },
+  "src/fine_art_archive/known_works/__init__.py": {
+    "repairs": 2,
+    "churn": 2
+  },
+  "src/fine_art_archive/identity/work_qid_uniqueness.py": {
+    "repairs": 2,
+    "churn": 3
+  },
+  "src/fine_art_archive/eink/gamut.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/holder_by_creator.py": {
+    "repairs": 2,
+    "churn": 9
+  },
+  "src/fine_art_archive/collect/quality.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/eink/sdcard.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/misresolved_work_qid.py": {
+    "repairs": 2,
+    "churn": 2
+  },
+  "src/fine_art_archive/collect/dedupe.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/eink/targets.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/eink/feed.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/issue_format.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/dossier.py": {
+    "repairs": 1,
+    "churn": 3
+  },
+  "src/fine_art_archive/enrichment/work_qid_search.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/artist_from_work.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/wikidata_identity.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/creator_category_prior.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/enrichment/category_infer.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/collect/sources/_shared.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/collect/sources/artic.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/medium_vocab.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/identity/artist_lookup.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/collect/host_registry.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/enrichment/__init__.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/iiif.py": {
+    "repairs": 1,
+    "churn": 2
+  },
+  "src/fine_art_archive/collect/verify.py": {
+    "repairs": 0,
+    "churn": 4
+  },
+  "src/fine_art_archive/identity/__init__.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/dedup_cascade.py": {
+    "repairs": 0,
+    "churn": 2
+  },
+  "src/fine_art_archive/display/hints.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/discovery.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/acquisition_flow.py": {
+    "repairs": 1,
+    "churn": 3
+  },
+  "src/fine_art_archive/parsers/meural_filename.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/parsers/semantic.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/parsers/year_utils.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/sources/cleveland.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/sources/met.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/collect/sources/rijksmuseum.py": {
+    "repairs": 0,
+    "churn": 1
+  },
+  "src/fine_art_archive/api/config.py": {
+    "repairs": 0,
+    "churn": 1
+  }
+}

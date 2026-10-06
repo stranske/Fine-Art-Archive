@@ -1,0 +1,670 @@
+[
+  {
+    "control": "reuse",
+    "node": "test_unchanged_container_reuses_handle_across_layer_case",
+    "old": "if cached is not None and cached[0] == mtime:",
+    "new": "if False:",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unchanged_container_reuses_handle_across_layer_case",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/reuse-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_unchanged_container_reuses_handle_across_layer_case",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "reuse-red.log",
+      "junit": "reuse-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unchanged_container_reuses_handle_across_layer_case",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/reuse-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_unchanged_container_reuses_handle_across_layer_case",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "reuse-green.log",
+      "junit": "reuse-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "layer-case",
+    "node": "test_unchanged_container_reuses_handle_across_layer_case",
+    "old": "f\"deepzoom-{layer.lower()}.zip\"",
+    "new": "f\"deepzoom-{layer}.zip\"",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unchanged_container_reuses_handle_across_layer_case",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/layer-case-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_unchanged_container_reuses_handle_across_layer_case",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "layer-case-red.log",
+      "junit": "layer-case-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unchanged_container_reuses_handle_across_layer_case",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/layer-case-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_unchanged_container_reuses_handle_across_layer_case",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "layer-case-green.log",
+      "junit": "layer-case-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "replacement",
+    "node": "test_replaced_container_reopens_and_serves_new_bytes",
+    "old": "if cached is not None and cached[0] == mtime:",
+    "new": "if cached is not None:",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_replaced_container_reopens_and_serves_new_bytes",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/replacement-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_replaced_container_reopens_and_serves_new_bytes",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "replacement-red.log",
+      "junit": "replacement-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_replaced_container_reopens_and_serves_new_bytes",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/replacement-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_replaced_container_reopens_and_serves_new_bytes",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "replacement-green.log",
+      "junit": "replacement-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "disappearance",
+    "node": "test_missing_container_clears_stale_cache_and_can_reappear",
+    "old": "_dz_zip_cache.pop(key, None)",
+    "new": "pass",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_container_clears_stale_cache_and_can_reappear",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/disappearance-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_missing_container_clears_stale_cache_and_can_reappear",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "disappearance-red.log",
+      "junit": "disappearance-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_container_clears_stale_cache_and_can_reappear",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/disappearance-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_missing_container_clears_stale_cache_and_can_reappear",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "disappearance-green.log",
+      "junit": "disappearance-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "corrupt",
+    "node": "test_corrupt_container_allows_fallback_and_later_repair",
+    "old": "except (OSError, zipfile.BadZipFile):\n        return None",
+    "new": "except OSError:\n        return None",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_corrupt_container_allows_fallback_and_later_repair",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/corrupt-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_corrupt_container_allows_fallback_and_later_repair",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "corrupt-red.log",
+      "junit": "corrupt-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_corrupt_container_allows_fallback_and_later_repair",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/corrupt-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_corrupt_container_allows_fallback_and_later_repair",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "corrupt-green.log",
+      "junit": "corrupt-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "unreadable",
+    "node": "test_unreadable_container_allows_fallback_without_cache_entry",
+    "old": "except (OSError, zipfile.BadZipFile):\n        return None",
+    "new": "except zipfile.BadZipFile:\n        return None",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unreadable_container_allows_fallback_without_cache_entry",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/unreadable-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_unreadable_container_allows_fallback_without_cache_entry",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "unreadable-red.log",
+      "junit": "unreadable-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unreadable_container_allows_fallback_without_cache_entry",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/unreadable-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_unreadable_container_allows_fallback_without_cache_entry",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "unreadable-green.log",
+      "junit": "unreadable-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "directory-error",
+    "node": "test_unavailable_work_directory_allows_container_fallback",
+    "old": "except HTTPException:\n        return None",
+    "new": "except HTTPException:\n        raise",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unavailable_work_directory_allows_container_fallback",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/directory-error-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_unavailable_work_directory_allows_container_fallback[invalid-work]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_unavailable_work_directory_allows_container_fallback[absent-work]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "directory-error-red.log",
+      "junit": "directory-error-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_unavailable_work_directory_allows_container_fallback",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/directory-error-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_unavailable_work_directory_allows_container_fallback[invalid-work]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_unavailable_work_directory_allows_container_fallback[absent-work]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "directory-error-green.log",
+      "junit": "directory-error-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "eviction",
+    "node": "test_container_cache_evicts_old_entries_and_keeps_new_handle",
+    "old": "_dz_zip_cache.clear()",
+    "new": "pass",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_container_cache_evicts_old_entries_and_keeps_new_handle",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/eviction-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_container_cache_evicts_old_entries_and_keeps_new_handle",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "eviction-red.log",
+      "junit": "eviction-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_container_cache_evicts_old_entries_and_keeps_new_handle",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/eviction-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_container_cache_evicts_old_entries_and_keeps_new_handle",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "eviction-green.log",
+      "junit": "eviction-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "manifest-missing",
+    "node": "test_missing_sidecar_returns_not_found[deepzoom]",
+    "old": "raise HTTPException(404, f\"no sidecar for {work_id}\")",
+    "new": "raise HTTPException(418, f\"no sidecar for {work_id}\")",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_sidecar_returns_not_found[deepzoom]",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/manifest-missing-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_missing_sidecar_returns_not_found[deepzoom]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "manifest-missing-red.log",
+      "junit": "manifest-missing-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_sidecar_returns_not_found[deepzoom]",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/manifest-missing-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_missing_sidecar_returns_not_found[deepzoom]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "manifest-missing-green.log",
+      "junit": "manifest-missing-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "tile-missing",
+    "node": "test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]",
+    "old": "raise HTTPException(404, f\"no sidecar for {work_id}\")",
+    "new": "raise HTTPException(418, f\"no sidecar for {work_id}\")",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/tile-missing-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "tile-missing-red.log",
+      "junit": "tile-missing-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/tile-missing-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_missing_sidecar_returns_not_found[dz/VIS/12/3_4.jpg]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "tile-missing-green.log",
+      "junit": "tile-missing-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "absent-layer",
+    "node": "test_absent_layer_returns_not_found",
+    "old": "raise HTTPException(404, f\"no {layer} deepzoom layer for {work_id}\")",
+    "new": "raise HTTPException(418, f\"no {layer} deepzoom layer for {work_id}\")",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_absent_layer_returns_not_found",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/absent-layer-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_absent_layer_returns_not_found[no-layers]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_absent_layer_returns_not_found[other-layer]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_absent_layer_returns_not_found[missing-fid]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "absent-layer-red.log",
+      "junit": "absent-layer-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_absent_layer_returns_not_found",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/absent-layer-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_absent_layer_returns_not_found[no-layers]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_absent_layer_returns_not_found[other-layer]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_absent_layer_returns_not_found[missing-fid]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "absent-layer-green.log",
+      "junit": "absent-layer-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  },
+  {
+    "control": "invalid-tile",
+    "node": "test_invalid_tile_request_is_rejected_before_archive_or_network",
+    "old": "raise HTTPException(404, \"bad tile request\")",
+    "new": "pass",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_invalid_tile_request_is_rejected_before_archive_or_network",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/invalid-tile-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[negative-level]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-level]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[unsafe-fid]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-column]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-row]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[not-jpeg]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "invalid-tile-red.log",
+      "junit": "invalid-tile-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_deepzoom_archive_cache.py::test_invalid_tile_request_is_rejected_before_archive_or_network",
+        "-q",
+        "--no-cov",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261006T2101Z/invalid-tile-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[negative-level]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-level]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[unsafe-fid]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-column]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[large-row]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "name": "test_invalid_tile_request_is_rejected_before_archive_or_network[not-jpeg]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "invalid-tile-green.log",
+      "junit": "invalid-tile-green.xml"
+    },
+    "restored_sha256": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3"
+  }
+]
