@@ -1,0 +1,10 @@
+import selectors
+
+_original_select = selectors.DefaultSelector.select
+
+
+def _poll_select(self, timeout=None):
+    return _original_select(self, 0.01 if timeout is None else min(timeout, 0.01))
+
+
+selectors.DefaultSelector.select = _poll_select

@@ -509,3 +509,199 @@ ranking, identical full-suite baseline/candidate commands (2127/2146 passed,
 restoration. Full console, JUnit and coverage captures are losslessly retained
 there. All 19 cases fail under their actual mutations and pass after restoration.
 No production change or initiative completion is claimed; #772 stays open.
+
+
+## Research-request continuation, 2026-10-06
+
+This bounded continuation starts at `6cb921db5b15bdf15bb79dd1c869b3ccb9e45ff5` on
+`codex/issue-772-api-regression-coverage`. Historical measurements above are
+separate pairs and are not inputs to this round. Baseline combined coverage is
+88.10354857475276%, below 90%; retain the bounded change and the
+broader #772 initiative. Statement-only baseline coverage is
+90.74547600314713%; it is not the initiative metric.
+
+### Fresh selection and reproduced defect
+
+The [full gap ranking](issue-772-research/ranking.json) contains 65 measured
+production modules with missing lines or branches. The named repair-history
+proxy counts each production Python path once per commit whose subject matches
+case-insensitive `\b(fix|bug|correct|repair|guard|regression)\w*`. This is a proxy
+for repair history, including formatting repairs, not verified escaped-defect
+evidence. Churn counts all touches in the same latest 500-commit
+window, from `6cb921db5b15bdf15bb79dd1c869b3ccb9e45ff5` through `334ff0f4e2749eebea5002ca91a6e517bab98cad`.
+Sort descending by repair proxy, churn, then missing lines (the uncovered-mass
+measure); path breaks ties and missing branches are reported separately.
+[The history](issue-772-research/history.txt.gz) retains the exact output of
+`git log -500 --format='COMMIT %H %s' --name-only HEAD`.
+[The ranking harness](issue-772-research/ranking-harness.txt) records computation.
+
+| Rank | Module under src/fine_art_archive | Repair proxy | Churn | Missing lines | Missing branches |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `api/main.py` | 21 | 48 | 150 | 71 |
+| 2 | `api/store.py` | 6 | 19 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+Within first-ranked `api/main.py`, `_active_research_requests` had 12/14 lines
+and 4/4 branches covered; its missing exception-recovery lines were 998–999.
+Commit `244bb4a` introduced the request log and its advisory expiry contract;
+`2fce286` hardened API mutation audit paths. Existing tests already covered
+expiry and read-I/O failure, but not malformed JSON records or failed atomic
+compaction. Those gaps made log recovery a bounded behavior-driven choice.
+
+A valid JSON array or scalar in the JSONL log crashed research reads and writes
+with `AttributeError` on `.get()`. Six cases reproduced this on original source
+(6 failed / 6 passed in the initial focused run, exit 1). The production fix
+adds only a dictionary check before accessing record fields. Malformed records
+are skipped consistently with the existing invalid-JSON/date recovery contract;
+active records for every work survive the next successful compaction.
+
+The twelve new cases in `tests/test_api_research_requests.py` use a temporary log,
+a fixed clock, real file locks and real HTTP routing. Sidecar lookup alone is
+stubbed. They cover nine malformed-record forms, inclusive TTL expiry and latest
+per-work selection, and two write/replace failures that must return HTTP 503 and
+preserve the original log bytes. No archive images, operator data or network
+services are used.
+
+### Identical-scope full measurements
+
+Both completed measurements used the same interpreter, source paths, coverage
+configuration, exclusions, 25% floor and full test selection, with this command:
+
+```bash
+PYTHONPATH=/tmp/issue-772-current/shim:src PYTEST_ADDOPTS='-m "not slow"' \
+  python -m pytest -q --cov=src --cov-report=json:coverage.json \
+  --junitxml=/tmp/issue-772-current/<baseline-or-candidate>.xml
+```
+
+The required `not slow` selection deselected zero tests. Python 3.14.7,
+pytest 9.1.1, pytest-cov 7.1.0 and coverage.py 7.16.2 were identical. An initial
+unassisted attempt stalled before results and was interrupted (exit 130); it is
+not a measurement. Both completed runs use the same external
+[polling shim](issue-772-research/polling-shim.txt), which caps selector waits at
+0.01 seconds so asyncio can observe callbacks when sandbox wakeup socket writes
+are denied. It changes no tests or application code.
+
+[Baseline process](issue-772-research/baseline-process.json) and
+[candidate process](issue-772-research/candidate-process.json) record commands,
+environment, cwd, versions and exit codes. Lossless full console, JUnit and
+coverage JSON are retained as `baseline.*.gz`, `candidate.*.gz`, and
+`*-coverage.json.gz` in [the evidence directory](issue-772-research).
+[The comparison](issue-772-research/comparison.json) records exact totals,
+function and per-file summaries. The tracked historical `coverage.json` was
+restored after retaining both measurements.
+
+| Metric | Baseline | Candidate |
+| --- | ---: | ---: |
+| Collected | 2158 | 2170 |
+| Passed | 2142 | 2154 |
+| Failed | 4 | 4 |
+| Skipped | 12 | 12 |
+| Warnings | 1 | 1 |
+| Exit | 1 | 1 |
+| covered_lines | 9227 | 9231 |
+| num_statements | 10168 | 10170 |
+| covered_branches | 2889 | 2891 |
+| num_branches | 3584 | 3586 |
+| missing_lines | 941 | 939 |
+| missing_branches | 695 | 695 |
+| percent_covered | 88.10354857475276 | 88.12154696132596 |
+
+All measured source paths are identical. The two-line production guard adds two
+statements and two branch exits, so the changed denominators are reported rather
+than hidden. No measured production module regresses. The four failed nodes are
+identical in both runs, all due to
+`OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'`:
+
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree`
+- `tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory`
+- `tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate`
+- `tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`
+
+There are no new failures; this is not a package-wide green claim.
+
+| Selected symbol, combined line-and-branch coverage | Baseline | Candidate |
+| --- | ---: | ---: |
+| `_active_research_requests` | 88.88888888888889% | 100.0% |
+| `_open_research_request` | 100.0% | 100.0% |
+| `_replace_research_requests` | 100.0% | 100.0% |
+| `request_research` | 86.66666666666667% | 86.66666666666667% |
+
+Targeted verification used:
+
+```bash
+PYTHONPATH=/tmp/issue-772-current/shim:src python -m pytest \
+  tests/test_api_research_requests.py tests/test_companion_app_api.py \
+  -o addopts='' -m 'not slow' --cov=fine_art_archive.api.main \
+  --cov-report=term-missing \
+  --cov-report=json:/tmp/issue-772-current/targeted-coverage.json -q
+```
+
+Result: 76 passed, one warning, exit 0. The coverage table reports
+`src/fine_art_archive/api/main.py` at 44% (43.62934362934363% combined).
+The parser, lookup and replacement helpers each measure 100% lines and branches.
+This is focused verification, not a whole-module 90% claim.
+[The full targeted output](issue-772-research/targeted.log.gz) retains the table.
+
+### Actual mutation and restoration proof
+
+[The executed mutation harness](issue-772-research/mutation-harness.txt) and
+[per-control receipts](issue-772-research/mutations.json) retain exact production
+replacements, named nodes, commands, every parameterized result, exit statuses,
+and source/test hashes. All tests stay byte-identical during controls. Each
+mutation changes real production code, runs the named nodes, restores exact
+candidate source bytes in `finally`, verifies equality and reruns the same nodes.
+Only this module's derived bytecode is removed to prevent same-second stale
+imports; bytecode writes are disabled during controls.
+
+All named nodes below are in `tests/test_api_research_requests.py`. Commands
+use `python -m pytest <named-nodes> -m 'not slow' --no-cov -q --junitxml=<path>`
+with the same polling shim. Each RED exits 1 with semantic test failures and each
+restored GREEN exits 0. Nine controls cover all 12 unique new cases, with 25
+failing case executions and 25 restored passes:
+
+| Real production break | Named node(s) | Cases | RED / GREEN exit |
+| --- | --- | ---: | --- |
+| Remove dictionary guard | `test_malformed_record_does_not_block_read_or_destroy_active_requests[null/empty-array/array/number/boolean/string]` (six individual nodes) | 6 | 1 / 0 |
+| Re-raise malformed JSON/date errors | `test_malformed_record_does_not_block_read_or_destroy_active_requests[invalid-json/missing-date/invalid-date]` (three individual nodes) | 3 | 1 / 0 |
+| Discard existing records on compaction | `test_malformed_record_does_not_block_read_or_destroy_active_requests` | 9 | 1 / 0 |
+| Change inclusive cutoff to strict | `test_cutoff_is_inclusive_and_latest_request_is_specific_to_work` | 1 | 1 / 0 |
+| Retain expired requests | `test_cutoff_is_inclusive_and_latest_request_is_specific_to_work` | 1 | 1 / 0 |
+| Return oldest matching request | `test_cutoff_is_inclusive_and_latest_request_is_specific_to_work` | 1 | 1 / 0 |
+| Remove per-work filter | `test_cutoff_is_inclusive_and_latest_request_is_specific_to_work` | 1 | 1 / 0 |
+| Return 500 instead of retryable 503 | `test_failed_compaction_returns_retryable_error_and_preserves_log` | 2 | 1 / 0 |
+| Write over original before replacement | `test_failed_compaction_returns_retryable_error_and_preserves_log[replace]` | 1 | 1 / 0 |
+
+Every restored production source has SHA256 `f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3`;
+the unchanged test SHA256 is `cc3bd04a2e3ab35a60f2aef20c622f16950307d3282d16526f1f65676bbe6c50`. The shape-guard removal is
+byte-identical to baseline production source. The final candidate full suite ran
+after every mutation was restored. Full RED/GREEN logs and JUnit are retained
+losslessly beside the receipts, and
+[the compressed manifest](issue-772-research/compressed-manifest.json) records
+decoded byte counts and SHA256 hashes.
+
+Relevant-file Black at line length 100, required whole-checkout
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+(342 files), touched-file Ruff, and `git diff --check` pass. Black uses
+`BLACK_NUM_WORKERS=1` and the same external shim because sandbox process-worker
+socket creation is denied. Full formatting and lint output is retained.
+
+- [x] Run current full-src coverage and rank gaps by named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected production symbols and minimally fix the reproduced parser defect.
+- [x] Actually break every new case, execute named tests, restore exact source bytes and capture results.
+- [x] Complete identical-scope baseline/candidate measurements with no new failures and record exact counts, percentages, ranking and existing failures.
+- [x] Verify every new case fails for a real mutation and passes after byte-identical restoration, recording commands and exits.
+- [x] Apply the conditional 90% criterion: retain this bounded change and the broader initiative because baseline combined coverage is below 90%.
+
+Remote readiness/checklist verification with `gh pr view --json number,state,isDraft`
+failed to connect to `api.github.com` (exit 1). This run creates or changes no
+remote PR, claims no remote readiness verification, and does not close #772.
+
+Primary-checkout staging failed (exit 128): the sandbox mounts `.git` read-only,
+so Git cannot create `.git/index.lock`. The source, tests and evidence are
+committed in an isolated local repository at
+`/tmp/issue-772-research-commit-repo`, with this baseline HEAD as parent, and
+exported to `/tmp/issue-772-research.patch`. The receiving lane must apply the
+patch in its writable checkout. No primary-branch update or remote push is claimed.
