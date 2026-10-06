@@ -1,0 +1,27 @@
+Command: PYTHONPATH=/tmp/issue-772-verification:src python -m pytest tests/test_api_queue_details.py tests/test_companion_app_api.py tests/test_judgement_surfaces.py -o addopts='' -m 'not slow' --cov=fine_art_archive.api.main --cov-report=term-missing --cov-report=json:/tmp/issue-772-queue-targeted-coverage.json -q
+Exit status: 0
+
+........................................................................ [ 66%]
+............................s.......                                     [100%]
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.7-final-0 ________________
+
+Name                               Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------
+src/fine_art_archive/api/main.py    1419    660    390     49    50%   153-154, 158-161, 167-168, 175, 204, 221, 253-268, 369->375, 377, 430-436, 444-470, 475-492, 501-508, 513-516, 527-540, 554-568, 597, 617-623, 628-700, 726-764, 773-855, 883, 932, 933->935, 954, 998-999, 1028, 1064, 1099, 1105-1107, 1119, 1173->1190, 1194->1190, 1282-1293, 1311-1357, 1361-1363, 1401-1413, 1417-1419, 1517->1522, 1552-1563, 1606-1630, 1654-1702, 1737-1738, 1740, 1743->1747, 1744->1743, 1748, 1754, 1756, 1769-1777, 1807-1818, 1838-1894, 1906-1914, 1932-1943, 1953-2001, 2042-2074, 2078-2081, 2085-2108, 2124-2137, 2142-2173, 2178-2180, 2185-2187, 2200-2205, 2210-2216, 2227-2235, 2250-2344, 2358-2360, 2364-2368, 2382->2396, 2385-2386, 2392, 2394-2395, 2406-2409, 2421, 2435, 2468, 2470, 2484, 2504, 2532-2533, 2546-2547, 2549, 2608-2611, 2820, 2887-2889, 2905->2910, 2908, 2919-2920, 2926-2931, 2936, 2959, 2978-2979, 2981, 2995, 2998-2999, 3005, 3012-3013, 3033->3043, 3036-3037, 3039-3042, 3053, 3059-3067, 3077-3078, 3095, 3100->3105, 3119
+------------------------------------------------------------------------------
+TOTAL                               1419    660    390     49    50%
+Coverage JSON written to file /tmp/issue-772-queue-targeted-coverage.json
+Required test coverage of 25.0% reached. Total coverage: 49.53%
+107 passed, 1 skipped, 1 warning in 6.04s
+
+Command: PYTHONPATH=/tmp/issue-772-verification:src BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+Exit status: 0
+All done! ✨ 🍰 ✨
+340 files would be left unchanged.

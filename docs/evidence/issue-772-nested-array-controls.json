@@ -1,0 +1,21 @@
+{
+  "main": "fb47e2f3e0700fc55ec99f2b4a008692da95fb84",
+  "source_sha256_before": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3",
+  "source_sha256_restored": "d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3",
+  "red_exit": 1,
+  "green_exit": 0,
+  "full_exit": 0,
+  "finished": "2026-10-06T15:42:23.701801+00:00",
+  "nodes": [
+    "invalid-proposals",
+    "invalid-tags_enabled",
+    "invalid1-proposals",
+    "invalid1-tags_enabled",
+    "None-proposals",
+    "None-tags_enabled"
+  ],
+  "baseline_passed": 6,
+  "mutated_failed": 6,
+  "restored_passed": 6,
+  "full_restored_passed": 38
+}

@@ -1,0 +1,2521 @@
+Original source SHA256: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+Unchanged tests SHA256: 30a1d854f931ce277aad98033bc914bb38eaba73af3a5dcb9faa3577c66a49aa
+
+CONTROL queue-order
+replace 'for wid in wids_ordered:'
+with 'for wid in sorted(wids_ordered):'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f3de01d6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-3/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-3/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}, {'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E         +         {
+E         +             'work_id': 'a-last',
+E         +             'title': 'Last work',
+E         +             'artist_name': '',
+E         +             'artist_wikidata_q': '',
+E         +             'year': '',
+E         +             'n_variants': 0,
+E         +             '_last_rating': None,
+E         +             '_last_quality': None,
+E         +             '_last_fit': None,
+E         +             '_n_ratings': 0,
+E         +         },
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E         -         {
+E         -             'work_id': 'a-last',
+E         -             'title': 'Last work',
+E         -             'artist_name': '',
+E         -             'artist_wikidata_q': '',
+E         -             'year': '',
+E         -             'n_variants': 0,
+E         -             '_last_rating': None,
+E         -             '_last_quality': None,
+E         -             '_last_fit': None,
+E         -             '_n_ratings': 0,
+E         -         },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}, {'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+  +         {
+  +             'work_id': 'a-last',
+  +             'title': 'Last work',
+  +             'artist_name': '',
+  +             'artist_wikidata_q': '',
+  +             'year': '',
+  +             'n_variants': 0,
+  +             '_last_rating': None,
+  +             '_last_quality': None,
+  +             '_last_fit': None,
+  +             '_n_ratings': 0,
+  +         },
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+  -         {
+  -             'work_id': 'a-last',
+  -             'title': 'Last work',
+  -             'artist_name': '',
+  -             'artist_wikidata_q': '',
+  -             'year': '',
+  -             'n_variants': 0,
+  -             '_last_rating': None,
+  -             '_last_quality': None,
+  -             '_last_fit': None,
+  -             '_n_ratings': 0,
+  -         },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.40s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.75s =========================
+exit_status=0
+
+CONTROL missing-work
+replace 'if w_full is None:\n            continue'
+with 'if w_full is None:\n            break'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f36bb3d6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-5/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-5/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 1, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E         {'total': 1} != {'total': 2}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E         -     'total': 2,
+E         ?              ^
+E         +     'total': 1,
+E         ?              ^
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E         -         {
+E         -             'work_id': 'a-last',
+E         -             'title': 'Last work',
+E         -             'artist_name': '',
+E         -             'artist_wikidata_q': '',
+E         -             'year': '',
+E         -             'n_variants': 0,
+E         -             '_last_rating': None,
+E         -             '_last_quality': None,
+E         -             '_last_fit': None,
+E         -             '_n_ratings': 0,
+E         -         },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 1, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 3 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+  {'total': 1} != {'total': 2}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+  -     'total': 2,
+  ?              ^
+  +     'total': 1,
+  ?              ^
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+  -         {
+  -             'work_id': 'a-last',
+  -             'title': 'Last work',
+  -             'artist_name': '',
+  -             'artist_wikidata_q': '',
+  -             'year': '',
+  -             'n_variants': 0,
+  -             '_last_rating': None,
+  -             '_last_quality': None,
+  -             '_last_fit': None,
+  -             '_n_ratings': 0,
+  -         },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL sidecar-title
+replace '"title": w_full.get("title", ""),'
+with '"title": "",'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7faf359eaba0>, PosixPath('/tmp/pytest-of-runner/pytest-7/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-7/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': '', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': '', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E         -             'title': 'First work',
+E         ?                       ----------
+E         +             'title': '',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E         -             'title': 'Last work',
+E         ?                       ---------
+E         +             'title': '',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': '', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': '', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+  -             'title': 'First work',
+  ?                       ----------
+  +             'title': '',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+  -             'title': 'Last work',
+  ?                       ---------
+  +             'title': '',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.38s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.34s =========================
+exit_status=0
+
+CONTROL sidecar-artist
+replace '"artist_name": (w_full.get("artist") or {}).get("name", ""),'
+with '"artist_name": "",'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f4c753e6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-9/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-9/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': '', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E         -             'artist_name': 'Known artist',
+E         ?                             ------------
+E         +             'artist_name': '',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': '', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+  -             'artist_name': 'Known artist',
+  ?                             ------------
+  +             'artist_name': '',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL sidecar-artist-qid
+replace '"artist_wikidata_q": (w_full.get("artist") or {}).get("wikidata_q", ""),'
+with '"artist_wikidata_q": "",'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f1217fd6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-11/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-11/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': '', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E         -             'artist_wikidata_q': 'Q123',
+E         ?                                   ----
+E         +             'artist_wikidata_q': '',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': '', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+  -             'artist_wikidata_q': 'Q123',
+  ?                                   ----
+  +             'artist_wikidata_q': '',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.36s =========================
+exit_status=0
+
+CONTROL sidecar-year
+replace '"year": w_full.get("year", ""),'
+with '"year": "",'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7fa4bd8e2ba0>, PosixPath('/tmp/pytest-of-runner/pytest-13/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-13/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E         -             'year': 1643,
+E         ?                     ^^^^
+E         +             'year': '',
+E         ?                     ^^
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+  -             'year': 1643,
+  ?                     ^^^^
+  +             'year': '',
+  ?                     ^^
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.38s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL variant-count
+replace '"n_variants": len((w_full.get("files") or {}).get("variants") or []),'
+with '"n_variants": 0,'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f6c193daba0>, PosixPath('/tmp/pytest-of-runner/pytest-15/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-15/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E         -             'n_variants': 2,
+E         ?                           ^
+E         +             'n_variants': 0,
+E         ?                           ^
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]} != {'works': [{'work_id': 'z-first', 'title': 'First work', 'artist_name': 'Known artist', 'artist_wikidata_q': 'Q123', ...}, {'work_id': 'a-last', 'title': 'Last work', 'artist_name': '', 'artist_wikidata_q': '', ...}]}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+  -             'n_variants': 2,
+  ?                           ^
+  +             'n_variants': 0,
+  ?                           ^
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL legacy-badge
+replace '"_last_rating": (latest or {}).get("rating"),'
+with '"_last_rating": None,'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[legacy]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+_______ test_queue_badges_use_latest_event_and_count_all_ratings[legacy] _______
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f1a31896a50>, PosixPath('/tmp/pytest-of-runner/pytest-17/test_queue_badges_use_latest_e0/works'), PosixPath('/tmp/pytest-of-runner/pytest-17/test_queue_badges_use_latest_e0/queues'))
+latest = {'rating': 4}
+expected = {'_last_rating': 4, '_last_quality': None, '_last_fit': None}
+
+    @pytest.mark.parametrize(
+        ("latest", "expected"),
+        [
+            ({"rating": 4}, {"_last_rating": 4, "_last_quality": None, "_last_fit": None}),
+            ({"quality": 5, "fit": 2}, {"_last_rating": None, "_last_quality": 5, "_last_fit": 2}),
+        ],
+        ids=["legacy", "two-axis"],
+    )
+    def test_queue_badges_use_latest_event_and_count_all_ratings(queue_env, latest, expected) -> None:
+        client, works, queues = queue_env
+        _write_work(works, "rated", title="Rated work")
+        (queues / "rated.json").write_text('{"work_ids": ["rated"]}', encoding="utf-8")
+        # File order differs from timestamp order; the API must expose the latest event.
+        store.append_rating({"work_id": "rated", "ts": "2026-10-02", **latest})
+        store.append_rating({"work_id": "rated", "ts": "2026-10-01", "rating": 1})
+        store.append_rating({"work_id": "other", "ts": "2026-10-03", "rating": 3})
+
+        response = client.get("/queues/rated")
+
+        assert response.status_code == 200
+        row = response.json()["works"][0]
+>       assert {key: row[key] for key in expected} == expected
+E       AssertionError: assert {'_last_ratin...st_fit': None} == {'_last_ratin...st_fit': None}
+E
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'_last_rating': None} != {'_last_rating': 4}
+E
+E         Full diff:
+E           {
+E         -     '_last_rating': 4,
+E         ?                     ^
+E         +     '_last_rating': None,
+E         ?                     ^^^^
+E               '_last_quality': None,
+E               '_last_fit': None,
+E           }
+
+tests/test_api_queue_details.py:118: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[legacy] - AssertionError: assert {'_last_ratin...st_fit': None} == {'_last_ratin...st_fit': None}
+
+  Omitting 2 identical items, use -vv to show
+  Differing items:
+  {'_last_rating': None} != {'_last_rating': 4}
+
+  Full diff:
+    {
+  -     '_last_rating': 4,
+  ?                     ^
+  +     '_last_rating': None,
+  ?                     ^^^^
+        '_last_quality': None,
+        '_last_fit': None,
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[legacy]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.37s =========================
+exit_status=0
+
+CONTROL quality-badge
+replace '"_last_quality": (latest or {}).get("quality"),'
+with '"_last_quality": None,'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+______ test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] ______
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f57138dea50>, PosixPath('/tmp/pytest-of-runner/pytest-19/test_queue_badges_use_latest_e0/works'), PosixPath('/tmp/pytest-of-runner/pytest-19/test_queue_badges_use_latest_e0/queues'))
+latest = {'quality': 5, 'fit': 2}
+expected = {'_last_rating': None, '_last_quality': 5, '_last_fit': 2}
+
+    @pytest.mark.parametrize(
+        ("latest", "expected"),
+        [
+            ({"rating": 4}, {"_last_rating": 4, "_last_quality": None, "_last_fit": None}),
+            ({"quality": 5, "fit": 2}, {"_last_rating": None, "_last_quality": 5, "_last_fit": 2}),
+        ],
+        ids=["legacy", "two-axis"],
+    )
+    def test_queue_badges_use_latest_event_and_count_all_ratings(queue_env, latest, expected) -> None:
+        client, works, queues = queue_env
+        _write_work(works, "rated", title="Rated work")
+        (queues / "rated.json").write_text('{"work_ids": ["rated"]}', encoding="utf-8")
+        # File order differs from timestamp order; the API must expose the latest event.
+        store.append_rating({"work_id": "rated", "ts": "2026-10-02", **latest})
+        store.append_rating({"work_id": "rated", "ts": "2026-10-01", "rating": 1})
+        store.append_rating({"work_id": "other", "ts": "2026-10-03", "rating": 3})
+
+        response = client.get("/queues/rated")
+
+        assert response.status_code == 200
+        row = response.json()["works"][0]
+>       assert {key: row[key] for key in expected} == expected
+E       AssertionError: assert {'_last_ratin..._last_fit': 2} == {'_last_ratin..._last_fit': 2}
+E
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'_last_quality': None} != {'_last_quality': 5}
+E
+E         Full diff:
+E           {
+E               '_last_rating': None,
+E         -     '_last_quality': 5,
+E         ?                      ^
+E         +     '_last_quality': None,
+E         ?                      ^^^^
+E               '_last_fit': 2,
+E           }
+
+tests/test_api_queue_details.py:118: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] - AssertionError: assert {'_last_ratin..._last_fit': 2} == {'_last_ratin..._last_fit': 2}
+
+  Omitting 2 identical items, use -vv to show
+  Differing items:
+  {'_last_quality': None} != {'_last_quality': 5}
+
+  Full diff:
+    {
+        '_last_rating': None,
+  -     '_last_quality': 5,
+  ?                      ^
+  +     '_last_quality': None,
+  ?                      ^^^^
+        '_last_fit': 2,
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.36s =========================
+exit_status=0
+
+CONTROL fit-badge
+replace '"_last_fit": (latest or {}).get("fit"),'
+with '"_last_fit": None,'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+______ test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] ______
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f53fbbe6a50>, PosixPath('/tmp/pytest-of-runner/pytest-21/test_queue_badges_use_latest_e0/works'), PosixPath('/tmp/pytest-of-runner/pytest-21/test_queue_badges_use_latest_e0/queues'))
+latest = {'quality': 5, 'fit': 2}
+expected = {'_last_rating': None, '_last_quality': 5, '_last_fit': 2}
+
+    @pytest.mark.parametrize(
+        ("latest", "expected"),
+        [
+            ({"rating": 4}, {"_last_rating": 4, "_last_quality": None, "_last_fit": None}),
+            ({"quality": 5, "fit": 2}, {"_last_rating": None, "_last_quality": 5, "_last_fit": 2}),
+        ],
+        ids=["legacy", "two-axis"],
+    )
+    def test_queue_badges_use_latest_event_and_count_all_ratings(queue_env, latest, expected) -> None:
+        client, works, queues = queue_env
+        _write_work(works, "rated", title="Rated work")
+        (queues / "rated.json").write_text('{"work_ids": ["rated"]}', encoding="utf-8")
+        # File order differs from timestamp order; the API must expose the latest event.
+        store.append_rating({"work_id": "rated", "ts": "2026-10-02", **latest})
+        store.append_rating({"work_id": "rated", "ts": "2026-10-01", "rating": 1})
+        store.append_rating({"work_id": "other", "ts": "2026-10-03", "rating": 3})
+
+        response = client.get("/queues/rated")
+
+        assert response.status_code == 200
+        row = response.json()["works"][0]
+>       assert {key: row[key] for key in expected} == expected
+E       AssertionError: assert {'_last_ratin...st_fit': None} == {'_last_ratin..._last_fit': 2}
+E
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'_last_fit': None} != {'_last_fit': 2}
+E
+E         Full diff:
+E           {
+E               '_last_rating': None,
+E               '_last_quality': 5,
+E         -     '_last_fit': 2,
+E         ?                  ^
+E         +     '_last_fit': None,
+E         ?                  ^^^^
+E           }
+
+tests/test_api_queue_details.py:118: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] - AssertionError: assert {'_last_ratin...st_fit': None} == {'_last_ratin..._last_fit': 2}
+
+  Omitting 2 identical items, use -vv to show
+  Differing items:
+  {'_last_fit': None} != {'_last_fit': 2}
+
+  Full diff:
+    {
+        '_last_rating': None,
+        '_last_quality': 5,
+  -     '_last_fit': 2,
+  ?                  ^
+  +     '_last_fit': None,
+  ?                  ^^^^
+    }
+| ========================= 1 failed, 1 warning in 0.38s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest 'tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis]' -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.36s =========================
+exit_status=0
+
+CONTROL rating-count
+replace '"_n_ratings": store.count_ratings_for(wid),'
+with '"_n_ratings": 0,'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 2 items
+
+tests/test_api_queue_details.py FF                                       [100%]
+
+| =================================== FAILURES ===================================
+_______ test_queue_badges_use_latest_event_and_count_all_ratings[legacy] _______
+
+queue_env = (<starlette.testclient.TestClient object at 0x7ff8755daa50>, PosixPath('/tmp/pytest-of-runner/pytest-23/test_queue_badges_use_latest_e0/works'), PosixPath('/tmp/pytest-of-runner/pytest-23/test_queue_badges_use_latest_e0/queues'))
+latest = {'rating': 4}
+expected = {'_last_rating': 4, '_last_quality': None, '_last_fit': None}
+
+    @pytest.mark.parametrize(
+        ("latest", "expected"),
+        [
+            ({"rating": 4}, {"_last_rating": 4, "_last_quality": None, "_last_fit": None}),
+            ({"quality": 5, "fit": 2}, {"_last_rating": None, "_last_quality": 5, "_last_fit": 2}),
+        ],
+        ids=["legacy", "two-axis"],
+    )
+    def test_queue_badges_use_latest_event_and_count_all_ratings(queue_env, latest, expected) -> None:
+        client, works, queues = queue_env
+        _write_work(works, "rated", title="Rated work")
+        (queues / "rated.json").write_text('{"work_ids": ["rated"]}', encoding="utf-8")
+        # File order differs from timestamp order; the API must expose the latest event.
+        store.append_rating({"work_id": "rated", "ts": "2026-10-02", **latest})
+        store.append_rating({"work_id": "rated", "ts": "2026-10-01", "rating": 1})
+        store.append_rating({"work_id": "other", "ts": "2026-10-03", "rating": 3})
+
+        response = client.get("/queues/rated")
+
+        assert response.status_code == 200
+        row = response.json()["works"][0]
+        assert {key: row[key] for key in expected} == expected
+>       assert row["_n_ratings"] == 2
+E       assert 0 == 2
+
+tests/test_api_queue_details.py:119: AssertionError
+______ test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] ______
+
+queue_env = (<starlette.testclient.TestClient object at 0x7ff867b0a350>, PosixPath('/tmp/pytest-of-runner/pytest-23/test_queue_badges_use_latest_e1/works'), PosixPath('/tmp/pytest-of-runner/pytest-23/test_queue_badges_use_latest_e1/queues'))
+latest = {'quality': 5, 'fit': 2}
+expected = {'_last_rating': None, '_last_quality': 5, '_last_fit': 2}
+
+    @pytest.mark.parametrize(
+        ("latest", "expected"),
+        [
+            ({"rating": 4}, {"_last_rating": 4, "_last_quality": None, "_last_fit": None}),
+            ({"quality": 5, "fit": 2}, {"_last_rating": None, "_last_quality": 5, "_last_fit": 2}),
+        ],
+        ids=["legacy", "two-axis"],
+    )
+    def test_queue_badges_use_latest_event_and_count_all_ratings(queue_env, latest, expected) -> None:
+        client, works, queues = queue_env
+        _write_work(works, "rated", title="Rated work")
+        (queues / "rated.json").write_text('{"work_ids": ["rated"]}', encoding="utf-8")
+        # File order differs from timestamp order; the API must expose the latest event.
+        store.append_rating({"work_id": "rated", "ts": "2026-10-02", **latest})
+        store.append_rating({"work_id": "rated", "ts": "2026-10-01", "rating": 1})
+        store.append_rating({"work_id": "other", "ts": "2026-10-03", "rating": 3})
+
+        response = client.get("/queues/rated")
+
+        assert response.status_code == 200
+        row = response.json()["works"][0]
+        assert {key: row[key] for key in expected} == expected
+>       assert row["_n_ratings"] == 2
+E       assert 0 == 2
+
+tests/test_api_queue_details.py:119: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[legacy] - assert 0 == 2
+FAILED tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings[two-axis] - assert 0 == 2
+| ========================= 2 failed, 1 warning in 0.53s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_queue_badges_use_latest_event_and_count_all_ratings -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 2 items
+
+tests/test_api_queue_details.py ..                                       [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 2 passed, 1 warning in 0.44s =========================
+exit_status=0
+
+CONTROL dynamic-precedence
+replace 'q = _dynamic_queue(name)'
+with 'q = None'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+___ test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file ____
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f2eab9daba0>, PosixPath('/tmp/pytest-of-runner/pytest-25/test_dynamic_queue_uses_curren0/works'), PosixPath('/tmp/pytest-of-runner/pytest-25/test_dynamic_queue_uses_curren0/queues'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2eab9d2780>
+
+    def test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file(
+        queue_env, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        client, works, queues = queue_env
+        for wid in ("rated-old", "unrated", "new-arrival"):
+            _write_work(works, wid, title=wid)
+        (queues / "autonomous-acquisitions.json").write_text(
+            '{"name": "Stale file", "work_ids": ["rated-old"]}', encoding="utf-8"
+        )
+        rows = [
+            {"work_id": "rated-old", "acquired_at": "2026-10-01"},
+            {"work_id": "unrated", "acquired_at": "2026-10-02"},
+        ]
+        monkeypatch.setattr(store, "acquisitions_since_epoch", lambda: rows)
+        store.append_rating({"work_id": "rated-old", "ts": "2026-10-02", "rating": 4})
+
+        first = client.get("/queues/autonomous-acquisitions")
+        rows.append({"work_id": "new-arrival", "acquired_at": "2026-10-03"})
+        second = client.get("/queues/autonomous-acquisitions")
+
+        assert first.status_code == second.status_code == 200
+>       assert [row["work_id"] for row in first.json()["works"]] == ["unrated", "rated-old"]
+E       AssertionError: assert ['rated-old'] == ['unrated', 'rated-old']
+E
+E         At index 0 diff: 'rated-old' != 'unrated'
+E         Right contains one more item: 'rated-old'
+E
+E         Full diff:
+E           [
+E         -     'unrated',
+E               'rated-old',
+E           ]
+
+tests/test_api_queue_details.py:143: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file - AssertionError: assert ['rated-old'] == ['unrated', 'rated-old']
+
+  At index 0 diff: 'rated-old' != 'unrated'
+  Right contains one more item: 'rated-old'
+
+  Full diff:
+    [
+  -     'unrated',
+        'rated-old',
+    ]
+| ========================= 1 failed, 1 warning in 0.42s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_dynamic_queue_uses_current_acquisitions_instead_of_same_named_file -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.38s =========================
+exit_status=0
+
+CONTROL default-name
+replace '"name": q.get("name", name),'
+with '"name": q.get("name", ""),'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_empty_queue_uses_filename_and_default_description ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7efecccdeba0>, PosixPath('/tmp/pytest-of-runner/pytest-27/test_empty_queue_uses_filename0/works'), PosixPath('/tmp/pytest-of-runner/pytest-27/test_empty_queue_uses_filename0/queues'))
+
+    def test_empty_queue_uses_filename_and_default_description(queue_env) -> None:
+        client, _, queues = queue_env
+        (queues / "empty.json").write_text("{}", encoding="utf-8")
+
+        response = client.get("/queues/empty")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "empty",
+            "key": "empty",
+            "description": "",
+            "total": 0,
+            "works": [],
+        }
+E       AssertionError: assert {'name': '', ...otal': 0, ...} == {'name': 'emp...otal': 0, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'name': ''} != {'name': 'empty'}
+E
+E         Full diff:
+E           {
+E         -     'name': 'empty',
+E         ?              -----
+E         +     'name': '',
+E               'key': 'empty',
+E               'description': '',
+E               'total': 0,
+E               'works': [],
+E           }
+
+tests/test_api_queue_details.py:158: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description - AssertionError: assert {'name': '', ...otal': 0, ...} == {'name': 'emp...otal': 0, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'name': ''} != {'name': 'empty'}
+
+  Full diff:
+    {
+  -     'name': 'empty',
+  ?              -----
+  +     'name': '',
+        'key': 'empty',
+        'description': '',
+        'total': 0,
+        'works': [],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL default-description
+replace '"description": q.get("description", ""),'
+with '"description": q.get("description"),'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_empty_queue_uses_filename_and_default_description ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f2a151e2ba0>, PosixPath('/tmp/pytest-of-runner/pytest-29/test_empty_queue_uses_filename0/works'), PosixPath('/tmp/pytest-of-runner/pytest-29/test_empty_queue_uses_filename0/queues'))
+
+    def test_empty_queue_uses_filename_and_default_description(queue_env) -> None:
+        client, _, queues = queue_env
+        (queues / "empty.json").write_text("{}", encoding="utf-8")
+
+        response = client.get("/queues/empty")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "empty",
+            "key": "empty",
+            "description": "",
+            "total": 0,
+            "works": [],
+        }
+E       AssertionError: assert {'name': 'emp...otal': 0, ...} == {'name': 'emp...otal': 0, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'description': None} != {'description': ''}
+E
+E         Full diff:
+E           {
+E               'name': 'empty',
+E               'key': 'empty',
+E         -     'description': '',
+E         ?                    ^^
+E         +     'description': None,
+E         ?                    ^^^^
+E               'total': 0,
+E               'works': [],
+E           }
+
+tests/test_api_queue_details.py:158: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description - AssertionError: assert {'name': 'emp...otal': 0, ...} == {'name': 'emp...otal': 0, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'description': None} != {'description': ''}
+
+  Full diff:
+    {
+        'name': 'empty',
+        'key': 'empty',
+  -     'description': '',
+  ?                    ^^
+  +     'description': None,
+  ?                    ^^^^
+        'total': 0,
+        'works': [],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_empty_queue_uses_filename_and_default_description -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL queue-total
+replace '"total": len(works_out),'
+with '"total": len(wids_ordered),'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7fbc299e6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-31/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-31/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 3, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'total': 3} != {'total': 2}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E               'key': 'curated',
+E               'description': 'Deliberate viewing order',
+E         -     'total': 2,
+E         ?              ^
+E         +     'total': 3,
+E         ?              ^
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 3, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'total': 3} != {'total': 2}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+        'key': 'curated',
+        'description': 'Deliberate viewing order',
+  -     'total': 2,
+  ?              ^
+  +     'total': 3,
+  ?              ^
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.39s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.34s =========================
+exit_status=0
+
+CONTROL addressable-key
+replace 'key = name'
+with 'key = q.get("name", name)'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+____________ test_file_queue_preserves_work_order_and_skips_missing ____________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7f9e565eeba0>, PosixPath('/tmp/pytest-of-runner/pytest-33/test_file_queue_preserves_work0/works'), PosixPath('/tmp/pytest-of-runner/pytest-33/test_file_queue_preserves_work0/queues'))
+
+    def test_file_queue_preserves_work_order_and_skips_missing(queue_env) -> None:
+        client, works, queues = queue_env
+        _write_work(
+            works,
+            "z-first",
+            title="First work",
+            artist={"name": "Known artist", "wikidata_q": "Q123"},
+            year=1643,
+            files={"variants": [{"role": "detail"}, {"role": "crop"}]},
+        )
+        _write_work(works, "a-last", title="Last work", artist=None, files=None)
+        (queues / "curated.json").write_text(
+            json.dumps(
+                {
+                    "name": "Curated display name",
+                    "description": "Deliberate viewing order",
+                    "work_ids": ["z-first", "missing-work", "a-last"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        response = client.get("/queues/curated")
+
+        assert response.status_code == 200
+>       assert response.json() == {
+            "name": "Curated display name",
+            "key": "curated",
+            "description": "Deliberate viewing order",
+            "total": 2,
+            "works": [
+                {
+                    "work_id": "z-first",
+                    "title": "First work",
+                    "artist_name": "Known artist",
+                    "artist_wikidata_q": "Q123",
+                    "year": 1643,
+                    "n_variants": 2,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+                {
+                    "work_id": "a-last",
+                    "title": "Last work",
+                    "artist_name": "",
+                    "artist_wikidata_q": "",
+                    "year": "",
+                    "n_variants": 0,
+                    "_last_rating": None,
+                    "_last_quality": None,
+                    "_last_fit": None,
+                    "_n_ratings": 0,
+                },
+            ],
+        }
+E       AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+E
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'key': 'Curated display name'} != {'key': 'curated'}
+E
+E         Full diff:
+E           {
+E               'name': 'Curated display name',
+E         -     'key': 'curated',
+E         +     'key': 'Curated display name',
+E               'description': 'Deliberate viewing order',
+E               'total': 2,
+E               'works': [
+E                   {
+E                       'work_id': 'z-first',
+E                       'title': 'First work',
+E                       'artist_name': 'Known artist',
+E                       'artist_wikidata_q': 'Q123',
+E                       'year': 1643,
+E                       'n_variants': 2,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E                   {
+E                       'work_id': 'a-last',
+E                       'title': 'Last work',
+E                       'artist_name': '',
+E                       'artist_wikidata_q': '',
+E                       'year': '',
+E                       'n_variants': 0,
+E                       '_last_rating': None,
+E                       '_last_quality': None,
+E                       '_last_fit': None,
+E                       '_n_ratings': 0,
+E                   },
+E               ],
+E           }
+
+tests/test_api_queue_details.py:63: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing - AssertionError: assert {'name': 'Cur...otal': 2, ...} == {'name': 'Cur...otal': 2, ...}
+
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'key': 'Curated display name'} != {'key': 'curated'}
+
+  Full diff:
+    {
+        'name': 'Curated display name',
+  -     'key': 'curated',
+  +     'key': 'Curated display name',
+        'description': 'Deliberate viewing order',
+        'total': 2,
+        'works': [
+            {
+                'work_id': 'z-first',
+                'title': 'First work',
+                'artist_name': 'Known artist',
+                'artist_wikidata_q': 'Q123',
+                'year': 1643,
+                'n_variants': 2,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+            {
+                'work_id': 'a-last',
+                'title': 'Last work',
+                'artist_name': '',
+                'artist_wikidata_q': '',
+                'year': '',
+                'n_variants': 0,
+                '_last_rating': None,
+                '_last_quality': None,
+                '_last_fit': None,
+                '_n_ratings': 0,
+            },
+        ],
+    }
+| ========================= 1 failed, 1 warning in 0.40s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_file_queue_preserves_work_order_and_skips_missing -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
+
+CONTROL missing-queue-status
+replace 'raise HTTPException(404, f"no queue named {name!r}")'
+with 'raise HTTPException(422, f"no queue named {name!r}")'
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_unknown_queue_returns_not_found -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py F                                        [100%]
+
+| =================================== FAILURES ===================================
+_____________________ test_unknown_queue_returns_not_found _____________________
+
+queue_env = (<starlette.testclient.TestClient object at 0x7ff65e9e6ba0>, PosixPath('/tmp/pytest-of-runner/pytest-35/test_unknown_queue_returns_not0/works'), PosixPath('/tmp/pytest-of-runner/pytest-35/test_unknown_queue_returns_not0/queues'))
+
+    def test_unknown_queue_returns_not_found(queue_env) -> None:
+        client, _, _ = queue_env
+
+        response = client.get("/queues/unknown")
+
+>       assert response.status_code == 404
+E       assert 422 == 404
+E        +  where 422 = <Response [422 Unprocessable Content]>.status_code
+
+tests/test_api_queue_details.py:172: AssertionError
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| =========================== short test summary info ============================
+FAILED tests/test_api_queue_details.py::test_unknown_queue_returns_not_found - assert 422 == 404
+ +  where 422 = <Response [422 Unprocessable Content]>.status_code
+| ========================= 1 failed, 1 warning in 0.38s =========================
+exit_status=1
+Byte-identical restoration: d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+$ PYTHONPATH=/tmp/issue-772-verification:src PYTHONDONTWRITEBYTECODE=1 /opt/hostedtoolcache/Python/3.14.7/x64/bin/python -m pytest tests/test_api_queue_details.py::test_unknown_queue_returns_not_found -m 'not slow' --no-cov -q
+| ============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: langsmith-0.14.4, platformdirs-4.12.3, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_api_queue_details.py .                                        [100%]
+
+| =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59
+  /opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+| ========================= 1 passed, 1 warning in 0.35s =========================
+exit_status=0
