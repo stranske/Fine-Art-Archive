@@ -1,0 +1,873 @@
+{
+  "source_sha256": {
+    "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37",
+    "tests/test_api_artist_decisions.py": "b7c45dfc1a2e1915c95a72f4c2d5d95f2abea1a69f055ea8a6839d713cda3cbd"
+  },
+  "controls": [
+    {
+      "name": "omit-append",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "    gates.append_allowlist(\n        artist_qid,\n        decision=body.decision,\n        artist_name=body.artist_name,\n        note=body.note,\n        reviewer=body.reviewer,\n        ts=datetime.now(UTC).isoformat(),\n    )\n",
+      "after": "",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "782eba75df2b31652e6c7771dcb952c129f6ec0f9308b2f7d85813cc67b3a76e",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/omit-append-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/omit-append-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-artist",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "        artist_qid,",
+      "after": "        \"Q43\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "81033377a7df80bbec7e66b35b4ba4dd17f282ad3e692003686a353eb8e8870d",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-artist-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-artist-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reverse-choice",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "decision=body.decision,",
+      "after": "decision=\"reject\" if body.decision == \"approve\" else \"approve\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "2a8627b53604ed4c91f382f6a93f39307d1baf3312e2e8c81d14a830fa418199",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/reverse-choice-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/reverse-choice-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "discard-name",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "artist_name=body.artist_name,",
+      "after": "artist_name=\"\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals"
+      ],
+      "mutated_sha256": "c0e672838b2c9cba8b21c2b5784c8f9e2c2b89c81b1d5c1ab136c5301187d550",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-name-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-name-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "discard-note",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "note=body.note,",
+      "after": "note=\"\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals"
+      ],
+      "mutated_sha256": "8ffea033d6c5edf243897e67d47cd28d178fcd1cd1cbcd6411558fec6bca1058",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-note-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-note-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "discard-reviewer",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "reviewer=body.reviewer,",
+      "after": "reviewer=\"tim\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals"
+      ],
+      "mutated_sha256": "903c2b8a4162bcbc721cb1ffe11ff590e3d8b0948ee2ba15d724ae10857a3cfb",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-reviewer-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/discard-reviewer-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-timestamp",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "ts=datetime.now(UTC).isoformat(),",
+      "after": "ts=\"2026-10-01T00:00:00+00:00\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "cac02c724e81c3ba139068d4fe57d01597514dba4bbdd72c12dac04549ab0f36",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-timestamp-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-timestamp-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-default-reviewer",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "reviewer=body.reviewer,",
+      "after": "reviewer=body.reviewer if body.reviewer != \"tim\" else \"other\",",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "31c8eb8fe1f2b0ac0afac45a3112012af8cbedca2f985ccf66c8d055debde1f4",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-default-reviewer-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-default-reviewer-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-approval-count",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "\"approved_artists\": len(allow),",
+      "after": "\"approved_artists\": len(allow) + 1,",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "6771057f94718758e01babf2b955187b9f89fe8cb58875377f905ca3b0bbdb5d",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-approval-count-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/wrong-approval-count-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "omit-qid-validation",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "    if not re.fullmatch(r\"Q[1-9][0-9]{0,11}\", artist_qid):\n        raise HTTPException(400, \"artist_qid must look like Q12345\")\n",
+      "after": "",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_invalid_artist_qid_is_rejected_before_log_append"
+      ],
+      "mutated_sha256": "9e4ad8b173bfc881fe3848c829a577842f1089b1bcc5e8453f22c13fb1abeb60",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_invalid_artist_qid_is_rejected_before_log_append",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/omit-qid-validation-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q0]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q01]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[q42]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q1000000000000]",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_invalid_artist_qid_is_rejected_before_log_append",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/omit-qid-validation-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q0]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q01]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[q42]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_invalid_artist_qid_is_rejected_before_log_append[Q1000000000000]",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "accept-unsupported-choice",
+      "path": "src/fine_art_archive/api/main.py",
+      "before": "    decision: Literal[\"approve\", \"reject\"]",
+      "after": "    decision: Literal[\"approve\", \"reject\", \"defer\"]",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_unsupported_artist_decision_is_rejected_before_log_append"
+      ],
+      "mutated_sha256": "3ab9bc4a22940f515d9bea34d208d3416792eb74050dc2f376bd7944eee75231",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_unsupported_artist_decision_is_rejected_before_log_append",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/accept-unsupported-choice-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_unsupported_artist_decision_is_rejected_before_log_append",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_unsupported_artist_decision_is_rejected_before_log_append",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/accept-unsupported-choice-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_unsupported_artist_decision_is_rejected_before_log_append",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "overwrite-history",
+      "path": "src/fine_art_archive/api/gates.py",
+      "before": "with open(p, \"a\", encoding=\"utf-8\") as fh:",
+      "after": "with open(p, \"w\", encoding=\"utf-8\") as fh:",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "f3701ae821e2a794713d1eb178dd4aac03c7e64613f9f4e50deb886b65800a9c",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/overwrite-history-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "failed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_artist_decision_persists_choice_and_reports_current_approvals",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/overwrite-history-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[approve]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_artist_decision_persists_choice_and_reports_current_approvals[reject]",
+            "status": "passed"
+          },
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "keep-rejected-approval",
+      "path": "src/fine_art_archive/api/gates.py",
+      "before": "            approved.discard(qid)",
+      "after": "            pass",
+      "nodes": [
+        "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history"
+      ],
+      "mutated_sha256": "f444c4ab8f49a377dd0a1ebb96a20451f433324127dca05de4fad7a71ecd2917",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/keep-rejected-approval-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "failed"
+          }
+        ]
+      },
+      "restored_sha256": {
+        "src/fine_art_archive/api/main.py": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+        "src/fine_art_archive/api/gates.py": "efe302cc98e8117dd1fe827aa4162892cfd2107931a12305d9969780abd2cd37"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+          "-m",
+          "pytest",
+          "tests/test_api_artist_decisions.py::test_later_artist_decision_reverses_choice_without_erasing_history",
+          "-m",
+          "not slow",
+          "--no-cov",
+          "-q",
+          "--junitxml=/tmp/issue-772-round/keep-rejected-approval-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_artist_decisions::test_later_artist_decision_reverses_choice_without_erasing_history",
+            "status": "passed"
+          }
+        ]
+      }
+    }
+  ]
+}

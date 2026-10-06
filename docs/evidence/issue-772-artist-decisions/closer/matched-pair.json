@@ -1,0 +1,76 @@
+[
+  {
+    "stage": "baseline",
+    "revision": "51dc66ef",
+    "exit": 0,
+    "command": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=src",
+      "--cov-report=json:/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261006T2220Z/artist-baseline-coverage.json",
+      "--junitxml=/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261006T2220Z/artist-baseline.xml"
+    ],
+    "counts": {
+      "tests": 2170,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 12
+    },
+    "coverage": {
+      "covered_lines": 9237,
+      "num_statements": 10170,
+      "percent_covered": 88.22332073277116,
+      "percent_covered_display": "88",
+      "missing_lines": 933,
+      "excluded_lines": 4,
+      "percent_statements_covered": 90.8259587020649,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3586,
+      "num_partial_branches": 521,
+      "covered_branches": 2899,
+      "missing_branches": 687,
+      "percent_branches_covered": 80.84216397099833,
+      "percent_branches_covered_display": "81"
+    },
+    "shim": false
+  },
+  {
+    "stage": "candidate",
+    "revision": "94dafd1",
+    "exit": 0,
+    "command": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=src",
+      "--cov-report=json:/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261006T2220Z/artist-candidate-coverage.json",
+      "--junitxml=/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261006T2220Z/artist-candidate.xml"
+    ],
+    "counts": {
+      "tests": 2178,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 12
+    },
+    "coverage": {
+      "covered_lines": 9242,
+      "num_statements": 10170,
+      "percent_covered": 88.27420761849375,
+      "percent_covered_display": "88",
+      "missing_lines": 928,
+      "excluded_lines": 4,
+      "percent_statements_covered": 90.87512291052114,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3586,
+      "num_partial_branches": 521,
+      "covered_branches": 2901,
+      "missing_branches": 685,
+      "percent_branches_covered": 80.89793641940881,
+      "percent_branches_covered_display": "81"
+    },
+    "shim": false
+  }
+]

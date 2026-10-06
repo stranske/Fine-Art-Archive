@@ -1,0 +1,32 @@
+{
+  "black": {
+    "command": "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "environment": {
+      "PYTHONPATH": "/tmp/issue-772-round/shim:src",
+      "BLACK_NUM_WORKERS": "1"
+    },
+    "exit": 0,
+    "unchanged_files": 343
+  },
+  "ruff": {
+    "command": "ruff check tests/test_api_artist_decisions.py",
+    "exit": 0
+  },
+  "diff_check": {
+    "command": "git diff --check",
+    "exit": 0
+  },
+  "production_restoration": {
+    "command": "git diff --exit-code -- src/fine_art_archive/api/main.py src/fine_art_archive/api/gates.py",
+    "exit": 0
+  },
+  "primary_staging": {
+    "command": "git add -- tests/test_api_artist_decisions.py docs/evidence/issue-772-identity-coverage.md docs/evidence/issue-772-artist-decisions",
+    "exit": 128,
+    "reason": "Cannot create .git/index.lock: Read-only file system"
+  },
+  "pr_readiness": {
+    "exit": 1,
+    "reason": "Cannot connect to api.github.com"
+  }
+}
