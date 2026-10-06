@@ -172,8 +172,9 @@ green suite still needs a runner with a writable host-local lock directory.
 The **32 cases listed in the mutation table below**, including the earlier
 expanded-shape and three launch cases, were exercised against real source edits.
 The six `test_nested_array_fields_reject_non_arrays` cases added in the closer
-source repair are outside this table; this table does not claim mutation
-coverage for the current 38-case inventory.
+source repair have separate actual mutation/restoration receipts in
+`issue-772-nested-array-controls.txt` and `.json` (see the final section).
+The historical table below covers 32 cases; those receipts cover the remaining six.
 Every row ran the following command with its named function node, first mutated
 and then restored, using the same polling shim:
 
@@ -251,3 +252,39 @@ the primary checkout or remote is claimed.
 
 
 2026-10-06 current-head check: `python3.12 -m pytest tests/test_api_tag_proposals.py -q --no-cov` passed all38 tests. The first focused run also passed38 tests but exited1 because this single module reached5.98percent against the package-wide25percent coverage floor. This focused check disables aggregate coverage only for the narrow run; no package-wide coverage PASS is claimed. Prior full-suite host cache limitations remain documented above.
+
+
+## Exact merged-source nested-array mutation proof (2026-10-06)
+
+The earlier 32-case mutation table is historical. The six additional nested-array
+cases now have actual source-mutation proof in
+[the full command transcript](issue-772-nested-array-controls.txt) and
+[the per-case receipt](issue-772-nested-array-controls.json). This supplies the
+previously missing six-case mutation proof.
+
+On main `fb47e2f3e0700fc55ec99f2b4a008692da95fb84`, removing only the production
+`proposals` and `gate.tags_enabled` list guards makes all six named cases fail
+with HTTP 200 where controlled HTTP 500 is required. Every assertion stays
+unchanged. Byte-identical restoration gives six passes; the full tag-proposal
+module gives 38 passes. No production or test changes are retained.
+
+| Named parameter case | Production guards removed | Restored |
+| --- | --- | --- |
+| `invalid-proposals` | FAIL, exit 1 | PASS, exit 0 |
+| `invalid-tags_enabled` | FAIL, exit 1 | PASS, exit 0 |
+| `invalid1-proposals` | FAIL, exit 1 | PASS, exit 0 |
+| `invalid1-tags_enabled` | FAIL, exit 1 | PASS, exit 0 |
+| `None-proposals` | FAIL, exit 1 | PASS, exit 0 |
+| `None-tags_enabled` | FAIL, exit 1 | PASS, exit 0 |
+
+Production source before and after restoration has SHA256
+`d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3`.
+
+Coverage measurements elsewhere in this document are separate historical
+baseline/candidate pairs from different environments: the original local
+2083→2099/12-skip run and the later sandbox run with four unchanged workspace
+conflict failures and its stated `not slow` selection. Their percentages must
+be compared within each identical-scope pair, not mixed across environments.
+This follow-up changes documentation only and claims no new package coverage
+measurement or package-wide PASS. The broader 90% initiative remains open;
+current-head hosted checks, review and comparison disposition remain required.

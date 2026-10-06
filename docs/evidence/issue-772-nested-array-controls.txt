@@ -1,0 +1,232 @@
+Run on exact merged main fb47e2f3e0700fc55ec99f2b4a008692da95fb84
+Actual mutation: remove the production proposals list guard and tags_enabled list guard; retain every test and all other validation.
+Source SHA256 before/restored d201269355b26f47b20b08a7020de9c277d6ada569e64e93e874a9d0006f93d3
+
+
+nested-baseline
+COMMAND ['python3.12', '-m', 'pytest', '--no-cov', '-q', 'tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa-774-mutation-evidence-1522
+configfile: pyproject.toml
+plugins: langsmith-0.10.9, cov-7.1.0, xdist-3.8.0, rerunfailures-16.3, datadir-1.8.0, typeguard-4.5.1, asyncio-1.3.0, pytest_httpserver-1.1.3, hypothesis-6.155.7, regressions-2.11.0, Faker-40.39.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6 items
+
+tests/test_api_tag_proposals.py ......                                   [100%]
+
+=============================== warnings summary ===============================
+../../../../../../../opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 6 passed, 1 warning in 3.21s =========================
+
+EXIT 0
+
+nested-RED
+COMMAND ['python3.12', '-m', 'pytest', '--no-cov', '-q', 'tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa-774-mutation-evidence-1522
+configfile: pyproject.toml
+plugins: langsmith-0.10.9, cov-7.1.0, xdist-3.8.0, rerunfailures-16.3, datadir-1.8.0, typeguard-4.5.1, asyncio-1.3.0, pytest_httpserver-1.1.3, hypothesis-6.155.7, regressions-2.11.0, Faker-40.39.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6 items
+
+tests/test_api_tag_proposals.py FFFFFF                                   [100%]
+
+=================================== FAILURES ===================================
+________ test_nested_array_fields_reject_non_arrays[invalid-proposals] _________
+
+tagger = (<starlette.testclient.TestClient object at 0x117015a30>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec0/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1170150d0>
+field = 'proposals', invalid = 'invalid'
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+_______ test_nested_array_fields_reject_non_arrays[invalid-tags_enabled] _______
+
+tagger = (<starlette.testclient.TestClient object at 0x117077200>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec1/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1170773b0>
+field = 'tags_enabled', invalid = 'invalid'
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+________ test_nested_array_fields_reject_non_arrays[invalid1-proposals] ________
+
+tagger = (<starlette.testclient.TestClient object at 0x117099c70>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec2/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x117099820>
+field = 'proposals', invalid = {}
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+______ test_nested_array_fields_reject_non_arrays[invalid1-tags_enabled] _______
+
+tagger = (<starlette.testclient.TestClient object at 0x11709ba40>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec3/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11709a330>
+field = 'tags_enabled', invalid = {}
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+__________ test_nested_array_fields_reject_non_arrays[None-proposals] __________
+
+tagger = (<starlette.testclient.TestClient object at 0x1171332c0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec4/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x117130f80>
+field = 'proposals', invalid = None
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+________ test_nested_array_fields_reject_non_arrays[None-tags_enabled] _________
+
+tagger = (<starlette.testclient.TestClient object at 0x117132270>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-876/test_nested_array_fields_rejec5/vision_tag_works.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x117131400>
+field = 'tags_enabled', invalid = None
+
+    @pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+    @pytest.mark.parametrize("invalid", ["invalid", {}, None])
+    def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+        client, _ = tagger
+        payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+        if field == "proposals":
+            payload["works"][0][field] = invalid
+        else:
+            payload["gate"][field] = invalid
+        respond(monkeypatch, stdout=json.dumps(payload))
+        response = client.post("/works/work-1/propose_tags")
+>       assert response.status_code == 500
+E       assert 200 == 500
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_api_tag_proposals.py:229: AssertionError
+=============================== warnings summary ===============================
+../../../../../../../opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[invalid-proposals]
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[invalid-tags_enabled]
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[invalid1-proposals]
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[invalid1-tags_enabled]
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[None-proposals]
+FAILED tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays[None-tags_enabled]
+========================= 6 failed, 1 warning in 0.43s =========================
+
+EXIT 1
+
+nested-GREEN
+COMMAND ['python3.12', '-m', 'pytest', '--no-cov', '-q', 'tests/test_api_tag_proposals.py::test_nested_array_fields_reject_non_arrays']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa-774-mutation-evidence-1522
+configfile: pyproject.toml
+plugins: langsmith-0.10.9, cov-7.1.0, xdist-3.8.0, rerunfailures-16.3, datadir-1.8.0, typeguard-4.5.1, asyncio-1.3.0, pytest_httpserver-1.1.3, hypothesis-6.155.7, regressions-2.11.0, Faker-40.39.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6 items
+
+tests/test_api_tag_proposals.py ......                                   [100%]
+
+=============================== warnings summary ===============================
+../../../../../../../opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 6 passed, 1 warning in 0.39s =========================
+
+EXIT 0
+
+full-restored
+COMMAND ['python3.12', '-m', 'pytest', '--no-cov', '-q', 'tests/test_api_tag_proposals.py']
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa-774-mutation-evidence-1522
+configfile: pyproject.toml
+plugins: langsmith-0.10.9, cov-7.1.0, xdist-3.8.0, rerunfailures-16.3, datadir-1.8.0, typeguard-4.5.1, asyncio-1.3.0, pytest_httpserver-1.1.3, hypothesis-6.155.7, regressions-2.11.0, Faker-40.39.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 38 items
+
+tests/test_api_tag_proposals.py ......................................   [100%]
+
+=============================== warnings summary ===============================
+../../../../../../../opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 38 passed, 1 warning in 0.52s =========================
+
+EXIT 0
