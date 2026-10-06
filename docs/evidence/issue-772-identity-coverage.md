@@ -913,3 +913,42 @@ as `/tmp/issue-772-artist-decisions.patch`. The receiving lane must apply the
 patch in its writable checkout; no primary branch update or remote push is
 claimed. [Validation receipts](issue-772-artist-decisions/validation.json) record
 the checks and environment limitations.
+
+
+### Independent closer artist-decision evidence (PR #778)
+
+The authoritative no-shim Python 3.12 matched pair for the separated artist
+chunk is retained in [closer/matched-pair.json](issue-772-artist-decisions/closer/matched-pair.json).
+It supersedes the historical Python 3.14/shim run for this chunk's acceptance;
+the historical failures above remain recorded and are not passing evidence.
+The selected production symbols and repair-history ranking above are unchanged.
+
+| Same full pytest scope | Baseline | Artist candidate |
+| --- | ---: | ---: |
+| JUnit total (including skipped) | 2170 | 2178 |
+| Passed | 2158 | 2166 |
+| Skipped | 12 | 12 |
+| Failures / errors | 0 / 0 | 0 / 0 |
+| Combined line and branch coverage | 88.22332073277116% | 88.27420761849375% |
+| Statements / branches | 10170 / 3586 | 10170 / 3586 |
+
+Thus the PR's 2158/2166 passing counts and JUnit's 2170/2178 totals agree;
+the difference is exactly 12 skipped cases in each run. The literal commands,
+zero exit statuses and coverage totals are in the matched-pair record.
+
+At merged commit `6da2aa357f879a9510bf898c63a36ac534571c65`, independent
+readback decoded and verified all 62 compressed evidence manifest entries,
+including full console logs, JUnit, coverage JSON and mutation receipts.
+All 13 actual production controls recorded RED (31 failed case executions in
+aggregate) and all 13 restored controls recorded GREEN. See the
+[decoded-hash manifest](issue-772-artist-decisions/closer/compressed-manifest.json)
+and [proof index](issue-772-artist-decisions/closer/README.md).
+The production endpoint and artist test file are byte-identical between the
+reviewed PR head and squash merge; source restoration hashes are retained in
+the mutation receipts. This is evidence readback, not a new full-suite run.
+
+Provider report run `37545493576` remains CONCERNS/CONCERNS and corpus NON_PASS:
+its supplied diff and acceptance evidence were truncated. Complete local
+readback resolves the inaccessible-transcript and count-reconciliation claims
+for this bounded chunk; it does not change the providers' original verdicts.
+Broad issue #772 remains open because combined coverage is below 90 percent.
