@@ -213,3 +213,18 @@ def test_empty_result_uses_explicit_defaults(tagger, monkeypatch, fields):
         "tags_enabled": [],
         "elapsed_ms": None,
     }
+
+
+@pytest.mark.parametrize("field", ["proposals", "tags_enabled"])
+@pytest.mark.parametrize("invalid", ["invalid", {}, None])
+def test_nested_array_fields_reject_non_arrays(tagger, monkeypatch, field, invalid):
+    client, _ = tagger
+    payload = {"works": [{"proposals": []}], "gate": {"tags_enabled": []}}
+    if field == "proposals":
+        payload["works"][0][field] = invalid
+    else:
+        payload["gate"][field] = invalid
+    respond(monkeypatch, stdout=json.dumps(payload))
+    response = client.post("/works/work-1/propose_tags")
+    assert response.status_code == 500
+    assert response.json() == {"detail": "tagger produced invalid JSON structure"}

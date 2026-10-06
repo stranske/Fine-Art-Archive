@@ -1981,8 +1981,16 @@ def propose_tags(work_id: str) -> dict:
     if (
         not isinstance(payload, dict)
         or ("works" in payload and not isinstance(payload["works"], list))
-        or any(not isinstance(work, dict) for work in (payload.get("works") or []))
+        or any(
+            not isinstance(work, dict)
+            or ("proposals" in work and not isinstance(work["proposals"], list))
+            for work in (payload.get("works") or [])
+        )
         or ("gate" in payload and not isinstance(payload["gate"], dict))
+        or (
+            "tags_enabled" in payload.get("gate", {})
+            and not isinstance(payload["gate"]["tags_enabled"], list)
+        )
     ):
         raise HTTPException(500, "tagger produced invalid JSON structure")
     works = payload.get("works") or []
