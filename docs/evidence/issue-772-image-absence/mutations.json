@@ -1,0 +1,222 @@
+[
+  {
+    "key": "missing-sidecar",
+    "symbol": "modality_image",
+    "node": "test_modality_requires_sidecar_even_when_master_exists",
+    "before": "    if w is None:\n        raise HTTPException(404, f\"no sidecar for {work_id}\")\n",
+    "after": "",
+    "original_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "mutant_sha256": "285f4c4b3ca35a5e4d7937af50bffdf74bc590c037e15060ad3023c83a38d1dd",
+    "restored_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "3b4d2ce40d8930680be4ffc174b9085f35b2fa42226b745781d9929e2f52488a",
+    "red": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_modality_requires_sidecar_even_when_master_exists",
+        "--junitxml=/tmp/772-api-boundaries/missing-sidecar-red.xml"
+      ],
+      "exit": 1,
+      "counts": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-sidecar-red.log",
+      "junit": "missing-sidecar-red.xml"
+    },
+    "green": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_modality_requires_sidecar_even_when_master_exists",
+        "--junitxml=/tmp/772-api-boundaries/missing-sidecar-green.xml"
+      ],
+      "exit": 0,
+      "counts": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-sidecar-green.log",
+      "junit": "missing-sidecar-green.xml"
+    }
+  },
+  {
+    "key": "missing-filename",
+    "symbol": "modality_image",
+    "node": "test_modality_descriptor_without_filename_is_404",
+    "before": "    if entry is None or not entry.get(\"filename\"):\n",
+    "after": "    if entry is None:\n",
+    "original_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "mutant_sha256": "a1322359f6e290e03dd34dff9e8a497e4f9dfccbe47af5cfd822e1eb1eb59487",
+    "restored_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "3b4d2ce40d8930680be4ffc174b9085f35b2fa42226b745781d9929e2f52488a",
+    "red": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_modality_descriptor_without_filename_is_404",
+        "--junitxml=/tmp/772-api-boundaries/missing-filename-red.xml"
+      ],
+      "exit": 1,
+      "counts": {
+        "tests": 2,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-filename-red.log",
+      "junit": "missing-filename-red.xml"
+    },
+    "green": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_modality_descriptor_without_filename_is_404",
+        "--junitxml=/tmp/772-api-boundaries/missing-filename-green.xml"
+      ],
+      "exit": 0,
+      "counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-filename-green.log",
+      "junit": "missing-filename-green.xml"
+    }
+  },
+  {
+    "key": "missing-modality-file",
+    "symbol": "modality_image",
+    "node": "test_missing_modality_file_does_not_fall_back_to_master",
+    "before": "    if not src.is_file():\n        raise HTTPException(404, f\"{modality} file missing for {work_id}\")\n",
+    "after": "",
+    "original_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "mutant_sha256": "8ba2659bdefed9b256c42e44c9c537e58be8c0665dfb6544f5fbfae35a5198d5",
+    "restored_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "3b4d2ce40d8930680be4ffc174b9085f35b2fa42226b745781d9929e2f52488a",
+    "red": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_missing_modality_file_does_not_fall_back_to_master",
+        "--junitxml=/tmp/772-api-boundaries/missing-modality-file-red.xml"
+      ],
+      "exit": 1,
+      "counts": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-modality-file-red.log",
+      "junit": "missing-modality-file-red.xml"
+    },
+    "green": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_missing_modality_file_does_not_fall_back_to_master",
+        "--junitxml=/tmp/772-api-boundaries/missing-modality-file-green.xml"
+      ],
+      "exit": 0,
+      "counts": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-modality-file-green.log",
+      "junit": "missing-modality-file-green.xml"
+    }
+  },
+  {
+    "key": "missing-download",
+    "symbol": "work_full",
+    "node": "test_original_download_with_stale_master_filename_is_404",
+    "before": "    if master is None:\n        raise HTTPException(404, f\"no master image for {work_id}\")\n",
+    "after": "",
+    "original_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "mutant_sha256": "7047ea5414c555aa2498605c90391c9bbb541654a7d0632cac7d7501a70a9dac",
+    "restored_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "3b4d2ce40d8930680be4ffc174b9085f35b2fa42226b745781d9929e2f52488a",
+    "red": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_original_download_with_stale_master_filename_is_404",
+        "--junitxml=/tmp/772-api-boundaries/missing-download-red.xml"
+      ],
+      "exit": 1,
+      "counts": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-download-red.log",
+      "junit": "missing-download-red.xml"
+    },
+    "green": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-m",
+        "not slow",
+        "tests/test_api_image_absence.py::test_original_download_with_stale_master_filename_is_404",
+        "--junitxml=/tmp/772-api-boundaries/missing-download-green.xml"
+      ],
+      "exit": 0,
+      "counts": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "missing-download-green.log",
+      "junit": "missing-download-green.xml"
+    }
+  }
+]

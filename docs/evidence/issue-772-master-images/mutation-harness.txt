@@ -1,0 +1,42 @@
+import ast, hashlib, json, pathlib, subprocess, sys, importlib.util
+root=pathlib.Path('/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa-772-next-api-boundaries')
+out=pathlib.Path('/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0302Z')
+py='/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python'
+source=root/'src/fine_art_archive/api/main.py'
+test=root/'tests/test_api_master_image_boundaries.py'
+original=source.read_bytes(); text=original.decode(); test_hash=hashlib.sha256(test.read_bytes()).hexdigest()
+mutations=[
+('rgba-conversion','_serve_resized','im = im.convert("RGB")','im = im','test_transparent_master_is_a_bounded_jpeg'),
+('resize-bound','_serve_resized','im.thumbnail((max, max), Image.Resampling.LANCZOS)','pass','test_transparent_master_is_a_bounded_jpeg'),
+('cache-reuse','_serve_resized','if not cache_p.exists():','if True:','test_cached_master_response_does_not_decode_again'),
+('missing-master','work_image','if master is None:','if False:','test_missing_master_is_404_without_creating_cache'),
+('decode-failure','_serve_resized','HTTPException(500, f"resize failed: {e}")','HTTPException(502, f"resize failed: {e}")','test_corrupt_master_reports_resize_failure_without_cached_output'),
+('pillow-outage','_serve_resized','HTTPException(500, "Pillow not installed")','HTTPException(502, "Pillow not installed")','test_unavailable_pillow_reports_specific_failure'),
+('sidecar-fallback','_master_path','return p','return None','test_sidecar_master_filename_fallback_is_served'),
+]
+records=[]
+for label,fn,old,new,node in mutations:
+ tree=ast.parse(text); f=next(n for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name==fn)
+ lines=text.splitlines(keepends=True); segment=''.join(lines[f.lineno-1:f.end_lineno]); assert segment.count(old)==1,(label,segment.count(old))
+ mutated=''.join(lines[:f.lineno-1])+segment.replace(old,new,1)+''.join(lines[f.end_lineno:])
+ args=[py,'-m','pytest',str(test.relative_to(root))+'::'+node,'-q','--no-cov']
+ record={'id':label,'symbol':fn,'old':old,'new':new,'node':node,'argv':args,'source_sha256':hashlib.sha256(original).hexdigest(),'test_sha256':test_hash,'mutant_sha256':hashlib.sha256(mutated.encode()).hexdigest()}
+ try:
+  source.write_text(mutated)
+  pathlib.Path(importlib.util.cache_from_source(str(source))).unlink(missing_ok=True)
+  red=subprocess.run(args,cwd=root,capture_output=True,text=True)
+  (out/('faa-mutant-'+label+'-red.log')).write_text(red.stdout+red.stderr)
+  record['red_exit']=red.returncode
+ finally:
+  source.write_bytes(original)
+  pathlib.Path(importlib.util.cache_from_source(str(source))).unlink(missing_ok=True)
+ assert source.read_bytes()==original
+ green=subprocess.run(args,cwd=root,capture_output=True,text=True)
+ (out/('faa-mutant-'+label+'-green.log')).write_text(green.stdout+green.stderr)
+ record['green_exit']=green.returncode
+ records.append(record);(out/'faa-mutations.json').write_text(json.dumps(records,indent=2))
+ print(label,red.returncode,green.returncode,flush=True)
+ assert red.returncode==1 and 'FAILED' in red.stdout and node in red.stdout,(label,red.stdout,red.stderr)
+ assert green.returncode==0,(label,green.stdout,green.stderr)
+ assert hashlib.sha256(test.read_bytes()).hexdigest()==test_hash
+assert len({x['node'] for x in records})==6

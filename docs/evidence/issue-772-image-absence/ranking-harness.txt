@@ -1,0 +1,35 @@
+import json
+import re
+import subprocess
+from pathlib import Path
+
+root = Path.cwd()
+out = Path('/tmp/772-api-boundaries')
+out.mkdir(parents=True, exist_ok=True)
+coverage = json.loads(Path('coverage.json').read_text())
+history = subprocess.check_output(
+    ['git', 'log', '-500', '--format=COMMIT%x09%H%x09%s', '--name-only', '--', 'src/fine_art_archive'],
+    text=True,
+)
+(out / 'history.txt').write_text(history)
+counts = {}
+repair = False
+for line in history.splitlines():
+    if line.startswith('COMMIT\t'):
+        repair = bool(re.search(r'\b(fix|bug|correct|repair|guard|regression)\b', line.split('\t', 2)[2], re.I))
+    elif line.startswith('src/fine_art_archive/'):
+        churn, repairs = counts.get(line, (0, 0))
+        counts[line] = (churn + 1, repairs + int(repair))
+rows = []
+for path, data in coverage['files'].items():
+    summary = data['summary']
+    if not path.startswith('src/fine_art_archive/') or not (summary['missing_lines'] or summary['missing_branches']):
+        continue
+    churn, repairs = counts.get(path, (0, 0))
+    rows.append({'path': path, 'repair_history_proxy': repairs, 'churn': churn, **summary})
+rows.sort(key=lambda row: (-row['repair_history_proxy'], -row['churn'], -row['missing_lines'], -row['missing_branches'], row['path']))
+result = {'base': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+          'rule': 'latest 500 source-touching commits: subject keyword repair-history proxy (not verified escaped defects), then commits touching path, missing lines, missing branches, path',
+          'history_count': sum(line.startswith('COMMIT\t') for line in history.splitlines()), 'ranking': rows}
+(out / 'ranking.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps({'totals': coverage['totals'], 'top_six': rows[:6]}, indent=2))

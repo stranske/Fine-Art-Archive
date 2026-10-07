@@ -1,0 +1,183 @@
+{
+  "base": "1f4a837476758a5b07cd0a418848e973f51ca8d1",
+  "production_diff": "none",
+  "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+  "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+  "same_source_universe": true,
+  "no_per_file_coverage_regression": true,
+  "same_scope_and_floors": true,
+  "baseline": {
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=src",
+      "--cov-report=json:/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0302Z/faa-baseline-coverage.json",
+      "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0302Z/faa-baseline.xml"
+    ],
+    "cwd": "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa-772-next-api-boundaries",
+    "exit": 0,
+    "seconds": 143.74524412500614,
+    "counts": {
+      "tests": 2197,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 12,
+      "passed": 2185
+    },
+    "coverage": {
+      "covered_lines": 9257,
+      "num_statements": 10175,
+      "percent_covered": 88.40537595350527,
+      "percent_covered_display": "88",
+      "missing_lines": 918,
+      "excluded_lines": 4,
+      "percent_statements_covered": 90.97788697788698,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3590,
+      "num_partial_branches": 518,
+      "covered_branches": 2912,
+      "missing_branches": 678,
+      "percent_branches_covered": 81.1142061281337,
+      "percent_branches_covered_display": "81"
+    },
+    "symbols": {
+      "_serve_resized": {
+        "covered_lines": 13,
+        "num_statements": 18,
+        "percent_covered": 68.18181818181819,
+        "percent_covered_display": "68",
+        "missing_lines": 5,
+        "excluded_lines": 0,
+        "percent_statements_covered": 72.22222222222223,
+        "percent_statements_covered_display": "72",
+        "num_branches": 4,
+        "num_partial_branches": 2,
+        "covered_branches": 2,
+        "missing_branches": 2,
+        "percent_branches_covered": 50.0,
+        "percent_branches_covered_display": "50"
+      },
+      "work_image": {
+        "covered_lines": 1,
+        "num_statements": 4,
+        "percent_covered": 16.666666666666668,
+        "percent_covered_display": "17",
+        "missing_lines": 3,
+        "excluded_lines": 0,
+        "percent_statements_covered": 25.0,
+        "percent_statements_covered_display": "25",
+        "num_branches": 2,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 2,
+        "percent_branches_covered": 0.0,
+        "percent_branches_covered_display": "0"
+      },
+      "_master_path": {
+        "covered_lines": 11,
+        "num_statements": 13,
+        "percent_covered": 80.0,
+        "percent_covered_display": "80",
+        "missing_lines": 2,
+        "excluded_lines": 0,
+        "percent_statements_covered": 84.61538461538461,
+        "percent_statements_covered_display": "85",
+        "num_branches": 12,
+        "num_partial_branches": 1,
+        "covered_branches": 9,
+        "missing_branches": 3,
+        "percent_branches_covered": 75.0,
+        "percent_branches_covered_display": "75"
+      }
+    }
+  },
+  "candidate": {
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=src",
+      "--cov-report=json:/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0302Z/faa-candidate-coverage.json",
+      "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0302Z/faa-candidate.xml"
+    ],
+    "cwd": "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa-772-next-api-boundaries",
+    "exit": 0,
+    "seconds": 89.53165795799578,
+    "counts": {
+      "tests": 2203,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 12,
+      "passed": 2191
+    },
+    "coverage": {
+      "covered_lines": 9267,
+      "num_statements": 10175,
+      "percent_covered": 88.51434798401743,
+      "percent_covered_display": "89",
+      "missing_lines": 908,
+      "excluded_lines": 4,
+      "percent_statements_covered": 91.07616707616708,
+      "percent_statements_covered_display": "91",
+      "num_branches": 3590,
+      "num_partial_branches": 517,
+      "covered_branches": 2917,
+      "missing_branches": 673,
+      "percent_branches_covered": 81.25348189415041,
+      "percent_branches_covered_display": "81"
+    },
+    "symbols": {
+      "_serve_resized": {
+        "covered_lines": 18,
+        "num_statements": 18,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "work_image": {
+        "covered_lines": 4,
+        "num_statements": 4,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 2,
+        "num_partial_branches": 0,
+        "covered_branches": 2,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "_master_path": {
+        "covered_lines": 13,
+        "num_statements": 13,
+        "percent_covered": 92.0,
+        "percent_covered_display": "92",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 12,
+        "num_partial_branches": 2,
+        "covered_branches": 10,
+        "missing_branches": 2,
+        "percent_branches_covered": 83.33333333333333,
+        "percent_branches_covered_display": "83"
+      }
+    }
+  }
+}
