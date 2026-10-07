@@ -1,0 +1,26 @@
+[
+  {
+    "path": "default-read-red.log.gz",
+    "raw_length": 26080,
+    "raw_sha256": "b78850a1f489daa6750f7debc6defc0ceffca8639d5687111c0fc96942358c0b",
+    "gzip_sha256": "b89912ed44c512978ff132b1a1a0b3d2f5c49dba44ad1d6d3ed6b73e08f34ae8"
+  },
+  {
+    "path": "default-write-red.log.gz",
+    "raw_length": 27816,
+    "raw_sha256": "7848df5cdd97472ba9b83b6d216d67ddcbe2a28886f975d0c84bf250b6486aba",
+    "gzip_sha256": "5531dae96b71fc7987aa4131bab25c89131aa537a03465932f760e08cda741ca"
+  },
+  {
+    "path": "restored-green.log.gz",
+    "raw_length": 1276,
+    "raw_sha256": "41b7acd54863a9c1d5dd116292a835ea9f80c81730b917c439a76f6c4d47f374",
+    "gzip_sha256": "c0b88120870f83beeaa0b1b33b9bd07ba8915d63b8f7fa4841691da4b442f10b"
+  },
+  {
+    "path": "unguarded-red.log.gz",
+    "raw_length": 41195,
+    "raw_sha256": "54fc0bfe0ec599467cbd54ed1a3f72c559337f066c65fa52ba64cd3c445f7742",
+    "gzip_sha256": "8997cf94f84209c13331d14f11f240e213ebe068a6078365d97c88769970eec6"
+  }
+]

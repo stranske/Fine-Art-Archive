@@ -1,0 +1,518 @@
+[
+  {
+    "mutation": "absent-detector-shape",
+    "old": "return {\"candidates\": [], \"decisions\": []}",
+    "new": "return {\"candidates\": []}",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_absent_detector_does_not_surface_unmatched_decisions",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/absent-detector-shape-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_absent_detector_does_not_surface_unmatched_decisions",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "absent-detector-shape-red.log",
+      "junit": "absent-detector-shape-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_absent_detector_does_not_surface_unmatched_decisions",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/absent-detector-shape-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_absent_detector_does_not_surface_unmatched_decisions",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "absent-detector-shape-green.log",
+      "junit": "absent-detector-shape-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "invent-unreviewed-decision",
+    "old": "c[\"decision\"] = d.get(\"decision\") if d else None",
+    "new": "c[\"decision\"] = d.get(\"decision\") if d else \"accept\"",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_unreviewed_candidates_have_no_decision_and_real_dimensions",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/invent-unreviewed-decision-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_unreviewed_candidates_have_no_decision_and_real_dimensions",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "invent-unreviewed-decision-red.log",
+      "junit": "invent-unreviewed-decision-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_unreviewed_candidates_have_no_decision_and_real_dimensions",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/invent-unreviewed-decision-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_unreviewed_candidates_have_no_decision_and_real_dimensions",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "invent-unreviewed-decision-green.log",
+      "junit": "invent-unreviewed-decision-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "retain-first-decision",
+    "old": "decisions[d.get(\"existing_wid\")] = d",
+    "new": "decisions.setdefault(d.get(\"existing_wid\"), d)",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/retain-first-decision-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "retain-first-decision-red.log",
+      "junit": "retain-first-decision-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/retain-first-decision-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "retain-first-decision-green.log",
+      "junit": "retain-first-decision-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "crosswire-work-history",
+    "old": "d = decisions.get(c.get(\"existing_wid\"))",
+    "new": "d = decisions.get(\"first-work\")",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/crosswire-work-history-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "crosswire-work-history-red.log",
+      "junit": "crosswire-work-history-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/crosswire-work-history-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "crosswire-work-history-green.log",
+      "junit": "crosswire-work-history-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "discard-decision-timestamp",
+    "old": "c[\"decision_ts\"] = d.get(\"ts\") if d else None",
+    "new": "c[\"decision_ts\"] = None",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/discard-decision-timestamp-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "discard-decision-timestamp-red.log",
+      "junit": "discard-decision-timestamp-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/discard-decision-timestamp-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "discard-decision-timestamp-green.log",
+      "junit": "discard-decision-timestamp-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "stop-on-blank-line",
+    "old": "if not line:\n                continue",
+    "new": "if not line:\n                break",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/stop-on-blank-line-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": true,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "stop-on-blank-line-red.log",
+      "junit": "stop-on-blank-line-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/stop-on-blank-line-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "stop-on-blank-line-green.log",
+      "junit": "stop-on-blank-line-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "abort-malformed-line",
+    "old": "except json.JSONDecodeError:\n                continue",
+    "new": "except json.JSONDecodeError:\n                raise",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/abort-malformed-line-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "abort-malformed-line-red.log",
+      "junit": "abort-malformed-line-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/abort-malformed-line-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[ \\n\\t\\n]",
+          "failed": false,
+          "error": false
+        },
+        {
+          "node": "tests.test_api_variant_review_history::test_latest_decisions_are_keyed_by_work_and_ignore_log_noise[{broken json}\\n]",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "abort-malformed-line-green.log",
+      "junit": "abort-malformed-line-green.xml"
+    },
+    "restored_exactly": true
+  },
+  {
+    "mutation": "abort-invalid-identity",
+    "old": "except HTTPException:\n            c[\"existing_px\"] = None",
+    "new": "except HTTPException:\n            raise",
+    "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+    "test_sha256": "f3a5770f5bb05e1a3c8c918eef32604e9ff148b130155d7b0325560594b9effd",
+    "red": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/abort-invalid-identity-red.xml"
+      ],
+      "exit": 1,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows",
+          "failed": true,
+          "error": false
+        }
+      ],
+      "log": "abort-invalid-identity-red.log",
+      "junit": "abort-invalid-identity-red.xml"
+    },
+    "green": {
+      "command": [
+        "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_api_variant_review_history.py::test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows",
+        "--junitxml=/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z/abort-invalid-identity-green.xml"
+      ],
+      "exit": 0,
+      "cases": [
+        {
+          "node": "tests.test_api_variant_review_history::test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows",
+          "failed": false,
+          "error": false
+        }
+      ],
+      "log": "abort-invalid-identity-green.log",
+      "junit": "abort-invalid-identity-green.xml"
+    },
+    "restored_exactly": true
+  }
+]

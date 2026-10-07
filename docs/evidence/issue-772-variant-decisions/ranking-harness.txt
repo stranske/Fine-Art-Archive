@@ -1,0 +1,41 @@
+import collections
+import json
+import re
+from pathlib import Path
+
+out = Path('/tmp/772-round')
+cov = json.loads(Path('coverage.json').read_text())
+counts = collections.defaultdict(lambda: {'repair_history_proxy': 0, 'churn': 0})
+commits = []
+seen = set()
+repair = False
+for line in (out / 'history.txt').read_text().splitlines():
+    if line.startswith('COMMIT '):
+        sha, subject = line[7:].split(' ', 1)
+        commits.append(sha)
+        repair = bool(re.search(r'\b(fix|bug|correct|repair|guard|regression)\w*', subject, re.I))
+        seen = set()
+    elif line.startswith('src/fine_art_archive/') and line.endswith('.py') and line not in seen:
+        counts[line]['churn'] += 1
+        counts[line]['repair_history_proxy'] += int(repair)
+        seen.add(line)
+rows = []
+for path, data in cov['files'].items():
+    s = data['summary']
+    if path.startswith('src/fine_art_archive/') and (s['missing_lines'] or s['missing_branches']):
+        rows.append({'path': path, **counts[path], **s})
+rows.sort(key=lambda r: (-r['repair_history_proxy'], -r['churn'], -r['missing_lines'], r['path']))
+result = {
+    'history_command': "git log -500 --format='COMMIT %H %s' --name-only -- src/fine_art_archive",
+    'history_commits': len(commits), 'newest': commits[0], 'oldest': commits[-1],
+    'ranking_rule': 'Descending repair-history subject-keyword proxy, then churn, missing lines; path breaks ties. Not a verified escaped-defect count.',
+    'ranking': rows,
+    'selected_symbols': ['variant_upgrade_decision', '_known_variant_upgrade_work_id'],
+    'selection_reason': 'First-ranked api/main.py: adjacent variant decision writing has unsupported-choice and absent-detector fallback gaps; protect append-only decisions through HTTP using local files.',
+}
+(out / 'ranking.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps(cov['totals']))
+for row in rows[:6]:
+    print(row['path'], row['repair_history_proxy'], row['churn'], row['missing_lines'], row['missing_branches'])
+for name in result['selected_symbols']:
+    print(name, cov['files']['src/fine_art_archive/api/main.py']['functions'][name]['summary'])

@@ -1,0 +1,83 @@
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+root = Path.cwd()
+out = Path('/tmp/772-round')
+source = root / 'src/fine_art_archive/api/main.py'
+test = root / 'tests/test_api_variant_review_history.py'
+original = source.read_bytes()
+test_bytes = test.read_bytes()
+original_sha = hashlib.sha256(original).hexdigest()
+test_sha = hashlib.sha256(test_bytes).hexdigest()
+text = original.decode()
+start = text.index('class UpgradeDecisionIn')
+part = text[start:]
+persist = 'test_post_decision_appends_exact_event_and_listing_replays_it'
+fallback = 'test_known_archive_work_can_be_reviewed_without_detector'
+mutants = [
+    ('overwrite-history', 'with open(VARIANT_UPGRADE_DECISIONS, "a") as f:', 'with open(VARIANT_UPGRADE_DECISIONS, "w") as f:', persist, 'endpoint'),
+    ('wrong-work', '"existing_wid": existing_wid,', '"existing_wid": "second-work",', persist, 'endpoint'),
+    ('reverse-choice', '"decision": body.decision,', '"decision": "incorrect",', persist, 'endpoint'),
+    ('discard-note', '"note": body.note or None,', '"note": None,', persist, 'endpoint'),
+    ('discard-timestamp', '"ts": _now(),', '"ts": None,', persist, 'endpoint'),
+    ('accept-unsupported-choice', 'if body.decision not in {"accept", "reject", "defer"}:', 'if False:', 'test_unsupported_upgrade_choice_does_not_append', 'endpoint'),
+    ('remove-note-limit', 'max_length=500', 'max_length=501', 'test_overlong_upgrade_note_does_not_create_log', 'endpoint'),
+    ('discard-empty-note-normalization', '"note": body.note or None,', '"note": body.note,', fallback, 'endpoint'),
+    ('omit-log-parent-creation', 'VARIANT_UPGRADE_DECISIONS.parent.mkdir(parents=True, exist_ok=True)', 'pass', fallback, 'endpoint'),
+    ('deny-archive-fallback', 'return _variant_upgrade_fallback_work(existing_wid) is not None', 'return False', fallback, 'lookup'),
+]
+env = os.environ.copy()
+env['PYTHONPATH'] = '/tmp/772-round/shim:src'
+env['PYTHONDONTWRITEBYTECODE'] = '1'
+
+def run(name, phase, node):
+    # Remove timestamp-based cached bytecode so this process imports the exact mutation.
+    for cached in (source.parent / '__pycache__').glob('main.*.pyc'):
+        cached.unlink()
+    argv = [sys.executable, '-m', 'pytest', '-q', '--no-cov', '-m', 'not slow',
+            'tests/test_api_variant_review_history.py::' + node,
+            '--junitxml=' + str(out / (name + '-' + phase + '.xml'))]
+    result = subprocess.run(argv, cwd=root, env=env, capture_output=True, text=True, timeout=60)
+    (out / (name + '-' + phase + '.log')).write_text(result.stdout + result.stderr)
+    cases = []
+    for case in ET.parse(out / (name + '-' + phase + '.xml')).iter('testcase'):
+        cases.append({'node': case.get('classname') + '::' + case.get('name'),
+                      'failed': case.find('failure') is not None,
+                      'error': case.find('error') is not None,
+                      'skipped': case.find('skipped') is not None})
+    return {'command': argv, 'exit': result.returncode, 'cases': cases,
+            'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest()}
+
+receipts = []
+try:
+    for name, old, new, node, scope in mutants:
+        if scope == 'endpoint':
+            assert part.count(old) == 1, (name, part.count(old))
+            broken = text[:start] + part.replace(old, new, 1)
+        else:
+            assert text.count(old) == 1, (name, text.count(old))
+            broken = text.replace(old, new, 1)
+        try:
+            source.write_bytes(broken.encode())
+            red = run(name, 'red', node)
+        finally:
+            source.write_bytes(original)
+            assert source.read_bytes() == original
+        green = run(name, 'green', node)
+        assert red['exit'] == 1 and all(c['failed'] and not c['error'] and not c['skipped'] for c in red['cases']), (name, red)
+        assert green['exit'] == 0 and all(not c['failed'] and not c['error'] and not c['skipped'] for c in green['cases']), (name, green)
+        assert source.read_bytes() == original
+        assert test.read_bytes() == test_bytes
+        receipts.append({'mutation': name, 'old': old, 'new': new, 'scope': scope,
+                         'source_sha256': original_sha, 'test_sha256': test_sha,
+                         'red': red, 'green': green, 'restored_exactly': True})
+        print(name, 'RED', len(red['cases']), 'GREEN', len(green['cases']), flush=True)
+finally:
+    source.write_bytes(original)
+    (out / 'mutations.json').write_text(json.dumps({'cwd': str(root), 'env': {k: env[k] for k in ['PYTHONPATH', 'PYTHONDONTWRITEBYTECODE']}, 'receipts': receipts}, indent=2) + '\n')
+assert len(receipts) == len(mutants)

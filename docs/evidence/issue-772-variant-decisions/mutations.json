@@ -1,0 +1,727 @@
+{
+  "cwd": "/home/runner/work/Fine-Art-Archive/Fine-Art-Archive",
+  "env": {
+    "PYTHONPATH": "/tmp/772-round/shim:src",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "receipts": [
+    {
+      "mutation": "overwrite-history",
+      "old": "with open(VARIANT_UPGRADE_DECISIONS, \"a\") as f:",
+      "new": "with open(VARIANT_UPGRADE_DECISIONS, \"w\") as f:",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/overwrite-history-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "90ecc13414092d341427216dacecc3523cf57b687b8eeb01b983321e0c3fa335"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/overwrite-history-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "wrong-work",
+      "old": "\"existing_wid\": existing_wid,",
+      "new": "\"existing_wid\": \"second-work\",",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/wrong-work-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "20e1953e9403e25cee875e8935bd055b3af91acb7d4a006865a4017108b34c07"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/wrong-work-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "reverse-choice",
+      "old": "\"decision\": body.decision,",
+      "new": "\"decision\": \"incorrect\",",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/reverse-choice-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "bfe5d780116a0739588a3d622678adb9a2ca386cd05f22a545708bfff98cbd59"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/reverse-choice-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "discard-note",
+      "old": "\"note\": body.note or None,",
+      "new": "\"note\": None,",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/discard-note-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "7eedfd2a96a648957938a3d83c2064cefa60f81fce7a40499e6c1df1b5e0ba58"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/discard-note-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "discard-timestamp",
+      "old": "\"ts\": _now(),",
+      "new": "\"ts\": None,",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/discard-timestamp-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "1718a5aa3851f25e4cd2ec314e9e898e5317ceae8e9f8aeaf40db9ee06b3d482"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_post_decision_appends_exact_event_and_listing_replays_it",
+          "--junitxml=/tmp/772-round/discard-timestamp-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[accept]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[reject]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_post_decision_appends_exact_event_and_listing_replays_it[defer]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "accept-unsupported-choice",
+      "old": "if body.decision not in {\"accept\", \"reject\", \"defer\"}:",
+      "new": "if False:",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_unsupported_upgrade_choice_does_not_append",
+          "--junitxml=/tmp/772-round/accept-unsupported-choice-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_unsupported_upgrade_choice_does_not_append[approve]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_unsupported_upgrade_choice_does_not_append[ACCEPT]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "e7fa3e5157c8d3596d178cecd4225a35961baecd33bd5017412e90675dc661b1"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_unsupported_upgrade_choice_does_not_append",
+          "--junitxml=/tmp/772-round/accept-unsupported-choice-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_unsupported_upgrade_choice_does_not_append[approve]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_unsupported_upgrade_choice_does_not_append[ACCEPT]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "remove-note-limit",
+      "old": "max_length=500",
+      "new": "max_length=501",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_overlong_upgrade_note_does_not_create_log",
+          "--junitxml=/tmp/772-round/remove-note-limit-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_overlong_upgrade_note_does_not_create_log",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "806fb27ebcc9d7cde3e11e9770146d7001365610e06299b57bdfd31ae354df16"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_overlong_upgrade_note_does_not_create_log",
+          "--junitxml=/tmp/772-round/remove-note-limit-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_overlong_upgrade_note_does_not_create_log",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "discard-empty-note-normalization",
+      "old": "\"note\": body.note or None,",
+      "new": "\"note\": body.note,",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/discard-empty-note-normalization-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "faf6bff83a4a0a67619c6f256c9bd92db3f6c3faf517a082eb4f31bfe69c6295"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/discard-empty-note-normalization-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "omit-log-parent-creation",
+      "old": "VARIANT_UPGRADE_DECISIONS.parent.mkdir(parents=True, exist_ok=True)",
+      "new": "pass",
+      "scope": "endpoint",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/omit-log-parent-creation-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "089997f5c376059b047e1fb9271cf8be37c2bd39120f9a7e7530e20a188d82df"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/omit-log-parent-creation-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    },
+    {
+      "mutation": "deny-archive-fallback",
+      "old": "return _variant_upgrade_fallback_work(existing_wid) is not None",
+      "new": "return False",
+      "scope": "lookup",
+      "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3",
+      "test_sha256": "29473fa09f525f6200c207f3a2d0002c8e7aab2ad5b234c4ff4c93193456873a",
+      "red": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/deny-archive-fallback-red.xml"
+        ],
+        "exit": 1,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": true,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "2b192d88b0f5f6ca57a174452d8a56602613a797cb016cfcd3ec710dfb1372de"
+      },
+      "green": {
+        "command": [
+          "/opt/hostedtoolcache/Python/3.14.7/x64/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--no-cov",
+          "-m",
+          "not slow",
+          "tests/test_api_variant_review_history.py::test_known_archive_work_can_be_reviewed_without_detector",
+          "--junitxml=/tmp/772-round/deny-archive-fallback-green.xml"
+        ],
+        "exit": 0,
+        "cases": [
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[manifest]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          },
+          {
+            "node": "tests.test_api_variant_review_history::test_known_archive_work_can_be_reviewed_without_detector[sidecar]",
+            "failed": false,
+            "error": false,
+            "skipped": false
+          }
+        ],
+        "source_sha256": "f02477af7bf92be083a31ad82f4a2051b7b86e4c0fd56511f85a1da5981db5b3"
+      },
+      "restored_exactly": true
+    }
+  ]
+}

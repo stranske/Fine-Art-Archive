@@ -952,3 +952,156 @@ its supplied diff and acceptance evidence were truncated. Complete local
 readback resolves the inaccessible-transcript and count-reconciliation claims
 for this bounded chunk; it does not change the providers' original verdicts.
 Broad issue #772 remains open because combined coverage is below 90 percent.
+
+
+### Variant-upgrade review history chunk
+
+[Complete matched-pair and source-mutation proof](issue-772-variant-history/README.md):
+six temporary-file HTTP API regressions; 2166→2172 passed, 12 skipped both;
+combined coverage 88.27420761849375→88.39052050014539 percent, identical source
+universe, +10 lines/+6 branches and no per-file regression. Eight actual source
+controls produce14 failed executions covering all six new cases, then byte-exact
+restoration passes every named command. The full console/JUnit/coverage captures,
+ranking, exact mutation harness, hashes and receipts are committed in that directory.
+Production is unchanged; broader #772 remains OPEN below90 percent.
+
+### Variant-decision persistence follow-up (current remote keepalive round)
+
+Base: `537f5a8d61fc510558a5ec6c3021eefd400cc850`. This bounded, test-only
+extension adds eight HTTP cases to `tests/test_api_variant_review_history.py`.
+No defect was reproduced on restored production; no production fix is needed.
+The broader #772 initiative remains open below the configured combined 90% metric.
+
+The [current ranking](issue-772-variant-decisions/ranking.json) uses the latest
+500 source-touching commits (177 available), counting subject matches for
+`fix|bug|correct|repair|guard|regression` as a **repair-history proxy, not a verified
+escaped-defect count**, then sorting by churn and uncovered line mass; path
+breaks ties. The exact [history](issue-772-variant-decisions/history.txt.gz) and
+[ranking computation](issue-772-variant-decisions/ranking-harness.txt) are retained.
+
+| Rank | Module under src/fine_art_archive | Repair proxy | Churn | Missing lines | Missing branches |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `api/main.py` | 22 | 51 | 133 | 63 |
+| 2 | `api/store.py` | 6 | 20 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+The first-ranked module's adjacent `variant_upgrade_decision` and
+`_known_variant_upgrade_work_id` had an uncovered unsupported-choice rejection
+and absent-detector branch. Prior variant review repairs (#657 and the
+`fix(review): the variant gate counted work nobody could do` commit) supply the
+review-history context, not proof of these exact defects. The new cases exercise
+accept/reject/defer, exact Unicode notes at the 500-character limit, append-only
+history, persisted timestamps and listing readback, rejection of two unsupported
+choices and a 501-character note, and manifest/sidecar fallback without a detector.
+They use temporary CSVs, logs, sidecars and actual images. Only input locations
+and time are patched; persistence and identity lookup execute real production.
+
+#### Matched full-suite measurement and existing failures
+
+Both states ran exactly the same command, apart from the JUnit output filename:
+
+```text
+PYTHONPATH=/tmp/772-round/shim:src python -m pytest -q --cov=src --cov-report=json:coverage.json -m 'not slow' --junitxml=/tmp/772-round/<stage>.xml
+```
+
+The absolute interpreter is `/opt/hostedtoolcache/Python/3.14.7/x64/bin/python`.
+The initial unassisted command stalled at its first HTTP test and was interrupted
+(exit 130). Both completed measurements use the same external
+[polling shim](issue-772-variant-decisions/polling-shim.txt) for sandbox-denied
+asyncio wakeup sends. This is remote sandbox evidence; it does not supersede
+historical independent Python 3.12 no-shim runs or claim hosted CI passed.
+No coverage exclusions, floors, test assertions or production bytes changed.
+The required `not slow` selection deselected zero cases.
+
+| Same full pytest scope | Baseline | Candidate |
+| --- | ---: | ---: |
+| Total cases | 2184 | 2192 |
+| Passed | 2168 | 2176 |
+| Skipped | 12 | 12 |
+| Failures / errors | 4 / 0 | 4 / 0 |
+| Command exit | 1 | 1 |
+| Combined line and branch coverage | 88.2887467287002% | 88.31055539400988% |
+| Covered lines / statements | 9246 / 10170 | 9247 / 10170 |
+| Covered branches / branches | 2899 / 3586 | 2901 / 3586 |
+| `variant_upgrade_decision` lines / branches | 8/9; 3/4 | 9/9; 4/4 |
+| `_known_variant_upgrade_work_id` lines / branches | 9/9; 5/6 | 9/9; 6/6 |
+
+Identical source-file universe and per-file denominators; no per-file covered-line
+or covered-branch regression. The [matched pair](issue-772-variant-decisions/matched-pair.json)
+and [comparison harness](issue-772-variant-decisions/comparison-harness.txt)
+retain exact totals, commands, failures and source/test hashes. Statement-only
+baseline coverage is 90.91445427728614%; the repository enables branch coverage,
+so its combined 88.2887467287002% is the applicable conditional metric.
+
+All four failures already occur on baseline in `tests/test_workspace_conflict_guard.py`:
+`test_automation_lock_path_is_not_on_dropbox_tree`,
+`test_automation_lock_path_rejects_configured_dropbox_directory`,
+`test_resolve_automation_lock_path_redirects_synced_candidate`, and
+`test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`.
+Each raises `OSError: [Errno 30] Read-only file system` while creating
+`/home/runner/.cache/fine-art-archive`. Candidate preserves the exact failed nodes
+and error messages. These are existing environment failures; neither suite is
+reported as fully passing. All 14 focused cases (six existing, eight new) pass
+with exit 0 under `--no-cov`. The earlier targeted coverage invocation also passed
+all 14 tests but exited 1 because its small subset did not meet the unchanged
+repository-wide 25% floor; full-scope measurements above supply the coverage gate.
+
+#### Actual source mutations and exact restoration
+
+The [mutation harness](issue-772-variant-decisions/mutation-harness.txt) changes
+real production code, runs each named test, restores the original source bytes
+in `finally`, then runs the same test again. It removes cached module bytecode
+and disables bytecode writes between runs. Test bytes remain fixed. Full RED/GREEN
+logs and JUnit are retained alongside [receipts](issue-772-variant-decisions/mutations.json),
+which include exact replacements, absolute commands, parameterized nodes, exits
+and hashes. Ten controls cover **all eight new cases**, producing **24 failed
+executions and 24 restored passes**. Every RED exits 1 with failing test cases;
+every restored GREEN exits 0, with no errors or skips.
+
+All names below have prefix `tests/test_api_variant_review_history.py::`.
+
+| Real production change | Named test | Failed / restored cases | RED / GREEN exit |
+| --- | --- | ---: | --- |
+| Append mode to overwrite | `test_post_decision_appends_exact_event_and_listing_replays_it` | 3 / 3 | 1 / 0 |
+| Persist another work's ID | `test_post_decision_appends_exact_event_and_listing_replays_it` | 3 / 3 | 1 / 0 |
+| Persist an incorrect choice | `test_post_decision_appends_exact_event_and_listing_replays_it` | 3 / 3 | 1 / 0 |
+| Discard the note | `test_post_decision_appends_exact_event_and_listing_replays_it` | 3 / 3 | 1 / 0 |
+| Discard the timestamp | `test_post_decision_appends_exact_event_and_listing_replays_it` | 3 / 3 | 1 / 0 |
+| Accept unsupported choices | `test_unsupported_upgrade_choice_does_not_append` | 2 / 2 | 1 / 0 |
+| Permit 501-character notes | `test_overlong_upgrade_note_does_not_create_log` | 1 / 1 | 1 / 0 |
+| Persist an empty note instead of null | `test_known_archive_work_can_be_reviewed_without_detector` | 2 / 2 | 1 / 0 |
+| Omit log parent creation | `test_known_archive_work_can_be_reviewed_without_detector` | 2 / 2 | 1 / 0 |
+| Deny the archive fallback | `test_known_archive_work_can_be_reviewed_without_detector` | 2 / 2 | 1 / 0 |
+
+Each named command uses `python -m pytest -q --no-cov -m 'not slow' <node>
+--junitxml=<capture>`, with the same shim and `PYTHONDONTWRITEBYTECODE=1`.
+The full candidate measurement runs after every mutation is restored. All tracked
+`src/` bytes equal base HEAD. The [compressed manifest](issue-772-variant-decisions/compressed-manifest.json)
+records decoded sizes and compressed/decoded SHA256; decompress with
+`gzip -dc <file>` or Python `gzip.decompress`.
+
+#### Verified local checklist and receiving-lane limitations
+
+- [x] Run full-src baseline coverage and rank production gaps by named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected symbols; restored production reproduces no defect requiring a fix.
+- [x] Actually break every new case, run named tests, restore exact bytes and capture results.
+- [x] Complete identical-scope baseline/candidate coverage with no new failures; record exact counts, percentages, ranking and existing failures.
+- [x] Verify every new test fails under a real mutation and passes after restoration; retain nodes, commands and exits.
+- [x] Retain one bounded change and the broader initiative because configured baseline coverage is below 90%.
+
+[Validation receipts](issue-772-variant-decisions/validation.json) record the
+required whole-repo Black command (344 files, line length 100), touched Ruff,
+`git diff --check` and source restoration passing. No tests are skipped or disabled
+beyond the requested marker selection. GitHub API lookup failed (exit 1), so remote
+checklist updates and PR readiness verification remain with the receiving lane;
+this run creates or changes no remote PR and closes no issue.
+
+Primary `git add` failed (exit 128): `.git/index.lock` cannot be created on the
+read-only Git mount. The test and evidence changes are committed in an isolated
+repository at `/tmp/772-round/commit.git`, using the primary workspace as its
+worktree and baseline HEAD as its parent, and exported to
+`/tmp/issue-772-variant-decisions.patch`. The receiving lane must apply the patch
+in its writable checkout; no primary branch update or remote push is claimed.

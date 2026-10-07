@@ -1,0 +1,46 @@
+{
+  "black": {
+    "command": "BLACK_NUM_WORKERS=1 PYTHONPATH=/tmp/772-round/shim:src black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "exit": 0,
+    "files": 344
+  },
+  "ruff": {
+    "command": "ruff check tests/test_api_variant_review_history.py",
+    "exit": 0
+  },
+  "source_restoration": {
+    "command": "git diff --exit-code HEAD -- src",
+    "exit": 0
+  },
+  "diff_check": {
+    "command": "git diff --check",
+    "exit": 0
+  },
+  "focused": {
+    "command": "PYTHONPATH=/tmp/772-round/shim:src python -m pytest tests/test_api_variant_review_history.py -m 'not slow' --no-cov --junitxml=/tmp/772-round/focused.xml -q",
+    "exit": 0,
+    "passed": 14
+  },
+  "targeted_coverage": {
+    "command": "PYTHONPATH=/tmp/772-round/shim:src python -m pytest tests/test_api_variant_review_history.py -m 'not slow' --cov=fine_art_archive.api.main --cov-report=json:/tmp/772-round/targeted-coverage.json --cov-report=term-missing --junitxml=/tmp/772-round/targeted.xml -q",
+    "exit": 1,
+    "passed": 14,
+    "failed": 0,
+    "reason": "Whole-repository coverage floor of 25% applies to this small targeted subset; no coverage settings changed."
+  },
+  "unassisted_baseline": {
+    "command": "python -m pytest -q --cov=src --cov-report=json:coverage.json -m 'not slow' --junitxml=/tmp/772-round-baseline.xml",
+    "exit": 130,
+    "reason": "Interrupted after sandbox asyncio wakeup stall at first HTTP test; not a completed measurement."
+  },
+  "primary_stage": {
+    "command": "git add tests/test_api_variant_review_history.py",
+    "exit": 128,
+    "reason": "Primary .git is read-only"
+  },
+  "pr_readiness": {
+    "command": "gh pr view codex/issue-772-next-api-coverage --repo stranske/Fine-Art-Archive --json number,state,isDraft",
+    "exit": 1,
+    "reason": "api.github.com unavailable; no remote PR created or changed"
+  }
+}
