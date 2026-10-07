@@ -1105,3 +1105,17 @@ repository at `/tmp/772-round/commit.git`, using the primary workspace as its
 worktree and baseline HEAD as its parent, and exported to
 `/tmp/issue-772-variant-decisions.patch`. The receiving lane must apply the patch
 in its writable checkout; no primary branch update or remote push is claimed.
+
+
+## 2026-10-07 — master-image HTTP boundaries
+
+Six new real-file HTTP cases protect rendering, cache reuse and failure responses.
+Identical full suites: 2,185 → 2,191 passed; 12 unchanged skips, zero failures/errors.
+Combined coverage: 88.40537595350527% → 88.51434798401743%, with identical
+source universe/floors and no per-file regression. Seven actual production mutations
+fail their named nodes, then pass after byte-identical restoration; all six new
+nodes are covered. Production is unchanged; source #772 remains open below 90%.
+
+[Complete current proof](issue-772-master-images/README.md) retains the ranking,
+matched measurements, raw lossless logs/JUnit/coverage, exact commands and hashes.
+This section supersedes no historical provider verdict and claims no hosted CI result.

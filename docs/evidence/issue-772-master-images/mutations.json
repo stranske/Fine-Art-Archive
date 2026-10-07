@@ -1,0 +1,142 @@
+[
+  {
+    "id": "rgba-conversion",
+    "symbol": "_serve_resized",
+    "old": "im = im.convert(\"RGB\")",
+    "new": "im = im",
+    "node": "test_transparent_master_is_a_bounded_jpeg",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_transparent_master_is_a_bounded_jpeg",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "09aec6b8673c257bef6bdb676b7b2ebdfa1bd7203328b1cf1744ce9a5e01bbb6",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "resize-bound",
+    "symbol": "_serve_resized",
+    "old": "im.thumbnail((max, max), Image.Resampling.LANCZOS)",
+    "new": "pass",
+    "node": "test_transparent_master_is_a_bounded_jpeg",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_transparent_master_is_a_bounded_jpeg",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "247c23a434a84bfca77e93c0b62f70a3c57f87d5ab24a5cca7a909bcfd7f0bac",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "cache-reuse",
+    "symbol": "_serve_resized",
+    "old": "if not cache_p.exists():",
+    "new": "if True:",
+    "node": "test_cached_master_response_does_not_decode_again",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_cached_master_response_does_not_decode_again",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "b79dec32eebf55f006d30c21778ff0533e653bda2146ea9b94219c6f62a0ed5c",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "missing-master",
+    "symbol": "work_image",
+    "old": "if master is None:",
+    "new": "if False:",
+    "node": "test_missing_master_is_404_without_creating_cache",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_missing_master_is_404_without_creating_cache",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "768750a0df3325409dcd2d68d65beb3db01015132351e76cfa551369db5a3e24",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "decode-failure",
+    "symbol": "_serve_resized",
+    "old": "HTTPException(500, f\"resize failed: {e}\")",
+    "new": "HTTPException(502, f\"resize failed: {e}\")",
+    "node": "test_corrupt_master_reports_resize_failure_without_cached_output",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_corrupt_master_reports_resize_failure_without_cached_output",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "745a14684e18c3bc77a72175a881044aff236306cc6581bc7cc107d8f2382e40",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "pillow-outage",
+    "symbol": "_serve_resized",
+    "old": "HTTPException(500, \"Pillow not installed\")",
+    "new": "HTTPException(502, \"Pillow not installed\")",
+    "node": "test_unavailable_pillow_reports_specific_failure",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_unavailable_pillow_reports_specific_failure",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "a14eed7b1408fb3ff5bf1600f092c6bd5d0f2019955781de8a75b25673343982",
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "id": "sidecar-fallback",
+    "symbol": "_master_path",
+    "old": "return p",
+    "new": "return None",
+    "node": "test_sidecar_master_filename_fallback_is_served",
+    "argv": [
+      "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python",
+      "-m",
+      "pytest",
+      "tests/test_api_master_image_boundaries.py::test_sidecar_master_filename_fallback_is_served",
+      "-q",
+      "--no-cov"
+    ],
+    "source_sha256": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "test_sha256": "e3adeb391561959d1d8031934e500b7f806c4e7e77ce59f357be883a4a1aa503",
+    "mutant_sha256": "8e36bc60befe825ab0094154b3b13fae7b4bc5dea000c89f58724995c5364510",
+    "red_exit": 1,
+    "green_exit": 0
+  }
+]

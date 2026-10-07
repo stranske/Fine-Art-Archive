@@ -1,0 +1,140 @@
+[
+  {
+    "file": "faa-mutant-rgba-conversion-green.log.gz",
+    "compressed_sha256": "b477a202eced497fede159bcad2c26b49088bcca8dbb988e032feac018bd37ed",
+    "decoded_sha256": "500769465f717c1e7fb03db4f4c5eef89e4e583f409438461c133519d2572583",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-decode-failure-green.log.gz",
+    "compressed_sha256": "3c24c091ab6b28a9a7ff797f5eda48fb5d3bc9ac8dc75a66fddc4b77bfa71955",
+    "decoded_sha256": "b9fe8135cd36093a312506bf7efabccab6e5fdad100898dda6b2c5231825ece2",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-pillow-outage-green.log.gz",
+    "compressed_sha256": "bc6c1c54ddf594659956b8f0361c7b7fea97816d237208517db54755b83e985c",
+    "decoded_sha256": "25abc3ad1a6147c6e18db14d0142bec67540463eba27233259f0b5e5d3cd1416",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-cache-reuse-green.log.gz",
+    "compressed_sha256": "3c24c091ab6b28a9a7ff797f5eda48fb5d3bc9ac8dc75a66fddc4b77bfa71955",
+    "decoded_sha256": "b9fe8135cd36093a312506bf7efabccab6e5fdad100898dda6b2c5231825ece2",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-decode-failure-red.log.gz",
+    "compressed_sha256": "2e565027c5c2a9c456db27c56f1d65ae6312e0dc8411828e33ff7a56779f95c1",
+    "decoded_sha256": "e494ae06fd33b11bd23d26b8de97c7ad6d82098c590f1a61363d4c22844ce845",
+    "decoded_bytes": 2745
+  },
+  {
+    "file": "faa-mutant-missing-master-red.log.gz",
+    "compressed_sha256": "dc13b61d2e17466c50afd7c4fb22349587071a6fb97db28d3fdca58e6f9adf08",
+    "decoded_sha256": "cf1cfbe183699dca9e30428080002a7af00533b874bfcea3255a8bd808952adb",
+    "decoded_bytes": 2614
+  },
+  {
+    "file": "faa-mutant-resize-bound-red.log.gz",
+    "compressed_sha256": "899b2e15601b3ed2c79f43ff13df1ecb0c6064177c30f6a94a42ec5ea428c9f6",
+    "decoded_sha256": "68ef6e268101969ee647eff4ae4af25919727214c39ddd73e31cdeb1a23bb696",
+    "decoded_bytes": 3121
+  },
+  {
+    "file": "faa-mutant-rgba-conversion-red.log.gz",
+    "compressed_sha256": "53ac65683b5d0917312dcfc82c568b166fcad752db9c6911372cf46f0a0da5d4",
+    "decoded_sha256": "5209c9ec80bc9c0e053e0b2b0eeedb414c721e4ab0eb91c4a9072bf1ce4409a4",
+    "decoded_bytes": 2831
+  },
+  {
+    "file": "faa-mutant-cache-reuse-red.log.gz",
+    "compressed_sha256": "e1171c434651e1ddfc94f6228db1613d7f9d17e082f7568e946e2eb54bf55ac2",
+    "decoded_sha256": "3da19db33a3e2d3d275ef0c5c11b383855ed99e0ac47338136d2519ae56835c1",
+    "decoded_bytes": 4883
+  },
+  {
+    "file": "faa-mutant-sidecar-fallback-green.log.gz",
+    "compressed_sha256": "bc6c1c54ddf594659956b8f0361c7b7fea97816d237208517db54755b83e985c",
+    "decoded_sha256": "25abc3ad1a6147c6e18db14d0142bec67540463eba27233259f0b5e5d3cd1416",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-resize-bound-green.log.gz",
+    "compressed_sha256": "4312d1bceec238a5c0a96c6c893e6f238228bbde486864768cfae6ab71c50657",
+    "decoded_sha256": "9d1f7e50043f8fb5698db0c5b14e1738c7527f38394bd64e40b720a41a9190f2",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-sidecar-fallback-red.log.gz",
+    "compressed_sha256": "9e2408e9c518dbc791bac20a1990b86e6fcdceced74fb857d0cf9fd20f3addd9",
+    "decoded_sha256": "3a4accf8362b1132c214f08d167e20d910e06d5561aaeb945845b67c344fc264",
+    "decoded_bytes": 2939
+  },
+  {
+    "file": "faa-mutant-missing-master-green.log.gz",
+    "compressed_sha256": "9151e8896b3486b60b5486507779473034274d2ab874a2ab9feb1efd128165bd",
+    "decoded_sha256": "56ad42393c9686b14107962bbdbbbffaa920da0a8276ec8acaa0ce9f5c4cf406",
+    "decoded_bytes": 1557
+  },
+  {
+    "file": "faa-mutant-pillow-outage-red.log.gz",
+    "compressed_sha256": "35d4f010245a8ad69b595f915416f76c1591adad5f9500bd418547715427ea47",
+    "decoded_sha256": "80a7931379d8886e55da24492a83f088da59bde0adab90dd51cc5ed387255e3e",
+    "decoded_bytes": 3207
+  },
+  {
+    "file": "faa-baseline.log.gz",
+    "compressed_sha256": "4255d36b588562b6eb99c906853034257aa011d1f23b29bc65a6b07884c4148d",
+    "decoded_sha256": "5177d7f74c53fd48630f325b7c44734978fc3c4334f18bd4b6f4f57ef1dccce8",
+    "decoded_bytes": 26968
+  },
+  {
+    "file": "faa-candidate.log.gz",
+    "compressed_sha256": "fd94c22a33586dbddd41d8893b4a74c78a5eb09ba7004e08d353896013a0ee60",
+    "decoded_sha256": "6d82b2204b35bfabbd19339db6c192f9ee64e52660e6292923d68403ccd03842",
+    "decoded_bytes": 27000
+  },
+  {
+    "file": "faa-focused.log.gz",
+    "compressed_sha256": "2cfaf8883cf9c30b3fc525bd6f5a842108ad150aa27dda23cdfdfb9af2ea659c",
+    "decoded_sha256": "f87c8d83fca6a39f9368d63fdb164a1ccd7a79d0d2da8fbdac5b5b88356a937e",
+    "decoded_bytes": 1558
+  },
+  {
+    "file": "faa-baseline.xml.gz",
+    "compressed_sha256": "cb5db51d735afbc13efd409b31f259ed79f18785341aee8652b1091108637e42",
+    "decoded_sha256": "21cee7b6bb000283803f77abc3036f53f5833fe80c45d47b3d62dbe3e2ee0d64",
+    "decoded_bytes": 289502
+  },
+  {
+    "file": "faa-candidate.xml.gz",
+    "compressed_sha256": "ef927b642d7a8ff3dc72312cd2689abf0c43b198bdeff46e8cd292d880e4fba6",
+    "decoded_sha256": "68d9f1e9de19db47ed0e1456bf943373e158bf78505a9e587b77baa4c0c98462",
+    "decoded_bytes": 290302
+  },
+  {
+    "file": "faa-baseline-coverage.json.gz",
+    "compressed_sha256": "a78c59537716d669baa24a70a4fec3c2d6083cebb5e5713e987414de83aad907",
+    "decoded_sha256": "9787ad46ccce97116a380aacd1e8641dc6236855cb1848f8f98eac70de33e07b",
+    "decoded_bytes": 982089
+  },
+  {
+    "file": "faa-candidate-coverage.json.gz",
+    "compressed_sha256": "8bd321feebcf345ba442b712e05c42e7df01d942e123a22805f7258c4805a5de",
+    "decoded_sha256": "6aa106f1c15b014c7f9aba0c8074d3c4e26a88dfc2340e4682eec76db588bd4f",
+    "decoded_bytes": 982075
+  },
+  {
+    "file": "faa-history.log.gz",
+    "compressed_sha256": "4e86210dda20b22529030fc41d620d9b5cc25bd4c7234f04b32c2b2445ad35ab",
+    "decoded_sha256": "57f941d0367563d12f66fc39c8cdbf4e3da96c5ed2d42ce10c7456cc3aa34e90",
+    "decoded_bytes": 32372
+  },
+  {
+    "file": "faa-black.log.gz",
+    "compressed_sha256": "896526fae5b04713cca7b546bb568ae95e71bc57980c444f6056c247173884ba",
+    "decoded_sha256": "61cc30755519ddf24ab6457a5f18eb9f6510190ef48c9e41df8c77d35e34369b",
+    "decoded_bytes": 58
+  }
+]
