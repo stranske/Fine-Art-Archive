@@ -5,6 +5,7 @@ from pathlib import Path
 
 root = Path.cwd()
 out = Path('/tmp/772-api-boundaries')
+out.mkdir(parents=True, exist_ok=True)
 coverage = json.loads(Path('coverage.json').read_text())
 history = subprocess.check_output(
     ['git', 'log', '-500', '--format=COMMIT%x09%H%x09%s', '--name-only', '--', 'src/fine_art_archive'],

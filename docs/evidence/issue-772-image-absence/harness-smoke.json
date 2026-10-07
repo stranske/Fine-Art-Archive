@@ -1,0 +1,59 @@
+[
+  {
+    "real_process_exit": 0,
+    "captured_exit": 0
+  },
+  {
+    "real_process_exit": 1,
+    "captured_exit": 1
+  },
+  {
+    "real_process_exit": 2,
+    "captured_exit": 2
+  },
+  {
+    "exit": 0,
+    "failures": 0,
+    "errors": 0,
+    "tests": 1,
+    "accepted": true
+  },
+  {
+    "exit": 1,
+    "failures": 1,
+    "errors": 0,
+    "tests": 1,
+    "accepted": true
+  },
+  {
+    "exit": 2,
+    "failures": 0,
+    "errors": 0,
+    "tests": 1,
+    "accepted": false
+  },
+  {
+    "exit": 0,
+    "failures": 1,
+    "errors": 0,
+    "tests": 1,
+    "accepted": false
+  },
+  {
+    "exit": 1,
+    "failures": 0,
+    "errors": 1,
+    "tests": 1,
+    "accepted": false
+  },
+  {
+    "exit": 0,
+    "failures": 0,
+    "errors": 0,
+    "tests": 0,
+    "accepted": false
+  },
+  {
+    "fresh_ranking_directory_created": true
+  }
+]

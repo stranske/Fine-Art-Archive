@@ -30,6 +30,15 @@ def counts(stage):
     result['failed_nodes'] = sorted(case.get('classname') + '::' + case.get('name') for case in document.iter('testcase') if case.find('failure') is not None or case.find('error') is not None)
     return result
 
+processes = {}
+for stage in ('baseline', 'candidate'):
+    process = json.loads((out / f'{stage}-process.json').read_text())
+    measured = counts(stage)
+    assert measured['tests'] > 0, f'{stage}: no tests executed'
+    assert measured['errors'] == 0, f'{stage}: collection/execution errors'
+    expected = 1 if measured['failures'] or measured['errors'] else 0
+    assert process['returncode'] == expected, (stage, process['returncode'], measured)
+    processes[stage] = process
 assert counts('baseline')['failed_nodes'] == counts('candidate')['failed_nodes']
 sha = lambda data: hashlib.sha256(data).hexdigest()
 source_hashes = {}
@@ -43,8 +52,8 @@ result = {
     'interpreter': sys.executable, 'python_version': platform.python_version(), 'cwd': str(Path.cwd()),
     'environment': {'PYTHONPATH': '/tmp/772-api-boundaries/shim:src'},
     'argv': [sys.executable, '-m', 'pytest', '-q', '--cov=src', '--cov-report=json:coverage.json', '-m', 'not slow', '--junitxml=/tmp/772-api-boundaries/<stage>.xml'],
-    'baseline': {'exit': 1, 'counts': counts('baseline'), 'totals': baseline['totals']},
-    'candidate': {'exit': 1, 'counts': counts('candidate'), 'totals': candidate['totals']},
+    'baseline': {'exit': processes['baseline']['returncode'], 'process': processes['baseline'], 'counts': counts('baseline'), 'totals': baseline['totals']},
+    'candidate': {'exit': processes['candidate']['returncode'], 'process': processes['candidate'], 'counts': counts('candidate'), 'totals': candidate['totals']},
     'identical_source_universe': True, 'identical_denominators': True, 'per_file_regressions': regressions,
     'selected_symbols': {name: {'baseline': baseline['files']['src/fine_art_archive/api/main.py']['functions'][name]['summary'], 'candidate': candidate['files']['src/fine_art_archive/api/main.py']['functions'][name]['summary']} for name in ('modality_image', 'work_full', '_master_path')},
     'unchanged_src_hashes': source_hashes,

@@ -1,0 +1,27 @@
+"""Run once per stage; preserve the actual process result for comparison-harness.txt.
+
+python process-harness.txt baseline --cwd /path/to/baseline -- python -m pytest ...
+python process-harness.txt candidate --cwd /path/to/candidate -- python -m pytest ...
+The pytest commands must write the matching baseline.xml/candidate.xml under
+/tmp/772-api-boundaries. Baseline coverage must be retained as baseline-coverage.json.
+"""
+import argparse
+import json
+import subprocess
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument('stage', choices=('baseline', 'candidate'))
+parser.add_argument('--cwd', required=True)
+args, command = parser.parse_known_args()
+if command[:1] == ['--']:
+    command = command[1:]
+if not command:
+    parser.error('a command is required after --')
+out = Path('/tmp/772-api-boundaries')
+out.mkdir(parents=True, exist_ok=True)
+with (out / f'{args.stage}.log').open('wb') as capture:
+    process = subprocess.run(command, cwd=args.cwd, stdout=capture, stderr=subprocess.STDOUT)
+receipt = {'argv': command, 'cwd': str(Path(args.cwd).resolve()), 'returncode': process.returncode}
+(out / f'{args.stage}-process.json').write_text(json.dumps(receipt, indent=2) + '\n')
+raise SystemExit(process.returncode)
