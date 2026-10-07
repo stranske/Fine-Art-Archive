@@ -1,0 +1,78 @@
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+root = Path.cwd()
+out = Path('/tmp/772-api-boundaries')
+source = root / 'src/fine_art_archive/api/main.py'
+tests = root / 'tests/test_api_image_absence.py'
+original = source.read_bytes()
+test_bytes = tests.read_bytes()
+sha = lambda data: hashlib.sha256(data).hexdigest()
+env = dict(os.environ, PYTHONPATH=str(out / 'shim') + ':src', PYTHONDONTWRITEBYTECODE='1')
+controls = [
+    ('missing-sidecar', 'modality_image',
+     '    if w is None:\n        raise HTTPException(404, f"no sidecar for {work_id}")\n', '',
+     'test_modality_requires_sidecar_even_when_master_exists'),
+    ('missing-filename', 'modality_image',
+     '    if entry is None or not entry.get("filename"):\n', '    if entry is None:\n',
+     'test_modality_descriptor_without_filename_is_404'),
+    ('missing-modality-file', 'modality_image',
+     '    if not src.is_file():\n        raise HTTPException(404, f"{modality} file missing for {work_id}")\n', '',
+     'test_missing_modality_file_does_not_fall_back_to_master'),
+    ('missing-download', 'work_full',
+     '    if master is None:\n        raise HTTPException(404, f"no master image for {work_id}")\n', '',
+     'test_original_download_with_stale_master_filename_is_404'),
+]
+receipts = []
+
+def run(stage, key, node):
+    junit = out / f'{key}-{stage}.xml'
+    command = [sys.executable, '-m', 'pytest', '-q', '--no-cov', '-m', 'not slow',
+               f'tests/test_api_image_absence.py::{node}', f'--junitxml={junit}']
+    with (out / f'{key}-{stage}.log').open('wb') as log:
+        completed = subprocess.run(command, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT, timeout=120)
+    suites = ET.parse(junit).getroot().iter('testsuite')
+    counts = {name: 0 for name in ('tests', 'failures', 'errors', 'skipped')}
+    for suite in suites:
+        for name in counts:
+            counts[name] += int(suite.get(name, 0))
+    return {'command': command, 'exit': completed.returncode, 'counts': counts,
+            'log': f'{key}-{stage}.log', 'junit': junit.name}
+
+def clear_bytecode():
+    for bytecode in source.parent.glob('__pycache__/main.*.pyc'):
+        bytecode.unlink()
+
+for key, symbol, before, after, node in controls:
+    start = original.index(f'def {symbol}('.encode())
+    end = original.find(b'\ndef ', start + 1)
+    if end < 0:
+        end = len(original)
+    body = original[start:end]
+    assert body.count(before.encode()) == 1, key
+    mutant = original[:start] + body.replace(before.encode(), after.encode(), 1) + original[end:]
+    try:
+        source.write_bytes(mutant)
+        clear_bytecode()
+        red = run('red', key, node)
+    finally:
+        source.write_bytes(original)
+        clear_bytecode()
+    assert source.read_bytes() == original
+    green = run('green', key, node)
+    receipt = {'key': key, 'symbol': symbol, 'node': node, 'before': before, 'after': after,
+               'original_sha256': sha(original), 'mutant_sha256': sha(mutant),
+               'restored_sha256': sha(source.read_bytes()), 'test_sha256': sha(test_bytes),
+               'red': red, 'green': green}
+    receipts.append(receipt)
+    (out / 'mutations.json').write_text(json.dumps(receipts, indent=2) + '\n')
+    assert tests.read_bytes() == test_bytes
+    assert red['exit'] == 1 and red['counts']['failures'] == red['counts']['tests'] and red['counts']['errors'] == 0, receipt
+    assert green['exit'] == 0 and green['counts']['failures'] == green['counts']['errors'] == green['counts']['skipped'] == 0, receipt
+    print(key, red['counts'], green['counts'], flush=True)
+assert source.read_bytes() == original

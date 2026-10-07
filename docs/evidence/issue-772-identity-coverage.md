@@ -1119,3 +1119,146 @@ nodes are covered. Production is unchanged; source #772 remains open below 90%.
 [Complete current proof](issue-772-master-images/README.md) retains the ranking,
 matched measurements, raw lossless logs/JUnit/coverage, exact commands and hashes.
 This section supersedes no historical provider verdict and claims no hosted CI result.
+
+## 2026-10-07 — modality and original-download absence responses
+
+Base: `9f75e3ea929259cd41abaaf7496c2eb72df0b478`. This bounded change adds
+five offline HTTP cases in `tests/test_api_image_absence.py`. They execute actual
+sidecar lookup, path resolution and endpoint responses using temporary files.
+Only archive/cache roots are patched. Restored production passes all five cases;
+no defect requiring a production fix was reproduced. Broader issue #772 remains
+open because configured combined line/branch coverage is below 90 percent.
+
+### Current gap ranking and selection
+
+The [executed ranking harness](issue-772-image-absence/ranking-harness.txt) reads
+the latest 500 source-touching commits (178 available). Its case-insensitive
+subject regex `\b(fix|bug|correct|repair|guard|regression)\b` is a **repair-history
+proxy, not verified escaped-defect evidence**. It sorts by proxy count, commits
+touching each path, uncovered lines, uncovered branches, then path. The complete
+[history](issue-772-image-absence/history.txt.gz) and
+[current ordering](issue-772-image-absence/ranking.json) are retained.
+
+| Rank | Module under src/fine_art_archive | Repair proxy | Churn | Missing lines | Missing branches |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `api/main.py` | 23 | 52 | 123 | 57 |
+| 2 | `api/store.py` | 6 | 20 | 20 | 6 |
+| 3 | `enrichment/source_resolver.py` | 5 | 9 | 95 | 88 |
+| 4 | `api/gates.py` | 5 | 8 | 66 | 45 |
+| 5 | `identity/variants.py` | 5 | 7 | 7 | 7 |
+| 6 | `known_works/artwork_classes.py` | 4 | 4 | 18 | 14 |
+
+The first-ranked module's `modality_image` had two uncovered missing-resource
+responses; `work_full` had an uncovered missing-master response. Image-serving
+repair history includes `43a4583` (gigapixel originals versus renderable views),
+`c7e52ba` (cache invalidation) and `e45308c` (preview dimensions). These establish
+the image API's repair context, without claiming these exact absence cases were
+escaped defects. New cases pin missing-sidecar precedence even with an available
+visible master, absent/empty modality filenames, an absent modality file despite
+an available visible master, and a download with a stale master filename. They
+assert precise 404 details and that failure creates no rendition cache.
+
+### Matched full-suite measurement
+
+Both completed states run the same command and interpreter; only the JUnit
+destination changes:
+
+```text
+PYTHONPATH=/tmp/772-api-boundaries/shim:src python -m pytest -q --cov=src --cov-report=json:coverage.json -m 'not slow' --junitxml=/tmp/772-api-boundaries/<stage>.xml
+```
+
+Interpreter: `/opt/hostedtoolcache/Python/3.14.8/x64/bin/python` (Python 3.14.8).
+The unassisted baseline stalled at its first HTTP test and was interrupted
+(exit 130). Both completed runs use the same external
+[polling shim](issue-772-image-absence/polling-shim.txt), previously documented
+for sandbox-denied asyncio wakeups. No source bytes, assertions, exclusions or
+coverage floors change. The requested marker selection deselects zero cases.
+This records local sandbox execution and makes no hosted CI claim.
+
+| Measurement | Baseline | Candidate |
+| --- | ---: | ---: |
+| Total cases | 2,203 | 2,208 |
+| Passed | 2,187 | 2,192 |
+| Skipped | 12 | 12 |
+| Failures / errors | 4 / 0 | 4 / 0 |
+| Command exit | 1 | 1 |
+| Combined line/branch coverage | 88.41264075553941% | 88.46349436977842% |
+| Covered lines / statements | 9,261 / 10,175 | 9,264 / 10,175 |
+| Covered branches / branches | 2,909 / 3,590 | 2,913 / 3,590 |
+| `modality_image` lines / branches | 9/11; 4/6 | 11/11; 6/6 |
+| `work_full` lines / branches | 3/4; 1/2 | 4/4; 2/2 |
+| `_master_path` lines / branches | 13/13; 10/12 | 13/13; 11/12 |
+
+Statement-only baseline coverage is 91.01719901719902%; the repository enables
+branch coverage, so its combined 88.41264075553941% governs the 90% condition.
+The [matched pair](issue-772-image-absence/matched-pair.json) and
+[comparison harness](issue-772-image-absence/comparison-harness.txt) verify
+identical source-file universes, denominators and exclusions, no per-file
+covered-line/branch regression, and all tracked `src/` bytes equal base HEAD.
+
+The same four existing failures occur in `tests/test_workspace_conflict_guard.py`:
+`test_automation_lock_path_is_not_on_dropbox_tree`,
+`test_automation_lock_path_rejects_configured_dropbox_directory`,
+`test_resolve_automation_lock_path_redirects_synced_candidate`, and
+`test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox`.
+All fail with `OSError: [Errno 30] Read-only file system` creating
+`/home/runner/.cache/fine-art-archive`. Both suites retain the same single
+dependency deprecation warning. Neither full suite is claimed fully passing.
+The focused command `python -m pytest tests/test_api_image_absence.py -q --no-cov
+-m 'not slow' --junitxml=/tmp/772-api-boundaries/targeted.xml`, under the same
+shim, exits 0 with **5 passed**, no errors, failures or skips.
+
+### Actual source mutations and byte-identical restoration
+
+The [executed mutation harness](issue-772-image-absence/mutation-harness.txt)
+changes production `api/main.py`, runs each named node, restores the original
+bytes in `finally`, then reruns that node. It removes source-module bytecode
+between executions and sets `PYTHONDONTWRITEBYTECODE=1`; test bytes stay fixed.
+All four controls produce assertion failures (five failed case executions in
+total), followed by five restored passes. The
+[receipts](issue-772-image-absence/mutations.json) retain exact replacements,
+absolute commands, exits, counts and original/mutant/restored/test SHA256.
+
+All named nodes below have prefix `tests/test_api_image_absence.py::`.
+
+| Real production mutation | Named test | RED / restored cases | RED / GREEN exit |
+| --- | --- | ---: | --- |
+| Remove missing-sidecar guard | `test_modality_requires_sidecar_even_when_master_exists` | 1 / 1 | 1 / 0 |
+| Remove missing-filename guard | `test_modality_descriptor_without_filename_is_404[absent]` and `[empty]` | 2 / 2 | 1 / 0 |
+| Remove missing-modality-file guard | `test_missing_modality_file_does_not_fall_back_to_master` | 1 / 1 | 1 / 0 |
+| Remove missing-master download guard | `test_original_download_with_stale_master_filename_is_404` | 1 / 1 | 1 / 0 |
+
+Each execution runs `python -m pytest -q --no-cov -m 'not slow' <named-node>
+--junitxml=<capture>` under the identical shim. For the filename control, the
+function node executes both parameterized cases. Every RED exits 1 with test
+failures and zero errors/skips; every restored GREEN exits 0. The candidate
+full-suite measurement runs after all restorations.
+
+Complete console, JUnit, coverage and formatting captures are losslessly
+compressed in [issue-772-image-absence](issue-772-image-absence/).
+The [manifest](issue-772-image-absence/compressed-manifest.json) records compressed
+and decoded hashes and byte lengths. Decode with `gzip -dc <file>` or Python
+`gzip.decompress`. The initial parallel Black attempt fails because sandboxed
+process workers cannot bind a socket; the unshimmed single-worker attempt stalls
+and is interrupted (exit 130). The required whole-repository check passes
+(347 files, exit 0) with `BLACK_NUM_WORKERS=1` and the same external polling shim:
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`.
+Touched-file Ruff passes; validation receipts record final whitespace and
+restoration checks. Protected files are unchanged.
+
+### Verified local task checklist
+
+- [x] Run full-src baseline coverage and rank gaps by explicitly named repair-history proxy, churn, then uncovered mass.
+- [x] Add focused tests for selected production symbols; no restored-production defect requires a fix.
+- [x] Actually break every new case, run named nodes, restore exact source bytes and capture results.
+- [x] Complete identical-scope baseline/candidate coverage with no new failures, recording exact counts, percentages and existing failures.
+- [x] Verify every new case fails under a real production mutation and passes after restoration.
+- [x] Deliver one bounded test change and retain the broader initiative below 90% combined coverage.
+
+The primary `git add` exits 128 because `.git/index.lock` is on a read-only mount.
+The verified code and evidence are committed in an isolated repository at
+`/tmp/772-api-boundaries/commit.git`, with base HEAD as the parent, and exported
+to `/tmp/issue-772-image-absence.patch`. The receiving lane must apply that patch
+in its writable checkout. This run updates no primary Git ref, pushes no branch,
+creates or changes no remote PR, and closes no issue. All implementation and
+validation stayed in this seat; the broader coverage initiative is retained.

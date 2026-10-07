@@ -1,0 +1,31 @@
+import gzip
+import hashlib
+import json
+import subprocess
+from pathlib import Path
+
+out = Path('docs/evidence/issue-772-image-absence')
+manifest = json.loads((out / 'compressed-manifest.json').read_text())
+for receipt in manifest:
+    encoded = (out / receipt['path']).read_bytes()
+    decoded = gzip.decompress(encoded)
+    assert len(encoded) == receipt['compressed_bytes']
+    assert len(decoded) == receipt['decoded_bytes']
+    assert hashlib.sha256(encoded).hexdigest() == receipt['compressed_sha256']
+    assert hashlib.sha256(decoded).hexdigest() == receipt['decoded_sha256']
+for path in subprocess.check_output(['git', 'ls-files', 'src'], text=True).splitlines():
+    assert Path(path).read_bytes() == subprocess.check_output(['git', 'show', f'HEAD:{path}']), path
+result = subprocess.run(['git', 'diff', '--check'], capture_output=True, text=True)
+assert result.returncode == 0, result.stdout + result.stderr
+validation = {
+    'whole_repository_black': {'command': "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .", 'environment': {'BLACK_NUM_WORKERS': '1', 'PYTHONPATH': '/tmp/772-api-boundaries/shim:src'}, 'exit': 0, 'files_unchanged': 347, 'capture': 'black-shim.log.gz'},
+    'black_initial_attempt': {'exit': 1, 'reason': 'PermissionError binding process-worker socket', 'capture': 'black.log.gz'},
+    'black_single_worker_without_shim': {'exit': 130, 'reason': 'stalled; interrupted', 'capture': 'black-serial.log.gz'},
+    'touched_ruff': {'command': 'ruff check tests/test_api_image_absence.py', 'exit': 0, 'capture': 'ruff.log.gz'},
+    'whitespace': {'command': 'git diff --check', 'exit': result.returncode, 'output': result.stdout + result.stderr},
+    'all_tracked_src_byte_identical_to_base': True,
+    'compressed_captures_verified': len(manifest),
+    'primary_git_add': {'exit': 128, 'reason': 'Cannot create .git/index.lock: Read-only file system'},
+}
+(out / 'validation.json').write_text(json.dumps(validation, indent=2) + '\n')
+print('Verified all source bytes, compressed artifacts and whitespace')

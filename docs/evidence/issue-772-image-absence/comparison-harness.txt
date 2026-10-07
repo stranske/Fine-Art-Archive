@@ -1,0 +1,54 @@
+import hashlib
+import json
+import platform
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+out = Path('/tmp/772-api-boundaries')
+baseline = json.loads((out / 'baseline-coverage.json').read_text())
+candidate = json.loads(Path('coverage.json').read_text())
+(out / 'candidate-coverage.json').write_bytes(Path('coverage.json').read_bytes())
+assert baseline['files'].keys() == candidate['files'].keys()
+regressions = []
+for path in baseline['files']:
+    before = baseline['files'][path]['summary']
+    after = candidate['files'][path]['summary']
+    assert (before['num_statements'], before['num_branches'], before['excluded_lines']) == (after['num_statements'], after['num_branches'], after['excluded_lines']), path
+    if before['covered_lines'] > after['covered_lines'] or before['covered_branches'] > after['covered_branches']:
+        regressions.append(path)
+assert not regressions, regressions
+
+def counts(stage):
+    document = ET.parse(out / f'{stage}.xml').getroot()
+    result = {name: 0 for name in ('tests', 'failures', 'errors', 'skipped')}
+    for suite in document.iter('testsuite'):
+        for name in result:
+            result[name] += int(suite.get(name, 0))
+    result['passed'] = result['tests'] - result['failures'] - result['errors'] - result['skipped']
+    result['failed_nodes'] = sorted(case.get('classname') + '::' + case.get('name') for case in document.iter('testcase') if case.find('failure') is not None or case.find('error') is not None)
+    return result
+
+assert counts('baseline')['failed_nodes'] == counts('candidate')['failed_nodes']
+sha = lambda data: hashlib.sha256(data).hexdigest()
+source_hashes = {}
+for path in subprocess.check_output(['git', 'ls-files', 'src'], text=True).splitlines():
+    original = subprocess.check_output(['git', 'show', f'HEAD:{path}'])
+    current = Path(path).read_bytes()
+    assert original == current, path
+    source_hashes[path] = sha(current)
+result = {
+    'base': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+    'interpreter': sys.executable, 'python_version': platform.python_version(), 'cwd': str(Path.cwd()),
+    'environment': {'PYTHONPATH': '/tmp/772-api-boundaries/shim:src'},
+    'argv': [sys.executable, '-m', 'pytest', '-q', '--cov=src', '--cov-report=json:coverage.json', '-m', 'not slow', '--junitxml=/tmp/772-api-boundaries/<stage>.xml'],
+    'baseline': {'exit': 1, 'counts': counts('baseline'), 'totals': baseline['totals']},
+    'candidate': {'exit': 1, 'counts': counts('candidate'), 'totals': candidate['totals']},
+    'identical_source_universe': True, 'identical_denominators': True, 'per_file_regressions': regressions,
+    'selected_symbols': {name: {'baseline': baseline['files']['src/fine_art_archive/api/main.py']['functions'][name]['summary'], 'candidate': candidate['files']['src/fine_art_archive/api/main.py']['functions'][name]['summary']} for name in ('modality_image', 'work_full', '_master_path')},
+    'unchanged_src_hashes': source_hashes,
+    'test_sha256': sha(Path('tests/test_api_image_absence.py').read_bytes()),
+}
+(out / 'matched-pair.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps({stage: result[stage] for stage in ('baseline', 'candidate')}, indent=2))

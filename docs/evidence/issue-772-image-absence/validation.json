@@ -1,0 +1,38 @@
+{
+  "whole_repository_black": {
+    "command": "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "environment": {
+      "BLACK_NUM_WORKERS": "1",
+      "PYTHONPATH": "/tmp/772-api-boundaries/shim:src"
+    },
+    "exit": 0,
+    "files_unchanged": 347,
+    "capture": "black-shim.log.gz"
+  },
+  "black_initial_attempt": {
+    "exit": 1,
+    "reason": "PermissionError binding process-worker socket",
+    "capture": "black.log.gz"
+  },
+  "black_single_worker_without_shim": {
+    "exit": 130,
+    "reason": "stalled; interrupted",
+    "capture": "black-serial.log.gz"
+  },
+  "touched_ruff": {
+    "command": "ruff check tests/test_api_image_absence.py",
+    "exit": 0,
+    "capture": "ruff.log.gz"
+  },
+  "whitespace": {
+    "command": "git diff --check",
+    "exit": 0,
+    "output": ""
+  },
+  "all_tracked_src_byte_identical_to_base": true,
+  "compressed_captures_verified": 32,
+  "primary_git_add": {
+    "exit": 128,
+    "reason": "Cannot create .git/index.lock: Read-only file system"
+  }
+}
