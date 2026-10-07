@@ -3058,12 +3058,14 @@ def variant_upgrades() -> dict:
     # Attach prior decisions
     decisions: dict[str, dict] = {}
     if VARIANT_UPGRADE_DECISIONS.exists():
-        for line in VARIANT_UPGRADE_DECISIONS.read_text().splitlines():
+        for line in VARIANT_UPGRADE_DECISIONS.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             try:
                 d = json.loads(line)
+                if not isinstance(d, dict):
+                    continue
                 decisions[d.get("existing_wid")] = d
             except json.JSONDecodeError:
                 continue
@@ -3128,7 +3130,7 @@ def variant_upgrade_decision(existing_wid: str, body: UpgradeDecisionIn) -> dict
         "ts": _now(),
     }
     VARIANT_UPGRADE_DECISIONS.parent.mkdir(parents=True, exist_ok=True)
-    with open(VARIANT_UPGRADE_DECISIONS, "a") as f:
+    with open(VARIANT_UPGRADE_DECISIONS, "a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
     return {
         "ok": True,

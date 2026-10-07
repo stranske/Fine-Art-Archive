@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import builtins
 import csv
+import io
 import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -91,7 +93,10 @@ def test_unreviewed_candidates_have_no_decision_and_real_dimensions(
     assert not review_files["decisions"].exists(), "a GET must not create review history"
 
 
-@pytest.mark.parametrize("interruption", ["", " \n\t\n", "{broken json}\n"])
+@pytest.mark.parametrize(
+    "interruption",
+    ["", " \n\t\n", "{broken json}\n", "null\n", "[]\n", "42\n", "true\n", '"text"\n'],
+)
 def test_latest_decisions_are_keyed_by_work_and_ignore_log_noise(
     review_files: dict[str, Path], interruption: str
 ) -> None:
@@ -158,9 +163,37 @@ def decision_time(monkeypatch: pytest.MonkeyPatch) -> str:
     return "2026-10-07T12:00:00+00:00"
 
 
+@pytest.fixture
+def ascii_decision_log_defaults(
+    monkeypatch: pytest.MonkeyPatch, review_files: dict[str, Path]
+) -> None:
+    """Exercise real log IO under a non-UTF-8 default without changing host locale."""
+    target = review_files["decisions"]
+
+    def wrap(original):
+        def open_log(file, mode="r", *args, **kwargs):
+            # Path.open passes encoding positionally; builtin open may use keywords.
+            if not isinstance(file, int) and Path(file) == target and "b" not in mode:
+                if len(args) >= 2:
+                    args = list(args)
+                    if args[1] in (None, "locale"):
+                        args[1] = "ascii"
+                elif kwargs.get("encoding") in (None, "locale"):
+                    kwargs["encoding"] = "ascii"
+            return original(file, mode, *args, **kwargs)
+
+        return open_log
+
+    monkeypatch.setattr(builtins, "open", wrap(builtins.open))
+    monkeypatch.setattr(io, "open", wrap(io.open))
+
+
 @pytest.mark.parametrize("decision", ["accept", "reject", "defer"])
 def test_post_decision_appends_exact_event_and_listing_replays_it(
-    review_files: dict[str, Path], decision_time: str, decision: str
+    review_files: dict[str, Path],
+    decision_time: str,
+    decision: str,
+    ascii_decision_log_defaults: None,
 ) -> None:
     log = review_files["decisions"]
     prior = {"existing_wid": "second-work", "decision": "reject", "ts": "2026-10-06T12:00:00Z"}

@@ -1,0 +1,53 @@
+{
+  "candidate_source_sha256": "641c252eced541b27b760f4c416a568118ad8496a30e85f692f64465e46db3ae",
+  "actual_source_controls": [
+    {
+      "mutation": "unguarded",
+      "argv": [
+        "/opt/anaconda3/bin/python3",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_api_variant_review_history.py",
+        "-k",
+        "ignore_log_noise"
+      ],
+      "exit": 1,
+      "failed": 5
+    },
+    {
+      "mutation": "default-read",
+      "argv": [
+        "/opt/anaconda3/bin/python3",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_api_variant_review_history.py",
+        "-k",
+        "post_decision_appends"
+      ],
+      "exit": 1,
+      "failed": 3
+    },
+    {
+      "mutation": "default-write",
+      "argv": [
+        "/opt/anaconda3/bin/python3",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_api_variant_review_history.py",
+        "-k",
+        "post_decision_appends"
+      ],
+      "exit": 1,
+      "failed": 3
+    }
+  ],
+  "restored_byte_identical": true,
+  "restored_exit": 0,
+  "restored_summary": "======================== 19 passed, 1 warning in 0.49s ========================="
+}

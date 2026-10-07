@@ -1,0 +1,20 @@
+[
+  {
+    "path": "default-read-red.log.gz",
+    "raw_sha256": "930c9a240e11783d4535af1d0ed4e77ed4d15626e983085c9c7ce65fb9d4dbfd",
+    "raw_bytes": 26080,
+    "compressed_sha256": "6755b2d9cc1e521b8b10694fa82870f63a85b6b4c9499a9704760ddcb00155b1"
+  },
+  {
+    "path": "default-write-red.log.gz",
+    "raw_sha256": "d4b3be578a6d24e3cbbbd1c562071f0b148e03aa1dcb607d3b349803a2a7ff42",
+    "raw_bytes": 27816,
+    "compressed_sha256": "92e5bef57f512d87a58438af79142b90a5b74fa5224fd8bd38c22c3a17dd0660"
+  },
+  {
+    "path": "unguarded-red.log.gz",
+    "raw_sha256": "31dedebb03fb97c46b0ec36566f104af1b6b16496600ecf2bb91efaab436c4dd",
+    "raw_bytes": 41170,
+    "compressed_sha256": "a8d5efc0b1465b11bb64f3dd8510679b215bbeff3afc092349cae03b72d6bdad"
+  }
+]
