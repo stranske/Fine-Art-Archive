@@ -3066,7 +3066,10 @@ def variant_upgrades() -> dict:
                 d = json.loads(line)
                 if not isinstance(d, dict):
                     continue
-                decisions[d.get("existing_wid")] = d
+                existing_wid = d.get("existing_wid")
+                if not isinstance(existing_wid, str):
+                    continue
+                decisions[existing_wid] = d
             except json.JSONDecodeError:
                 continue
     for c in candidates:
