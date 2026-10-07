@@ -1,0 +1,45 @@
+{
+  "scope": "Harness control fixtures only; no new product coverage or full-suite claim",
+  "cases": [
+    {
+      "case": "fresh real subprocess receipts with synthetic JUnit/coverage accepted",
+      "passed": true
+    },
+    {
+      "case": "existing stage rejected before command",
+      "passed": true
+    },
+    {
+      "case": "stale prior run receipts copied to new directory rejected",
+      "passed": true
+    },
+    {
+      "case": "pre-fix comparator accepts stale run attack (RED proof)",
+      "passed": true
+    },
+    {
+      "case": "tampered JUnit rejected",
+      "passed": true
+    },
+    {
+      "case": "tampered coverage rejected",
+      "passed": true
+    },
+    {
+      "case": "missing interrupted stage rejected",
+      "passed": true
+    },
+    {
+      "case": "wrong stage receipt rejected",
+      "passed": true
+    },
+    {
+      "case": "actual interrupted process exit2 retained",
+      "passed": true
+    },
+    {
+      "case": "interrupted process without artifacts rejected",
+      "passed": true
+    }
+  ]
+}

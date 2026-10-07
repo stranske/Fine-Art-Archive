@@ -1,3 +1,4 @@
+import argparse
 import hashlib
 import json
 import platform
@@ -6,10 +7,12 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-out = Path('/tmp/772-api-boundaries')
+parser = argparse.ArgumentParser()
+parser.add_argument('--run-dir', required=True)
+args = parser.parse_args()
+out = Path(args.run_dir).resolve(strict=True)
 baseline = json.loads((out / 'baseline-coverage.json').read_text())
-candidate = json.loads(Path('coverage.json').read_text())
-(out / 'candidate-coverage.json').write_bytes(Path('coverage.json').read_bytes())
+candidate = json.loads((out / 'candidate-coverage.json').read_text())
 assert baseline['files'].keys() == candidate['files'].keys()
 regressions = []
 for path in baseline['files']:
@@ -33,6 +36,9 @@ def counts(stage):
 processes = {}
 for stage in ('baseline', 'candidate'):
     process = json.loads((out / f'{stage}-process.json').read_text())
+    assert process['run_dir'] == str(out) and process['stage'] == stage, 'wrong comparison run/stage'
+    for name in (f'{stage}.xml', f'{stage}-coverage.json'):
+        assert process['artifacts'][name] == hashlib.sha256((out / name).read_bytes()).hexdigest(), name
     measured = counts(stage)
     assert measured['tests'] > 0, f'{stage}: no tests executed'
     assert measured['errors'] == 0, f'{stage}: collection/execution errors'
@@ -50,8 +56,9 @@ for path in subprocess.check_output(['git', 'ls-files', 'src'], text=True).split
 result = {
     'base': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
     'interpreter': sys.executable, 'python_version': platform.python_version(), 'cwd': str(Path.cwd()),
-    'environment': {'PYTHONPATH': '/tmp/772-api-boundaries/shim:src'},
-    'argv': [sys.executable, '-m', 'pytest', '-q', '--cov=src', '--cov-report=json:coverage.json', '-m', 'not slow', '--junitxml=/tmp/772-api-boundaries/<stage>.xml'],
+    'run_dir': str(out),
+    'environment': {'PYTHONPATH': str(out / 'shim') + ':src'},
+    'argv': [sys.executable, '-m', 'pytest', '-q', '--cov=src', '--cov-report=json:' + str(out / '<stage>-coverage.json'), '-m', 'not slow', '--junitxml=' + str(out / '<stage>.xml')],
     'baseline': {'exit': processes['baseline']['returncode'], 'process': processes['baseline'], 'counts': counts('baseline'), 'totals': baseline['totals']},
     'candidate': {'exit': processes['candidate']['returncode'], 'process': processes['candidate'], 'counts': counts('candidate'), 'totals': candidate['totals']},
     'identical_source_universe': True, 'identical_denominators': True, 'per_file_regressions': regressions,
