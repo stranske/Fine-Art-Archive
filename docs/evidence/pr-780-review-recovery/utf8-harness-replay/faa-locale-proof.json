@@ -1,0 +1,51 @@
+{
+  "control": "Every harness text read/write rejects an unspecified or non-UTF8 encoding; child tests use real path-scoped ASCII-default I/O.",
+  "text_operations": [
+    [
+      "write",
+      "src/fine_art_archive/api/main.py",
+      "utf-8"
+    ],
+    [
+      "write",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/unguarded-red.log",
+      "utf-8"
+    ],
+    [
+      "write",
+      "src/fine_art_archive/api/main.py",
+      "utf-8"
+    ],
+    [
+      "write",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/default-read-red.log",
+      "utf-8"
+    ],
+    [
+      "write",
+      "src/fine_art_archive/api/main.py",
+      "utf-8"
+    ],
+    [
+      "write",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/default-write-red.log",
+      "utf-8"
+    ],
+    [
+      "write",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/restored-green.log",
+      "utf-8"
+    ],
+    [
+      "write",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/production-red-green.json",
+      "utf-8"
+    ],
+    [
+      "read",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/work/20261007T0221Z/faa-locale-replay/production-red-green.json",
+      "utf-8"
+    ]
+  ],
+  "implicit_default_operations": 0
+}

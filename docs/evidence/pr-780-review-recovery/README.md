@@ -9,3 +9,9 @@ Focused command: `python3 -m pytest --no-cov -q tests/test_api_variant_review_hi
 The first encoding wrapper missed pathlib's `locale` sentinel; the independent read mutation exposed this vacuous control. The wrapper was corrected and all three controls above rerun successfully. Do not reuse the earlier incomplete control.
 
 A broader suite was attempted and interrupted while companion API tests stalled: **415 passed,2 skipped**, exit2/KeyboardInterrupt,71.99seconds. This is not a full-suite PASS, matched coverage measurement, or hosted CI substitute. The predecessor's 2166/2172 measurements and original source-byte invariance apply only to that historical test-only chunk. Current production fixes require fresh hosted CI and reviewer disposition. Broader issue772 remains OPEN below90percent.
+
+## Harness encoding review follow-through
+
+The harness now explicitly decodes source and reads/writes all text as UTF-8, including captured subprocess output. It accepts an optional output directory so fresh replays preserve previous evidence. At production head `dca98428f05720a2b1201a1d0ef7b8be7b7745bd`, all three real source mutants again produce 5/3/3 semantic failures; byte-identical restoration gives 19 passing history cases. The adjacent variant suites give 73 passes. A strict wrapper rejects every harness text operation without explicit UTF-8: 9 operations, zero implicit defaults. Complete replay receipt, wrapper, lossless compressed outputs and hashes are retained in `utf8-harness-replay/`. Earlier c73 production/control receipts remain historical and unchanged. This documentation-only harness repair does not establish a new full-suite/coverage result.
+
+Replay: `python3 docs/evidence/pr-780-review-recovery/mutation-harness.txt /tmp/faa-harness-output` from the repository root.

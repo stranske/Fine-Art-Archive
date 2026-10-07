@@ -1,11 +1,91 @@
-import pathlib,subprocess,hashlib,json,sys
-p=pathlib.Path(__file__).parent;source=pathlib.Path('src/fine_art_archive/api/main.py');good=source.read_bytes();s=good.decode();cases=[('unguarded',s.replace('                if not isinstance(d, dict):\n                    continue\n','',1),'ignore_log_noise',5),('default-read',s.replace('VARIANT_UPGRADE_DECISIONS.read_text(encoding="utf-8")','VARIANT_UPGRADE_DECISIONS.read_text()',1),'post_decision_appends',3),('default-write',s.replace('open(VARIANT_UPGRADE_DECISIONS, "a", encoding="utf-8")','open(VARIANT_UPGRADE_DECISIONS, "a")',1),'post_decision_appends',3)];rows=[]
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+
+# Optional output directory keeps fresh replays separate from retained evidence.
+p = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).parent
+p.mkdir(parents=True, exist_ok=True)
+source = pathlib.Path("src/fine_art_archive/api/main.py")
+good = source.read_bytes()
+s = good.decode("utf-8")
+cases = [
+    (
+        "unguarded",
+        s.replace(
+            "                if not isinstance(d, dict):\n                    continue\n", "", 1
+        ),
+        "ignore_log_noise",
+        5,
+    ),
+    (
+        "default-read",
+        s.replace(
+            'VARIANT_UPGRADE_DECISIONS.read_text(encoding="utf-8")',
+            "VARIANT_UPGRADE_DECISIONS.read_text()",
+            1,
+        ),
+        "post_decision_appends",
+        3,
+    ),
+    (
+        "default-write",
+        s.replace(
+            'open(VARIANT_UPGRADE_DECISIONS, "a", encoding="utf-8")',
+            'open(VARIANT_UPGRADE_DECISIONS, "a")',
+            1,
+        ),
+        "post_decision_appends",
+        3,
+    ),
+]
+rows = []
 try:
- for name,text,focus,count in cases:
-  assert text!=s;source.write_text(text)
-  cmd=[sys.executable,'-m','pytest','--no-cov','-q','tests/test_api_variant_review_history.py','-k',focus]
-  r=subprocess.run(cmd,text=True,capture_output=True);(p/(name+'-red.log')).write_text(r.stdout+r.stderr);assert r.returncode==1 and f'{count} failed' in r.stdout,(name,r.returncode,r.stdout[-800:]);rows.append({'mutation':name,'argv':cmd,'exit':r.returncode,'failed':count})
-finally:source.write_bytes(good)
-assert source.read_bytes()==good
-r=subprocess.run([sys.executable,'-m','pytest','--no-cov','-q','tests/test_api_variant_review_history.py'],text=True,capture_output=True);(p/'restored-green.log').write_text(r.stdout+r.stderr);assert r.returncode==0
-(p/'production-red-green.json').write_text(json.dumps({'candidate_source_sha256':hashlib.sha256(good).hexdigest(),'actual_source_controls':rows,'restored_byte_identical':True,'restored_exit':r.returncode,'restored_summary':r.stdout.splitlines()[-1]},indent=2));print((p/'production-red-green.json').read_text())
+    for name, text, focus, count in cases:
+        assert text != s
+        source.write_text(text, encoding="utf-8")
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--no-cov",
+            "-q",
+            "tests/test_api_variant_review_history.py",
+            "-k",
+            focus,
+        ]
+        result = subprocess.run(cmd, text=True, encoding="utf-8", capture_output=True)
+        (p / (name + "-red.log")).write_text(result.stdout + result.stderr, encoding="utf-8")
+        assert result.returncode == 1 and f"{count} failed" in result.stdout, (
+            name,
+            result.returncode,
+            result.stdout[-800:],
+        )
+        rows.append({"mutation": name, "argv": cmd, "exit": result.returncode, "failed": count})
+finally:
+    source.write_bytes(good)
+assert source.read_bytes() == good
+result = subprocess.run(
+    [sys.executable, "-m", "pytest", "--no-cov", "-q", "tests/test_api_variant_review_history.py"],
+    text=True,
+    encoding="utf-8",
+    capture_output=True,
+)
+(p / "restored-green.log").write_text(result.stdout + result.stderr, encoding="utf-8")
+assert result.returncode == 0
+receipt = p / "production-red-green.json"
+receipt.write_text(
+    json.dumps(
+        {
+            "candidate_source_sha256": hashlib.sha256(good).hexdigest(),
+            "actual_source_controls": rows,
+            "restored_byte_identical": True,
+            "restored_exit": result.returncode,
+            "restored_summary": result.stdout.splitlines()[-1],
+        },
+        indent=2,
+    ),
+    encoding="utf-8",
+)
+print(receipt.read_text(encoding="utf-8"))
