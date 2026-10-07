@@ -1,0 +1,54 @@
+import hashlib
+import json
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+out = Path('/tmp/772-round')
+
+def report(stage):
+    tree = ET.parse(out / (stage + '.xml'))
+    counts = {'total': 0, 'passed': 0, 'failed': 0, 'errors': 0, 'skipped': 0}
+    failures = []
+    for case in tree.iter('testcase'):
+        counts['total'] += 1
+        if case.find('failure') is not None:
+            counts['failed'] += 1
+            failures.append({'node': case.get('classname') + '::' + case.get('name'), 'message': case.find('failure').get('message')})
+        elif case.find('error') is not None:
+            counts['errors'] += 1
+        elif case.find('skipped') is not None:
+            counts['skipped'] += 1
+        else:
+            counts['passed'] += 1
+    coverage = json.loads((out / (stage + '-coverage.json')).read_text())
+    return {'command': [sys.executable, '-m', 'pytest', '-q', '--cov=src', '--cov-report=json:coverage.json', '-m', 'not slow', '--junitxml=' + str(out / (stage + '.xml'))], 'exit': 1, 'counts': counts, 'failures': failures, 'coverage': coverage['totals'], 'selected_symbols': {k: coverage['files']['src/fine_art_archive/api/main.py']['functions'][k]['summary'] for k in ['variant_upgrade_decision', '_known_variant_upgrade_work_id']}}
+
+baseline = json.loads((out / 'baseline-coverage.json').read_text())
+candidate = json.loads((out / 'candidate-coverage.json').read_text())
+assert set(baseline['files']) == set(candidate['files'])
+assert baseline['totals']['num_statements'] == candidate['totals']['num_statements']
+assert baseline['totals']['num_branches'] == candidate['totals']['num_branches']
+regressions = []
+for path, b in baseline['files'].items():
+    c = candidate['files'][path]
+    for key in ['num_statements', 'num_branches']:
+        assert b['summary'][key] == c['summary'][key]
+    for key in ['covered_lines', 'covered_branches']:
+        if b['summary'][key] > c['summary'][key]:
+            regressions.append([path, key, b['summary'][key], c['summary'][key]])
+result = {'base': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(), 'cwd': str(Path.cwd()), 'environment': {'PYTHONPATH': '/tmp/772-round/shim:src'}, 'baseline': report('baseline'), 'candidate': report('candidate'), 'same_source_file_universe': True, 'source_files': len(baseline['files']), 'per_file_regressions': regressions}
+assert result['baseline']['failures'] == result['candidate']['failures'], result
+assert result['candidate']['counts']['passed'] - result['baseline']['counts']['passed'] == 8
+assert not regressions, regressions
+source_hashes = {}
+for name in subprocess.check_output(['git', 'ls-files', 'src'], text=True).splitlines():
+    current = Path(name).read_bytes()
+    original = subprocess.check_output(['git', 'show', 'HEAD:' + name])
+    assert current == original, name
+    source_hashes[name] = hashlib.sha256(current).hexdigest()
+result['source_sha256'] = source_hashes
+result['test_sha256'] = hashlib.sha256(Path('tests/test_api_variant_review_history.py').read_bytes()).hexdigest()
+(out / 'matched-pair.json').write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps({k: result[k] for k in ['baseline', 'candidate', 'per_file_regressions']}, indent=2))

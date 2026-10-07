@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -144,3 +145,114 @@ def test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows(
     assert invalid["candidate_present"] is False
     assert invalid["title"] == "Malformed identity"
     assert invalid["artist"] == invalid["artist_name"] == "CSV artist"
+
+
+@pytest.fixture
+def decision_time(monkeypatch: pytest.MonkeyPatch) -> str:
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 7, 12, tzinfo=UTC)
+
+    monkeypatch.setattr(api_main, "datetime", FrozenDatetime)
+    return "2026-10-07T12:00:00+00:00"
+
+
+@pytest.mark.parametrize("decision", ["accept", "reject", "defer"])
+def test_post_decision_appends_exact_event_and_listing_replays_it(
+    review_files: dict[str, Path], decision_time: str, decision: str
+) -> None:
+    log = review_files["decisions"]
+    prior = {"existing_wid": "second-work", "decision": "reject", "ts": "2026-10-06T12:00:00Z"}
+    log.write_text(json.dumps(prior) + "\n", encoding="utf-8")
+    original_log = log.read_bytes()
+    sources = [
+        review_files["detector"],
+        review_files["works"] / "first-work" / "master.png",
+        review_files["staging"] / "first-work.png",
+    ]
+    original_sources = {p: p.read_bytes() for p in sources}
+    note = "étude — " + "界" * 492  # Exactly 500 characters, including non-ASCII text.
+    event = {
+        "existing_wid": "first-work",
+        "decision": decision,
+        "note": note,
+        "ts": decision_time,
+    }
+
+    with TestClient(api_main.app) as client:
+        response = client.post(
+            "/variant_upgrades/first-work/decision", json={"decision": decision, "note": note}
+        )
+        listing = client.get("/variant_upgrades")
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["event"] == event
+    updated = log.read_bytes()
+    assert updated.startswith(original_log), "a new decision must preserve existing history"
+    assert [json.loads(line) for line in updated[len(original_log) :].splitlines()] == [event]
+    assert listing.status_code == 200
+    assert [
+        (r["existing_wid"], r["decision"], r["decision_ts"]) for r in listing.json()["candidates"]
+    ] == [
+        ("first-work", decision, decision_time),
+        ("second-work", "reject", prior["ts"]),
+    ]
+    assert {p: p.read_bytes() for p in sources} == original_sources
+
+
+@pytest.mark.parametrize("decision", ["approve", "ACCEPT"])
+def test_unsupported_upgrade_choice_does_not_append(
+    review_files: dict[str, Path], decision: str
+) -> None:
+    log = review_files["decisions"]
+    log.write_text('{"existing_wid":"second-work","decision":"defer"}\n', encoding="utf-8")
+    original = log.read_bytes()
+
+    with TestClient(api_main.app) as client:
+        response = client.post("/variant_upgrades/first-work/decision", json={"decision": decision})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "decision must be accept/reject/defer"}
+    assert log.read_bytes() == original
+
+
+def test_overlong_upgrade_note_does_not_create_log(review_files: dict[str, Path]) -> None:
+    with TestClient(api_main.app) as client:
+        response = client.post(
+            "/variant_upgrades/first-work/decision", json={"decision": "defer", "note": "界" * 501}
+        )
+
+    assert response.status_code == 422
+    assert any(error["loc"] == ["body", "note"] for error in response.json()["detail"])
+    assert not review_files["decisions"].exists()
+
+
+@pytest.mark.parametrize("holding", ["manifest", "sidecar"])
+def test_known_archive_work_can_be_reviewed_without_detector(
+    review_files: dict[str, Path], decision_time: str, holding: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    review_files["detector"].unlink()
+    if holding == "manifest":
+        store.MANIFEST_CSV.write_text(
+            "work_id,title,artist_name\nfirst-work,Held Work,Held Artist\n", encoding="utf-8"
+        )
+        metadata = store.MANIFEST_CSV
+    else:
+        metadata = review_files["works"] / "first-work" / "meta.json"
+        metadata.write_text(json.dumps({"title": "Held Work", "artist": {"name": "Held Artist"}}))
+    original = metadata.read_bytes()
+    log = review_files["works"].parent / "new" / "nested" / "decisions.jsonl"
+    monkeypatch.setattr(api_main, "VARIANT_UPGRADE_DECISIONS", log)
+    assert not log.parent.exists()
+    event = {"existing_wid": "first-work", "decision": "defer", "note": None, "ts": decision_time}
+
+    with TestClient(api_main.app) as client:
+        response = client.post("/variant_upgrades/first-work/decision", json={"decision": "defer"})
+
+    assert response.status_code == 200
+    assert response.json()["event"] == event
+    assert [json.loads(line) for line in log.read_text().splitlines()] == [event]
+    assert metadata.read_bytes() == original
+    assert not review_files["detector"].exists()
