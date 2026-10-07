@@ -1,0 +1,40 @@
+import pathlib,subprocess,json,hashlib,xml.etree.ElementTree as ET
+root=pathlib.Path('/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa-772-next-api-coverage')
+out=pathlib.Path('/Users/teacher/.codex/automations/pd-workloop-resume/evidence/20261007T0102Z')
+py='/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/Fine-Art-Archive-772-coverage/.venv/bin/python'
+f=root/'src/fine_art_archive/api/main.py';original=f.read_bytes();original_sha=hashlib.sha256(original).hexdigest()
+test=root/'tests/test_api_variant_review_history.py'; test_sha=hashlib.sha256(test.read_bytes()).hexdigest()
+module='tests/test_api_variant_review_history.py'
+mutants=[
+ ('absent-detector-shape','return {"candidates": [], "decisions": []}','return {"candidates": []}', 'test_absent_detector_does_not_surface_unmatched_decisions'),
+ ('invent-unreviewed-decision','c["decision"] = d.get("decision") if d else None','c["decision"] = d.get("decision") if d else "accept"','test_unreviewed_candidates_have_no_decision_and_real_dimensions'),
+ ('retain-first-decision','decisions[d.get("existing_wid")] = d','decisions.setdefault(d.get("existing_wid"), d)','test_latest_decisions_are_keyed_by_work_and_ignore_log_noise'),
+ ('crosswire-work-history','d = decisions.get(c.get("existing_wid"))','d = decisions.get("first-work")','test_latest_decisions_are_keyed_by_work_and_ignore_log_noise'),
+ ('discard-decision-timestamp','c["decision_ts"] = d.get("ts") if d else None','c["decision_ts"] = None','test_latest_decisions_are_keyed_by_work_and_ignore_log_noise'),
+ ('stop-on-blank-line','if not line:\n                continue','if not line:\n                break','test_latest_decisions_are_keyed_by_work_and_ignore_log_noise'),
+ ('abort-malformed-line','except json.JSONDecodeError:\n                continue','except json.JSONDecodeError:\n                raise','test_latest_decisions_are_keyed_by_work_and_ignore_log_noise'),
+ ('abort-invalid-identity','except HTTPException:\n            c["existing_px"] = None','except HTTPException:\n            raise','test_invalid_detector_identity_is_unavailable_without_hiding_valid_rows'),
+]
+def run(name,phase,node):
+ argv=[py,'-m','pytest','-q','-o','addopts=',module+'::'+node,'--junitxml='+str(out/(name+'-'+phase+'.xml'))]
+ p=subprocess.run(argv,cwd=root,capture_output=True,text=True)
+ (out/(name+'-'+phase+'.log')).write_text(p.stdout+p.stderr)
+ tree=ET.parse(out/(name+'-'+phase+'.xml'));cases=[{'node':t.get('classname')+'::'+t.get('name'),'failed':t.find('failure') is not None,'error':t.find('error') is not None} for t in tree.iter('testcase')]
+ return {'command':argv,'exit':p.returncode,'cases':cases,'log':name+'-'+phase+'.log','junit':name+'-'+phase+'.xml'}
+receipts=[]
+try:
+ for name,old,new,node in mutants:
+  text=original.decode();start=text.index('def variant_upgrades()');end=text.index('\ndef _variant_upgrade_fallback_work',start);part=text[start:end]
+  assert part.count(old)==1,(name,part.count(old));broken=text[:start]+part.replace(old,new,1)+text[end:]
+  f.write_text(broken);red=run(name,'red',node)
+  f.write_bytes(original);assert hashlib.sha256(f.read_bytes()).hexdigest()==original_sha
+  green=run(name,'green',node)
+  assert red['exit']==1 and any(c['failed'] for c in red['cases']),(name,red)
+  assert green['exit']==0,(name,green)
+  assert hashlib.sha256(test.read_bytes()).hexdigest()==test_sha
+  receipts.append({'mutation':name,'old':old,'new':new,'source_sha256':original_sha,'test_sha256':test_sha,'red':red,'green':green,'restored_exactly':True})
+  print(name,'RED',sum(c['failed'] for c in red['cases']),'GREEN',len(green['cases']),flush=True)
+finally:
+ f.write_bytes(original)
+ (out/'faa-mutations.json').write_text(json.dumps(receipts,indent=2)+'\n')
+assert len(receipts)==len(mutants)

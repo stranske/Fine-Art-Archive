@@ -952,3 +952,15 @@ its supplied diff and acceptance evidence were truncated. Complete local
 readback resolves the inaccessible-transcript and count-reconciliation claims
 for this bounded chunk; it does not change the providers' original verdicts.
 Broad issue #772 remains open because combined coverage is below 90 percent.
+
+
+### Variant-upgrade review history chunk
+
+[Complete matched-pair and source-mutation proof](issue-772-variant-history/README.md):
+six temporary-file HTTP API regressions; 2166→2172 passed, 12 skipped both;
+combined coverage 88.27420761849375→88.39052050014539 percent, identical source
+universe, +10 lines/+6 branches and no per-file regression. Eight actual source
+controls produce14 failed executions covering all six new cases, then byte-exact
+restoration passes every named command. The full console/JUnit/coverage captures,
+ranking, exact mutation harness, hashes and receipts are committed in that directory.
+Production is unchanged; broader #772 remains OPEN below90 percent.
