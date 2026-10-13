@@ -425,10 +425,12 @@ def build(
 
         if spec.limit is None:
             raise ValueError("preference-diverse selection requires limit")
+        if quality_scores is None or embeddings is None:
+            raise ValueError("preference-diverse selection requires quality and embedding evidence")
         selection = select_quality_diverse(
             [row["work_id"] for row in rows],
-            quality_scores or {},
-            embeddings or {},
+            quality_scores,
+            embeddings,
             spec.limit,
             seed=spec.seed,
         )

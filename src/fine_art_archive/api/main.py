@@ -576,6 +576,51 @@ class PlaylistIn(BaseModel):
     sample: int = Field(default=24, ge=0, le=200)
 
 
+def _build_eink_playlist(
+    sidecars: list[tuple[str, dict]],
+    spec: _eink.PlaylistSpec,
+    *,
+    ratings: dict[str, dict[str, int]],
+    quality_scores: dict[str, float] | None = None,
+    embeddings: dict[str, list[float]] | None = None,
+) -> _eink.PlaylistResult:
+    """Resolve one selection with the same filtered evidence for every delivery path.
+
+    None derives server-owned evidence. An explicitly supplied empty mapping
+    remains empty, so preview cannot silently replace invalid caller evidence.
+    """
+    dossier_ids = set(store.work_ids_with_dossier())
+    needs_quality = quality_scores is None
+    needs_embeddings = embeddings is None
+    if spec.selection_mode == "preference-diverse" and (needs_quality or needs_embeddings):
+        candidates = _eink.build(
+            sidecars,
+            _eink.PlaylistSpec.from_dict(
+                {**spec.__dict__, "selection_mode": "ordered", "limit": None}
+            ),
+            ratings=ratings,
+            dossier_ids=dossier_ids,
+        )
+        derived_quality, derived_embeddings = _derived_preference_evidence(
+            candidates.work_ids,
+            ratings,
+            include_quality=needs_quality,
+            include_embeddings=needs_embeddings,
+        )
+        if needs_quality:
+            quality_scores = derived_quality
+        if needs_embeddings:
+            embeddings = derived_embeddings
+    return _eink.build(
+        sidecars,
+        spec,
+        ratings=ratings,
+        dossier_ids=dossier_ids,
+        quality_scores=quality_scores,
+        embeddings=embeddings,
+    )
+
+
 class ExportIn(BaseModel):
     # Either give a spec inline, or name a saved playlist — same selection code
     # either way, so a card and that playlist's feed cannot diverge.
@@ -631,43 +676,15 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         raise HTTPException(400, str(exc)) from exc
     sidecars = _all_sidecars()
     ratings = _eink.load_ratings(store.RATINGS_LOG)
-    quality_scores = body.quality_scores
-    embeddings = body.embeddings
-    needs_quality = not _request_supplies(body, "quality_scores")
-    needs_embeddings = not _request_supplies(body, "embeddings")
-    if spec.selection_mode == "preference-diverse" and (needs_quality or needs_embeddings):
-        # Apply the exact requested filters before touching masters: a missing
-        # master outside the selected candidate set must not make this preview
-        # fail.  The second build below retains the requested selection mode.
-        candidates = _eink.build(
-            sidecars,
-            _eink.PlaylistSpec.from_dict(
-                {**spec.__dict__, "selection_mode": "ordered", "limit": None}
-            ),
-            ratings=ratings,
-            dossier_ids=set(store.work_ids_with_dossier()),
-        )
-        try:
-            derived_quality, derived_embeddings = _derived_preference_evidence(
-                candidates.work_ids,
-                ratings,
-                include_quality=needs_quality,
-                include_embeddings=needs_embeddings,
-            )
-        except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
-        if needs_quality:
-            quality_scores = derived_quality
-        if needs_embeddings:
-            embeddings = derived_embeddings
     try:
-        res = _eink.build(
+        res = _build_eink_playlist(
             sidecars,
             spec,
             ratings=ratings,
-            dossier_ids=set(store.work_ids_with_dossier()),
-            quality_scores=quality_scores,
-            embeddings=embeddings,
+            quality_scores=(
+                body.quality_scores if _request_supplies(body, "quality_scores") else None
+            ),
+            embeddings=body.embeddings if _request_supplies(body, "embeddings") else None,
         )
     except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc
@@ -784,13 +801,12 @@ def eink_playlist_export(body: ExportIn) -> dict:
 
     sidecars = _all_sidecars()
     try:
-        res = _eink.build(
+        res = _build_eink_playlist(
             sidecars,
             spec,
             ratings=_cached_ratings(),
-            dossier_ids=set(store.work_ids_with_dossier()),
         )
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
     by_id = dict(sidecars)
@@ -2047,13 +2063,12 @@ def _resolve_playlist(pl, sidecars: list[tuple[str, dict]] | None = None) -> lis
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
     sidecars = _all_sidecars() if sidecars is None else sidecars
     try:
-        res = _eink.build(
+        res = _build_eink_playlist(
             sidecars,
             spec,
             ratings=_cached_ratings(),
-            dossier_ids=set(store.work_ids_with_dossier()),
         )
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
     by_id = dict(sidecars)
     from fine_art_archive.eink.playlist import _artist_of, parse_year
@@ -2156,9 +2171,17 @@ def eink_save_playlist(body: SavePlaylistIn) -> dict:
         )
 
     if body.id:
-        pl = _get_playlist_or_404(body.id)
-        pl.name, pl.spec, pl.target = body.name, body.spec, body.target
-        pl.dither, pl.fit, pl.interval = body.dither, fit, body.interval
+        from dataclasses import replace
+
+        pl = replace(
+            _get_playlist_or_404(body.id),
+            name=body.name,
+            spec=body.spec,
+            target=body.target,
+            dither=body.dither,
+            fit=fit,
+            interval=body.interval,
+        )
     else:
         pl = _eink.SavedPlaylist.new(
             body.name,
@@ -2168,9 +2191,11 @@ def eink_save_playlist(body: SavePlaylistIn) -> dict:
             fit=fit,
             interval=body.interval,
         )
+    # Validate the actual selection before creating or overwriting a saved spec.
+    resolved_count = len(_resolve_playlist(pl))
     _playlists.save(pl)
     d = pl.as_dict()
-    d["resolved_count"] = len(_resolve_playlist(pl))
+    d["resolved_count"] = resolved_count
     d["feed_url"] = f"/feed/{pl.id}/current"
     return d
 
