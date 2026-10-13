@@ -3,15 +3,16 @@
   "src/fine_art_archive/eink/feed.py": "493d5daa552bb1b37802671a33750f16d3af635624baa7042b2eb7308be9efff",
   "tests/test_eink_feed_endpoints.py": "82e0607bb79a95781449ad0e88da6758659adaa80a65d34615ea9b32f6208626",
   "tests/test_eink_pipeline.py": "d685c97618c80c8e6e6858b67958cd0d4e4578981aa6f67c247ef4ba12a4aad9",
-  "docs/evidence/issue-786/README.md": "4d95a7628103f055f32f6d00df107489a1afd5ac442352b462f9eba8391c82df",
+  "docs/evidence/issue-786/README.md": "e34af283d3895ec3e929a3c015eca45c15a6f299bb6111f788a586f6faf67ed7",
   "docs/evidence/issue-786/acceptance.log": "cecd0d33dfcb46ff9799644da4c9ed6fc9e2424aa2da2017ea328fdab84fabeb",
   "docs/evidence/issue-786/black.log": "26a5fd9505f2b5608a20c4fed4b4c4795e0783d03b72ade02a6af34dae8ad086",
   "docs/evidence/issue-786/full-suite.log": "161664a5774613815b28bdc5c00b15c30b21f9646b34cb96ffea551233698558",
   "docs/evidence/issue-786/mutation-receipt.json": "a9c685e916d23ff8fb9a29a3e65eb091f26c5ff15a3410823c3e50668112fcfb",
-  "docs/evidence/issue-786/mutation-red.log": "9a5a7fa0683b31c7d9393dc75253b8ae1eacafe5db955ac303a8c07149ca3df0",
-  "docs/evidence/issue-786/mutation.py": "5116df3f58642e1f7cf1f5266e2261de189d5c616ff0fe5a4bb1ba8be017c0b8",
+  "docs/evidence/issue-786/mutation-red.log": "119287535d0a47098d1420f4c91c276f32c011016cf784e236a0563cbb83e0c8",
+  "docs/evidence/issue-786/mutation.py": "89d5a809eed10f1e0f4caadb8a8cf8ff86261cf2ee7a023cbc061cc7ec919437",
   "docs/evidence/issue-786/mypy.log": "5d9261c2f8e0d161fdeb3a711a1b51e3d1724c5eaf9836031ec19f1a9712c9a1",
   "docs/evidence/issue-786/original-red.log": "16f7853373bb70324834697cd47352adf995c42e8a88c73572354dd81c51e097",
   "docs/evidence/issue-786/restored-green.log": "5a5c3f3519f02966175c99c42b03b8c38ec92ac18fb2105f83aa4ed6229bb990",
-  "docs/evidence/issue-786/ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  "docs/evidence/issue-786/ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+  "docs/evidence/issue-786/black-repository.log": "8ff7b2a5dfd9eb5858e5597c56c978a8a5449c460c18eb176839bc5a0ef8ec1b"
 }

@@ -2,9 +2,9 @@ FFFFFF.............                                                      [100%]
 =================================== FAILURES ===================================
 _____ test_fit_change_invalidates_saved_feed_image[contain-cover-image/0] ______
 
-client = <starlette.testclient.TestClient object at 0x105efc110>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa0/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x105efe6f0>
+client = <starlette.testclient.TestClient object at 0x106f385c0>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa0/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106f386e0>
 route = 'image/0', before = 'contain', after = 'cover'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -47,9 +47,9 @@ E        +  where 304 = <Response [304 Not Modified]>.status_code
 tests/test_eink_feed_endpoints.py:120: AssertionError
 _____ test_fit_change_invalidates_saved_feed_image[contain-cover-current] ______
 
-client = <starlette.testclient.TestClient object at 0x105f69c40>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa1/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x105f6a510>
+client = <starlette.testclient.TestClient object at 0x106f1ff20>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa1/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106fa68d0>
 route = 'current', before = 'contain', after = 'cover'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -92,9 +92,9 @@ E        +  where 304 = <Response [304 Not Modified]>.status_code
 tests/test_eink_feed_endpoints.py:120: AssertionError
 _____ test_fit_change_invalidates_saved_feed_image[cover-stretch-image/0] ______
 
-client = <starlette.testclient.TestClient object at 0x105fcbf80>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa2/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x105fcbaa0>
+client = <starlette.testclient.TestClient object at 0x107109a30>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa2/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10710bd40>
 route = 'image/0', before = 'cover', after = 'stretch'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -137,9 +137,9 @@ E        +  where 304 = <Response [304 Not Modified]>.status_code
 tests/test_eink_feed_endpoints.py:120: AssertionError
 _____ test_fit_change_invalidates_saved_feed_image[cover-stretch-current] ______
 
-client = <starlette.testclient.TestClient object at 0x106021700>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa3/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106022450>
+client = <starlette.testclient.TestClient object at 0x10710b740>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa3/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10710b1d0>
 route = 'current', before = 'cover', after = 'stretch'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -182,9 +182,9 @@ E        +  where 304 = <Response [304 Not Modified]>.status_code
 tests/test_eink_feed_endpoints.py:120: AssertionError
 ____ test_fit_change_invalidates_saved_feed_image[stretch-contain-image/0] _____
 
-client = <starlette.testclient.TestClient object at 0x1060224b0>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa4/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106021cd0>
+client = <starlette.testclient.TestClient object at 0x10710a540>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa4/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10710a4b0>
 route = 'image/0', before = 'stretch', after = 'contain'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -227,9 +227,9 @@ E        +  where 304 = <Response [304 Not Modified]>.status_code
 tests/test_eink_feed_endpoints.py:120: AssertionError
 ____ test_fit_change_invalidates_saved_feed_image[stretch-contain-current] _____
 
-client = <starlette.testclient.TestClient object at 0x105fc9640>
-archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1616/test_fit_change_invalidates_sa5/works')
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x105fcbc50>
+client = <starlette.testclient.TestClient object at 0x10710b5c0>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1619/test_fit_change_invalidates_sa5/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x107109400>
 route = 'current', before = 'stretch', after = 'contain'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -283,4 +283,4 @@ FAILED tests/test_eink_feed_endpoints.py::test_fit_change_invalidates_saved_feed
 FAILED tests/test_eink_feed_endpoints.py::test_fit_change_invalidates_saved_feed_image[cover-stretch-current]
 FAILED tests/test_eink_feed_endpoints.py::test_fit_change_invalidates_saved_feed_image[stretch-contain-image/0]
 FAILED tests/test_eink_feed_endpoints.py::test_fit_change_invalidates_saved_feed_image[stretch-contain-current]
-6 failed, 13 passed, 64 deselected, 1 warning in 0.74s
+6 failed, 13 passed, 64 deselected, 1 warning in 0.72s
