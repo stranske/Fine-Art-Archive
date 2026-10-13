@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="13" skipped="0" tests="14" time="4.062" timestamp="2026-10-13T16:08:40.419769-05:00" hostname="server.trs.private">
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_preview_saved_feed_and_exports_agree[False]" time="0.131">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_preview_saved_feed_and_exports_agree[True]" time="0.101">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[quality-False]" time="0.005">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[quality-True]" time="0.008">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[master-False]" time="0.006">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[master-True]" time="0.008">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[unreadable-False]" time="0.006">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[unreadable-True]" time="0.009">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[zero-vector-False]" time="0.005">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_invalid_evidence_never_commits[zero-vector-True]" time="0.008">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_filters_before_deriving_and_resolves_live" time="0.006">
+      <failure message="fine_art_archive.preference.exhibition.MissingEvidenceError: aaa1111-red-work: quality and embedding evidence are required" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_preview_keeps_explicit_evidence" time="0.100" />
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_builder_names_missing_evidence[quality_scores]" time="0.000">
+      <failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'requires quality and embedding evidence'&#10;  Actual message: 'subset_size 1 exceeds candidate count 0'" />
+    </testcase>
+    <testcase classname="tests.test_eink_feed_endpoints" name="test_preference_diverse_builder_names_missing_evidence[embeddings]" time="0.000">
+      <failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'requires quality and embedding evidence'&#10;  Actual message: 'subset_size 1 exceeds candidate count 0'" />
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,81 @@
+{
+  "source_files": [
+    {
+      "path": "src/fine_art_archive/api/main.py",
+      "bytes": 127840,
+      "sha256": "5aab140b0b1adb68a3853ebd5ac7998f203650e7f38a6ae7a47d53c6c8054de6"
+    },
+    {
+      "path": "src/fine_art_archive/eink/playlist.py",
+      "bytes": 19352,
+      "sha256": "c8d628a97659ab2b19ddffe376f5e0424f84d0904e9ec1045b3f29933f8bb265"
+    },
+    {
+      "path": "tests/test_eink_feed_endpoints.py",
+      "bytes": 28104,
+      "sha256": "3b81042ec63b4b891983d180a1ffefaac8544cfa9064cff2b87673b32e14b679"
+    }
+  ],
+  "proof_files": [
+    {
+      "path": "docs/evidence/preference-diverse-feed/README.md",
+      "bytes": 4606,
+      "sha256": "7910e1e88aea04dc712ab7e7fb91cc5ffb7a0b0697a3e43e56514f8ada836052"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/acceptance.log",
+      "bytes": 740,
+      "sha256": "fadda2525147603cf6da76d6cecfd644ec31f8424ff5c47c23613559183800f3"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/black-source.log",
+      "bytes": 58,
+      "sha256": "1cc7866d2f48e1099453ea872fe0d561602a4d2e8814b7268e3c91d3ff5f8a8f"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/full-suite.log",
+      "bytes": 26047,
+      "sha256": "285b7484d85ec6146ead4b8c0cea2293b269a667c765245cf9847b8d967e0849"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/mutation-receipt.json",
+      "bytes": 729,
+      "sha256": "cb3523717d8e323352d9c4abae013bb867bfcb66fc730097643c4b91405cf191"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/mutation-red.log",
+      "bytes": 2817,
+      "sha256": "88757cfe23216df5cfe5c43f2f6270b95ce4b1a955741cc4b488f88c9ae1e6ef"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/mutation-red.xml",
+      "bytes": 4566,
+      "sha256": "22378658dc8d72aec2751a741fbcacfe6f806687329fcff61d1a61fcc76845a0"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/mypy.log",
+      "bytes": 154,
+      "sha256": "9c3d767f7ee98bf15771057b17caada46762d8480059887b489894412b7596b8"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/original-replay-red.log",
+      "bytes": 68891,
+      "sha256": "af1465204f879fa4103ae5ef5eadb25009371c2b16044e9cf90abe67691d42e8"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/original-replay-red.xml",
+      "bytes": 4592,
+      "sha256": "371a908b122a45333e807a3afa04a1d9e93089742c9598b5282fff7d20a72017"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/restored-green.log",
+      "bytes": 594,
+      "sha256": "7ba534045d3100f7f6a508724e858652d81361eb7897e6a5918b4240200ec500"
+    },
+    {
+      "path": "docs/evidence/preference-diverse-feed/restored-green.xml",
+      "bytes": 2270,
+      "sha256": "8405914d27c7489ea71e4d7cbcf86548baea9f4a859c34af5250fc2b562b4ce0"
+    }
+  ]
+}

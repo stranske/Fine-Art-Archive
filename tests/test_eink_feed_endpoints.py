@@ -505,3 +505,166 @@ def test_an_unknown_fit_is_refused(client, archive):
     )
 
     assert response.status_code == 400
+
+
+@pytest.fixture
+def diverse_archive(archive, tmp_path, monkeypatch):
+    ids = ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+    for wid, colour in zip(ids, [(220, 40, 40), (210, 50, 50), (40, 70, 220)], strict=True):
+        _work(archive, wid, title=wid)
+        Image.new("RGB", (80, 60), colour).save(archive / wid / "master.jpeg")
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text(
+        "\n".join(
+            json.dumps({"work_id": wid, "fit": 9, "quality": quality})
+            for wid, quality in zip(ids, [9, 8, 7], strict=True)
+        )
+    )
+    monkeypatch.setattr(api_store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+    return {"sort": "fit", "min_fit": 8, "limit": 2, "selection_mode": "preference-diverse"}
+
+
+@pytest.mark.parametrize("write", [False, True])
+def test_preference_diverse_preview_saved_feed_and_exports_agree(
+    client, archive, diverse_archive, tmp_path, write
+):
+    # This is the companion's payload, with no caller-supplied evidence.
+    spec = diverse_archive
+    preview = client.post("/eink/playlist/preview", json={"spec": spec})
+    assert preview.status_code == 200, preview.text
+    selected = preview.json()["work_ids"]
+    assert set(selected) == {"aaa1111-red-work", "ccc3333-blue-work"}
+    saved = _save(client, spec=spec)
+    assert saved["resolved_count"] == 2
+    listed = client.get("/eink/playlists")
+    assert listed.status_code == 200
+    assert listed.json()["playlists"][0]["resolved_count"] == 2
+    manifest = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == selected
+    after = ""
+    for expected in selected:
+        nxt = client.get(f"/feed/{saved['id']}/next", params={"after": after})
+        assert nxt.status_code == 200, nxt.text
+        assert nxt.json()["work_id"] == expected
+        image = client.get(nxt.json()["image_url"])
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == expected
+        after = expected
+    for index, request in enumerate([{"spec": spec}, {"playlist_id": saved["id"]}]):
+        card = tmp_path / f"card-{index}"
+        exported = client.post(
+            "/eink/playlist/export", json={**request, "path": str(card), "write": write}
+        )
+        assert exported.status_code == 200, exported.text
+        assert exported.json()["selected"] == 2
+        assert [row["work_id"] for row in exported.json()["render_evidence"]] == selected
+        assert exported.json()["written"] == 2
+        if write:
+            manifest = json.loads((card / "playlist.json").read_text())
+            assert [row["work_id"] for row in manifest["items"]] == selected
+            for row in manifest["items"]:
+                with Image.open(card / row["file"]) as image:
+                    assert image.format == "PNG"
+            assert exported.json()["bytes_written"] > 0
+        else:
+            assert not card.exists(), "dry-run must not write a card"
+
+
+@pytest.mark.parametrize("update", [False, True])
+@pytest.mark.parametrize("missing", ["quality", "master", "unreadable", "zero-vector"])
+def test_preference_diverse_invalid_evidence_never_commits(
+    client, archive, diverse_archive, tmp_path, update, missing
+):
+    existing = _save(client, name="Original") if update else None
+    before = api_main._playlists.path.read_bytes() if existing else None
+    if missing == "quality":
+        api_store.RATINGS_LOG.write_text(
+            "\n".join(
+                json.dumps({"work_id": wid, "fit": 9})
+                for wid in ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+            )
+        )
+        api_main._ratings_cache = None
+    elif missing == "master":
+        (archive / "aaa1111-red-work" / "master.jpeg").unlink()
+    elif missing == "unreadable":
+        (archive / "aaa1111-red-work" / "master.jpeg").write_text("not an image")
+    else:
+        Image.new("RGB", (80, 60), (0, 0, 0)).save(archive / "aaa1111-red-work" / "master.jpeg")
+    response = client.post(
+        "/eink/playlists",
+        json={
+            "id": existing["id"] if existing else None,
+            "name": "Changed",
+            "spec": diverse_archive,
+        },
+    )
+    assert response.status_code == 400, response.text
+    assert "evidence" in response.json()["detail"] or "embedding" in response.json()["detail"]
+    if existing:
+        assert api_main._playlists.path.read_bytes() == before
+    else:
+        assert not api_main._playlists.path.exists()
+    listed = client.get("/eink/playlists")
+    assert listed.status_code == 200
+    assert [row["name"] for row in listed.json()["playlists"]] == (["Original"] if update else [])
+    # Both export routes must refuse the same evidence without creating output.
+    bad = _eink.SavedPlaylist.new("Old bad entry", diverse_archive)
+    api_main._playlists.save(bad)
+    for request in [{"spec": diverse_archive}, {"playlist_id": bad.id}]:
+        exported = client.post(
+            "/eink/playlist/export", json={**request, "path": str(tmp_path / "card")}
+        )
+        assert exported.status_code == 400, exported.text
+    assert not (tmp_path / "card").exists()
+    rows = {row["id"]: row for row in client.get("/eink/playlists").json()["playlists"]}
+    assert rows[bad.id]["resolved_count"] is None
+    assert rows[bad.id]["error"]
+    for endpoint in ["manifest.json", "next", "current", "image/0"]:
+        assert client.get(f"/feed/{bad.id}/{endpoint}").status_code == 400
+
+
+def test_preference_diverse_filters_before_deriving_and_resolves_live(
+    client, archive, diverse_archive
+):
+    _work(archive, "ddd4444-filtered-out", title="No master outside filter", master=False)
+    saved = _save(client, spec=diverse_archive)
+    # A missing master outside min_fit must not invalidate the selection.
+    first = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert first.status_code == 200, first.text
+    assert "ddd4444-filtered-out" not in [r["work_id"] for r in first.json()["items"]]
+    with api_store.RATINGS_LOG.open("a") as log:
+        log.write("\n" + json.dumps({"work_id": "ddd4444-filtered-out", "fit": 9, "quality": 9}))
+    changed = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert changed.status_code == 400, "saved specs must re-resolve newly matching evidence"
+    assert "ddd4444-filtered-out" in changed.json()["detail"]
+
+
+def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, diverse_archive):
+    ids = ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+    supplied = {
+        "quality_scores": dict(zip(ids, [1, 10, 1], strict=True)),
+        "embeddings": dict(zip(ids, [[1, 0], [1, 0], [0, 1]], strict=True)),
+    }
+    response = client.post("/eink/playlist/preview", json={"spec": diverse_archive, **supplied})
+    assert response.status_code == 200, response.text
+    assert response.json()["work_ids"][0] == "bbb2222-near-red"
+    for field in ["quality_scores", "embeddings"]:
+        refused = client.post(
+            "/eink/playlist/preview", json={"spec": diverse_archive, **supplied, field: {}}
+        )
+        assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
+        assert "evidence" in refused.json()["detail"]
+
+
+@pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])
+def test_preference_diverse_builder_names_missing_evidence(missing):
+    supplied = {"quality_scores": {}, "embeddings": {}}
+    supplied.pop(missing)
+    with pytest.raises(ValueError, match="requires quality and embedding evidence"):
+        _eink.build(
+            [], _eink.PlaylistSpec(selection_mode="preference-diverse", limit=1), **supplied
+        )

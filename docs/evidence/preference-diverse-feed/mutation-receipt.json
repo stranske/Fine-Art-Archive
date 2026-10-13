@@ -1,0 +1,13 @@
+{
+  "source_sha256": "5aab140b0b1adb68a3853ebd5ac7998f203650e7f38a6ae7a47d53c6c8054de6",
+  "mutation_sha256": "856ba4fb9d0e1123da14314aa0dbba599387c5109762fe454259ac36f967c293",
+  "mutation": "Bypass shared evidence resolution only in saved _resolve_playlist; production builder now receives no quality or embeddings.",
+  "original_source_sha256": {
+    "src/fine_art_archive/api/main.py": "6bb29fa5d180cacb9c3bf6524a5ca1579b6d311c5a9147eafef755c5acf7fc70",
+    "src/fine_art_archive/eink/playlist.py": "43d21054cc8ebe7c104a8ae39a46f219d2a386e8c9a61feaf4dc136c1ee44888"
+  },
+  "original_replay_exit": 1,
+  "red_exit": 1,
+  "restored_sha256": "5aab140b0b1adb68a3853ebd5ac7998f203650e7f38a6ae7a47d53c6c8054de6",
+  "green_exit": 0
+}
