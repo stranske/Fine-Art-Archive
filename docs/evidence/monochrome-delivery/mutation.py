@@ -5,9 +5,22 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+
+def _redact_local_paths(text: str) -> str:
+    """Scrub machine-local paths from retained JUnit/log evidence."""
+    text = re.sub(r"/private/var/folders/[^\s\"'<>]+", "<redacted-tmp>", text)
+    text = re.sub(r"/Users/[^\s\"'<>]+", "<redacted-home>", text)
+    text = re.sub(r'hostname="[^"]+"', 'hostname="redacted"', text)
+    return text
+
+
+def _write_redacted(path: Path, content: str) -> None:
+    path.write_text(_redact_local_paths(content))
 
 root = Path.cwd()
 evidence = Path(__file__).resolve().parent
@@ -60,7 +73,11 @@ try:
         text=True,
         capture_output=True,
     )
-    (evidence / "original-red.log").write_text(original_red.stdout + original_red.stderr)
+    _write_redacted(evidence / "original-red.log", original_red.stdout + original_red.stderr)
+    _write_redacted(
+        evidence / "original-red.xml",
+        (evidence / "original-red.xml").read_text(encoding="utf-8"),
+    )
     assert original_red.returncode == 1, ("original RED must fail", original_red.returncode)
 finally:
     for name, data in corrected.items():
@@ -109,7 +126,11 @@ for name, relative, needle, replacement, test in proofs:
             text=True,
             capture_output=True,
         )
-        (evidence / (name + "-red.log")).write_text(red.stdout + red.stderr)
+        _write_redacted(evidence / (name + "-red.log"), red.stdout + red.stderr)
+        _write_redacted(
+            evidence / (name + "-red.xml"),
+            (evidence / (name + "-red.xml")).read_text(encoding="utf-8"),
+        )
         assert red.returncode == 1, (name, "RED must fail", red.returncode)
     finally:
         source.write_bytes(original)
@@ -120,7 +141,11 @@ for name, relative, needle, replacement, test in proofs:
         text=True,
         capture_output=True,
     )
-    (evidence / (name + "-green.log")).write_text(green.stdout + green.stderr)
+    _write_redacted(evidence / (name + "-green.log"), green.stdout + green.stderr)
+    _write_redacted(
+        evidence / (name + "-green.xml"),
+        (evidence / (name + "-green.xml")).read_text(encoding="utf-8"),
+    )
     assert green.returncode == 0, (name, "restored GREEN must pass", green.returncode)
     receipts.append(
         {

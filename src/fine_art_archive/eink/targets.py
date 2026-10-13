@@ -255,7 +255,12 @@ def render_for_target(
         palette = Palette(name=f"{palette.name}-{strategy}", colours=colours)
         if strategy == "duotone":
             levels = np.asarray(out)[:, :, 0]
-            light = levels >= float(np.median(levels))
+            threshold = (
+                128.0
+                if levels.min() == levels.max()
+                else float(np.median(levels))
+            )
+            light = levels >= threshold
             pixels = np.empty((*levels.shape, 3), dtype=np.uint8)
             pixels[light] = palette.white
             pixels[~light] = palette.black

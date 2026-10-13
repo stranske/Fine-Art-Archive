@@ -32,7 +32,7 @@ Run from the repository root:
 `uv run --locked --extra dev python docs/evidence/monochrome-delivery/mutation.py`.
 This temporarily changes production files and restores identical bytes in `finally`.
 
-1. Final tests against immutable original source `5a236579ab0becd260e717c7497c3023af614000`: **11 failures**, including six actual chromatic-pixel failures and two stale-304 failures (`original-red.*`).
+1. Final tests against immutable original source `5a236579ab0becd260e717c7497c3023af614000`: **11 failures** in `original-red.xml` — three missing-header failures and eight pixel failures. Its two policy-change cases stop at the pixel assertion and do not check for stale 304s. The two stale-304 failures are recorded separately in `etag-red.xml` (`original-red.*`, `etag-red.*`).
 2. Force only `targets.render_for_target` to ignore the selected strategy and use color: **6 failed, 3 passed**; restore exact source: **9 passed** (`strategy-red.*`, `strategy-green.*`).
 3. Remove only the strategy from `feed.item_etag`: **2 failed** (expected 200, actual 304); restore exact source: **2 passed** (`etag-red.*`, `etag-green.*`).
 

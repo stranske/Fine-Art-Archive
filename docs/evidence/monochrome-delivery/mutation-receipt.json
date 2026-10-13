@@ -2,13 +2,13 @@
   {
     "mutation": "original-source",
     "baseline": "5a236579ab0becd260e717c7497c3023af614000",
-    "test_sha256": "7367962f25c647e4965882f429c725958086add8343d2a6e888f1b79705c0ea3",
+    "test_sha256": "e74002e24a872105621a9cbfc5717b220e5d2bced399ea82418cfef2e9290dfc",
     "corrected_source_sha256": {
-      "src/fine_art_archive/eink/targets.py": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
-      "src/fine_art_archive/eink/feed.py": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
+      "src/fine_art_archive/eink/targets.py": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
+      "src/fine_art_archive/eink/feed.py": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
       "src/fine_art_archive/eink/sdcard.py": "54a5bd6d0bcf118e1c732f5ecfe704f42130ceb26f7b3d6b8ab3a6496380668b",
       "src/fine_art_archive/eink/__init__.py": "ed4bcae5e9a098309224fc3e4301cbc19abfb14c3da7dd2d472d3679a10647fc",
-      "src/fine_art_archive/api/main.py": "2e0e2f7188eb3b6ed1991568371dbf7609c98760e267a196887ba0753bc4fd82"
+      "src/fine_art_archive/api/main.py": "10471d15127832a1c54a310e8254b691b570ff967251be7adabc88c8a44e93d4"
     },
     "original_source_sha256": {
       "src/fine_art_archive/eink/targets.py": "83a43ef2c6538a8720bbcf265e93d623a0a233a1d3875b9c05cc20915c0336ce",
@@ -22,11 +22,11 @@
   {
     "mutation": "strategy",
     "source": "src/fine_art_archive/eink/targets.py",
-    "corrected_sha256": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
-    "mutated_sha256": "2973389eb63026dbbb544612ec90f1c50babf3430037687c5c97cc08af2b4a46",
-    "restored_sha256": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
+    "corrected_sha256": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
+    "mutated_sha256": "27739e54e6dbbd1f1800c3ee4610b17ae71467c7628c8283ff2ad2b1de021a11",
+    "restored_sha256": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
     "command": [
-      "$WORKTREE/.venv/bin/python3",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa789-recovery-20261013/.venv/bin/python3",
       "-m",
       "pytest",
       "tests/test_eink_monochrome_delivery.py",
@@ -42,11 +42,11 @@
   {
     "mutation": "etag",
     "source": "src/fine_art_archive/eink/feed.py",
-    "corrected_sha256": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
-    "mutated_sha256": "45498b6d890061531f42b2da7567da4f97d1dac3ac33cc2c9fdd7aeff6453cc5",
-    "restored_sha256": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
+    "corrected_sha256": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+    "mutated_sha256": "1d7c3431a76a5782c1a4671b6402f03314ee8690b5413a569dfa12c3984841bd",
+    "restored_sha256": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
     "command": [
-      "$WORKTREE/.venv/bin/python3",
+      "/Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa789-recovery-20261013/.venv/bin/python3",
       "-m",
       "pytest",
       "tests/test_eink_monochrome_delivery.py",

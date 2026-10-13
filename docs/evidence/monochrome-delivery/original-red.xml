@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="11" time="0.760" timestamp="2026-10-13T18:11:43.451396-05:00" hostname="redacted-local-host"><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-color]" time="0.044"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x107f076b0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app0')
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="11" time="8.300" timestamp="2026-10-13T18:40:04.835252-05:00" hostname="redacted"><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-color]" time="1.086"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x108800770&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'color', method = 'none'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -57,8 +57,8 @@ key = 'X-Render-Strategy'
 &gt;       raise KeyError(key)
 E       KeyError: 'X-Render-Strategy'
 
-.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-grayscale]" time="0.024"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x111388620&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app1')
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-grayscale]" time="0.123"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1088b7e30&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'none'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -90,7 +90,7 @@ strategy = 'grayscale', method = 'none'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107F06870&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1088BDF40&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -105,8 +105,8 @@ E
 E             Extra items in the left set:
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-duotone]" time="0.023"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1113896d0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app2')
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[none-duotone]" time="0.972"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1088be6c0&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'none'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -138,7 +138,7 @@ strategy = 'duotone', method = 'none'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x11138BA40&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1088B3A40&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -153,8 +153,8 @@ E
 E             Extra items in the left set:
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-color]" time="0.023"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x111388b60&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app3')
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-color]" time="0.304"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x1088b7890&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'color', method = 'floyd-steinberg'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -212,8 +212,8 @@ key = 'X-Render-Strategy'
 &gt;       raise KeyError(key)
 E       KeyError: 'X-Render-Strategy'
 
-.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-grayscale]" time="0.023"><failure message="assert {(158, 48, 44...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1113df890&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app4')
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-grayscale]" time="0.231"><failure message="assert {(158, 48, 44...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1088bfc50&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'floyd-steinberg'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -245,7 +245,7 @@ strategy = 'grayscale', method = 'floyd-steinberg'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1113DDD00&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1089C2930&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -260,8 +260,8 @@ E
 E             Extra items in the left set:
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone]" time="0.024"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (54, 108, 74)&#10;  (158, 48, 44)&#10;  (198, 168, 60)">delivery = (&lt;starlette.testclient.TestClient object at 0x1113dd5e0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app5')
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone]" time="0.151"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (54, 108, 74)&#10;  (158, 48, 44)&#10;  (198, 168, 60)">delivery = (&lt;starlette.testclient.TestClient object at 0x1089c2480&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'floyd-steinberg'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -293,7 +293,7 @@ strategy = 'duotone', method = 'floyd-steinberg'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x11141CF50&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1089CFBF0&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -311,8 +311,8 @@ E             (54, 108, 74)
 E             (158, 48, 44)
 E             (198, 168, 60)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-color]" time="0.029"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x11141c8c0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app6')
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-color]" time="0.464"><failure message="KeyError: 'X-Render-Strategy'">delivery = (&lt;starlette.testclient.TestClient object at 0x1089cef60&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'color', method = 'atkinson'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -370,8 +370,8 @@ key = 'X-Render-Strategy'
 &gt;       raise KeyError(key)
 E       KeyError: 'X-Render-Strategy'
 
-.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale]" time="0.030"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1114a84d0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app7')
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale]" time="0.227"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1089cc9b0&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'atkinson'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -403,7 +403,7 @@ strategy = 'grayscale', method = 'atkinson'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114A9A90&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1089CF3E0&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -419,8 +419,8 @@ E             Extra items in the left set:
 E             (44, 70, 132)
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone]" time="0.031"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (54, 108, 74)&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1114ab0e0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app8')
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone]" time="0.280"><failure message="assert {(44, 70, 132...22, 219, 205)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (44, 70, 132)&#10;  (54, 108, 74)&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1089cca70&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'atkinson'
 
     @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -452,7 +452,7 @@ strategy = 'duotone', method = 'atkinson'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114ABA10&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1089C2A20&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -469,8 +469,8 @@ E             (44, 70, 132)
 E             (54, 108, 74)
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_changed_policy_invalidates_cached_strategy[image/0]" time="0.014"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x111403a40&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1114037d0&gt;
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_changed_policy_invalidates_cached_strategy[image/0]" time="0.089"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1089cc890&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1089ccd40&gt;
 route = 'image/0'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -487,10 +487,10 @@ route = 'image/0'
         assert first.status_code == 200
 &gt;       _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
 
-tests/test_eink_monochrome_delivery.py:185: 
+tests/test_eink_monochrome_delivery.py:195: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114012E0&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1088BE2A0&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -505,8 +505,8 @@ E
 E             Extra items in the left set:
 E             (158, 48, 44)
 
-tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_changed_policy_invalidates_cached_strategy[current]" time="0.014"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1114a8ef0&gt;, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
-monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1114abe00&gt;
+tests/test_eink_monochrome_delivery.py:41: AssertionError</failure></testcase><testcase classname="tests.test_eink_monochrome_delivery" name="test_changed_policy_invalidates_cached_strategy[current]" time="0.122"><failure message="assert {(158, 48, 44)} &lt;= {(28, 28, 28)...22, 219, 205)}&#10;  &#10;  Extra items in the left set:&#10;  (158, 48, 44)">delivery = (&lt;starlette.testclient.TestClient object at 0x1088bd5b0&gt;, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1088bf0e0&gt;
 route = 'current'
 
     @pytest.mark.parametrize("route", ["image/0", "current"])
@@ -523,10 +523,10 @@ route = 'current'
         assert first.status_code == 200
 &gt;       _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
 
-tests/test_eink_monochrome_delivery.py:185: 
+tests/test_eink_monochrome_delivery.py:195: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114A91C0&gt;
+image = &lt;PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1088B3C80&gt;
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 

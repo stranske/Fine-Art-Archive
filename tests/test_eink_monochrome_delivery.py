@@ -170,6 +170,16 @@ def test_grayscale_preserves_native_gray_levels_and_duotone_uses_endpoints():
     assert _pixels(duo) == {target.palette.black, target.palette.white}
 
 
+def test_duotone_uniform_luminance_uses_midpoint_threshold():
+    from fine_art_archive.eink.targets import render_for_target
+
+    target = eink.RenderTarget("test", "Test", 8, 8, "spectra6")
+    for level, expected in ((20, target.palette.black), (200, target.palette.white)):
+        uniform = Image.new("RGB", (8, 8), (level, level, level))
+        rendered = render_for_target(uniform, target, strategy="duotone", method="none")
+        assert _pixels(rendered) == {expected}
+
+
 @pytest.mark.parametrize("route", ["image/0", "current"])
 def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
     from fine_art_archive.eink import render_strategy
