@@ -29,6 +29,46 @@ from fine_art_archive.eink.palette import SPECTRA6, quantize
 from fine_art_archive.eink.targets import get_target
 
 
+@pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+def test_export_applies_selected_strategy_with_native_palette(tmp_path, strategy):
+    """Keep the issue's named export gate tied to real card pixels."""
+    import json
+
+    from fine_art_archive.display.render import gamut_render_evidence
+    from fine_art_archive.eink.targets import RenderTarget
+
+    image = Image.new("RGB", (40, 20), SPECTRA6.colours[2])
+    if strategy == "grayscale":
+        image.paste((255, 0, 255), (0, 0, 40, 20))
+    elif strategy == "duotone":
+        image.paste((255, 0, 255), (0, 0, 4, 20))
+    assert gamut_render_evidence(image).strategy == strategy
+    master = tmp_path / "master.png"
+    image.save(master)
+    target = RenderTarget("test", "Test", 40, 20, "spectra6")
+    card = tmp_path / "card"
+    report = sdcard.export(
+        [sdcard.ExportItem("work")],
+        card,
+        target,
+        master_for=lambda _: master,
+        method="none",
+        dry_run=False,
+    )
+    assert len(report.written) == 1, report.skipped
+    manifest = json.loads((card / "playlist.json").read_text())
+    assert manifest["items"][0]["render_strategy"] == strategy
+    with Image.open(card / report.written[0]) as rendered:
+        assert rendered.size == target.size
+        present = set(rendered.convert("RGB").getdata())
+        assert present <= set(target.palette.colours)
+        endpoints = {target.palette.black, target.palette.white}
+        if strategy == "color":
+            assert present - endpoints
+        else:
+            assert present <= endpoints
+
+
 def _gradient() -> Image.Image:
     return Image.fromarray(
         np.tile(np.arange(256, dtype=np.uint8).reshape(1, 256, 1), (64, 1, 3)), "RGB"
