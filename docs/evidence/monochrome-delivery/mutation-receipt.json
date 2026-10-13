@@ -1,0 +1,62 @@
+[
+  {
+    "mutation": "original-source",
+    "baseline": "5a236579ab0becd260e717c7497c3023af614000",
+    "test_sha256": "7367962f25c647e4965882f429c725958086add8343d2a6e888f1b79705c0ea3",
+    "corrected_source_sha256": {
+      "src/fine_art_archive/eink/targets.py": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
+      "src/fine_art_archive/eink/feed.py": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
+      "src/fine_art_archive/eink/sdcard.py": "54a5bd6d0bcf118e1c732f5ecfe704f42130ceb26f7b3d6b8ab3a6496380668b",
+      "src/fine_art_archive/eink/__init__.py": "ed4bcae5e9a098309224fc3e4301cbc19abfb14c3da7dd2d472d3679a10647fc",
+      "src/fine_art_archive/api/main.py": "2e0e2f7188eb3b6ed1991568371dbf7609c98760e267a196887ba0753bc4fd82"
+    },
+    "original_source_sha256": {
+      "src/fine_art_archive/eink/targets.py": "83a43ef2c6538a8720bbcf265e93d623a0a233a1d3875b9c05cc20915c0336ce",
+      "src/fine_art_archive/eink/feed.py": "6fac3e18455e5770bc3f900542907357bc36dc9cceeedfac99cbbda5f5fd9f63",
+      "src/fine_art_archive/eink/sdcard.py": "75eee6978581eb8361da3923df041dde5d285161b00e997362dace84acf07e13",
+      "src/fine_art_archive/eink/__init__.py": "3f6a8afd86f641071b9a01206468b6e25ab8458692ba776c1a631aaf5855a04e",
+      "src/fine_art_archive/api/main.py": "5aab140b0b1adb68a3853ebd5ac7998f203650e7f38a6ae7a47d53c6c8054de6"
+    },
+    "red_exit": 1
+  },
+  {
+    "mutation": "strategy",
+    "source": "src/fine_art_archive/eink/targets.py",
+    "corrected_sha256": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
+    "mutated_sha256": "2973389eb63026dbbb544612ec90f1c50babf3430037687c5c97cc08af2b4a46",
+    "restored_sha256": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
+    "command": [
+      "$WORKTREE/.venv/bin/python3",
+      "-m",
+      "pytest",
+      "tests/test_eink_monochrome_delivery.py",
+      "-k",
+      "test_companion_feed_and_sd_apply_reported_strategy",
+      "-q",
+      "-o",
+      "addopts="
+    ],
+    "red_exit": 1,
+    "green_exit": 0
+  },
+  {
+    "mutation": "etag",
+    "source": "src/fine_art_archive/eink/feed.py",
+    "corrected_sha256": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
+    "mutated_sha256": "45498b6d890061531f42b2da7567da4f97d1dac3ac33cc2c9fdd7aeff6453cc5",
+    "restored_sha256": "a55d395cbb2bb721424e23caf9a3f2d46338a940a28bb47117a054392d44e834",
+    "command": [
+      "$WORKTREE/.venv/bin/python3",
+      "-m",
+      "pytest",
+      "tests/test_eink_monochrome_delivery.py",
+      "-k",
+      "test_changed_policy_invalidates_cached_strategy",
+      "-q",
+      "-o",
+      "addopts="
+    ],
+    "red_exit": 1,
+    "green_exit": 0
+  }
+]

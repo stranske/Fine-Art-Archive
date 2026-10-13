@@ -21,11 +21,15 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageOps
 
 from .palette import Palette, get_palette, map_to_panel_range, quantize
+
+if TYPE_CHECKING:
+    from fine_art_archive.display.render import RenderEvidence
 
 FitMode = Literal["contain", "cover", "stretch"]
 
@@ -203,6 +207,17 @@ def fit_to_target(
     return canvas
 
 
+def render_evidence(img: Image.Image) -> RenderEvidence:
+    """Select the existing A11 policy on master colours, before fit/downsampling.
+
+    A11's verdicts are calibrated against Spectra-6; do not change that policy
+    when mapping its chosen strategy onto a particular target's native inks.
+    """
+    from fine_art_archive.display.render import gamut_render_evidence
+
+    return gamut_render_evidence(img)
+
+
 def render_for_target(
     img: Image.Image,
     target: RenderTarget,
@@ -211,18 +226,44 @@ def render_for_target(
     method: str = "floyd-steinberg",
     compress_range: bool = True,
     fast: bool = True,
+    strategy: str | None = None,
 ) -> Image.Image:
-    """Full pipeline: fit → range-compress → dither to the panel's palette.
+    """Select strategy → fit → range-compress → dither to native panel inks.
+
+    Callers that decode at reduced scale pass the strategy selected from the
+    master first. Grayscale uses native neutral levels when available, or the
+    panel's real black/white inks. Duotone uses just those two endpoints with
+    the existing median-luminance split, never synthetic off-palette grays.
 
     `fast` defaults to True to match `palette.quantize`. It defaulted to False
     here, which silently overrode quantize's own default and sent every caller
     -- including the app's preview endpoint -- down the 250x slower NumPy path
     for no measured benefit (0.70s vs 0.14s on a 378x213 preview).
     """
+    if strategy is None:
+        strategy = render_evidence(img).strategy
+    if strategy not in {"color", "grayscale", "duotone"}:
+        raise ValueError(f"invalid render strategy: {strategy!r}")
     out = fit_to_target(img, target, fit=fit)
-    if compress_range:
-        out = map_to_panel_range(out, target.palette)
-    return quantize(out, target.palette, method=method, fast=fast)  # type: ignore[arg-type]
+    palette = target.palette
+    if strategy != "color":
+        out = ImageOps.grayscale(out).convert("RGB")
+        colours = tuple(c for c in palette.colours if c[0] == c[1] == c[2])
+        # Warm panel white is a neutral endpoint even when R/G/B differ.
+        if strategy == "duotone" or len(colours) < 2:
+            colours = (palette.black, palette.white)
+        palette = Palette(name=f"{palette.name}-{strategy}", colours=colours)
+        if strategy == "duotone":
+            levels = np.asarray(out)[:, :, 0]
+            light = levels >= float(np.median(levels))
+            pixels = np.empty((*levels.shape, 3), dtype=np.uint8)
+            pixels[light] = palette.white
+            pixels[~light] = palette.black
+            out = Image.fromarray(pixels)
+    if compress_range and strategy != "duotone":
+        # The median split already selected exact native endpoints.
+        out = map_to_panel_range(out, palette)
+    return quantize(out, palette, method=method, fast=fast)  # type: ignore[arg-type]
 
 
 def write_targets_json(path: Path) -> None:

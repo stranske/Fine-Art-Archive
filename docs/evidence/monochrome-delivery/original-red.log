@@ -1,0 +1,597 @@
+FFFFFFFFFFF                                                              [100%]
+=================================== FAILURES ===================================
+________ test_companion_feed_and_sd_apply_reported_strategy[none-color] ________
+
+delivery = (<starlette.testclient.TestClient object at 0x107f076b0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app0')
+strategy = 'color', method = 'none'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+            _assert_pixels(image, target, strategy)
+>           assert response.headers["X-Render-Strategy"] == strategy
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_eink_monochrome_delivery.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Headers({'cache-control': 'no-store', 'x-palette-measured': 'False', 'content-length': '113', 'content-type': 'image/png'})
+key = 'X-Render-Strategy'
+
+    def __getitem__(self, key: str) -> str:
+        """
+        Return a single header value.
+    
+        If there are multiple headers with the same key, then we concatenate
+        them with commas. See: https://tools.ietf.org/html/rfc7230#section-3.2.2
+        """
+        normalized_key = key.lower().encode(self.encoding)
+    
+        items = [
+            header_value.decode(self.encoding)
+            for _, header_key, header_value in self._list
+            if header_key == normalized_key
+        ]
+    
+        if items:
+            return ", ".join(items)
+    
+>       raise KeyError(key)
+E       KeyError: 'X-Render-Strategy'
+
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError
+______ test_companion_feed_and_sd_apply_reported_strategy[none-grayscale] ______
+
+delivery = (<starlette.testclient.TestClient object at 0x111388620>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app1')
+strategy = 'grayscale', method = 'none'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107F06870>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'grayscale'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(158, 48, 44)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+_______ test_companion_feed_and_sd_apply_reported_strategy[none-duotone] _______
+
+delivery = (<starlette.testclient.TestClient object at 0x1113896d0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app2')
+strategy = 'duotone', method = 'none'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x11138BA40>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'duotone'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(158, 48, 44)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+__ test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-color] ___
+
+delivery = (<starlette.testclient.TestClient object at 0x111388b60>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app3')
+strategy = 'color', method = 'floyd-steinberg'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+            _assert_pixels(image, target, strategy)
+>           assert response.headers["X-Render-Strategy"] == strategy
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_eink_monochrome_delivery.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Headers({'cache-control': 'no-store', 'x-palette-measured': 'False', 'content-length': '450', 'content-type': 'image/png'})
+key = 'X-Render-Strategy'
+
+    def __getitem__(self, key: str) -> str:
+        """
+        Return a single header value.
+    
+        If there are multiple headers with the same key, then we concatenate
+        them with commas. See: https://tools.ietf.org/html/rfc7230#section-3.2.2
+        """
+        normalized_key = key.lower().encode(self.encoding)
+    
+        items = [
+            header_value.decode(self.encoding)
+            for _, header_key, header_value in self._list
+            if header_key == normalized_key
+        ]
+    
+        if items:
+            return ", ".join(items)
+    
+>       raise KeyError(key)
+E       KeyError: 'X-Render-Strategy'
+
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError
+_ test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-grayscale] _
+
+delivery = (<starlette.testclient.TestClient object at 0x1113df890>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app4')
+strategy = 'grayscale', method = 'floyd-steinberg'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1113DDD00>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'grayscale'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(158, 48, 44...22, 219, 205)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+_ test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone] __
+
+delivery = (<starlette.testclient.TestClient object at 0x1113dd5e0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app5')
+strategy = 'duotone', method = 'floyd-steinberg'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x11141CF50>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'duotone'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(44, 70, 132...22, 219, 205)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (44, 70, 132)
+E             (54, 108, 74)
+E             (158, 48, 44)
+E             (198, 168, 60)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+______ test_companion_feed_and_sd_apply_reported_strategy[atkinson-color] ______
+
+delivery = (<starlette.testclient.TestClient object at 0x11141c8c0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app6')
+strategy = 'color', method = 'atkinson'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+            _assert_pixels(image, target, strategy)
+>           assert response.headers["X-Render-Strategy"] == strategy
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_eink_monochrome_delivery.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Headers({'cache-control': 'no-store', 'x-palette-measured': 'False', 'content-length': '181', 'content-type': 'image/png'})
+key = 'X-Render-Strategy'
+
+    def __getitem__(self, key: str) -> str:
+        """
+        Return a single header value.
+    
+        If there are multiple headers with the same key, then we concatenate
+        them with commas. See: https://tools.ietf.org/html/rfc7230#section-3.2.2
+        """
+        normalized_key = key.lower().encode(self.encoding)
+    
+        items = [
+            header_value.decode(self.encoding)
+            for _, header_key, header_value in self._list
+            if header_key == normalized_key
+        ]
+    
+        if items:
+            return ", ".join(items)
+    
+>       raise KeyError(key)
+E       KeyError: 'X-Render-Strategy'
+
+.venv/lib/python3.12/site-packages/httpx/_models.py:302: KeyError
+____ test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale] ____
+
+delivery = (<starlette.testclient.TestClient object at 0x1114a84d0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app7')
+strategy = 'grayscale', method = 'atkinson'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114A9A90>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'grayscale'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(44, 70, 132...22, 219, 205)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (44, 70, 132)
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+_____ test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone] _____
+
+delivery = (<starlette.testclient.TestClient object at 0x1114ab0e0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1630/test_companion_feed_and_sd_app8')
+strategy = 'duotone', method = 'atkinson'
+
+    @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
+    @pytest.mark.parametrize("method", ["none", "floyd-steinberg", "atkinson"])
+    def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strategy, method):
+        client, works, target = delivery
+        _work(works, strategy)
+        preview = client.post("/eink/playlist/preview", json={"target": target.key})
+        assert preview.status_code == 200, preview.text
+        evidence = preview.json()["items"][0]
+        assert evidence["render_strategy"] == strategy
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": method}
+        )
+        assert saved.status_code == 200, saved.text
+        playlist_id = saved.json()["id"]
+        routes = [
+            f"/works/{strategy}/eink_preview?target={target.key}&dither={method}",
+            f"/feed/{playlist_id}/image/0",
+            f"/feed/{playlist_id}/current",
+        ]
+        images = []
+        for route in routes:
+            response = client.get(route)
+            assert response.status_code == 200, response.text
+            image = Image.open(io.BytesIO(response.content))
+>           _assert_pixels(image, target, strategy)
+
+tests/test_eink_monochrome_delivery.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114ABA10>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'duotone'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(44, 70, 132...22, 219, 205)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (44, 70, 132)
+E             (54, 108, 74)
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+___________ test_changed_policy_invalidates_cached_strategy[image/0] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x111403a40>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1114037d0>
+route = 'image/0'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+>       _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+
+tests/test_eink_monochrome_delivery.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114012E0>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'grayscale'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(158, 48, 44)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+___________ test_changed_policy_invalidates_cached_strategy[current] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x1114a8ef0>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1114abe00>
+route = 'current'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+>       _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+
+tests/test_eink_monochrome_delivery.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1114A91C0>
+target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
+strategy = 'grayscale'
+
+    def _assert_pixels(image, target, strategy):
+        assert image.size == target.size
+        present = _pixels(image)
+        assert present <= set(target.palette.colours)
+        if strategy in {"grayscale", "duotone"}:
+>           assert present <= {target.palette.black, target.palette.white}
+E           assert {(158, 48, 44)} <= {(28, 28, 28)...22, 219, 205)}
+E             
+E             Extra items in the left set:
+E             (158, 48, 44)
+
+tests/test_eink_monochrome_delivery.py:41: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  $WORKTREE/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[none-color]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[none-grayscale]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[none-duotone]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-color]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-grayscale]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[atkinson-color]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale]
+FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone]
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[image/0]
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[current]
+11 failed, 25 deselected, 1 warning in 0.83s
