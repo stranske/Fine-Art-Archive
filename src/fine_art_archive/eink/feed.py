@@ -39,6 +39,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .targets import FitMode, coerce_fit, get_target
+
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 # Rotation intervals a device might poll on. Seconds.
 INTERVALS: dict[str, int] = {
@@ -161,15 +163,20 @@ def rotation_index(
     return (int(now.timestamp()) // secs + offset) % n_items
 
 
-def item_etag(work_id: str, target_key: str, dither: str, mtime: float | int) -> str:
+def item_etag(
+    work_id: str, target_key: str, dither: str, mtime: float | int, *, fit: FitMode | None
+) -> str:
     """Stable identity for one rendered image.
 
     Includes the master's mtime so re-mastering a work invalidates the cached
-    render, and the render settings so switching panel or dither does too —
+    render, and the render settings so switching panel, dither or fit does too —
     otherwise a device would keep showing a stale image that no longer matches
     the playlist it is pointed at.
     """
-    h = hashlib.sha256(f"{work_id}|{target_key}|{dither}|{mtime}".encode()).hexdigest()
+    effective_fit = coerce_fit(fit) or get_target(target_key).fit
+    h = hashlib.sha256(
+        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}".encode()
+    ).hexdigest()
     return f'W/"{h[:24]}"'
 
 

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,7 @@ from fine_art_archive.api import main as api_main
 from fine_art_archive.api import store as api_store
 from fine_art_archive.api.main import app
 from fine_art_archive.eink.feed import rotation_index
+from fine_art_archive.eink.targets import TARGETS, RenderTarget
 
 
 @pytest.fixture
@@ -81,6 +83,68 @@ def _save(client: TestClient, **body) -> dict:
     response = client.post("/eink/playlists", json=payload)
     assert response.status_code == 200, response.text
     return response.json()
+
+
+@pytest.mark.parametrize("route", ["image/0", "current"])
+@pytest.mark.parametrize(
+    "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+)
+def test_fit_change_invalidates_saved_feed_image(
+    client, archive, monkeypatch, route, before, after
+):
+    work_id = "aaa1111-fit-cache"
+    _work(archive, work_id, title="Fit cache")
+    # Unequal geometry and patterned pixels distinguish all three actual renderings.
+    master = Image.new("RGB", (10, 30), "white")
+    for y in range(30):
+        for x in range(10):
+            master.putpixel((x, y), (0, 0, 0) if x < 4 and 5 <= y < 25 else (255, 255, 255))
+    master.save(archive / work_id / "master.jpeg", "JPEG")
+    target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+    monkeypatch.setitem(TARGETS, target.key, target)
+    saved = _save(client, target=target.key, dither="none", fit=before)
+    url = f"/feed/{saved['id']}/{route}"
+    original = client.get(url)
+    assert original.status_code == 200
+    old_tag = original.headers["ETag"]
+    assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+
+    updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+    assert updated["id"] == saved["id"]
+    unconditional = client.get(url)
+    assert unconditional.status_code == 200
+    assert unconditional.content != original.content
+    with Image.open(BytesIO(unconditional.content)) as rendered:
+        assert rendered.size == target.size
+    revalidated = client.get(url, headers={"If-None-Match": old_tag})
+    assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+    assert revalidated.content == unconditional.content
+    assert revalidated.headers["ETag"] != old_tag
+    assert revalidated.headers["Cache-Control"] == original.headers["Cache-Control"]
+    current = client.get(url, headers={"If-None-Match": revalidated.headers["ETag"]})
+    assert current.status_code == 304
+    assert current.content == b""
+
+
+@pytest.mark.parametrize("route", ["image/0", "current"])
+@pytest.mark.parametrize("default_fit", ["contain", "cover", "stretch"])
+@pytest.mark.parametrize("unset_fit", [None, ""])
+def test_unset_fit_and_explicit_target_default_share_feed_etag(
+    client, archive, monkeypatch, route, default_fit, unset_fit
+):
+    _work(archive, "aaa1111-fit-default", title="Default fit")
+    target = RenderTarget("fit-default", "Fit default", 30, 20, "spectra6", fit=default_fit)
+    monkeypatch.setitem(TARGETS, target.key, target)
+    saved = _save(client, target=target.key, dither="none", fit=unset_fit)
+    url = f"/feed/{saved['id']}/{route}"
+    original = client.get(url)
+    assert original.status_code == 200
+    _save(client, id=saved["id"], target=target.key, dither="none", fit=default_fit)
+    explicit = client.get(url)
+    assert explicit.status_code == 200
+    assert explicit.content == original.content
+    assert explicit.headers["ETag"] == original.headers["ETag"]
+    assert client.get(url, headers={"If-None-Match": original.headers["ETag"]}).status_code == 304
 
 
 def test_atomic_sidecar_writer_forces_utf8_under_ascii_default(

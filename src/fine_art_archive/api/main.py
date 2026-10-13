@@ -2108,7 +2108,11 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
         tgt = _eink.get_target(pl.target)
     except KeyError as exc:
         raise HTTPException(404, f"playlist {pl.id}: {exc}") from exc
-    etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime)
+    try:
+        fit = _eink.coerce_fit(pl.fit) or tgt.fit
+    except ValueError as exc:
+        raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
+    etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime, fit=fit)
     if request.headers.get("if-none-match") == etag:
         return Response(
             status_code=304,
@@ -2117,7 +2121,7 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
     try:
         with Image.open(master) as im:
             im.draft("RGB", (tgt.width * 2, tgt.height * 2))
-            out = _eink.render_for_target(im, tgt, fit=_eink.coerce_fit(pl.fit), method=pl.dither)
+            out = _eink.render_for_target(im, tgt, fit=fit, method=pl.dither)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
     buf = io.BytesIO()
