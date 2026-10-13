@@ -1,0 +1,9 @@
+{
+  "src/fine_art_archive/api/main.py": "10471d15127832a1c54a310e8254b691b570ff967251be7adabc88c8a44e93d4",
+  "src/fine_art_archive/eink/feed.py": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+  "src/fine_art_archive/eink/targets.py": "6933e49a78649e4203771ea28ceba33eb61ede85d480537fc4b6e7e59a09daa9",
+  "tests/test_eink_feed_endpoints.py": "4e0871ed9d70b020fd6d22c95f79023345b2e1725ee555bd8771d89fb9f0b58b",
+  "tests/test_eink_pipeline.py": "d685c97618c80c8e6e6858b67958cd0d4e4578981aa6f67c247ef4ba12a4aad9",
+  "tests/test_eink_export_format.py": "5d640b839c18759d99646067e5fa32f94ccaeb83cd7aded3c28b0a74ceda5eec",
+  "tests/test_eink_monochrome_delivery.py": "7367962f25c647e4965882f429c725958086add8343d2a6e888f1b79705c0ea3"
+}
