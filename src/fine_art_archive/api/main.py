@@ -2108,7 +2108,10 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
         tgt = _eink.get_target(pl.target)
     except KeyError as exc:
         raise HTTPException(404, f"playlist {pl.id}: {exc}") from exc
-    fit = _eink.coerce_fit(pl.fit) or tgt.fit
+    try:
+        fit = _eink.coerce_fit(pl.fit) or tgt.fit
+    except ValueError as exc:
+        raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
     etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime, fit=fit)
     if request.headers.get("if-none-match") == etag:
         return Response(
