@@ -22,6 +22,7 @@ def _redact_local_paths(text: str) -> str:
 def _write_redacted(path: Path, content: str) -> None:
     path.write_text(_redact_local_paths(content))
 
+
 root = Path.cwd()
 evidence = Path(__file__).resolve().parent
 proofs = [
