@@ -636,11 +636,24 @@ def test_every_declared_interval_actually_rotates(interval):
 
 # ---- etag ------------------------------------------------------------------
 def test_etag_changes_when_the_master_or_render_settings_change():
-    base = item_etag("w1", "t1", "floyd-steinberg", 1000)
-    assert base == item_etag("w1", "t1", "floyd-steinberg", 1000)
-    assert base != item_etag("w1", "t1", "floyd-steinberg", 1001), "re-master must bust cache"
-    assert base != item_etag("w1", "t2", "floyd-steinberg", 1000), "panel change must bust cache"
-    assert base != item_etag("w1", "t1", "atkinson", 1000), "dither change must bust cache"
+    base = item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
+    assert base == item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
+    assert base != item_etag("w1", "t1", "floyd-steinberg", 1001, fit="contain")
+    assert base != item_etag("w1", "t2", "floyd-steinberg", 1000, fit="contain")
+    assert base != item_etag("w1", "t1", "atkinson", 1000, fit="contain")
+    assert base != item_etag("w1", "t1", "floyd-steinberg", 1000, fit="cover")
+    assert base != item_etag("w1", "t1", "floyd-steinberg", 1000, fit="stretch")
+
+
+@pytest.mark.parametrize("default_fit", ["contain", "cover", "stretch"])
+def test_etag_unset_fit_matches_explicit_target_default(monkeypatch, default_fit):
+    from fine_art_archive.eink.targets import TARGETS, RenderTarget
+
+    target = RenderTarget("etag-default", "ETag default", 30, 20, "spectra6", fit=default_fit)
+    monkeypatch.setitem(TARGETS, target.key, target)
+    assert item_etag("w1", target.key, "none", 1000, fit=None) == item_etag(
+        "w1", target.key, "none", 1000, fit=default_fit
+    )
 
 
 # ---- store -----------------------------------------------------------------

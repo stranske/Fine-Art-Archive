@@ -1,0 +1,11 @@
+# Issue 786: feed fit cache evidence
+
+Both indexed and clock-driven current feed URLs now invalidate an old image ETag when a saved playlist changes effective fit. Unset/empty fit and the explicit target default retain identical PNG bytes and ETags for contain, cover and stretch. The HTTP tests use temporary real JPEG masters, the production PlaylistStore/API and Pillow renderer; only the target registry gets a small test geometry. No operational archive, network or physical panel is used.
+
+- Original source: `pytest tests/test_eink_feed_endpoints.py -k fit -q -o addopts=` => 6 failed, 13 passed. Every failure is the stale conditional response: expected 200, received 304 after the actual PNG rendering changed.
+- Corrected focused gate: `pytest tests/test_eink_feed_endpoints.py tests/test_eink_pipeline.py -q -o addopts=` => 182 passed.
+- Surgical mutation: remove only `|{effective_fit}` from the production `item_etag` hash. The same HTTP gate returns 6 failed, 13 passed; restored source returns 19 passed. `mutation-receipt.json` binds the identical corrected/restored source SHA256.
+- Replay in a disposable checkout with pytest and repository dependencies: `python docs/evidence/issue-786/mutation.py /tmp/faa-fit-proof`. The script always restores the exact source bytes; never run concurrently with another writer/test process.
+- Ruff/Black pass on the four changed code/test files; mypy passes on both changed production modules.
+
+Full suite: `pytest -q --cov=src --cov-report=term --cov-fail-under=81` => 2231 passed, 12 skipped, 88.87% coverage (81% required). Full-suite results and the final immutable source/test/proof hashes are captured alongside this file. Environment/worktree path metadata in published logs is redacted; test assertions, outcomes and traceback content are retained. The original-red test run preceded only an import-order lint correction; mutation/restoration and final validation use the final test files. Hosted CI, actual devices and post-merge provider acceptance remain separate gates.

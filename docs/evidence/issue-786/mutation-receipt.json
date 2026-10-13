@@ -1,0 +1,17 @@
+{
+  "source_sha256": "493d5daa552bb1b37802671a33750f16d3af635624baa7042b2eb7308be9efff",
+  "mutation": "Remove only |{effective_fit} from item_etag hashed representation",
+  "command": [
+    "-m",
+    "pytest",
+    "tests/test_eink_feed_endpoints.py",
+    "-k",
+    "fit",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "red_exit": 1,
+  "restored_sha256": "493d5daa552bb1b37802671a33750f16d3af635624baa7042b2eb7308be9efff",
+  "green_exit": 0
+}
