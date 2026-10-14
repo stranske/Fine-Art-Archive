@@ -155,7 +155,7 @@ for name, relative, needle, replacement, test in proofs:
             "corrected_sha256": corrected_sha,
             "mutated_sha256": hashlib.sha256(mutated).hexdigest(),
             "restored_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-            "command": command,
+            "command": ["python", *command[1:]],
             "red_exit": red.returncode,
             "green_exit": green.returncode,
         }

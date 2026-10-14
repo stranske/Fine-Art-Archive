@@ -4,7 +4,7 @@
     "baseline": "5a236579ab0becd260e717c7497c3023af614000",
     "test_sha256": "e74002e24a872105621a9cbfc5717b220e5d2bced399ea82418cfef2e9290dfc",
     "corrected_source_sha256": {
-      "src/fine_art_archive/eink/targets.py": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
+      "src/fine_art_archive/eink/targets.py": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
       "src/fine_art_archive/eink/feed.py": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
       "src/fine_art_archive/eink/sdcard.py": "54a5bd6d0bcf118e1c732f5ecfe704f42130ceb26f7b3d6b8ab3a6496380668b",
       "src/fine_art_archive/eink/__init__.py": "ed4bcae5e9a098309224fc3e4301cbc19abfb14c3da7dd2d472d3679a10647fc",
@@ -22,11 +22,11 @@
   {
     "mutation": "strategy",
     "source": "src/fine_art_archive/eink/targets.py",
-    "corrected_sha256": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
-    "mutated_sha256": "27739e54e6dbbd1f1800c3ee4610b17ae71467c7628c8283ff2ad2b1de021a11",
-    "restored_sha256": "bd2af642b3d6c389d6ded46ca3db5bd1bbe81bd564130e43a05a5f6c9826b317",
+    "corrected_sha256": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
+    "mutated_sha256": "83789231dea0d1169dafeffd0c8b5e761f1be482a733aab57f0a39216d5d1ad4",
+    "restored_sha256": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
     "command": [
-      "/Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa789-recovery-20261013/.venv/bin/python3",
+      "python",
       "-m",
       "pytest",
       "tests/test_eink_monochrome_delivery.py",
@@ -46,7 +46,7 @@
     "mutated_sha256": "1d7c3431a76a5782c1a4671b6402f03314ee8690b5413a569dfa12c3984841bd",
     "restored_sha256": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
     "command": [
-      "/Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa789-recovery-20261013/.venv/bin/python3",
+      "python",
       "-m",
       "pytest",
       "tests/test_eink_monochrome_delivery.py",

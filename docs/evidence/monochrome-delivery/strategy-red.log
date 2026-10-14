@@ -2,7 +2,7 @@
 =================================== FAILURES ===================================
 ______ test_companion_feed_and_sd_apply_reported_strategy[none-grayscale] ______
 
-delivery = (<starlette.testclient.TestClient object at 0x107c73d10>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x1127abf80>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'none'
 
@@ -35,7 +35,7 @@ strategy = 'grayscale', method = 'none'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107C73470>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1127AEE40>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -53,7 +53,7 @@ E             (158, 48, 44)
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 _______ test_companion_feed_and_sd_apply_reported_strategy[none-duotone] _______
 
-delivery = (<starlette.testclient.TestClient object at 0x107c727e0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x1127b95b0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'none'
 
@@ -86,7 +86,7 @@ strategy = 'duotone', method = 'none'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107C79130>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1122C9C40>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -104,7 +104,7 @@ E             (158, 48, 44)
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 _ test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-grayscale] _
 
-delivery = (<starlette.testclient.TestClient object at 0x107d7c980>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x1122cb5f0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'floyd-steinberg'
 
@@ -137,7 +137,7 @@ strategy = 'grayscale', method = 'floyd-steinberg'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107D7C890>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x113377740>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -155,7 +155,7 @@ E             (158, 48, 44)
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 _ test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone] __
 
-delivery = (<starlette.testclient.TestClient object at 0x107d852e0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x1122cbbf0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'floyd-steinberg'
 
@@ -188,7 +188,7 @@ strategy = 'duotone', method = 'floyd-steinberg'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107D87470>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x1127ABEF0>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -209,7 +209,7 @@ E             (198, 168, 60)
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 ____ test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale] ____
 
-delivery = (<starlette.testclient.TestClient object at 0x107d886b0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x113374920>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'grayscale', method = 'atkinson'
 
@@ -242,7 +242,7 @@ strategy = 'grayscale', method = 'atkinson'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107D8C770>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x113374260>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'grayscale'
 
@@ -261,7 +261,7 @@ E             (158, 48, 44)
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 _____ test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone] _____
 
-delivery = (<starlette.testclient.TestClient object at 0x107d8adb0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+delivery = (<starlette.testclient.TestClient object at 0x113376cf0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
 tmp_path = PosixPath('<redacted-tmp>')
 strategy = 'duotone', method = 'atkinson'
 
@@ -294,7 +294,7 @@ strategy = 'duotone', method = 'atkinson'
 tests/test_eink_monochrome_delivery.py:97: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x107C1E450>
+image = <PIL.PngImagePlugin.PngImageFile image mode=RGB size=40x20 at 0x11337A780>
 target = RenderTarget(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note='')
 strategy = 'duotone'
 
@@ -313,7 +313,7 @@ E             (158, 48, 44)
 
 tests/test_eink_monochrome_delivery.py:41: AssertionError
 =============================== warnings summary ===============================
-.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+../faa-monochrome-20261013/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
   <redacted-home> StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
     from starlette.testclient import TestClient as TestClient  # noqa
 
@@ -325,4 +325,4 @@ FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_
 FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[floyd-steinberg-duotone]
 FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[atkinson-grayscale]
 FAILED tests/test_eink_monochrome_delivery.py::test_companion_feed_and_sd_apply_reported_strategy[atkinson-duotone]
-6 failed, 3 passed, 28 deselected, 1 warning in 7.20s
+6 failed, 3 passed, 28 deselected, 1 warning in 1.15s

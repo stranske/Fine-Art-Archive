@@ -10,7 +10,9 @@ full target palette. PNG/BMP remain lossless and the SD palette guard remains ac
 Image responses expose `X-Render-Strategy`. Feed validators include the applied
 strategy and a representation version. Written SD manifests and API evidence come
 from each successfully rendered item; failed items have no claimed applied evidence.
-Dry runs still describe a plan. The separate fit-mode ETag issue #786/#787 is excluded.
+Dry runs still describe a plan. The original implementation excluded the separate
+fit-mode ETag issue #786/#787; the current branch is rebased onto that merged change,
+so feed validators now include both the effective fit and the applied strategy.
 
 ## Validation
 
