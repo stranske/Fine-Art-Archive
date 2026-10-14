@@ -63,7 +63,13 @@ every promotion — there is no incremental path to keep in step with it.
 - `--check` reports whether the manifest matches the tree and exits 1 if not,
   writing nothing. Use it to probe staleness from automation.
 - `/healthz` reports `manifest_drift` and, when drifted, names this command in
-  `manifest_remedy`.
+  `manifest_remedy`. It also compares work IDs: `manifest_missing` lists sidecar
+  directories absent from the manifest; `manifest_extra` lists manifest IDs absent
+  from the tree. Each sorted list is capped at 50 IDs, with full totals in
+  `manifest_missing_count` / `manifest_extra_count`. An unreadable tree reports
+  these comparisons as `null`. Any ID mismatch is unhealthy, except the existing
+  empty-manifest fresh-checkout allowance. `manifest_drift` remains the numeric
+  row-count difference for compatibility.
 
 ## Coordinated with
 

@@ -15,6 +15,9 @@ guard is "health is silent about drift", not "drift exists".
 from __future__ import annotations
 
 import csv
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -27,24 +30,35 @@ from fine_art_archive.api.main import app
 
 @pytest.fixture
 def archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """A works tree and manifest whose row count the test controls."""
+    """Real archive files with independently controlled manifest and directory IDs."""
     works = tmp_path / "works"
     works.mkdir()
     manifest = tmp_path / "manifest.csv"
 
-    def build(sidecars: int, manifest_rows: int) -> None:
+    def build(sidecars: int, manifest_rows: int, *, manifest_ids: list[str] | None = None) -> None:
         for i in range(sidecars):
             (works / f"wid-{i:03d}").mkdir(exist_ok=True)
         with open(manifest, "w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=["work_id", "title"])
             writer.writeheader()
-            for i in range(manifest_rows):
-                writer.writerow({"work_id": f"wid-{i:03d}", "title": f"Work {i}"})
+            ids = (
+                manifest_ids
+                if manifest_ids is not None
+                else [f"wid-{i:03d}" for i in range(manifest_rows)]
+            )
+            for i, work_id in enumerate(ids):
+                writer.writerow({"work_id": work_id, "title": f"Work {i}"})
 
     monkeypatch.setattr(api_store, "WORKS", works)
     monkeypatch.setattr(api_store, "MANIFEST_CSV", manifest)
     monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "QUEUES_DIR", tmp_path / "queues")
+    api_store.invalidate_manifest_cache()
+    api_store.invalidate_ratings_cache()
     yield build
+    api_store.invalidate_manifest_cache()
+    api_store.invalidate_ratings_cache()
 
 
 @pytest.fixture
@@ -159,3 +173,74 @@ def test_unreadable_tree_is_unknown_not_empty(
     assert body["sidecar_works"] is None
     assert body["archive_works"] is None
     assert body["manifest_drift"] is None
+
+
+def test_same_count_different_ids_is_unhealthy(archive, client: TestClient) -> None:
+    archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["manifest_drift"] == 0
+    assert body["ok"] is False
+    assert body["manifest_missing"] == ["wid-001"]
+    assert body["manifest_extra"] == ["retired-work"]
+    assert body["manifest_missing_count"] == body["manifest_extra_count"] == 1
+    assert body["manifest_remedy"] == api_main.MANIFEST_REBUILD_COMMAND
+
+
+def test_manifest_id_differences_are_sorted_and_bounded(archive, client: TestClient) -> None:
+    archive(
+        sidecars=73, manifest_rows=73, manifest_ids=[f"stale-{i:03d}" for i in reversed(range(73))]
+    )
+    body = client.get("/healthz").json()
+    assert body["ok"] is False
+    assert body["manifest_drift"] == 0
+    assert body["manifest_missing_count"] == body["manifest_extra_count"] == 73
+    assert body["manifest_missing"] == [f"wid-{i:03d}" for i in range(50)]
+    assert body["manifest_extra"] == [f"stale-{i:03d}" for i in range(50)]
+
+
+def test_real_manifest_rebuild_clears_same_count_drift(archive, client: TestClient) -> None:
+    archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+    for work in api_store.WORKS.iterdir():
+        (work / "meta.json").write_text(json.dumps({"work_id": work.name, "title": work.name}))
+    assert client.get("/healthz").json()["ok"] is False
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/build_manifest.py",
+            "--works-root",
+            str(api_store.WORKS),
+            "--out",
+            str(api_store.MANIFEST_CSV),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    # Exercise the real loader's cache invalidation after an atomic same-size rewrite.
+    body = client.get("/healthz").json()
+    assert body["ok"] is True
+    assert body["manifest_drift"] == 0
+    assert body["manifest_missing"] == body["manifest_extra"] == []
+    assert body["manifest_missing_count"] == body["manifest_extra_count"] == 0
+    assert body["manifest_remedy"] is None
+
+
+def test_missing_tree_keeps_id_comparison_unknown(archive, client: TestClient, monkeypatch) -> None:
+    archive(sidecars=0, manifest_rows=2)
+    monkeypatch.setattr(api_store, "WORKS", api_store.WORKS / "absent")
+    body = client.get("/healthz").json()
+    assert body["ok"] is False
+    assert body["manifest_missing"] is body["manifest_extra"] is None
+    assert body["manifest_missing_count"] is body["manifest_extra_count"] is None
+    assert body["sidecar_works"] is body["manifest_drift"] is None
+
+
+def test_regular_files_do_not_count_as_work_ids(archive, client: TestClient) -> None:
+    archive(sidecars=2, manifest_rows=2)
+    (api_store.WORKS / "readme.txt").write_text("not a work directory")
+    body = client.get("/healthz").json()
+    assert body["ok"] is True
+    assert body["manifest_missing"] == body["manifest_extra"] == []

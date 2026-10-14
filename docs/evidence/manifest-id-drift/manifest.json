@@ -1,0 +1,26 @@
+{
+  "baseline": "30e1006a9c35e9b7e628ad53b8e62deb2a404212",
+  "sha256": {
+    "src/fine_art_archive/api/main.py": "b3b00b6ffaeabd7dbe22f08b4968d876378a5c561ff0ef549d965deb04cdf855",
+    "tests/test_healthz_manifest_drift.py": "6a25a09d31a269bdc050a9bcf42b20c0290846df3592d67cefdc191b8ec1e3fe",
+    "README.md": "aca4a2e827a3db2d2d24fef4add77346aab93b262301078a56fb35db19d3b344",
+    "docs/evidence/manifest-id-drift/README.md": "5cff8fa12a9eb97f0522c44b4c2f9285360cff3c6d4fe4e540475ab94356a7a2",
+    "docs/evidence/manifest-id-drift/black.log": "bcce42bd3c7be566d5103a32a7f94415780b1d4ec650cb2fca38fe705632d8d0",
+    "docs/evidence/manifest-id-drift/count-only-red.log": "22f18d20c481182f9219a3483ec34e54254982a8e47e160c8b73b9e67a8ff6c9",
+    "docs/evidence/manifest-id-drift/count-only-red.xml": "42cac76deef5e636d133505e88b38a15ac6967693f73384ae3dd8cc5e9ebe047",
+    "docs/evidence/manifest-id-drift/focused.log": "004c8a2ddfe10a2e2f22699c203c72dbca1729ef807d28da837df967afe0c3b9",
+    "docs/evidence/manifest-id-drift/focused.xml": "df393db2e367b1c04ee36f7f7a20fb24bca8b16d0a6058aaec1c4ae25d4dba4b",
+    "docs/evidence/manifest-id-drift/full-suite.log": "8ab94b5224fb9babfaeb527f23e4547dd6f8b085e235dd3357b215dd581d97aa",
+    "docs/evidence/manifest-id-drift/full-suite.xml": "7647ce52f7ea5e6ec67e1f16c4745160a89dccd73d96fd55ebc09f11909fea3e",
+    "docs/evidence/manifest-id-drift/mutation-receipt.json": "66e53fdcece54c706aaebe350df895a600fa4489022fac238cee8eb4a45e5054",
+    "docs/evidence/manifest-id-drift/mutation.py": "8b58cd662587c9ec0f365c1d70bfc8450ba271cdd341e53c1dce30dc7faad9f1",
+    "docs/evidence/manifest-id-drift/mypy.log": "8017e47a6c0d3e249baf797d2d3ac56781ee44393c20974c0172ee2da29fd2b2",
+    "docs/evidence/manifest-id-drift/original-red.log": "bb1770f68274dcfe2992f12963b48bf1e625eb864dce6aaaed9475788bcdf66b",
+    "docs/evidence/manifest-id-drift/original-red.xml": "8e1e51f84f9949cdb829bf28248e327e787fd714eb244876d7657d993d8d9994",
+    "docs/evidence/manifest-id-drift/restored-green.log": "255420af992ea2c530df68355b674eb1c45922f82b5c5fc70ba1d0cae0ff5b3f",
+    "docs/evidence/manifest-id-drift/restored-green.xml": "4d0e8266d72e3ab153896d1465032c0c2760dbe31faeb37671a7596db9188d3b",
+    "docs/evidence/manifest-id-drift/ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "docs/evidence/manifest-id-drift/smoke.json": "1238486b5bd5cb8da628d9c14fc680aaf262271ecacaca14d023484e6dce053e",
+    "docs/evidence/manifest-id-drift/smoke.py": "fed2e47754df47ea7907e34c7d22a815e1d37ab5d3aef078555a2886939fd27c"
+  }
+}
