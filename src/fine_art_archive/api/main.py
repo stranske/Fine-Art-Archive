@@ -268,25 +268,31 @@ def _quarantine_report(root: Path, today: date | None = None) -> dict | None:
     return {"overdue": overdue, "no_ttl": sorted(no_ttl), "total": len(entries)}
 
 
-def _count_work_dirs(root: Path) -> int | None:
-    """Number of work directories under `root`, or None if it is unreadable.
-
-    None is deliberately distinct from 0: a missing or unreadable tree is "we
-    do not know", and must not be reported as "the archive is empty" — that
-    would make drift detection read healthy in the very case it should fire.
-    """
+def _work_dir_ids(root: Path) -> list[str] | None:
+    """Sorted work directory IDs, or None when the tree cannot be read."""
     try:
-        return sum(1 for child in root.iterdir() if child.is_dir())
+        return sorted(child.name for child in root.iterdir() if child.is_dir())
     except OSError:
         return None
+
+
+def _count_work_dirs(root: Path) -> int | None:
+    """Count directories without turning an unreadable tree into an empty one."""
+    ids = _work_dir_ids(root)
+    return None if ids is None else len(ids)
 
 
 @app.get("/healthz")
 def healthz() -> dict:
     corrupt_line_count = store.ratings_corrupt_line_count()
     queues_invalid_count = _queue_invalid_count()
-    manifest_loaded = len(store.load_manifest())
-    sidecar_works = _count_work_dirs(store.WORKS)
+    manifest = store.load_manifest()
+    manifest_loaded = len(manifest)
+    sidecar_ids = _work_dir_ids(store.WORKS)
+    sidecar_works = None if sidecar_ids is None else len(sidecar_ids)
+    manifest_ids = {row["work_id"] for row in manifest if row.get("work_id")}
+    manifest_missing = None if sidecar_ids is None else sorted(set(sidecar_ids) - manifest_ids)
+    manifest_extra = None if sidecar_ids is None else sorted(manifest_ids - set(sidecar_ids))
     archive_works = _count_work_dirs(ART_WORKS_ROOT)
 
     # The manifest is the operator UI's ONLY navigation path, and until
@@ -315,7 +321,12 @@ def healthz() -> dict:
     # — and on this machine it had reached all 3499 works, the file never
     # having existed.
     nothing_to_navigate = sidecar_works is None or sidecar_works <= FRESH_CHECKOUT_SIDECAR_WORKS
-    drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or manifest_drift == 0
+    # Equal counts can hide a replaced/renamed work. Compare actual navigation
+    # IDs as well; preserve the fresh-checkout exception and numeric drift.
+    membership_matches = manifest_missing == [] and manifest_extra == []
+    drift_is_healthy = (manifest_loaded == 0 and nothing_to_navigate) or (
+        manifest_drift == 0 and membership_matches
+    )
     # The owner's decision record, REPORTED but deliberately not part of `ok`.
     #
     # Both loaders return an empty set for a file they cannot open, so "you have
@@ -344,6 +355,11 @@ def healthz() -> dict:
         "sidecar_works": sidecar_works,
         "archive_works": archive_works,
         "manifest_drift": manifest_drift,
+        # Bound response size while retaining the full mismatch cardinalities.
+        "manifest_missing": None if manifest_missing is None else manifest_missing[:50],
+        "manifest_extra": None if manifest_extra is None else manifest_extra[:50],
+        "manifest_missing_count": None if manifest_missing is None else len(manifest_missing),
+        "manifest_extra_count": None if manifest_extra is None else len(manifest_extra),
         # FYI only — deliberately NOT part of `ok`. An expired quarantine is not
         # an outage and must never block; it is a fact that had no reader.
         "quarantine": _quarantine_report(ART_WORKS_ROOT.parent / "quarantine"),

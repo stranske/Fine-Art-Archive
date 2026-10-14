@@ -1,0 +1,55 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+__________________ test_same_count_different_ids_is_unhealthy __________________
+
+archive = <function archive.<locals>.build at 0x1071f82c0>
+client = <starlette.testclient.TestClient object at 0x1071e6930>
+
+    def test_same_count_different_ids_is_unhealthy(archive, client: TestClient) -> None:
+        archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+        response = client.get("/healthz")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["manifest_drift"] == 0
+>       assert body["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:184: AssertionError
+_____________ test_manifest_id_differences_are_sorted_and_bounded ______________
+
+archive = <function archive.<locals>.build at 0x1071f99e0>
+client = <starlette.testclient.TestClient object at 0x1071e77a0>
+
+    def test_manifest_id_differences_are_sorted_and_bounded(archive, client: TestClient) -> None:
+        archive(
+            sidecars=73, manifest_rows=73, manifest_ids=[f"stale-{i:03d}" for i in reversed(range(73))]
+        )
+        body = client.get("/healthz").json()
+>       assert body["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:196: AssertionError
+______________ test_real_manifest_rebuild_clears_same_count_drift ______________
+
+archive = <function archive.<locals>.build at 0x1071f8e00>
+client = <starlette.testclient.TestClient object at 0x10720b980>
+
+    def test_real_manifest_rebuild_clears_same_count_drift(archive, client: TestClient) -> None:
+        archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+        for work in api_store.WORKS.iterdir():
+            (work / "meta.json").write_text(json.dumps({"work_id": work.name, "title": work.name}))
+>       assert client.get("/healthz").json()["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:207: AssertionError
+=============================== warnings summary ===============================
+../faa-monochrome-20261013/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  <redacted-home> StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_healthz_manifest_drift.py::test_same_count_different_ids_is_unhealthy
+FAILED tests/test_healthz_manifest_drift.py::test_manifest_id_differences_are_sorted_and_bounded
+FAILED tests/test_healthz_manifest_drift.py::test_real_manifest_rebuild_clears_same_count_drift
+3 failed, 9 deselected, 1 warning in 0.96s

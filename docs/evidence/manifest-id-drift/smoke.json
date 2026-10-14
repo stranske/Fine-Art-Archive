@@ -1,0 +1,31 @@
+{
+  "before": {
+    "ok": false,
+    "manifest_loaded": 3,
+    "sidecar_works": 3,
+    "manifest_drift": 0,
+    "manifest_missing": [
+      "work-b"
+    ],
+    "manifest_extra": [
+      "retired"
+    ],
+    "manifest_missing_count": 1,
+    "manifest_extra_count": 1
+  },
+  "after": {
+    "ok": true,
+    "manifest_loaded": 3,
+    "sidecar_works": 3,
+    "manifest_drift": 0,
+    "manifest_missing": [],
+    "manifest_extra": [],
+    "manifest_missing_count": 0,
+    "manifest_extra_count": 0
+  },
+  "http_statuses": [
+    200,
+    200
+  ],
+  "builder_exit": 0
+}
