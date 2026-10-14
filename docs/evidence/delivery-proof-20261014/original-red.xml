@@ -1,0 +1,34 @@
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.404" timestamp="2026-10-13T21:38:07.221569-05:00" hostname="redacted"><testcase classname="tests.test_healthz_manifest_drift" name="test_same_count_different_ids_is_unhealthy" time="0.008"><failure message="assert True is False">archive = &lt;function archive.&lt;locals&gt;.build at 0x10758ef20&gt;
+client = &lt;starlette.testclient.TestClient object at 0x1075b8fe0&gt;
+
+    def test_same_count_different_ids_is_unhealthy(archive, client: TestClient) -&gt; None:
+        archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+        response = client.get("/healthz")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["manifest_drift"] == 0
+&gt;       assert body["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:184: AssertionError</failure></testcase><testcase classname="tests.test_healthz_manifest_drift" name="test_manifest_id_differences_are_sorted_and_bounded" time="0.009"><failure message="assert True is False">archive = &lt;function archive.&lt;locals&gt;.build at 0x10758fb00&gt;
+client = &lt;starlette.testclient.TestClient object at 0x1075bae40&gt;
+
+    def test_manifest_id_differences_are_sorted_and_bounded(archive, client: TestClient) -&gt; None:
+        archive(
+            sidecars=73, manifest_rows=73, manifest_ids=[f"stale-{i:03d}" for i in reversed(range(73))]
+        )
+        body = client.get("/healthz").json()
+&gt;       assert body["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:196: AssertionError</failure></testcase><testcase classname="tests.test_healthz_manifest_drift" name="test_real_manifest_rebuild_clears_same_count_drift" time="0.004"><failure message="assert True is False">archive = &lt;function archive.&lt;locals&gt;.build at 0x10758da80&gt;
+client = &lt;starlette.testclient.TestClient object at 0x1075e2ea0&gt;
+
+    def test_real_manifest_rebuild_clears_same_count_drift(archive, client: TestClient) -&gt; None:
+        archive(sidecars=3, manifest_rows=3, manifest_ids=["wid-000", "retired-work", "wid-002"])
+        for work in api_store.WORKS.iterdir():
+            (work / "meta.json").write_text(json.dumps({"work_id": work.name, "title": work.name}))
+&gt;       assert client.get("/healthz").json()["ok"] is False
+E       assert True is False
+
+tests/test_healthz_manifest_drift.py:207: AssertionError</failure></testcase></testsuite></testsuites>

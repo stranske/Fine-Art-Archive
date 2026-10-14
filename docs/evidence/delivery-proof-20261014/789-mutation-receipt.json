@@ -1,0 +1,41 @@
+[
+  {
+    "name": "fit",
+    "source": "src/fine_art_archive/eink/feed.py",
+    "sha256": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+    "red_exit": 1,
+    "green_exit": 0,
+    "red_summary": [
+      "6 failed, 13 passed, 65 deselected, 1 warning in 2.60s"
+    ],
+    "green_summary": [
+      "19 passed, 65 deselected, 1 warning in 2.31s"
+    ]
+  },
+  {
+    "name": "strategy-etag",
+    "source": "src/fine_art_archive/eink/feed.py",
+    "sha256": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+    "red_exit": 1,
+    "green_exit": 0,
+    "red_summary": [
+      "3 failed, 118 deselected, 1 warning in 1.26s"
+    ],
+    "green_summary": [
+      "3 passed, 118 deselected, 1 warning in 0.45s"
+    ]
+  },
+  {
+    "name": "strategy-pixels",
+    "source": "src/fine_art_archive/eink/targets.py",
+    "sha256": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
+    "red_exit": 1,
+    "green_exit": 0,
+    "red_summary": [
+      "6 failed, 3 passed, 28 deselected, 1 warning in 0.80s"
+    ],
+    "green_summary": [
+      "9 passed, 28 deselected, 1 warning in 0.95s"
+    ]
+  }
+]
