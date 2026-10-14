@@ -1,0 +1,10 @@
+{
+  "src/fine_art_archive/api/main.py": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+  "src/fine_art_archive/eink/targets.py": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
+  "src/fine_art_archive/eink/feed.py": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+  "src/fine_art_archive/eink/sdcard.py": "54a5bd6d0bcf118e1c732f5ecfe704f42130ceb26f7b3d6b8ab3a6496380668b",
+  "tests/test_healthz_manifest_drift.py": "6a25a09d31a269bdc050a9bcf42b20c0290846df3592d67cefdc191b8ec1e3fe",
+  "tests/test_eink_monochrome_delivery.py": "e74002e24a872105621a9cbfc5717b220e5d2bced399ea82418cfef2e9290dfc",
+  "tests/test_eink_feed_endpoints.py": "4e0871ed9d70b020fd6d22c95f79023345b2e1725ee555bd8771d89fb9f0b58b",
+  "uv.lock": "96a3adda80343b006797d05a2271d34293acec7d3ff62d3dfe482c664d8b6c88"
+}

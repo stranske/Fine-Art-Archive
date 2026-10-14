@@ -1,0 +1,22 @@
+[
+  {
+    "mutation": "original-source",
+    "baseline": "5a236579ab0becd260e717c7497c3023af614000",
+    "test_sha256": "e74002e24a872105621a9cbfc5717b220e5d2bced399ea82418cfef2e9290dfc",
+    "corrected_source_sha256": {
+      "src/fine_art_archive/eink/targets.py": "fcc33ae29c44a0d7929ba42c93c1056772ba2c12ef4320cbe0048e0ab8bdba5c",
+      "src/fine_art_archive/eink/feed.py": "35053b9e0596f9dc156bfc6594daa26326a4b80970e15b69db5ae87d6a04d2d3",
+      "src/fine_art_archive/eink/sdcard.py": "54a5bd6d0bcf118e1c732f5ecfe704f42130ceb26f7b3d6b8ab3a6496380668b",
+      "src/fine_art_archive/eink/__init__.py": "ed4bcae5e9a098309224fc3e4301cbc19abfb14c3da7dd2d472d3679a10647fc",
+      "src/fine_art_archive/api/main.py": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e"
+    },
+    "original_source_sha256": {
+      "src/fine_art_archive/eink/targets.py": "83a43ef2c6538a8720bbcf265e93d623a0a233a1d3875b9c05cc20915c0336ce",
+      "src/fine_art_archive/eink/feed.py": "6fac3e18455e5770bc3f900542907357bc36dc9cceeedfac99cbbda5f5fd9f63",
+      "src/fine_art_archive/eink/sdcard.py": "75eee6978581eb8361da3923df041dde5d285161b00e997362dace84acf07e13",
+      "src/fine_art_archive/eink/__init__.py": "3f6a8afd86f641071b9a01206468b6e25ab8458692ba776c1a631aaf5855a04e",
+      "src/fine_art_archive/api/main.py": "5aab140b0b1adb68a3853ebd5ac7998f203650e7f38a6ae7a47d53c6c8054de6"
+    },
+    "red_exit": 1
+  }
+]

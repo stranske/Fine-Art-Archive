@@ -1,0 +1,56 @@
+{
+  "baseline": "30e1006a9c35e9b7e628ad53b8e62deb2a404212",
+  "corrected_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+  "restored_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+  "test_sha256": "6a25a09d31a269bdc050a9bcf42b20c0290846df3592d67cefdc191b8ec1e3fe",
+  "phases": [
+    {
+      "phase": "original-red",
+      "exit": 1,
+      "source_sha256": "243ee2abef9c41debe2ddbc9681441de186ba682f02238ac6395b9d007ce054a",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_healthz_manifest_drift.py",
+        "-k",
+        "same_count or differences_are_sorted",
+        "-q",
+        "-o",
+        "addopts="
+      ]
+    },
+    {
+      "phase": "count-only-red",
+      "exit": 1,
+      "source_sha256": "f3918cadca7306e12a762d3ef688e6385f749b0d0ea92db7ade7be6e75ac28f8",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_healthz_manifest_drift.py",
+        "-k",
+        "same_count or differences_are_sorted",
+        "-q",
+        "-o",
+        "addopts="
+      ]
+    },
+    {
+      "phase": "restored-green",
+      "exit": 0,
+      "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_healthz_manifest_drift.py",
+        "-k",
+        "same_count or differences_are_sorted",
+        "-q",
+        "-o",
+        "addopts="
+      ]
+    }
+  ]
+}

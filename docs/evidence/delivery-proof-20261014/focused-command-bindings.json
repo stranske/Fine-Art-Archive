@@ -1,0 +1,51 @@
+{
+  "docs/evidence/monochrome-delivery/locked-focused-20261014/focused.log": "b601b50022a47f5550447fc02270c27309f8d366417a6d5286cc05139f74ded4",
+  "docs/evidence/monochrome-delivery/locked-focused-20261014/focused.xml": "10ef13277499424c3679ced2081f758a4d5eaec9597637e061604794a8505b84",
+  "issue788_command": {
+    "argv": [
+      "uv",
+      "run",
+      "--locked",
+      "--extra",
+      "dev",
+      "pytest",
+      "tests/test_eink_monochrome_delivery.py",
+      "tests/test_eink_export_format.py",
+      "tests/test_render_strategy.py",
+      "tests/test_render_color_strategy.py",
+      "tests/test_eink_pipeline.py",
+      "tests/test_eink_feed_endpoints.py",
+      "-q",
+      "-o",
+      "addopts=",
+      "--junitxml=$ROUND/faa788-locked-focused.xml"
+    ],
+    "exit": 0,
+    "passed": 240,
+    "failed": 0,
+    "skipped": 0
+  },
+  "docs/evidence/manifest-id-drift/locked-focused-20261014/focused.log": "b067d74cec2751ad9778b74058090eea7a5c4927fe9c61084842629839addcae",
+  "docs/evidence/manifest-id-drift/locked-focused-20261014/focused.xml": "f0d79a7935c200c0a4b15146b43161163c6e79815830558fa79dc1392997456a",
+  "issue790_command": {
+    "argv": [
+      "uv",
+      "run",
+      "--locked",
+      "--extra",
+      "dev",
+      "pytest",
+      "tests/test_healthz_manifest_drift.py",
+      "tests/test_companion_app_api.py",
+      "tests/test_build_manifest.py",
+      "-q",
+      "-o",
+      "addopts=",
+      "--junitxml=$ROUND/faa790-locked-focused.xml"
+    ],
+    "exit": 0,
+    "passed": 97,
+    "failed": 0,
+    "skipped": 0
+  }
+}

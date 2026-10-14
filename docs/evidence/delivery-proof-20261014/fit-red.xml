@@ -1,0 +1,253 @@
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="19" time="2.595" timestamp="2026-10-13T21:37:23.192830-05:00" hostname="redacted"><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[contain-cover-image/0]" time="0.055"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x104454470&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa0/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1044546b0&gt;
+route = 'image/0', before = 'contain', after = 'cover'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[contain-cover-current]" time="0.030"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x1044547a0&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa1/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1045c3740&gt;
+route = 'current', before = 'contain', after = 'cover'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[cover-stretch-image/0]" time="0.029"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x1045c2060&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa2/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1045c3350&gt;
+route = 'image/0', before = 'cover', after = 'stretch'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[cover-stretch-current]" time="0.028"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x1045c01a0&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa3/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x104739e20&gt;
+route = 'current', before = 'cover', after = 'stretch'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[stretch-contain-image/0]" time="0.079"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x104738800&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa4/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x104738ef0&gt;
+route = 'image/0', before = 'stretch', after = 'contain'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_fit_change_invalidates_saved_feed_image[stretch-contain-current]" time="0.047"><failure message="AssertionError: changed framing must invalidate the old image&#10;assert 304 == 200&#10; +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x1045c02f0&gt;
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1744/test_fit_change_invalidates_sa5/works')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1045c2a20&gt;
+route = 'current', before = 'stretch', after = 'contain'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    @pytest.mark.parametrize(
+        "before,after", [("contain", "cover"), ("cover", "stretch"), ("stretch", "contain")]
+    )
+    def test_fit_change_invalidates_saved_feed_image(
+        client, archive, monkeypatch, route, before, after
+    ):
+        work_id = "aaa1111-fit-cache"
+        _work(archive, work_id, title="Fit cache")
+        # Unequal geometry and patterned pixels distinguish all three actual renderings.
+        master = Image.new("RGB", (10, 30), "white")
+        for y in range(30):
+            for x in range(10):
+                master.putpixel((x, y), (0, 0, 0) if x &lt; 4 and 5 &lt;= y &lt; 25 else (255, 255, 255))
+        master.save(archive / work_id / "master.jpeg", "JPEG")
+        target = RenderTarget("fit-cache", "Fit cache", 30, 20, "spectra6")
+        monkeypatch.setitem(TARGETS, target.key, target)
+        saved = _save(client, target=target.key, dither="none", fit=before)
+        url = f"/feed/{saved['id']}/{route}"
+        original = client.get(url)
+        assert original.status_code == 200
+        old_tag = original.headers["ETag"]
+        assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+    
+        updated = _save(client, id=saved["id"], target=target.key, dither="none", fit=after)
+        assert updated["id"] == saved["id"]
+        unconditional = client.get(url)
+        assert unconditional.status_code == 200
+        assert unconditional.content != original.content
+        with Image.open(BytesIO(unconditional.content)) as rendered:
+            assert rendered.size == target.size
+        revalidated = client.get(url, headers={"If-None-Match": old_tag})
+&gt;       assert revalidated.status_code == 200, "changed framing must invalidate the old image"
+E       AssertionError: changed framing must invalidate the old image
+E       assert 304 == 200
+E        +  where 304 = &lt;Response [304 Not Modified]&gt;.status_code
+
+tests/test_eink_feed_endpoints.py:120: AssertionError</failure></testcase><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-contain-image/0]" time="0.152" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-contain-current]" time="0.156" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-cover-image/0]" time="0.152" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-cover-current]" time="0.153" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-stretch-image/0]" time="0.151" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[None-stretch-current]" time="0.147" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-contain-image/0]" time="0.145" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-contain-current]" time="0.149" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-cover-image/0]" time="0.147" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-cover-current]" time="0.148" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-stretch-image/0]" time="0.159" /><testcase classname="tests.test_eink_feed_endpoints" name="test_unset_fit_and_explicit_target_default_share_feed_etag[-stretch-current]" time="0.157" /><testcase classname="tests.test_eink_feed_endpoints" name="test_an_unknown_fit_is_refused" time="0.002" /></testsuite></testsuites>
