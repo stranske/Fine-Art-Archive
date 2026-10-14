@@ -1,0 +1,97 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+________________ test_applied_strategy_change_invalidates_etag _________________
+
+client = <starlette.testclient.TestClient object at 0x1066beb10>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-1641/test_applied_strategy_change_i0/works')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1088cfe90>
+
+    def test_applied_strategy_change_invalidates_etag(client, archive, monkeypatch):
+        """The issue's named feed gate rejects a validator for the former policy."""
+        import io
+    
+        from fine_art_archive.eink import render_strategy
+    
+        _work(archive, "magenta", title="Magenta")
+        Image.new("RGB", (40, 20), (255, 0, 255)).save(
+            archive / "magenta" / "master.jpeg", format="PNG"
+        )
+        target = _eink.RenderTarget("strategy-test", "Test", 40, 20, "spectra6")
+        monkeypatch.setitem(_eink.TARGETS, target.key, target)
+        playlist = _save(client, target=target.key, dither="none")
+        url = f"/feed/{playlist['id']}/current"
+        first = client.get(url)
+        assert first.status_code == 200
+        assert first.headers["X-Render-Strategy"] == "grayscale"
+        monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+        changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+>       assert changed.status_code == 200
+E       assert 304 == 200
+E        +  where 304 = <Response [304 Not Modified]>.status_code
+
+tests/test_eink_feed_endpoints.py:169: AssertionError
+___________ test_changed_policy_invalidates_cached_strategy[image/0] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x108aa3f50>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108aa3c20>
+route = 'image/0'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+        _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+        # Change the existing policy input, without replacing classifier/renderer.
+        monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+        changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+>       assert changed.status_code == 200
+E       assert 304 == 200
+E        +  where 304 = <Response [304 Not Modified]>.status_code
+
+tests/test_eink_monochrome_delivery.py:189: AssertionError
+___________ test_changed_policy_invalidates_cached_strategy[current] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x108abdf70>, PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00...get(key='test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108abd8b0>
+route = 'current'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+        _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+        # Change the existing policy input, without replacing classifier/renderer.
+        monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+        changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+>       assert changed.status_code == 200
+E       assert 304 == 200
+E        +  where 304 = <Response [304 Not Modified]>.status_code
+
+tests/test_eink_monochrome_delivery.py:189: AssertionError
+=============================== warnings summary ===============================
+../../../pd-workloop-resume/worktrees/faa-monochrome-20261013/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  <validation-environment>/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_eink_feed_endpoints.py::test_applied_strategy_change_invalidates_etag
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[image/0]
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[current]
+3 failed, 117 deselected, 1 warning in 1.10s

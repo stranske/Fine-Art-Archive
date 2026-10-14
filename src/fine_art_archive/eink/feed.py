@@ -164,18 +164,22 @@ def rotation_index(
 
 
 def item_etag(
-    work_id: str, target_key: str, dither: str, mtime: float | int, *, fit: FitMode | None
+    work_id: str,
+    target_key: str,
+    dither: str,
+    mtime: float | int,
+    *,
+    fit: FitMode | None,
+    render_strategy: str = "color",
 ) -> str:
-    """Stable identity for one rendered image.
+    """Stable identity for one rendered image, including fit and A11 strategy.
 
-    Includes the master's mtime so re-mastering a work invalidates the cached
-    render, and the render settings so switching panel, dither or fit does too —
-    otherwise a device would keep showing a stale image that no longer matches
-    the playlist it is pointed at.
+    The target and dithering identify the panel's output. Fit and strategy must
+    also change the validator when the saved representation changes.
     """
     effective_fit = coerce_fit(fit) or get_target(target_key).fit
     h = hashlib.sha256(
-        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}".encode()
+        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}".encode()
     ).hexdigest()
     return f'W/"{h[:24]}"'
 

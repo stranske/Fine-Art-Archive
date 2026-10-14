@@ -53,6 +53,7 @@ from .targets import (  # noqa: F401
     coerce_fit,
     fit_to_target,
     get_target,
+    render_evidence,
     render_for_target,
 )
 
@@ -98,4 +99,5 @@ __all__ = [
     "parse_year",
     "quantize",
     "render_for_target",
+    "render_evidence",
 ]

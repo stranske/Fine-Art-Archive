@@ -47,7 +47,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from .targets import RenderTarget, coerce_fit, render_for_target
+from .targets import RenderTarget, coerce_fit, render_evidence, render_for_target
 
 LOSSLESS_FORMATS = frozenset({"png", "bmp"})
 # Refused, not merely discouraged — see the guard in `export_card`.
@@ -99,6 +99,7 @@ class ExportReport:
     removed: list[str] = field(default_factory=list)
     bytes_written: int = 0
     dry_run: bool = True
+    render_evidence: list[dict[str, str]] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return {
@@ -108,6 +109,7 @@ class ExportReport:
             "bytes_written": self.bytes_written,
             "dry_run": self.dry_run,
             "skipped_detail": self.skipped[:20],
+            "render_evidence": self.render_evidence,
         }
 
 
@@ -189,9 +191,17 @@ def export(
         partial = root / f".{name}.partial"
         if progress:
             progress(i, len(items), it.work_id)
+        applied_evidence: dict[str, str] = {}
         if not dry_run:
             try:
                 with Image.open(master) as im:
+                    evidence = render_evidence(im)
+                    applied_evidence = {
+                        "work_id": it.work_id,
+                        "render_strategy": evidence.strategy,
+                        "render_strategy_reason": evidence.reason,
+                        "gamut_verdict": evidence.gamut_verdict,
+                    }
                     # Decode gigapixel masters at reduced scale: draft() lets the
                     # JPEG decoder skip DCT levels, which is the difference
                     # between seconds and minutes on a 600 MB master.
@@ -206,6 +216,7 @@ def export(
                         method=method,
                         compress_range=compress_range,
                         fast=fast,
+                        strategy=evidence.strategy,
                     )
                     # Durable guard: assert the rendered buffer really is
                     # palette-conformant before it reaches the card. The format
@@ -223,6 +234,7 @@ def export(
                     rep.removed.append(prior.name)
             partial.replace(dest)
             rep.bytes_written += dest.stat().st_size
+            rep.render_evidence.append(applied_evidence)
         rep.written.append(name)
         manifest_items.append(
             {
@@ -232,6 +244,7 @@ def export(
                 "title": it.title,
                 "artist": it.artist,
                 "year": it.year,
+                **applied_evidence,
             }
         )
 

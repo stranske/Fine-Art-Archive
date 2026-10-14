@@ -147,6 +147,33 @@ def test_unset_fit_and_explicit_target_default_share_feed_etag(
     assert client.get(url, headers={"If-None-Match": original.headers["ETag"]}).status_code == 304
 
 
+def test_applied_strategy_change_invalidates_etag(client, archive, monkeypatch):
+    """The issue's named feed gate rejects a validator for the former policy."""
+    import io
+
+    from fine_art_archive.eink import render_strategy
+
+    _work(archive, "magenta", title="Magenta")
+    Image.new("RGB", (40, 20), (255, 0, 255)).save(
+        archive / "magenta" / "master.jpeg", format="PNG"
+    )
+    target = _eink.RenderTarget("strategy-test", "Test", 40, 20, "spectra6")
+    monkeypatch.setitem(_eink.TARGETS, target.key, target)
+    playlist = _save(client, target=target.key, dither="none")
+    url = f"/feed/{playlist['id']}/current"
+    first = client.get(url)
+    assert first.status_code == 200
+    assert first.headers["X-Render-Strategy"] == "grayscale"
+    monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+    changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+    assert changed.status_code == 200
+    assert changed.headers["X-Render-Strategy"] == "color"
+    assert changed.headers["ETag"] != first.headers["ETag"]
+    assert changed.content != first.content
+    with Image.open(io.BytesIO(changed.content)) as rendered:
+        assert set(rendered.getdata()) - {target.palette.black, target.palette.white}
+
+
 def test_atomic_sidecar_writer_forces_utf8_under_ascii_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -706,10 +706,8 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         if master is not None:
             from PIL import Image
 
-            from fine_art_archive.display.render import gamut_render_evidence
-
             with Image.open(master) as im:
-                evidence = gamut_render_evidence(im)
+                evidence = _eink.render_evidence(im)
             item["render_strategy"] = evidence.strategy
             item["render_strategy_reason"] = evidence.reason
             item["gamut_verdict"] = evidence.gamut_verdict
@@ -771,8 +769,11 @@ def eink_preview(
     )
     try:
         with Image.open(master) as im:
+            evidence = _eink.render_evidence(im)
             im.draft("RGB", (small.width * 2, small.height * 2))
-            out = _eink.render_for_target(im, small, fit=render_fit, method=dither)
+            out = _eink.render_for_target(
+                im, small, fit=render_fit, method=dither, strategy=evidence.strategy
+            )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
 
@@ -781,7 +782,11 @@ def eink_preview(
     return Response(
         buf.getvalue(),
         media_type="image/png",
-        headers={"Cache-Control": "no-store", "X-Palette-Measured": str(tgt.palette.measured)},
+        headers={
+            "Cache-Control": "no-store",
+            "X-Palette-Measured": str(tgt.palette.measured),
+            "X-Render-Strategy": evidence.strategy,
+        },
     )
 
 
@@ -840,25 +845,26 @@ def eink_playlist_export(body: ExportIn) -> dict:
         raise HTTPException(400, str(exc)) from exc
 
     out = rep.as_dict()
-    render_evidence = []
-    from PIL import Image
+    render_evidence = rep.render_evidence
+    if rep.dry_run:
+        # A plan may report proposed evidence; writes report only successfully
+        # delivered items from the writer's actual policy, without reopening.
+        from PIL import Image
 
-    from fine_art_archive.display.render import gamut_render_evidence
-
-    for wid in res.work_ids:
-        master = _eink_master(wid)
-        if master is None:
-            continue
-        with Image.open(master) as im:
-            evidence = gamut_render_evidence(im)
-        render_evidence.append(
-            {
-                "work_id": wid,
-                "render_strategy": evidence.strategy,
-                "render_strategy_reason": evidence.reason,
-                "gamut_verdict": evidence.gamut_verdict,
-            }
-        )
+        for wid in res.work_ids:
+            master = _eink_master(wid)
+            if master is None:
+                continue
+            with Image.open(master) as im:
+                evidence = _eink.render_evidence(im)
+            render_evidence.append(
+                {
+                    "work_id": wid,
+                    "render_strategy": evidence.strategy,
+                    "render_strategy_reason": evidence.reason,
+                    "gamut_verdict": evidence.gamut_verdict,
+                }
+            )
     out.update(
         {
             "path": str(dest),
@@ -2112,16 +2118,34 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
         fit = _eink.coerce_fit(pl.fit) or tgt.fit
     except ValueError as exc:
         raise HTTPException(400, f"playlist {pl.id}: {exc}") from exc
-    etag = _eink.item_etag(work_id, tgt.key, pl.dither, master.stat().st_mtime, fit=fit)
-    if request.headers.get("if-none-match") == etag:
-        return Response(
-            status_code=304,
-            headers={"ETag": etag, "Cache-Control": "public, max-age=300"},
-        )
     try:
         with Image.open(master) as im:
+            evidence = _eink.render_evidence(im)
+            etag = _eink.item_etag(
+                work_id,
+                tgt.key,
+                pl.dither,
+                master.stat().st_mtime,
+                fit=fit,
+                render_strategy=evidence.strategy,
+            )
+            if request.headers.get("if-none-match") == etag:
+                return Response(
+                    status_code=304,
+                    headers={
+                        "ETag": etag,
+                        "Cache-Control": "public, max-age=300",
+                        "X-Render-Strategy": evidence.strategy,
+                    },
+                )
             im.draft("RGB", (tgt.width * 2, tgt.height * 2))
-            out = _eink.render_for_target(im, tgt, fit=fit, method=pl.dither)
+            out = _eink.render_for_target(
+                im,
+                tgt,
+                fit=fit,
+                method=pl.dither,
+                strategy=evidence.strategy,
+            )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, f"render failed: {exc}") from exc
     buf = io.BytesIO()
@@ -2135,6 +2159,7 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
             # unchanged image, but the feed must still pick up a re-master.
             "Cache-Control": "public, max-age=300",
             "X-Work-Id": work_id,
+            "X-Render-Strategy": evidence.strategy,
             "X-Palette-Measured": str(tgt.palette.measured),
         },
     )

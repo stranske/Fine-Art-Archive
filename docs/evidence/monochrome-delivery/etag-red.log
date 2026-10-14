@@ -1,0 +1,66 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_changed_policy_invalidates_cached_strategy[image/0] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x1090c2c00>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1090c2ab0>
+route = 'image/0'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+        _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+        # Change the existing policy input, without replacing classifier/renderer.
+        monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+        changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+>       assert changed.status_code == 200
+E       assert 304 == 200
+E        +  where 304 = <Response [304 Not Modified]>.status_code
+
+tests/test_eink_monochrome_delivery.py:199: AssertionError
+___________ test_changed_policy_invalidates_cached_strategy[current] ___________
+
+delivery = (<starlette.testclient.TestClient object at 0x1085ffaa0>, PosixPath('<redacted-tmp>'test-strategy', label='Test', width=40, height=20, palette_name='spectra6', fit='contain', rotate=0, note=''))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1091eeb40>
+route = 'current'
+
+    @pytest.mark.parametrize("route", ["image/0", "current"])
+    def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
+        from fine_art_archive.eink import render_strategy
+    
+        client, works, target = delivery
+        _work(works, "grayscale")
+        saved = client.post(
+            "/eink/playlists", json={"name": "Test", "target": target.key, "dither": "none"}
+        )
+        url = f"/feed/{saved.json()['id']}/{route}"
+        first = client.get(url)
+        assert first.status_code == 200
+        _assert_pixels(Image.open(io.BytesIO(first.content)), target, "grayscale")
+        # Change the existing policy input, without replacing classifier/renderer.
+        monkeypatch.setitem(render_strategy._DEFAULT_POLICY, "poorly-served", "color")
+        changed = client.get(url, headers={"If-None-Match": first.headers["ETag"]})
+>       assert changed.status_code == 200
+E       assert 304 == 200
+E        +  where 304 = <Response [304 Not Modified]>.status_code
+
+tests/test_eink_monochrome_delivery.py:199: AssertionError
+=============================== warnings summary ===============================
+../faa-monochrome-20261013/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  <redacted-home> StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[image/0]
+FAILED tests/test_eink_monochrome_delivery.py::test_changed_policy_invalidates_cached_strategy[current]
+2 failed, 35 deselected, 1 warning in 0.46s
