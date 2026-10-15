@@ -16,7 +16,7 @@ attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
-black==26.10.0
+black==26.10.1
     # via fine-art-archive (pyproject.toml)
 certifi==2026.5.20
     # via
@@ -208,7 +208,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.10
+ruff==0.17.0
     # via fine-art-archive (pyproject.toml)
 safetensors==0.8.0
     # via transformers
