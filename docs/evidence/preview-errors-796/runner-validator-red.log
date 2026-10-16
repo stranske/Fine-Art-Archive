@@ -1,0 +1,61 @@
+FFF.FFFF
+======================================================================
+FAIL: test_failed_green_rejected (__main__.AuditTests.test_failed_green_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 78, in test_failed_green_rejected
+    with self.assertRaisesRegex(AssertionError, "restored test failed"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_missing_case_rejected (__main__.AuditTests.test_missing_case_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 51, in test_missing_case_rejected
+    with self.assertRaisesRegex(AssertionError, "unexpected case count"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_non_assertion_failure_rejected (__main__.AuditTests.test_non_assertion_failure_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 47, in test_non_assertion_failure_rejected
+    with self.assertRaisesRegex(AssertionError, "non-assertion failure"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_setup_error_rejected (__main__.AuditTests.test_setup_error_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 40, in test_setup_error_rejected
+    with self.assertRaisesRegex(AssertionError, "collection/setup error"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_skipped_green_rejected (__main__.AuditTests.test_skipped_green_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 73, in test_skipped_green_rejected
+    with self.assertRaisesRegex(AssertionError, "selected case skipped"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_wrong_parameter_rejected (__main__.AuditTests.test_wrong_parameter_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 68, in test_wrong_parameter_rejected
+    with self.assertRaisesRegex(AssertionError, "wrong parameter selection"):
+AssertionError: AssertionError not raised
+
+======================================================================
+FAIL: test_wrong_test_rejected (__main__.AuditTests.test_wrong_test_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/test-runner-audit.py", line 58, in test_wrong_test_rejected
+    with self.assertRaisesRegex(AssertionError, "wrong test"):
+AssertionError: AssertionError not raised
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.010s
+
+FAILED (failures=7)

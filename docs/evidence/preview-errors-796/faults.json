@@ -98,9 +98,9 @@
     },
     "observed_failures": 3,
     "assertion_failure_messages": [
-      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x107A03800>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
-      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x1078D8B60>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
-      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x107A072C0>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x11011B710>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x107F69040>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x11011F500>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
     ]
   },
   {
@@ -170,7 +170,7 @@
     },
     "observed_failures": 1,
     "assertion_failure_messages": [
-      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x106146840>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x1147AAD50>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
     ]
   }
 ]

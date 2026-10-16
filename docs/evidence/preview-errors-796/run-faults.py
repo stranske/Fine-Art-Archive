@@ -2,6 +2,8 @@ import hashlib
 import json
 import pathlib
 import subprocess
+import sys
+import xml.etree.ElementTree as ET
 
 root = pathlib.Path(__file__).resolve().parents[3]
 p = root / "src/fine_art_archive/api/main.py"
@@ -96,47 +98,107 @@ cases = [
         1,
     ),
 ]
-try:
-    for name, old, new, node, select, count in cases:
-        assert section.count(old) == 1, (name, section.count(old))
-        mutated = s[:start] + section.replace(old, new, 1) + s[end:]
-        p.write_text(mutated)
-        args = [
-            str(root / ".venv/bin/python"),
-            "-m",
-            "pytest",
-            node,
-            "--no-cov",
-            "-q",
-            "--tb=short",
-            "--junitxml=" + str(out / (name + "-red.xml")),
-        ]
-        if select:
-            args += ["-k", select]
-        [f.unlink() for f in (p.parent / "__pycache__").glob("main.*.pyc")]
-        red = subprocess.run(args, cwd=root, capture_output=True, text=True)
-        (out / (name + "-red.log")).write_text(red.stdout + red.stderr)
+
+
+def validate_reports(red_path, green_path, node, selection, count):
+    """Reject incomplete/error REDs and bind restored GREEN to the same cases."""
+    red = ET.parse(red_path).getroot()
+    green = ET.parse(green_path).getroot()
+    module, test_name = node.split("::")
+    classname = module.removesuffix(".py").replace("/", ".")
+    identities = []
+    for report in (red, green):
+        cases = list(report.iter("testcase"))
+        assert len(cases) == count, ("unexpected case count", len(cases), count)
+        assert not list(report.iter("error")), "collection/setup error"
+        assert not list(report.iter("skipped")), "selected case skipped"
+        ids = {(case.get("classname"), case.get("name")) for case in cases}
+        assert len(ids) == count, "duplicate test identities"
+        for module_name, name in ids:
+            assert module_name == classname, ("wrong module", module_name)
+            assert name == test_name or name.startswith(test_name + "["), (
+                "wrong test",
+                name,
+            )
+            if selection:
+                assert name.startswith(test_name + "[" + selection + "-"), (
+                    "wrong parameter selection",
+                    name,
+                )
+        identities.append(ids)
+    assert identities[0] == identities[1], "RED/GREEN cases differ"
+    failures = list(red.iter("failure"))
+    assert len(failures) == count, ("unexpected failure count", len(failures), count)
+    assert all(len(case.findall("failure")) == 1 for case in red.iter("testcase"))
+    messages = [failure.get("message", "") for failure in failures]
+    assert all(message.startswith(("assert ", "AssertionError")) for message in messages), (
+        "non-assertion failure",
+        messages,
+    )
+    assert not list(green.iter("failure")), "restored test failed"
+    return {"observed_failures": len(failures), "assertion_failure_messages": messages}
+
+
+def main():
+    try:
+        for name, old, new, node, select, count in cases:
+            assert section.count(old) == 1, (name, section.count(old))
+            mutated = s[:start] + section.replace(old, new, 1) + s[end:]
+            p.write_text(mutated)
+            args = [
+                sys.executable,
+                "-m",
+                "pytest",
+                node,
+                "--no-cov",
+                "-q",
+                "--tb=short",
+                "--junitxml=" + str(out / (name + "-red.xml")),
+            ]
+            if select:
+                args += ["-k", select]
+            [f.unlink() for f in (p.parent / "__pycache__").glob("main.*.pyc")]
+            red = subprocess.run(args, cwd=root, capture_output=True, text=True)
+            (out / (name + "-red.log")).write_text(red.stdout + red.stderr)
+            p.write_bytes(original)
+            assert p.read_bytes() == original
+            args[args.index("--junitxml=" + str(out / (name + "-red.xml")))] = "--junitxml=" + str(
+                out / (name + "-green.xml")
+            )
+            [f.unlink() for f in (p.parent / "__pycache__").glob("main.*.pyc")]
+            green = subprocess.run(args, cwd=root, capture_output=True, text=True)
+            (out / (name + "-green.log")).write_text(green.stdout + green.stderr)
+            row = {
+                "name": name,
+                "node": node,
+                "selection": select,
+                "expected_failures": count,
+                "red_exit": red.returncode,
+                "green_exit": green.returncode,
+                "source_sha256": hashlib.sha256(original).hexdigest(),
+                "mutation": {"old": old, "new": new},
+            }
+            assert red.returncode == 1 and green.returncode == 0, (
+                name,
+                red.stdout[-1200:],
+            )
+            row.update(
+                validate_reports(
+                    out / (name + "-red.xml"),
+                    out / (name + "-green.xml"),
+                    node,
+                    select,
+                    count,
+                )
+            )
+            rows.append(row)
+            print(name, red.returncode, green.returncode, flush=True)
+        audit_tmp = out / "faults.json.tmp"
+        audit_tmp.write_text(json.dumps(rows, indent=2))
+        audit_tmp.replace(out / "faults.json")
+    finally:
         p.write_bytes(original)
-        assert p.read_bytes() == original
-        args[args.index("--junitxml=" + str(out / (name + "-red.xml")))] = "--junitxml=" + str(
-            out / (name + "-green.xml")
-        )
-        [f.unlink() for f in (p.parent / "__pycache__").glob("main.*.pyc")]
-        green = subprocess.run(args, cwd=root, capture_output=True, text=True)
-        (out / (name + "-green.log")).write_text(green.stdout + green.stderr)
-        row = {
-            "name": name,
-            "node": node,
-            "selection": select,
-            "expected_failures": count,
-            "red_exit": red.returncode,
-            "green_exit": green.returncode,
-            "source_sha256": hashlib.sha256(original).hexdigest(),
-            "mutation": {"old": old, "new": new},
-        }
-        rows.append(row)
-        (out / "faults.json").write_text(json.dumps(rows, indent=2))
-        print(name, red.returncode, green.returncode, flush=True)
-        assert red.returncode == 1 and green.returncode == 0, (name, red.stdout[-1200:])
-finally:
-    p.write_bytes(original)
+
+
+if __name__ == "__main__":
+    main()

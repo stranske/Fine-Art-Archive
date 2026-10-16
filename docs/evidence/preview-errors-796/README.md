@@ -40,3 +40,11 @@ Frozen-lock full candidate suite: **2282 passed, 12 skipped**, 175.33 seconds. C
 Full candidate suite, exact-head hosted checks, seven-minute review floor, zero active review threads, guarded squash, actual `verify:compare`, and source disposition remain separate gates. Local causal proof does not assert hosted acceptance or provider PASS.
 
 The first exact-head independent advisory found no code defect and requested separate diagnostic assertion discrimination. Source #796 says every new test (rather than every assertion), but these three added faults independently strengthen that acceptance proof: all five error diagnostics now also fail while their status codes remain unchanged. They were actually run and restored; test/production/lock bytes remain unchanged from the fully validated candidate.
+
+## Reproduction-runner review repair
+
+The runner now parses both JUnit reports before accepting a control. It requires the exact selected module/test/parameter identities, the expected number of assertion failures, no collection/setup errors or skips, and passing restored cases with matching identities. It retains `observed_failures` and `assertion_failure_messages` in `faults.json`, replacing that audit atomically only after all ten controls validate. Subprocesses use the explicitly selected interpreter that launched the runner.
+
+All ten real controls were rerun with this validator: 14 assertion failures, zero errors, and ten restored GREEN runs; production bytes match every recorded source hash. `test-runner-audit.py` passes eight regression checks covering authentic reports and malformed/error/skip/mismatched-case rejection. Deliberately replacing validation with unconditional acceptance makes seven checks FAIL; restoring the runner byte-for-byte returns eight PASS. Raw RED/GREEN logs are retained alongside the evidence. Run `.venv/bin/python docs/evidence/preview-errors-796/test-runner-audit.py` to repeat the audit checks without mutating production.
+
+Two rendered diagnostic-evidence files have trailing whitespace normalized for `git diff --check`; the raw rerun is retained in the lane receipt. No failure/status/count/source binding was changed.
