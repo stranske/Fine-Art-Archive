@@ -5,7 +5,7 @@
     "src/fine_art_archive/api/main.py": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
     "tests/test_eink_monochrome_delivery.py": "60ed4b9280168dbcd0659d91144d724eaa195c5813c206e3d707fd5f12ccf5ad",
     "uv.lock": "07022551b98f5825360cd34926567a3f7211c106663c4eaa02d911c33980f1c3",
-    "docs/evidence/preview-errors-796/run-faults.py": "ea519ede34614a6c9afbf082c23bd1f2b6e61cca20e17820bcc91d1776ed5197"
+    "docs/evidence/preview-errors-796/run-faults.py": "8b63be760dc1d142f0784e3555058344cac8fc7cdcddc4cd116e32f1b47eeef6"
   },
   "production_unchanged": true
 }
