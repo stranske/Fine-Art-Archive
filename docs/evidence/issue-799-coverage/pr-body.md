@@ -34,7 +34,7 @@ ruff check src/fine_art_archive/collect/verify.py tests/test_coverage_round_799.
 The local full-suite and Black runs used a temporary external selector-polling harness because sandboxed socketpair writes return EPERM and otherwise hang event-loop thread completion. Black also used one worker because forkserver sockets are unavailable. The harness changes no repository source or tests. Commands, exact coverage summaries, environment details, and file hashes are in [validation.json](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/validation.json).
 
 ## Executed break-and-revert proofs
-Each of the 16 collected test cases was run separately against an actual, temporary production-source mutation; it failed. The source was restored before rerunning the same selected case; it passed. Restoration was protected by `finally`, and both production files match the starting head after the proofs. Every row below is an executed run, including each parameterized case.
+Each of the original 16 collected test cases was run separately against an actual, temporary production-source mutation; it failed. The source was restored before rerunning the same selected case; it passed. Restoration was protected by `finally`, and both production files match the starting head after the proofs. Every row below is an executed run, including each parameterized case. The combined acquisition configuration test has since been replaced by the eight independent cases documented below; its original receipt is retained as history.
 
 | Test case in `tests/test_coverage_round_799.py` | Deliberate defect | Broken | Restored |
 |---|---|---|---|
@@ -57,65 +57,50 @@ Each of the 16 collected test cases was run separately against an actual, tempor
 
 Full RED/GREEN output: [mutation-proofs.txt](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/mutation-proofs.txt). In particular, removing `ValueError` from the fallback handler reproduces the real backend bug and restoring it passes.
 
-<!-- pr-preamble:start -->
-<!-- meta:issue:799 -->
-> **Source:** Issue #799
+## Acquisition follow-up
 
-Closes #799
+The combined configuration/artist test has been split into independent missing-config, empty-config, unknown-host, empty-candidate, and parameterized artist-name cases. This prevents a failure in the first assertion from standing in as mutation evidence for all later checks. The artist cases also check that a non-string name falls back to a label and blank fields fall back to `display_name`. No additional production change was needed.
 
-<!-- pr-preamble:end -->
+All eight cases below were individually run against the stated source mutation and again after restoring the original bytes. Together with the 15 retained test cases from the original proof table, all 23 current cases have an executed break-and-revert proof. Detailed output is in [acquisition-mutation-proofs.txt](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/acquisition-mutation-proofs.txt).
 
-<!-- auto-status-summary:start -->
-## Automated Status Summary
-#### Scope
-Fine-Art-Archive reads 89.11% blended line+branch in CI; reaching 90% needs about 124 more covered statements+branches. Prioritize identity resolution / enrichment / API-surface modules.
+| Test case | Deliberate defect | Broken | Restored |
+|---|---|---|---|
+| `test_acquisition_missing_quality_config` | Raise ValueError instead of FileNotFoundError | 1 failed in 0.16s (exit 1) | 1 passed in 0.55s (exit 0) |
+| `test_acquisition_quality_config_without_sources` | Accept a configuration with no sources | 1 failed in 0.16s (exit 1) | 1 passed in 0.11s (exit 0) |
+| `test_acquisition_unknown_host_has_no_source_chain` | Invent a source chain for an unknown host | 1 failed in 0.16s (exit 1) | 1 passed in 0.12s (exit 0) |
+| `test_acquisition_select_source_rejects_empty_candidates` | Omit the empty candidate guard | 1 failed in 0.16s (exit 1) | 1 passed in 0.11s (exit 0) |
+| `test_acquisition_candidate_artist_name[blank-name]` | Invent an artist name when all name fields are blank | 1 failed in 0.16s (exit 1) | 1 passed in 0.11s (exit 0) |
+| `test_acquisition_candidate_artist_name[label-fallback]` | Ignore the artist label fallback | 1 failed in 0.16s (exit 1) | 1 passed in 0.12s (exit 0) |
+| `test_acquisition_candidate_artist_name[display-name-fallback]` | Ignore the display_name fallback | 1 failed in 0.16s (exit 1) | 1 passed in 0.12s (exit 0) |
+| `test_acquisition_candidate_artist_name[non-string-artist]` | Turn a non-string artist into a name | 1 failed in 0.15s (exit 1) | 1 passed in 0.11s (exit 0) |
 
-The target order below is the Orchestrator's own ranking (escaped defects, then churn, then uncovered mass -- unchanged). Only the bundling is new: earlier rounds spent a whole PR on files with a handful of uncovered statements, so one PR now covers the next ranked targets until it has covered about 60 units.
+Fresh targeted coverage: **94 passed, 4 skipped in 3.09s**. Both `acquisition_flow.py` (127 statements + 38 branches) and `verify.py` (238 statements + 60 branches) remain at **100%**, with zero missing units. The earlier PR baseline and 62-unit improvement above remain unchanged; this follow-up strengthens the evidence rather than claiming additional covered units.
 
-#### Tasks
+Fresh full-suite baseline at `38d72e0`: **4 failed, 2294 passed, 12 skipped in 107.83s**; blended coverage **89.51%**, so the 90% stop condition does not apply. Final full-suite result: **4 failed, 2301 passed, 12 skipped in 104.57s**, with the same four read-only-home failures and unchanged **89.51%** blended coverage. Both runs use `pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:<separate report path> -q -m 'not slow'`. The same temporary selector-polling harness described above is needed in this sandbox. No tests are disabled to hide filesystem failures.
+
+Before this follow-up, [Gate passed on `38d72e0`](https://github.com/stranske/Fine-Art-Archive/actions/runs/38956189223). Acceptance for the new commit's CI remains pending. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` pass. Commands, fresh coverage summaries, production-source hashes, and mutation results are in [acquisition-followup.json](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/acquisition-followup.json).
+
+## Tasks
+
 - [x] Cover `src/fine_art_archive/collect/verify.py` (50 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
 - [x] Cover `src/fine_art_archive/collect/acquisition_flow.py` (12 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
 - [x] For each new test, run the break-and-revert proof (break the code it covers, `pytest` fails; revert, `pytest` passes) and record both results in the PR body.
-- [x] If a test exposes a real bug in a target above, fix it with the smallest diff and show `pytest tests/` green again.
+- [ ] If a test exposes a real bug in a target above, fix it with the smallest diff and show `pytest tests/` green again.
 - [x] Open ONE PR whose body states each target's coverage before and after (from `pytest --cov`) and has a closing line for THIS issue (`Closes #<this issue's number>`), so the round closes when the PR merges.
 
-#### Acceptance criteria
+## Acceptance criteria
+
 - [ ] `pytest` passes in CI with the new tests, and each new test fails when the code it covers is deliberately broken (the PR body shows the break-and-revert run).
 - [ ] The PR's Gate coverage shows the targets' uncovered statements+branches down by about 60 or more, or the PR body explains each target that could not be meaningfully covered.
 - [x] Production code changes only where a test found a real bug, each one explained in the PR body.
-
 - [x] Same contract as every round in this initiative:
-1. [ ] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then
-   churn, then uncovered mass), not by file size.
-2. [ ] Every new test must FAIL when the code it covers is deliberately broken and PASS when
-   reverted -- run that break-and-revert for real and report it, don't assert it.
-3. [ ] Real bugs found while writing tests get fixed with a minimal, targeted diff in the same PR,
-   not worked around. Watch for the negative-cache pattern (cache.get(key) is None used as a 'not yet cached' check, which can't tell 'never queried' from 'queried and got nothing') -- it has recurred independently four separate times fleet-wide already.
-4. [ ] Low blast radius only -- test-only or tightly-scoped fixes, no refactors.
-5. [ ] One PR per logical chunk of work.
+  1. [x] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then churn, then uncovered mass), not by file size.
+  2. [x] Every new test must FAIL when the code it covers is deliberately broken and PASS when reverted -- run that break-and-revert for real and report it, don't assert it.
+  3. [x] Real bugs found while writing tests get fixed with a minimal, targeted diff in the same PR, not worked around. Watch for the negative-cache pattern.
+  4. [x] Low blast radius only -- test-only or tightly-scoped fixes, no refactors.
+  5. [x] One PR per logical chunk of work.
+- [x] The goal is to improve the code, not a metric. The measured starting coverage is below 90%; no new PR was opened for this follow-up.
 
-- [x] The goal is to improve the code, not a metric. If you measure this repo at or above 90% before
-- [x] starting, say so in a comment on this issue and close it without opening a PR -- do not
-- [x] manufacture a fix just because a round was requested.
-
-**Head SHA:** 9dfd5951fc036bb1a0680d539c3a05374cd08ad0
-**Latest Runs:** ❔ in progress — Gate
-**Required:** gate: ❔ in progress
-
-| Workflow / Job | Result | Logs |
-|----------------|--------|------|
-| Backplane Conformance | ✅ success | [View run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38951677814) |
-| Cross-Repo Smoke | ⏭️ skipped | [View run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38951677802) |
-| Gate | ❔ in progress | [View run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38951676708) |
-| Health 45 Agents Guard | ✅ success | [View run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38951675959) |
-| PR 46 Dependency Repair Contract | ⏭️ skipped | Last completed result; current run in PR checks |
-<!-- auto-status-summary:end -->
-
-## Registry routing replacement
-Supersedes #803 at unchanged implementation head `9dfd5951fc036bb1a0680d539c3a05374cd08ad0`. The original coverage-autopilot Codex agent completed with rc0 and released its target claim before this repair. This replacement uses the registry branch and matching Codex/auto/keepalive/autofix routing; no implementation change or new source issue is introduced. Preserve the original local coverage and break/revert receipts. Current lint-format failure and incomplete product CI remain real until the routed worker repairs or completes them; no check waiver or CodeRabbit approval is inferred.
-
-Closes #799.
-
+This ready-for-review PR continues to supersede #803 on the registry branch. Fresh-head CI remains the outstanding acceptance check; no waiver is inferred from the local evidence.
 
 Closes #799
-

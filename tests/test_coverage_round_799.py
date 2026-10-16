@@ -277,27 +277,58 @@ def test_verify_reports_unreadable_candidate_as_aspect_failure(tmp_path: Path) -
     assert "candidate image unavailable" in report.checks[0].message
 
 
-def test_acquisition_configuration_and_artist_name_failure_paths(
+def test_acquisition_missing_quality_config(tmp_path: Path) -> None:
+    """An explicit missing routing config must fail with its path in the error."""
+    missing = tmp_path / "missing.yaml"
+    with pytest.raises(FileNotFoundError, match="source-quality config not found") as exc:
+        af.load_source_quality_config(missing)
+    assert str(missing) in str(exc.value)
+
+
+def test_acquisition_quality_config_without_sources(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    missing = tmp_path / "missing.yaml"
-    with pytest.raises(FileNotFoundError, match="source-quality config not found"):
-        af.load_source_quality_config(missing)
-
+    """An existing but empty config must fail independently of the missing-file guard."""
     config = tmp_path / "quality.yaml"
     config.write_text("sources: {}")
-    monkeypatch.setattr(af.source_quality, "load_aggregates", lambda _: {})
-    with pytest.raises(ValueError, match="has no sources"):
+    loader = Mock(return_value={"sources": {}})
+    monkeypatch.setattr(af.source_quality, "load_aggregates", loader)
+    with pytest.raises(ValueError, match="has no sources") as exc:
         af.load_source_quality_config(config)
+    loader.assert_called_once_with(config)
+    assert str(config) in str(exc.value)
 
-    monkeypatch.setattr(af.host_registry, "find_by_wikidata_q", lambda *_: None)
+
+def test_acquisition_unknown_host_has_no_source_chain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Unknown hosts return an empty chain using the caller's registry."""
+    config = tmp_path / "hosts.yaml"
+    lookup = Mock(return_value=None)
+    monkeypatch.setattr(af.host_registry, "find_by_wikidata_q", lookup)
     assert af.source_chain_for_host("Q0", config) == []
+    lookup.assert_called_once_with("Q0", config)
+
+
+def test_acquisition_select_source_rejects_empty_candidates() -> None:
+    """Empty candidates must produce a useful error rather than an indexing failure."""
     with pytest.raises(ValueError, match="candidate_sources must not be empty"):
         af.select_source("painting", [], {})
 
-    assert af._candidate_artist_name({"artist": {"name": "  "}}) == ""
-    assert af._candidate_artist_name({"artist": {"label": "  Artist  "}}) == "Artist"
-    assert af._candidate_artist_name({"artist": 12}) == ""
+
+@pytest.mark.parametrize(
+    ("artist", "expected"),
+    [
+        ({"name": "  "}, ""),
+        ({"name": 12, "label": "  Artist  "}, "Artist"),
+        ({"name": "", "label": " ", "display_name": "  Display Artist  "}, "Display Artist"),
+        (12, ""),
+    ],
+    ids=["blank-name", "label-fallback", "display-name-fallback", "non-string-artist"],
+)
+def test_acquisition_candidate_artist_name(artist: object, expected: str) -> None:
+    """Inventory matching gets a trimmed artist name or an empty string."""
+    assert af._candidate_artist_name({"artist": artist}) == expected
 
 
 def test_acquisition_flow_accepts_work_without_metadata(tmp_path: Path) -> None:
