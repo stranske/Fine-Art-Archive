@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.371" timestamp="2026-10-16T07:31:26.344050-05:00" hostname="server.trs.private"><testcase classname="tests.test_eink_monochrome_delivery" name="test_preview_rejects_invalid_render_options_before_rendering[query2-unknown fit mode]" time="0.034"><failure message="assert 200 == 400&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">tests/test_eink_monochrome_delivery.py:93: in test_preview_rejects_invalid_render_options_before_rendering
+    assert response.status_code == 400
+E   assert 200 == 400
+E    +  where 200 = &lt;Response [200 OK]&gt;.status_code</failure></testcase></testsuite></testsuites>

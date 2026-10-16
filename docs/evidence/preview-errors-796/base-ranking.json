@@ -1,0 +1,350 @@
+{
+  "base": "4446c8f2cb7730614f9bf5e35e0ac385242facec",
+  "measurement_kind": "Retrospective exact pre-PR base reconstruction; not an original pre-work execution",
+  "coverage_totals": {
+    "covered_lines": 9366,
+    "num_statements": 10219,
+    "percent_covered": 89.09064602474137,
+    "percent_covered_display": "89",
+    "missing_lines": 853,
+    "excluded_lines": 6,
+    "percent_statements_covered": 91.65280360113515,
+    "percent_statements_covered_display": "92",
+    "num_branches": 3604,
+    "num_partial_branches": 507,
+    "covered_branches": 2949,
+    "missing_branches": 655,
+    "percent_branches_covered": 81.82574916759157,
+    "percent_branches_covered_display": "82"
+  },
+  "full_suite": "2277 passed /12 skipped /180.60s; frozen uv lock, CPython3.12.2",
+  "coverage_json_sha256": "4251408752163098588e032f0a181c4d5026a303a2090ba7ee6a0f2bc246fba5",
+  "rank_order": "escaped-defect evidence, 90day commits, uncovered lines+branches; never file size",
+  "ranking": [
+    {
+      "path": "src/fine_art_archive/api/main.py",
+      "escaped_defect_priority": 1,
+      "priority_evidence": "Recent same-surface production fit/ETag and strategy delivery corrections (#786/#788/#790); highest-risk public error boundary in this chunk",
+      "commits_90_days": 45,
+      "uncovered_mass": 121,
+      "coverage_percent": 93.40958605664488
+    },
+    {
+      "path": "src/fine_art_archive/api/store.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 11,
+      "uncovered_mass": 28,
+      "coverage_percent": 94.84346224677716
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/source_resolver.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 9,
+      "uncovered_mass": 183,
+      "coverage_percent": 83.77659574468085
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/holder_by_creator.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 9,
+      "uncovered_mass": 11,
+      "coverage_percent": 95.17543859649123
+    },
+    {
+      "path": "src/fine_art_archive/api/gates.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 8,
+      "uncovered_mass": 106,
+      "coverage_percent": 79.2156862745098
+    },
+    {
+      "path": "src/fine_art_archive/identity/variants.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 7,
+      "uncovered_mass": 14,
+      "coverage_percent": 93.66515837104072
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/holder.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 5,
+      "uncovered_mass": 52,
+      "coverage_percent": 87.0
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/work_qid_by_creator.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 5,
+      "uncovered_mass": 21,
+      "coverage_percent": 84.21052631578948
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/creator_provenance.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 4,
+      "uncovered_mass": 11,
+      "coverage_percent": 92.3076923076923
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/dossier.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 3,
+      "uncovered_mass": 19,
+      "coverage_percent": 89.32584269662921
+    },
+    {
+      "path": "src/fine_art_archive/identity/artist_resolver.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 3,
+      "uncovered_mass": 18,
+      "coverage_percent": 93.20754716981132
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/title_artist_swap.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 3,
+      "uncovered_mass": 8,
+      "coverage_percent": 90.69767441860465
+    },
+    {
+      "path": "src/fine_art_archive/identity/work_qid_uniqueness.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 3,
+      "uncovered_mass": 3,
+      "coverage_percent": 93.47826086956522
+    },
+    {
+      "path": "src/fine_art_archive/identity/work_qid_collision_audit.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 3,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/identity/artist_lookup.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 16,
+      "coverage_percent": 86.77685950413223
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/work_qid_search.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 12,
+      "coverage_percent": 87.62886597938144
+    },
+    {
+      "path": "src/fine_art_archive/identity/crop_siblings.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 11,
+      "coverage_percent": 94.47236180904522
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/medium_vocab.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 10,
+      "coverage_percent": 88.50574712643679
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/work_qid_title_variants.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 10,
+      "coverage_percent": 94.84536082474227
+    },
+    {
+      "path": "src/fine_art_archive/identity/variant_identity.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 10,
+      "coverage_percent": 88.76404494382022
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/misresolved_work_qid.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 8,
+      "coverage_percent": 91.30434782608695
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/category_infer.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 2,
+      "uncovered_mass": 7,
+      "coverage_percent": 96.02272727272727
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/artist_from_work.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 22,
+      "coverage_percent": 80.70175438596492
+    },
+    {
+      "path": "src/fine_art_archive/identity/getty.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 13,
+      "coverage_percent": 92.57142857142857
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/creator_category_prior.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 11,
+      "coverage_percent": 83.58208955223881
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/wikidata_identity.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 6,
+      "coverage_percent": 87.23404255319149
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/__init__.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/identity/artist_qid.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/identity/same_object.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 1,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/api/__init__.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 0,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/api/config.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 0,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    },
+    {
+      "path": "src/fine_art_archive/identity/__init__.py",
+      "escaped_defect_priority": 0,
+      "priority_evidence": "No specific escaped-defect receipt asserted for this scoped comparison",
+      "commits_90_days": 0,
+      "uncovered_mass": 0,
+      "coverage_percent": 100.0
+    }
+  ],
+  "preview_function": {
+    "executed_lines": [
+      757,
+      758,
+      760,
+      761,
+      762,
+      763,
+      774,
+      776,
+      777,
+      786,
+      787,
+      788,
+      789,
+      790,
+      796,
+      797,
+      798
+    ],
+    "summary": {
+      "covered_lines": 17,
+      "num_statements": 25,
+      "percent_covered": 65.51724137931035,
+      "percent_covered_display": "66",
+      "missing_lines": 8,
+      "excluded_lines": 0,
+      "percent_statements_covered": 68.0,
+      "percent_statements_covered_display": "68",
+      "num_branches": 4,
+      "num_partial_branches": 2,
+      "covered_branches": 2,
+      "missing_branches": 2,
+      "percent_branches_covered": 50.0,
+      "percent_branches_covered_display": "50"
+    },
+    "missing_lines": [
+      759,
+      764,
+      765,
+      766,
+      767,
+      768,
+      793,
+      794
+    ],
+    "excluded_lines": [],
+    "start_line": 744,
+    "executed_branches": [
+      [
+        758,
+        760
+      ],
+      [
+        763,
+        774
+      ]
+    ],
+    "missing_branches": [
+      [
+        758,
+        759
+      ],
+      [
+        763,
+        764
+      ]
+    ]
+  }
+}
