@@ -1,0 +1,176 @@
+[
+  {
+    "name": "invalid-target",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering",
+    "selection": "query0",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "tgt = _eink.get_target(target)",
+      "new": "tgt = _eink.get_target(\"test-strategy\")"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "assert 200 == 400\n +  where 200 = <Response [200 OK]>.status_code"
+    ]
+  },
+  {
+    "name": "invalid-dither",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering",
+    "selection": "query1",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "if dither not in (\"none\", \"floyd-steinberg\", \"atkinson\"):",
+      "new": "if False:"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "assert 500 == 400\n +  where 500 = <Response [500 Internal Server Error]>.status_code"
+    ]
+  },
+  {
+    "name": "invalid-fit",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering",
+    "selection": "query2",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "render_fit = _eink.coerce_fit(fit)",
+      "new": "render_fit = None"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "assert 200 == 400\n +  where 200 = <Response [200 OK]>.status_code"
+    ]
+  },
+  {
+    "name": "missing-master",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_reports_missing_master_before_attempting_a_render",
+    "selection": "",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "raise HTTPException(404, f\"no local master for {work_id}\")",
+      "new": "raise HTTPException(410, f\"no local master for {work_id}\")"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "assert 410 == 404\n +  where 410 = <Response [410 Gone]>.status_code"
+    ]
+  },
+  {
+    "name": "render-error",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_turns_render_failures_into_a_clear_server_error",
+    "selection": "",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "raise HTTPException(500, f\"render failed: {exc}\")",
+      "new": "raise HTTPException(400, f\"render failed: {exc}\")"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "assert 400 == 500\n +  where 400 = <Response [400 Bad Request]>.status_code"
+    ]
+  },
+  {
+    "name": "invalid-options-order",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering",
+    "selection": "",
+    "expected_failures": 3,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "    master = _eink_master(work_id)",
+      "new": "    _eink.render_for_target(__import__(\"PIL.Image\", fromlist=[\"Image\"]).new(\"RGB\", (8, 8)), _eink.RenderTarget(\"fault\", \"fault\", 8, 8, \"spectra6\"), method=\"none\")\n    master = _eink_master(work_id)"
+    },
+    "observed_failures": 3,
+    "assertion_failure_messages": [
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x11011B710>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x107F69040>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].",
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x11011F500>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
+    ]
+  },
+  {
+    "name": "invalid-diagnostics",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering",
+    "selection": "",
+    "expected_failures": 3,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "    except KeyError as exc:\n        raise HTTPException(400, str(exc)) from exc\n    except ValueError as exc:\n        raise HTTPException(400, str(exc)) from exc",
+      "new": "    except KeyError as exc:\n        raise HTTPException(400, \"wrong diagnostic\") from exc\n    except ValueError as exc:\n        raise HTTPException(400, \"wrong diagnostic\") from exc"
+    },
+    "observed_failures": 3,
+    "assertion_failure_messages": [
+      "AssertionError: assert 'unknown render target' in 'wrong diagnostic'",
+      "AssertionError: assert 'unsupported dither method' in 'wrong diagnostic'",
+      "AssertionError: assert 'unknown fit mode' in 'wrong diagnostic'"
+    ]
+  },
+  {
+    "name": "missing-master-diagnostic",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_reports_missing_master_before_attempting_a_render",
+    "selection": "",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "raise HTTPException(404, f\"no local master for {work_id}\")",
+      "new": "raise HTTPException(404, f\"no pixels for {work_id}\")"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "AssertionError: assert 'no local master' in 'no pixels for sidecar-only'"
+    ]
+  },
+  {
+    "name": "render-error-diagnostic",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_turns_render_failures_into_a_clear_server_error",
+    "selection": "",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "raise HTTPException(500, f\"render failed: {exc}\")",
+      "new": "raise HTTPException(500, f\"render unavailable: {exc}\")"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "AssertionError: assert 'render unava...e: bad pixels' == 'render failed: bad pixels'\n  \n  - render failed: bad pixels\n  ?        ^    -\n  + render unavailable: bad pixels\n  ?        ^^^^   +++"
+    ]
+  },
+  {
+    "name": "missing-master-order",
+    "node": "tests/test_eink_monochrome_delivery.py::test_preview_reports_missing_master_before_attempting_a_render",
+    "selection": "",
+    "expected_failures": 1,
+    "red_exit": 1,
+    "green_exit": 0,
+    "source_sha256": "0d297d060dd5cc1c9a19a0c1324d9725e3cdee4744eff2f6b1baa0a93408554e",
+    "mutation": {
+      "old": "    if master is None:\n",
+      "new": "    if master is None:\n        _eink.render_for_target(__import__(\"PIL.Image\", fromlist=[\"Image\"]).new(\"RGB\", (8, 8)), _eink.RenderTarget(\"fault\", \"fault\", 8, 8, \"spectra6\"), method=\"none\")\n"
+    },
+    "observed_failures": 1,
+    "assertion_failure_messages": [
+      "AssertionError: Expected 'mock' to not have been called. Called 1 times.\nCalls: [call(<PIL.Image.Image image mode=RGB size=8x8 at 0x1147AAD50>, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')]."
+    ]
+  }
+]

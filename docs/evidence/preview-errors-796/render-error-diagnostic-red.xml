@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.373" timestamp="2026-10-16T08:06:31.099024-05:00" hostname="server.trs.private"><testcase classname="tests.test_eink_monochrome_delivery" name="test_preview_turns_render_failures_into_a_clear_server_error" time="0.033"><failure message="AssertionError: assert 'render unava...e: bad pixels' == 'render failed: bad pixels'&#10;  &#10;  - render failed: bad pixels&#10;  ?        ^    -&#10;  + render unavailable: bad pixels&#10;  ?        ^^^^   +++">tests/test_eink_monochrome_delivery.py:127: in test_preview_turns_render_failures_into_a_clear_server_error
+    assert response.json()["detail"] == "render failed: bad pixels"
+E   AssertionError: assert 'render unava...e: bad pixels' == 'render failed: bad pixels'
+E
+E     - render failed: bad pixels
+E     ?        ^    -
+E     + render unavailable: bad pixels
+E     ?        ^^^^   +++</failure></testcase></testsuite></testsuites>

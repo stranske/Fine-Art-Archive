@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.14.2
+collected 3 items
+
+tests/test_eink_monochrome_delivery.py ...                               [100%]
+
+=============================== warnings summary ===============================
+../../../imi-merge-verify-closer/worktrees/faa797-acceptance-20261016/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa797-acceptance-20261016/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /Users/teacher/.codex/automations/pd-workloop-resume/worktrees/faa797-runner-review-20261016/docs/evidence/preview-errors-796/invalid-diagnostics-green.xml -
+========================= 3 passed, 1 warning in 0.36s =========================

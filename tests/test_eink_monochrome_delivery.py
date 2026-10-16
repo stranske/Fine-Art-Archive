@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import os
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -68,6 +69,62 @@ def _work(works, strategy):
     path = directory / "master.jpeg"
     _master(strategy).save(path, format="PNG")
     return path
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        ({"target": "not-a-panel"}, "unknown render target"),
+        ({"dither": "ordered"}, "unsupported dither method"),
+        ({"fit": "squish"}, "unknown fit mode"),
+    ],
+)
+def test_preview_rejects_invalid_render_options_before_rendering(
+    delivery, monkeypatch, query, expected
+):
+    """A bad preview request must not silently render with a different panel policy."""
+    client, works, target = delivery
+    _work(works, "color")
+    renderer = Mock(wraps=api._eink.render_for_target)
+    monkeypatch.setattr(api._eink, "render_for_target", renderer)
+
+    response = client.get("/works/color/eink_preview", params={"target": target.key, **query})
+
+    assert response.status_code == 400
+    assert expected in response.json()["detail"]
+    renderer.assert_not_called()
+
+
+def test_preview_reports_missing_master_before_attempting_a_render(delivery, monkeypatch):
+    """A sidecar without pixels is not a blank panel preview."""
+    client, works, target = delivery
+    directory = works / "sidecar-only"
+    directory.mkdir()
+    (directory / "meta.json").write_text(json.dumps({"work_id": "sidecar-only"}))
+    renderer = Mock(wraps=api._eink.render_for_target)
+    monkeypatch.setattr(api._eink, "render_for_target", renderer)
+
+    response = client.get(f"/works/sidecar-only/eink_preview?target={target.key}")
+
+    assert response.status_code == 404
+    assert "no local master" in response.json()["detail"]
+    renderer.assert_not_called()
+
+
+def test_preview_turns_render_failures_into_a_clear_server_error(delivery, monkeypatch):
+    """A corrupt master must not leak a Pillow traceback through the API."""
+    client, works, target = delivery
+    _work(works, "color")
+
+    def fail_render(*args, **kwargs):
+        raise ValueError("bad pixels")
+
+    monkeypatch.setattr(api._eink, "render_for_target", fail_render)
+
+    response = client.get(f"/works/color/eink_preview?target={target.key}")
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "render failed: bad pixels"
 
 
 @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])

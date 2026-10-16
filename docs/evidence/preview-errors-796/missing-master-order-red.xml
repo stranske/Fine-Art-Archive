@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.367" timestamp="2026-10-16T08:06:32.345861-05:00" hostname="server.trs.private"><testcase classname="tests.test_eink_monochrome_delivery" name="test_preview_reports_missing_master_before_attempting_a_render" time="0.013"><failure message="AssertionError: Expected 'mock' to not have been called. Called 1 times.&#10;Calls: [call(&lt;PIL.Image.Image image mode=RGB size=8x8 at 0x1147AAD50&gt;, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].">tests/test_eink_monochrome_delivery.py:111: in test_preview_reports_missing_master_before_attempting_a_render
+    renderer.assert_not_called()
+/opt/anaconda3/lib/python3.12/unittest/mock.py:905: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(&lt;PIL.Image.Image image mode=RGB size=8x8 at 0x1147AAD50&gt;, RenderTarget(key='fault', label='fault', width=8, height=8, palette_name='spectra6', fit='contain', rotate=0, note=''), method='none')].</failure></testcase></testsuite></testsuites>
