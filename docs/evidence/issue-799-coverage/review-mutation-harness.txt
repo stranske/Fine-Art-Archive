@@ -1,0 +1,87 @@
+"""Execute an isolated production mutation and restoration for every new case."""
+import ast
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+source = Path('src/fine_art_archive/api/main.py')
+original = source.read_bytes()
+source_text = original.decode()
+nodes = {node.name: node for node in ast.parse(source_text).body if isinstance(node, ast.FunctionDef)}
+source_lines = source_text.splitlines(keepends=True)
+proofs = []
+cases = []
+for route, function in [
+    ('acquisitions', 'list_acquisitions'),
+    ('review/works', 'review_works'),
+    ('review/artists', 'review_artists'),
+    ('review/held', 'review_gate'),
+]:
+    cases.append((
+        f'test_review_lists_reject_zero_limit_before_loading_state[{route}]',
+        function, 'if limit < 1:', 'if limit < 0:',
+        'Allow a zero limit to reach the review state loader',
+    ))
+cases.extend([
+    ('test_gate_details_preserve_summary_and_item_order[truncated]', 'review_gate',
+     'payload["items"] = g.items[:limit]', 'payload["items"] = g.items',
+     'Ignore the requested item limit'),
+    ('test_gate_details_preserve_summary_and_item_order[all-items]', 'review_gate',
+     'payload["returned"] = len(g.items[:limit])', 'payload["returned"] = 0',
+     'Report zero returned items for a populated gate'),
+    ('test_unknown_gate_is_404_even_when_other_gates_exist[no-gates]', 'review_gate',
+     'raise HTTPException(404,', 'raise HTTPException(418,',
+     'Return the wrong status for an unknown gate'),
+    ('test_unknown_gate_is_404_even_when_other_gates_exist[other-gate]', 'review_gate',
+     'raise HTTPException(404,', 'raise HTTPException(418,',
+     'Return the wrong status after searching unrelated gates'),
+    ('test_artist_review_omits_candidates_without_artist_identity', 'review_artists',
+     'if not qid:', 'if False:',
+     'Include candidates that cannot identify their artist'),
+    ('test_artist_review_recovers_label_from_a_later_work', 'review_artists',
+     'entry["artist_label"] = item["artist_label"]', 'entry["artist_label"] = ""',
+     'Discard the artist label supplied by a later work'),
+])
+environment = os.environ.copy()
+environment['PYTHONPATH'] = '/tmp/faa804-validation'
+environment['PYTHONDONTWRITEBYTECODE'] = '1'
+
+def clear_bytecode():
+    for cached in (source.parent / '__pycache__').glob('main.*.pyc'):
+        cached.unlink()
+
+try:
+    for name, function, before, after, defect in cases:
+        node = nodes[function]
+        start, end = node.lineno - 1, node.end_lineno
+        function_text = ''.join(source_lines[start:end])
+        assert function_text.count(before) == 1, (function, before)
+        mutated = ''.join(source_lines[:start]) + function_text.replace(before, after) + ''.join(source_lines[end:])
+        command = [sys.executable, '-m', 'pytest', f'tests/test_api_review_contracts.py::{name}',
+                   '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+        try:
+            source.write_text(mutated)
+            clear_bytecode()
+            red = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=60)
+        finally:
+            source.write_bytes(original)
+            clear_bytecode()
+        green = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=60)
+        proof = {'test': name, 'function': function, 'defect': defect,
+                 'before': before, 'after': after, 'command': command,
+                 'red_exit': red.returncode, 'red_output': red.stdout + red.stderr,
+                 'green_exit': green.returncode, 'green_output': green.stdout + green.stderr}
+        proofs.append(proof)
+        print(name, 'RED', red.returncode, 'GREEN', green.returncode, flush=True)
+        assert red.returncode == 1 and f'FAILED tests/test_api_review_contracts.py::{name}' in red.stdout
+        assert green.returncode == 0
+finally:
+    source.write_bytes(original)
+    clear_bytecode()
+    assert source.read_bytes() == original
+    Path('docs/evidence/issue-799-coverage/review-mutation-proofs.json').write_text(
+        json.dumps({'source': str(source), 'source_sha256': hashlib.sha256(original).hexdigest(),
+                    'restored_exactly': True, 'proofs': proofs}, indent=2) + '\n')
