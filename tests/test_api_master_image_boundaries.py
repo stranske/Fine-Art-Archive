@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import builtins
 import io
 import json
@@ -129,3 +130,105 @@ def test_sidecar_master_filename_fallback_is_served(image_files: dict[str, Path]
         assert rendered.size == (64, 32)
         red, _, blue = rendered.getpixel((32, 16))
         assert blue > red
+
+
+def test_is_master_image_accepts_pictures_and_rejects_sidecars() -> None:
+    """An XMP sidecar starts with "master." too, so the prefix cannot decide."""
+    from fine_art_archive.sidecar import is_master_image
+
+    for name in (
+        "master.jpeg",
+        "master.jpg",
+        "master.png",
+        "master.tif",
+        "master.tiff",
+        "master.webp",
+        "master.JPG",  # the lowercasing path, which no accepted name exercised
+    ):
+        assert is_master_image(name), name
+    # digiKam writes "master.jpeg.xmp"; its compact naming writes "master.xmp"
+    for name in ("master.jpeg.xmp", "master.xmp", "master.JPEG.XMP", "master.json"):
+        assert not is_master_image(name), name
+    assert not is_master_image("variant-landscape-crop.jpeg")
+
+
+def test_a_sidecar_beside_the_master_is_not_served_as_the_image(
+    image_files: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The picture is served even when an XMP sidecar shares its "master." prefix.
+
+    Without the extension check the directory scan returns "master.png.xmp" -- it
+    matched the prefix and nothing downstream re-checked the suffix -- and the API
+    tries to render an XML file as a picture.
+    """
+    master = image_files["work"] / "master.png"
+    Image.new("RGB", (64, 32), (10, 120, 200)).save(master)
+    sidecar_file = image_files["work"] / "master.png.xmp"
+    sidecar_file.write_text(
+        '<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?><x:xmpmeta '
+        'xmlns:x="adobe:ns:meta/"/><?xpacket end="w"?>',
+        encoding="utf-8",
+    )
+
+    # Directory order decides which file the scan reaches first, and it is not
+    # guaranteed: with the guard removed this test still passed on one run because
+    # the picture happened to come first. Force the adversarial order so the test
+    # fails whenever the extension check is dropped, on any filesystem.
+    real_iterdir = Path.iterdir
+
+    def sidecars_first(self: Path):
+        return iter(sorted(real_iterdir(self), key=lambda p: (p.suffix != ".xmp", p.name)))
+
+    monkeypatch.setattr(Path, "iterdir", sidecars_first)
+
+    assert api_main._master_path("sample-work") == master
+
+    with TestClient(api_main.app) as client:
+        response = client.get("/works/sample-work/image?max=64")
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "image/jpeg"
+    with Image.open(io.BytesIO(response.content)) as rendered:
+        assert rendered.format == "JPEG"
+
+
+def test_no_caller_locates_the_master_by_prefix_alone() -> None:
+    """The prefix test lives in is_master_image and nowhere else.
+
+    This is the break-test for the rule: reintroducing `startswith("master.")` at a
+    call site reopens the bug silently, because a work directory without a sidecar
+    still behaves correctly and nothing else notices.
+    """
+    repo = Path(__file__).resolve().parents[1]
+    allowed = {repo / "src" / "fine_art_archive" / "sidecar.py"}
+    offenders: list[str] = []
+    unparsed: list[str] = []
+    for path in sorted([*(repo / "src").rglob("*.py"), *(repo / "scripts").rglob("*.py")]):
+        if path in allowed:
+            continue
+        source = path.read_text(encoding="utf-8", errors="replace")
+        try:
+            tree = ast.parse(source)
+        except SyntaxError as exc:  # pragma: no cover - a parse failure is reported, not skipped
+            unparsed.append(f"{path.relative_to(repo)}: {exc}")
+            continue
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "startswith"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and node.args[0].value.startswith("master.")
+            ):
+                offenders.append(f"{path.relative_to(repo)}:{node.lineno}")
+
+    # A file the scan could not read has not been checked. Letting that pass would
+    # make the guard report "clean" for a reason that has nothing to do with the code.
+    assert not unparsed, f"scan did not cover: {unparsed}"
+    assert not offenders, (
+        "locate the master with fine_art_archive.sidecar.is_master_image(); "
+        f"prefix-only checks found at: {offenders}"
+    )

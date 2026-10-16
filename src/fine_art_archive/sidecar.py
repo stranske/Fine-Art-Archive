@@ -9,6 +9,24 @@ from pathlib import Path
 # even when jsonschema isn't installed. Validation requires it.
 
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "meta.schema.json"
+# A work's master image. Callers locate it by scanning the work directory for a
+# file whose name starts with "master." -- but that prefix alone is not enough.
+# An XMP sidecar is named "master.jpeg.xmp", and the compact form is "master.xmp";
+# both start with "master.", and nothing downstream re-checks the extension
+# (_contained_master_filename only verifies the path stays inside the work dir).
+# A directory holding one would serve the sidecar in place of the picture. Match
+# the extension positively instead: a master is an image.
+MASTER_IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"})
+
+
+def is_master_image(name: str) -> bool:
+    """True if `name` is a work's master image file (not its sidecar)."""
+    lowered = name.lower()
+    if not lowered.startswith("master."):
+        return False
+    return Path(lowered).suffix in MASTER_IMAGE_SUFFIXES
+
+
 SITE_ANCHORED_CATEGORIES = frozenset(
     {
         "architecture",

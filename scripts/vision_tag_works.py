@@ -46,8 +46,11 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from _paths import default_works_dir  # noqa: E402
+
+from fine_art_archive.sidecar import is_master_image  # noqa: E402
 
 ROOT = Path(
     os.environ.get(
@@ -266,11 +269,7 @@ def _master_path(work_id: str) -> Path | None:
     work_dir = ART_WORKS / work_id
     if work_dir.is_dir():
         return next(
-            (
-                path
-                for path in work_dir.iterdir()
-                if path.is_file() and path.name.startswith("master.")
-            ),
+            (path for path in work_dir.iterdir() if path.is_file() and is_master_image(path.name)),
             None,
         )
     return None
