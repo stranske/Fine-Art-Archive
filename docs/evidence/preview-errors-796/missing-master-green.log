@@ -14,4 +14,4 @@ tests/test_eink_monochrome_delivery.py .                                 [100%]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa797-acceptance-20261016/docs/evidence/preview-errors-796/missing-master-green.xml -
-========================= 1 passed, 1 warning in 0.32s =========================
+========================= 1 passed, 1 warning in 0.34s =========================

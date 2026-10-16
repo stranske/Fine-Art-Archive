@@ -12,7 +12,7 @@ The exact pre-PR base `4446c8f2cb7730614f9bf5e35e0ac385242facec` has now been re
 
 ## Individual causal controls
 
-`faults.json`, per-control logs, and parsed JUnit preserve **seven assertion-RED / restored-GREEN controls**. Each control starts from the exact production bytes and restores them in a `finally` block. Source SHA-256 is recorded in every row. The restored source is byte-identical to the PR's production source; no mutant is committed.
+`faults.json`, per-control logs, and parsed JUnit preserve **ten assertion-RED / restored-GREEN controls**. Each control starts from the exact production bytes and restores them in a `finally` block. Source SHA-256 is recorded in every row. The restored source is byte-identical to the PR's production source; no mutant is committed.
 
 | Fault | Expected failing cases | Restored |
 | --- | ---: | --- |
@@ -23,8 +23,11 @@ The exact pre-PR base `4446c8f2cb7730614f9bf5e35e0ac385242facec` has now been re
 | Renderer exception status changed 500 -> 400 | 1 | PASS |
 | Actual render performed before invalid-option validation | 3 | PASS |
 | Actual render performed before missing-master rejection | 1 | PASS |
+| Wrong invalid-option diagnostics with unchanged HTTP 400 | 3 | PASS |
+| Wrong missing-master diagnostic with unchanged HTTP 404 | 1 | PASS |
+| Wrong renderer-error diagnostic with unchanged HTTP 500 | 1 | PASS |
 
-The ordering mutants still return the expected status/detail; the new renderer assertions specifically catch their extra work. The JUnit audit confirms 9 assertion failures, zero collection/setup errors, and all restored cases passing. An initial selection trial selected zero nodes and an initial same-size rewrite reused Python bytecode; neither was accepted as proof. The final runner selects the actual pytest parameter IDs and removes only its owned generated `main.*.pyc` before each subprocess. The seven final controls above were rerun completely.
+The ordering mutants still return the expected status/detail; the new renderer assertions specifically catch their extra work. The JUnit audit confirms 14 assertion failures, zero collection/setup errors, and all restored cases passing. An initial selection trial selected zero nodes and an initial same-size rewrite reused Python bytecode; neither was accepted as proof. The final runner selects the actual pytest parameter IDs and removes only its owned generated `main.*.pyc` before each subprocess. The ten final controls above were rerun completely.
 
 Reproduce after `uv sync --frozen --extra dev --python /opt/anaconda3/bin/python3` with `.venv/bin/python docs/evidence/preview-errors-796/run-faults.py`. Run it only in an isolated worktree with no concurrent tests/writer, because it temporarily mutates the production file.
 
@@ -35,3 +38,5 @@ Frozen-lock full candidate suite: **2282 passed, 12 skipped**, 175.33 seconds. C
 ## Delivery boundary
 
 Full candidate suite, exact-head hosted checks, seven-minute review floor, zero active review threads, guarded squash, actual `verify:compare`, and source disposition remain separate gates. Local causal proof does not assert hosted acceptance or provider PASS.
+
+The first exact-head independent advisory found no code defect and requested separate diagnostic assertion discrimination. Source #796 says every new test (rather than every assertion), but these three added faults independently strengthen that acceptance proof: all five error diagnostics now also fail while their status codes remain unchanged. They were actually run and restored; test/production/lock bytes remain unchanged from the fully validated candidate.

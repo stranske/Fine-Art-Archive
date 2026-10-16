@@ -22,4 +22,4 @@ E    +  where 400 = <Response [400 Bad Request]>.status_code
 - generated xml file: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa797-acceptance-20261016/docs/evidence/preview-errors-796/render-error-red.xml -
 =========================== short test summary info ============================
 FAILED tests/test_eink_monochrome_delivery.py::test_preview_turns_render_failures_into_a_clear_server_error
-========================= 1 failed, 1 warning in 0.38s =========================
+========================= 1 failed, 1 warning in 0.40s =========================

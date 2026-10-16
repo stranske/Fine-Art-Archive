@@ -22,4 +22,4 @@ E    +  where 200 = <Response [200 OK]>.status_code
 - generated xml file: /Users/teacher/.codex/automations/imi-merge-verify-closer/worktrees/faa797-acceptance-20261016/docs/evidence/preview-errors-796/invalid-fit-red.xml -
 =========================== short test summary info ============================
 FAILED tests/test_eink_monochrome_delivery.py::test_preview_rejects_invalid_render_options_before_rendering[query2-unknown fit mode]
-================== 1 failed, 2 deselected, 1 warning in 0.37s ==================
+================== 1 failed, 2 deselected, 1 warning in 0.39s ==================
