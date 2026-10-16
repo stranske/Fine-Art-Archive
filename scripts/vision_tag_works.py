@@ -269,11 +269,7 @@ def _master_path(work_id: str) -> Path | None:
     work_dir = ART_WORKS / work_id
     if work_dir.is_dir():
         return next(
-            (
-                path
-                for path in work_dir.iterdir()
-                if path.is_file() and is_master_image(path.name)
-            ),
+            (path for path in work_dir.iterdir() if path.is_file() and is_master_image(path.name)),
             None,
         )
     return None

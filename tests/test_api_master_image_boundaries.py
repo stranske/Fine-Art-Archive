@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import builtins
 import io
 import json
@@ -135,7 +136,15 @@ def test_is_master_image_accepts_pictures_and_rejects_sidecars() -> None:
     """An XMP sidecar starts with "master." too, so the prefix cannot decide."""
     from fine_art_archive.sidecar import is_master_image
 
-    for name in ("master.jpeg", "master.jpg", "master.png", "master.tif", "master.tiff"):
+    for name in (
+        "master.jpeg",
+        "master.jpg",
+        "master.png",
+        "master.tif",
+        "master.tiff",
+        "master.webp",
+        "master.JPG",  # the lowercasing path, which no accepted name exercised
+    ):
         assert is_master_image(name), name
     # digiKam writes "master.jpeg.xmp"; its compact naming writes "master.xmp"
     for name in ("master.jpeg.xmp", "master.xmp", "master.JPEG.XMP", "master.json"):
@@ -193,15 +202,32 @@ def test_no_caller_locates_the_master_by_prefix_alone() -> None:
     """
     repo = Path(__file__).resolve().parents[1]
     allowed = {repo / "src" / "fine_art_archive" / "sidecar.py"}
-    offenders = []
-    for path in list((repo / "src").rglob("*.py")) + list((repo / "scripts").rglob("*.py")):
+    offenders: list[str] = []
+    unparsed: list[str] = []
+    for path in sorted([*(repo / "src").rglob("*.py"), *(repo / "scripts").rglob("*.py")]):
         if path in allowed:
             continue
-        for number, line in enumerate(
-            path.read_text(encoding="utf-8", errors="replace").splitlines(), 1
-        ):
-            if 'startswith("master.")' in line or "startswith('master.')" in line:
-                offenders.append(f"{path.relative_to(repo)}:{number}")
+        source = path.read_text(encoding="utf-8", errors="replace")
+        try:
+            tree = ast.parse(source)
+        except SyntaxError as exc:  # pragma: no cover - a parse failure is reported, not skipped
+            unparsed.append(f"{path.relative_to(repo)}: {exc}")
+            continue
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "startswith"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and node.args[0].value.startswith("master.")
+            ):
+                offenders.append(f"{path.relative_to(repo)}:{node.lineno}")
+
+    # A file the scan could not read has not been checked. Letting that pass would
+    # make the guard report "clean" for a reason that has nothing to do with the code.
+    assert not unparsed, f"scan did not cover: {unparsed}"
     assert not offenders, (
         "locate the master with fine_art_archive.sidecar.is_master_image(); "
         f"prefix-only checks found at: {offenders}"
