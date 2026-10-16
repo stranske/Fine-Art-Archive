@@ -157,75 +157,107 @@ def test_open_clip_backend_wraps_model_embedding(monkeypatch: pytest.MonkeyPatch
         verify_module._load_open_clip_backend.cache_clear()
 
 
-def test_embedding_and_site_identity_reject_invalid_inputs(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("vectors", "status", "message"),
+    [
+        (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+        (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+        (([0.0], [0.0]), "FAIL", "non-zero"),
+    ],
+    ids=["matching", "length-mismatch", "zero-vector"],
+)
+def test_embedding_similarity_validates_vectors(
+    tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+) -> None:
     candidate = _image(tmp_path / "candidate.png")
     reference = _image(tmp_path / "reference.png")
-
-    mismatch = check_embedding_similarity(
-        candidate_path=candidate,
-        reference_path=reference,
-        embedding_backend=lambda _: [1.0],
-    )
-    assert mismatch.status == "PASS"
-
-    values = iter(([1.0], [1.0, 2.0]))
-    invalid = check_embedding_similarity(
+    values = iter(vectors)
+    result = check_embedding_similarity(
         candidate_path=candidate,
         reference_path=reference,
         embedding_backend=lambda _: next(values),
     )
-    assert invalid.status == "FAIL"
-    assert "same length" in invalid.message
 
-    zero_vector = check_embedding_similarity(
-        candidate_path=candidate,
-        reference_path=reference,
-        embedding_backend=lambda _: [0.0],
+    assert result.name == "clip_similarity"
+    assert result.status == status
+    assert message in result.message
+    assert result.detail == (
+        {"cosine_similarity": 1.0, "threshold": 0.88} if status == "PASS" else {"threshold": 0.88}
     )
-    assert zero_vector.status == "FAIL"
-    assert "non-zero" in zero_vector.message
-
-    assert check_site_identity({"category": "painting"}).status == "FAIL"
-    assert check_site_identity({"category": "stained_glass", "site": {}}).status == "FAIL"
 
 
-def test_place_similarity_handles_empty_unavailable_and_invalid_references(
+@pytest.mark.parametrize(
+    ("meta", "message"),
+    [
+        ({"category": "painting"}, "category is not site-anchored"),
+        (
+            {"category": "stained_glass", "site": {}},
+            "site.wikidata_q or site.element_q is required",
+        ),
+    ],
+    ids=["wrong-category", "missing-site-identifiers"],
+)
+def test_site_identity_rejects_missing_anchors(meta: dict, message: str) -> None:
+    result = check_site_identity(meta)
+
+    assert result.name == "site_identity"
+    assert result.status == "FAIL"
+    assert result.message == message
+
+
+def test_place_similarity_rejects_empty_references(tmp_path: Path) -> None:
+    candidate = _image(tmp_path / "candidate.png")
+    result = check_place_object_similarity(
+        candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
+    )
+
+    assert result.status == "FAIL"
+    assert result.detail == {"threshold": 0.55, "reference_count": 0}
+    assert result.message == "no Commons category reference images supplied"
+
+
+def test_place_similarity_rejects_unavailable_backend(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     candidate = _image(tmp_path / "candidate.png")
-    unreadable = tmp_path / "unreadable.png"
-    unreadable.write_text("not an image")
-
-    assert (
-        check_place_object_similarity(
-            candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
-        ).status
-        == "FAIL"
-    )
 
     def unavailable() -> object:
         raise ImportError("open_clip")
 
     monkeypatch.setattr(verify_module, "_load_open_clip_backend", unavailable)
-    assert (
-        check_place_object_similarity(candidate_path=candidate, reference_paths=[candidate]).status
-        == "FAIL"
-    )
+    result = check_place_object_similarity(candidate_path=candidate, reference_paths=[candidate])
 
-    bad_reference = check_place_object_similarity(
+    assert result.status == "FAIL"
+    assert result.detail == {"threshold": 0.55, "reference_count": 1}
+    assert result.message == "embedding backend unavailable: open_clip"
+
+
+def test_place_similarity_rejects_unreadable_reference(tmp_path: Path) -> None:
+    candidate = _image(tmp_path / "candidate.png")
+    unreadable = tmp_path / "unreadable.png"
+    unreadable.write_text("not an image")
+
+    result = check_place_object_similarity(
         candidate_path=candidate, reference_paths=[unreadable], embedding_backend=lambda _: [1.0]
     )
-    assert bad_reference.status == "FAIL"
-    assert "failed to load reference" in bad_reference.message
 
+    assert result.status == "FAIL"
+    assert result.detail == {"threshold": 0.55, "reference": str(unreadable)}
+    assert "failed to load reference" in result.message
+
+
+def test_place_similarity_rejects_invalid_reference_vector(tmp_path: Path) -> None:
+    candidate = _image(tmp_path / "candidate.png")
     values = iter(([1.0], [1.0, 2.0]))
-    invalid_vector = check_place_object_similarity(
+    result = check_place_object_similarity(
         candidate_path=candidate,
         reference_paths=[candidate],
         embedding_backend=lambda _: next(values),
     )
-    assert invalid_vector.status == "FAIL"
-    assert "same length" in invalid_vector.message
+
+    assert result.status == "FAIL"
+    assert result.detail == {"threshold": 0.55, "reference": str(candidate)}
+    assert "same length" in result.message
 
 
 @pytest.mark.parametrize(

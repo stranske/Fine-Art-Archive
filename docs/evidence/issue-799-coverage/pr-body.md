@@ -61,7 +61,7 @@ Full RED/GREEN output: [mutation-proofs.txt](https://github.com/stranske/Fine-Ar
 
 The combined configuration/artist test has been split into independent missing-config, empty-config, unknown-host, empty-candidate, and parameterized artist-name cases. This prevents a failure in the first assertion from standing in as mutation evidence for all later checks. The artist cases also check that a non-string name falls back to a label and blank fields fall back to `display_name`. No additional production change was needed.
 
-All eight cases below were individually run against the stated source mutation and again after restoring the original bytes. Together with the 15 retained test cases from the original proof table, all 23 current cases have an executed break-and-revert proof. Detailed output is in [acquisition-mutation-proofs.txt](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/acquisition-mutation-proofs.txt).
+All eight cases below were individually run against the stated source mutation and again after restoring the original bytes. At that revision, together with the 15 retained test cases from the original proof table, all 23 cases had an executed break-and-revert proof. Detailed output is in [acquisition-mutation-proofs.txt](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/acquisition-mutation-proofs.txt).
 
 | Test case | Deliberate defect | Broken | Restored |
 |---|---|---|---|
@@ -79,6 +79,30 @@ Fresh targeted coverage: **94 passed, 4 skipped in 3.09s**. Both `acquisition_fl
 Fresh full-suite baseline at `38d72e0`: **4 failed, 2294 passed, 12 skipped in 107.83s**; blended coverage **89.51%**, so the 90% stop condition does not apply. Final full-suite result: **4 failed, 2301 passed, 12 skipped in 104.57s**, with the same four read-only-home failures and unchanged **89.51%** blended coverage. Both runs use `pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:<separate report path> -q -m 'not slow'`. The same temporary selector-polling harness described above is needed in this sandbox. No tests are disabled to hide filesystem failures.
 
 Before this follow-up, [Gate passed on `38d72e0`](https://github.com/stranske/Fine-Art-Archive/actions/runs/38956189223). Acceptance for the new commit's CI remains pending. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` pass. Commands, fresh coverage summaries, production-source hashes, and mutation results are in [acquisition-followup.json](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-799-coverage-verify-acquisition/docs/evidence/issue-799-coverage/acquisition-followup.json).
+
+## Verification follow-up
+
+Two combined verification tests have been replaced by nine independent cases. The vector cases separately check matching, unequal-length, and zero vectors; site identity separately checks category and identifiers; place similarity separately checks empty references, missing backend, unreadable references, and invalid reference vectors. Assertions also verify the diagnostic and result details. No production change was needed.
+
+Each case below was run against an actual temporary mutation of `collect/verify.py`, failed, then passed after the original source bytes were restored. Together with the 21 retained cases documented above, all **30 current cases** have individual executed proofs. Full output: [verification-mutation-proofs.txt](verification-mutation-proofs.txt); commands and hashes: [verification-followup.json](verification-followup.json).
+
+| Test case | Deliberate defect | Broken | Restored |
+|---|---|---|---|
+| `test_embedding_similarity_validates_vectors[matching]` | Reject matching embeddings | 1 failed in 0.20s (exit 1) | 1 passed in 0.53s (exit 0) |
+| `test_embedding_similarity_validates_vectors[length-mismatch]` | Remove vector-length validation | 1 failed in 0.19s (exit 1) | 1 passed in 0.14s (exit 0) |
+| `test_embedding_similarity_validates_vectors[zero-vector]` | Remove zero-vector validation | 1 failed in 0.19s (exit 1) | 1 passed in 0.14s (exit 0) |
+| `test_site_identity_rejects_missing_anchors[wrong-category]` | Remove site-category guard | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `test_site_identity_rejects_missing_anchors[missing-site-identifiers]` | Remove site-identifier guard | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `test_place_similarity_rejects_empty_references` | Accept an empty reference set | 1 failed in 0.18s (exit 1) | 1 passed in 0.14s (exit 0) |
+| `test_place_similarity_rejects_unavailable_backend` | Skip rather than fail an unavailable site backend | 1 failed in 0.18s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `test_place_similarity_rejects_unreadable_reference` | Accept an unreadable reference | 1 failed in 0.20s (exit 1) | 1 passed in 0.16s (exit 0) |
+| `test_place_similarity_rejects_invalid_reference_vector` | Accept an invalid reference vector | 1 failed in 0.18s (exit 1) | 1 passed in 0.14s (exit 0) |
+
+The starting full suite at `62b7bde` measured **89.51%** blended coverage, with **4 failed, 2301 passed, 12 skipped**. The same four read-only-home failures described above remain environmental blockers. The existing [Gate run for `62b7bde`](https://github.com/stranske/Fine-Art-Archive/actions/runs/38959783307) passed; CI for this follow-up is still pending.
+
+Final targeted coverage: **101 passed, 4 skipped in 3.27s**, both target rows **100%** with zero missing statements or branches. Final full suite: **4 failed, 2308 passed, 12 skipped in 119.25s**, with exactly the same four read-only-home failures and unchanged **89.51%** blended coverage. No additional covered units are claimed for this follow-up. All 30 collected cases match executed RED/GREEN receipts. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` passed.
+
+Task reconciliation: the recent commits and a fresh targeted run verify that both coverage targets are complete. The checked-in body records those completed tasks and all executed mutation proofs. The GitHub connector confirmed PR #804 is **open** with **draft=false**. Updating its live body was blocked: `MCP tool call requires approval, but approval policy is never`. The shell GitHub client also cannot connect to `api.github.com`, so the live checkbox update remains outstanding. Committing was also blocked: Git cannot create `.git/index.lock` on the read-only filesystem. The source changes and updated evidence remain in the working tree.
 
 ## Tasks
 
