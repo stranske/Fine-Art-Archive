@@ -1,0 +1,421 @@
+{
+  "production_head": "62b7bdee0c9605159ae908c4e34613db5d501e06",
+  "source_sha256": {
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "src/fine_art_archive/collect/acquisition_flow.py": "928d59b526659310a5de0c90ff4608aee624e0f990858f75013a81f05de9da86",
+    "tests/test_coverage_round_799.py": "65eac9945e038fe86e38d408097f61f14a9f6544e3d13a8556654929f0a67213"
+  },
+  "source_restored": true,
+  "mutation_proofs": [
+    {
+      "test": "test_embedding_similarity_validates_vectors[matching]",
+      "defect": "Reject matching embeddings",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[matching]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.20s",
+      "green_result": "1 passed in 0.53s"
+    },
+    {
+      "test": "test_embedding_similarity_validates_vectors[length-mismatch]",
+      "defect": "Remove vector-length validation",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[length-mismatch]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.19s",
+      "green_result": "1 passed in 0.14s"
+    },
+    {
+      "test": "test_embedding_similarity_validates_vectors[zero-vector]",
+      "defect": "Remove zero-vector validation",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[zero-vector]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.19s",
+      "green_result": "1 passed in 0.14s"
+    },
+    {
+      "test": "test_site_identity_rejects_missing_anchors[wrong-category]",
+      "defect": "Remove site-category guard",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_site_identity_rejects_missing_anchors[wrong-category]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.17s",
+      "green_result": "1 passed in 0.13s"
+    },
+    {
+      "test": "test_site_identity_rejects_missing_anchors[missing-site-identifiers]",
+      "defect": "Remove site-identifier guard",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_site_identity_rejects_missing_anchors[missing-site-identifiers]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.17s",
+      "green_result": "1 passed in 0.13s"
+    },
+    {
+      "test": "test_place_similarity_rejects_empty_references",
+      "defect": "Accept an empty reference set",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_rejects_empty_references",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.18s",
+      "green_result": "1 passed in 0.14s"
+    },
+    {
+      "test": "test_place_similarity_rejects_unavailable_backend",
+      "defect": "Skip rather than fail an unavailable site backend",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_rejects_unavailable_backend",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.18s",
+      "green_result": "1 passed in 0.13s"
+    },
+    {
+      "test": "test_place_similarity_rejects_unreadable_reference",
+      "defect": "Accept an unreadable reference",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_rejects_unreadable_reference",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.20s",
+      "green_result": "1 passed in 0.16s"
+    },
+    {
+      "test": "test_place_similarity_rejects_invalid_reference_vector",
+      "defect": "Accept an invalid reference vector",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_rejects_invalid_reference_vector",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.18s",
+      "green_result": "1 passed in 0.14s"
+    }
+  ],
+  "baseline_command": "PYTHONPATH=/tmp/faa799-validation COVERAGE_FILE=/tmp/faa799-baseline.coverage pytest tests/ -o addopts= -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa799-baseline.json -q",
+  "final_command": "PYTHONPATH=/tmp/faa799-validation COVERAGE_FILE=/tmp/faa799-final.coverage pytest tests/ -o addopts= -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa799-final.json -q",
+  "focused_command": "COVERAGE_FILE=/tmp/faa799-target.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -m 'not slow' --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa799-target.json -q",
+  "focused_result": "101 passed, 4 skipped in 3.27s",
+  "environment": [
+    "Python 3.14.8. Full-suite runs use the unchanged external selector-polling harness recorded below. No repository code or tests are modified by the harness.",
+    "Four pre-existing tests cannot write the default automation lock directory under the read-only home filesystem; no tests were skipped to hide this.",
+    "Whole-tree Black uses the same harness and BLACK_NUM_WORKERS=1 because the sandbox prevents socket wakeups and multiprocessing forkserver sockets."
+  ],
+  "external_sitecustomize": "\"\"\"Poll selectors when sandboxed socketpair wakeup writes are unavailable.\"\"\"\nimport selectors\n\n_select = selectors.EpollSelector.select\n\n\ndef _poll_select(self, timeout=None):\n    return _select(self, 0.01 if timeout is None else min(timeout, 0.01))\n\n\nselectors.EpollSelector.select = _poll_select\n",
+  "formatting": [
+    "black --line-length 100 tests/test_coverage_round_799.py",
+    "PYTHONPATH=/tmp/faa799-validation BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "ruff check tests/test_coverage_round_799.py",
+    "git diff --check"
+  ],
+  "formatting_result": "All checks passed; whole-tree Black checked 361 Python files.",
+  "starting_gate": {
+    "head": "62b7bdee0c9605159ae908c4e34613db5d501e06",
+    "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38959783307",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "pr": {
+    "number": 804,
+    "state": "open",
+    "draft": false,
+    "body_update_error": "MCP tool call requires approval, but approval policy is never"
+  },
+  "baseline": {
+    "totals": {
+      "covered_lines": 9415,
+      "num_statements": 10219,
+      "percent_covered": 89.51023656225132,
+      "percent_covered_display": "90",
+      "missing_lines": 804,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.13230257363735,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 496,
+      "covered_branches": 2958,
+      "missing_branches": 646,
+      "percent_branches_covered": 82.0754716981132,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 127,
+          "num_statements": 127,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 38,
+          "num_partial_branches": 0,
+          "covered_branches": 38,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 238,
+          "num_statements": 238,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 60,
+          "num_partial_branches": 0,
+          "covered_branches": 60,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      }
+    }
+  },
+  "target": {
+    "totals": {
+      "covered_lines": 365,
+      "num_statements": 365,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 98,
+      "num_partial_branches": 0,
+      "covered_branches": 98,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 127,
+          "num_statements": 127,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 38,
+          "num_partial_branches": 0,
+          "covered_branches": 38,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 238,
+          "num_statements": 238,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 60,
+          "num_partial_branches": 0,
+          "covered_branches": 60,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      }
+    }
+  },
+  "baseline_result": "4 failed, 2301 passed, 12 skipped, 1 warning in 121.60s (0:02:01)",
+  "commit_error": "fatal: Unable to create '/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/.git/index.lock': Read-only file system",
+  "final": {
+    "totals": {
+      "covered_lines": 9415,
+      "num_statements": 10219,
+      "percent_covered": 89.51023656225132,
+      "percent_covered_display": "90",
+      "missing_lines": 804,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.13230257363735,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 496,
+      "covered_branches": 2958,
+      "missing_branches": 646,
+      "percent_branches_covered": 82.0754716981132,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 127,
+          "num_statements": 127,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 38,
+          "num_partial_branches": 0,
+          "covered_branches": 38,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 238,
+          "num_statements": 238,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 60,
+          "num_partial_branches": 0,
+          "covered_branches": 60,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      }
+    }
+  },
+  "baseline_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "final_result": "4 failed, 2308 passed, 12 skipped, 1 warning in 119.25s (0:01:59)",
+  "final_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "proof_coverage": {
+    "collected_cases": 30,
+    "cases_with_executed_red_green_proofs": 30,
+    "all_current_cases_proven": true
+  },
+  "production_files_unchanged": true
+}

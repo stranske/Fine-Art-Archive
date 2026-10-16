@@ -1,0 +1,389 @@
+test_embedding_similarity_validates_vectors[matching] | Reject matching embeddings | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_embedding_similarity_validates_vectors[matching] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-3/test_embedding_similarity_vali0')
+vectors = ([1.0], [1.0]), status = 'PASS', message = 'embedding cosine 1.000'
+
+    @pytest.mark.parametrize(
+        ("vectors", "status", "message"),
+        [
+            (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+            (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+            (([0.0], [0.0]), "FAIL", "non-zero"),
+        ],
+        ids=["matching", "length-mismatch", "zero-vector"],
+    )
+    def test_embedding_similarity_validates_vectors(
+        tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        values = iter(vectors)
+        result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+    
+        assert result.name == "clip_similarity"
+>       assert result.status == status
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:182: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[matching] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.20s
+
+
+test_embedding_similarity_validates_vectors[matching] | Reject matching embeddings | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.53s
+
+
+test_embedding_similarity_validates_vectors[length-mismatch] | Remove vector-length validation | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_embedding_similarity_validates_vectors[length-mismatch] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-5/test_embedding_similarity_vali0')
+vectors = ([1.0], [1.0, 2.0]), status = 'FAIL', message = 'same length'
+
+    @pytest.mark.parametrize(
+        ("vectors", "status", "message"),
+        [
+            (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+            (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+            (([0.0], [0.0]), "FAIL", "non-zero"),
+        ],
+        ids=["matching", "length-mismatch", "zero-vector"],
+    )
+    def test_embedding_similarity_validates_vectors(
+        tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        values = iter(vectors)
+        result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+    
+        assert result.name == "clip_similarity"
+        assert result.status == status
+>       assert message in result.message
+E       AssertionError: assert 'same length' in 'zip() argument 2 is longer than argument 1'
+E        +  where 'zip() argument 2 is longer than argument 1' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='zip() argument 2 is longer than argument 1', blocks_overall=True).message
+
+tests/test_coverage_round_799.py:183: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[length-mismatch] - AssertionError: assert 'same length' in 'zip() argument 2 is longer than argument 1'
+ +  where 'zip() argument 2 is longer than argument 1' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='zip() argument 2 is longer than argument 1', blocks_overall=True).message
+1 failed in 0.19s
+
+
+test_embedding_similarity_validates_vectors[length-mismatch] | Remove vector-length validation | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.14s
+
+
+test_embedding_similarity_validates_vectors[zero-vector] | Remove zero-vector validation | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_embedding_similarity_validates_vectors[zero-vector] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-7/test_embedding_similarity_vali0')
+vectors = ([0.0], [0.0]), status = 'FAIL', message = 'non-zero'
+
+    @pytest.mark.parametrize(
+        ("vectors", "status", "message"),
+        [
+            (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+            (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+            (([0.0], [0.0]), "FAIL", "non-zero"),
+        ],
+        ids=["matching", "length-mismatch", "zero-vector"],
+    )
+    def test_embedding_similarity_validates_vectors(
+        tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        values = iter(vectors)
+>       result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+
+tests/test_coverage_round_799.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/verify.py:323: in check_embedding_similarity
+    similarity = _cosine_similarity(cand_vec, ref_vec)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+left = [0.0], right = [0.0]
+
+    def _cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
+        import math
+    
+        if len(left) != len(right) or not left:
+            raise ValueError("embedding vectors must be non-empty and the same length")
+        dot = sum(float(a) * float(b) for a, b in zip(left, right, strict=True))
+        left_norm = math.sqrt(sum(float(a) * float(a) for a in left))
+        right_norm = math.sqrt(sum(float(b) * float(b) for b in right))
+        if False:
+            raise ValueError("embedding vectors must be non-zero")
+>       return dot / (left_norm * right_norm)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ZeroDivisionError: division by zero
+
+src/fine_art_archive/collect/verify.py:283: ZeroDivisionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[zero-vector] - ZeroDivisionError: division by zero
+1 failed in 0.19s
+
+
+test_embedding_similarity_validates_vectors[zero-vector] | Remove zero-vector validation | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.14s
+
+
+test_site_identity_rejects_missing_anchors[wrong-category] | Remove site-category guard | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_site_identity_rejects_missing_anchors[wrong-category] __________
+
+meta = {'category': 'painting'}, message = 'category is not site-anchored'
+
+    @pytest.mark.parametrize(
+        ("meta", "message"),
+        [
+            ({"category": "painting"}, "category is not site-anchored"),
+            (
+                {"category": "stained_glass", "site": {}},
+                "site.wikidata_q or site.element_q is required",
+            ),
+        ],
+        ids=["wrong-category", "missing-site-identifiers"],
+    )
+    def test_site_identity_rejects_missing_anchors(meta: dict, message: str) -> None:
+        result = check_site_identity(meta)
+    
+        assert result.name == "site_identity"
+        assert result.status == "FAIL"
+>       assert result.message == message
+E       AssertionError: assert 'site.wikidat...q is required' == 'category is ...site-anchored'
+E         
+E         - category is not site-anchored
+E         + site.wikidata_q or site.element_q is required
+
+tests/test_coverage_round_799.py:205: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_site_identity_rejects_missing_anchors[wrong-category] - AssertionError: assert 'site.wikidat...q is required' == 'category is ...site-anchored'
+  
+  - category is not site-anchored
+  + site.wikidata_q or site.element_q is required
+1 failed in 0.17s
+
+
+test_site_identity_rejects_missing_anchors[wrong-category] | Remove site-category guard | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.13s
+
+
+test_site_identity_rejects_missing_anchors[missing-site-identifiers] | Remove site-identifier guard | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_site_identity_rejects_missing_anchors[missing-site-identifiers] _____
+
+meta = {'category': 'stained_glass', 'site': {}}
+message = 'site.wikidata_q or site.element_q is required'
+
+    @pytest.mark.parametrize(
+        ("meta", "message"),
+        [
+            ({"category": "painting"}, "category is not site-anchored"),
+            (
+                {"category": "stained_glass", "site": {}},
+                "site.wikidata_q or site.element_q is required",
+            ),
+        ],
+        ids=["wrong-category", "missing-site-identifiers"],
+    )
+    def test_site_identity_rejects_missing_anchors(meta: dict, message: str) -> None:
+        result = check_site_identity(meta)
+    
+        assert result.name == "site_identity"
+        assert result.status == "FAIL"
+>       assert result.message == message
+E       AssertionError: assert 'site.commons... verification' == 'site.wikidat...q is required'
+E         
+E         - site.wikidata_q or site.element_q is required
+E         + site.commons_category is required for place-object verification
+
+tests/test_coverage_round_799.py:205: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_site_identity_rejects_missing_anchors[missing-site-identifiers] - AssertionError: assert 'site.commons... verification' == 'site.wikidat...q is required'
+  
+  - site.wikidata_q or site.element_q is required
+  + site.commons_category is required for place-object verification
+1 failed in 0.17s
+
+
+test_site_identity_rejects_missing_anchors[missing-site-identifiers] | Remove site-identifier guard | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.13s
+
+
+test_place_similarity_rejects_empty_references | Accept an empty reference set | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_place_similarity_rejects_empty_references ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-9/test_place_similarity_rejects_0')
+
+    def test_place_similarity_rejects_empty_references(tmp_path: Path) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        result = check_place_object_similarity(
+            candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
+        )
+    
+>       assert result.status == "FAIL"
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:214: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_rejects_empty_references - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.18s
+
+
+test_place_similarity_rejects_empty_references | Accept an empty reference set | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.14s
+
+
+test_place_similarity_rejects_unavailable_backend | Skip rather than fail an unavailable site backend | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_place_similarity_rejects_unavailable_backend _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-11/test_place_similarity_rejects_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a4e75a2c0>
+
+    def test_place_similarity_rejects_unavailable_backend(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+    
+        def unavailable() -> object:
+            raise ImportError("open_clip")
+    
+        monkeypatch.setattr(verify_module, "_load_open_clip_backend", unavailable)
+        result = check_place_object_similarity(candidate_path=candidate, reference_paths=[candidate])
+    
+>       assert result.status == "FAIL"
+E       AssertionError: assert 'SKIP' == 'FAIL'
+E         
+E         - FAIL
+E         + SKIP
+
+tests/test_coverage_round_799.py:230: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_rejects_unavailable_backend - AssertionError: assert 'SKIP' == 'FAIL'
+  
+  - FAIL
+  + SKIP
+1 failed in 0.18s
+
+
+test_place_similarity_rejects_unavailable_backend | Skip rather than fail an unavailable site backend | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.13s
+
+
+test_place_similarity_rejects_unreadable_reference | Accept an unreadable reference | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_place_similarity_rejects_unreadable_reference ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-13/test_place_similarity_rejects_0')
+
+    def test_place_similarity_rejects_unreadable_reference(tmp_path: Path) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        unreadable = tmp_path / "unreadable.png"
+        unreadable.write_text("not an image")
+    
+        result = check_place_object_similarity(
+            candidate_path=candidate, reference_paths=[unreadable], embedding_backend=lambda _: [1.0]
+        )
+    
+>       assert result.status == "FAIL"
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:244: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_rejects_unreadable_reference - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.20s
+
+
+test_place_similarity_rejects_unreadable_reference | Accept an unreadable reference | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.16s
+
+
+test_place_similarity_rejects_invalid_reference_vector | Accept an invalid reference vector | RED | exit 1
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_place_similarity_rejects_invalid_reference_vector ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-15/test_place_similarity_rejects_0')
+
+    def test_place_similarity_rejects_invalid_reference_vector(tmp_path: Path) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        values = iter(([1.0], [1.0, 2.0]))
+        result = check_place_object_similarity(
+            candidate_path=candidate,
+            reference_paths=[candidate],
+            embedding_backend=lambda _: next(values),
+        )
+    
+>       assert result.status == "FAIL"
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:258: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_rejects_invalid_reference_vector - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.18s
+
+
+test_place_similarity_rejects_invalid_reference_vector | Accept an invalid reference vector | GREEN | exit 0
+.                                                                        [100%]
+1 passed in 0.14s

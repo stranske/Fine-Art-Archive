@@ -1,0 +1,247 @@
+CASE: test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash]
+Defect: Reintroduce the backend ValueError crash fixed by this PR
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-2/test_acquisition_assessment_pr0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2362b42520>
+failing_hash = 'phash', different = False
+
+    @pytest.mark.parametrize("failing_hash", ["phash", "dhash"])
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_acquisition_assessment_preserves_identity_when_hash_backend_breaks(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_hash: str, different: bool
+    ) -> None:
+        """Backend recovery must still reject a different work at the acquisition boundary."""
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        backend = SimpleNamespace(phash=Mock(return_value=0), dhash=Mock(return_value=0))
+        getattr(backend, failing_hash).side_effect = ValueError("incompatible scipy backend")
+        monkeypatch.setitem(sys.modules, "imagehash", backend)
+    
+>       assessment = af.assess_master(
+            candidate, source="met", h_cm=8.0, w_cm=9.0, reference_path=reference
+        )
+
+tests/test_coverage_round_799.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/acquisition_flow.py:184: in assess_master
+    vreport = verify(
+src/fine_art_archive/collect/verify.py:628: in verify
+    check_perceptual_hash(
+src/fine_art_archive/collect/verify.py:174: in check_perceptual_hash
+    p_dist = imagehash.phash(cand_img) - imagehash.phash(ref_img)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1176: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1180: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139789952353008'>
+args = (<PIL.Image.Image image mode=L size=9x8 at 0x7F23627342B0>,), kwargs = {}
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               ValueError: incompatible scipy backend
+
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1241: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash] - ValueError: incompatible scipy backend
+1 failed in 0.21s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.24s
+
+
+CASE: test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash]
+Defect: Reintroduce the backend ValueError crash fixed by this PR
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_acquisition_assessment_pr0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f538cb52520>
+failing_hash = 'dhash', different = False
+
+    @pytest.mark.parametrize("failing_hash", ["phash", "dhash"])
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_acquisition_assessment_preserves_identity_when_hash_backend_breaks(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_hash: str, different: bool
+    ) -> None:
+        """Backend recovery must still reject a different work at the acquisition boundary."""
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        backend = SimpleNamespace(phash=Mock(return_value=0), dhash=Mock(return_value=0))
+        getattr(backend, failing_hash).side_effect = ValueError("incompatible scipy backend")
+        monkeypatch.setitem(sys.modules, "imagehash", backend)
+    
+>       assessment = af.assess_master(
+            candidate, source="met", h_cm=8.0, w_cm=9.0, reference_path=reference
+        )
+
+tests/test_coverage_round_799.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/acquisition_flow.py:184: in assess_master
+    vreport = verify(
+src/fine_art_archive/collect/verify.py:628: in verify
+    check_perceptual_hash(
+src/fine_art_archive/collect/verify.py:175: in check_perceptual_hash
+    d_dist = imagehash.dhash(cand_img) - imagehash.dhash(ref_img)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1176: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1180: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Mock id='139996815508880'>
+args = (<PIL.Image.Image image mode=L size=9x8 at 0x7F538C7482B0>,), kwargs = {}
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               ValueError: incompatible scipy backend
+
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py:1241: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash] - ValueError: incompatible scipy backend
+1 failed in 0.21s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.12s
+
+
+CASE: test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash]
+Defect: Accept a different work by discarding the fallback average-hash distance
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-6/test_acquisition_assessment_pr0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f30b1b4e520>
+failing_hash = 'phash', different = True
+
+    @pytest.mark.parametrize("failing_hash", ["phash", "dhash"])
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_acquisition_assessment_preserves_identity_when_hash_backend_breaks(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_hash: str, different: bool
+    ) -> None:
+        """Backend recovery must still reject a different work at the acquisition boundary."""
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        backend = SimpleNamespace(phash=Mock(return_value=0), dhash=Mock(return_value=0))
+        getattr(backend, failing_hash).side_effect = ValueError("incompatible scipy backend")
+        monkeypatch.setitem(sys.modules, "imagehash", backend)
+    
+        assessment = af.assess_master(
+            candidate, source="met", h_cm=8.0, w_cm=9.0, reference_path=reference
+        )
+    
+        expected = "FAIL" if different else "PASS"
+>       assert assessment.verification["status"] == expected
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:85: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash] - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.13s
+
+
+CASE: test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash]
+Defect: Accept a different work by discarding the fallback average-hash distance
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-8/test_acquisition_assessment_pr0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f534c33a520>
+failing_hash = 'dhash', different = True
+
+    @pytest.mark.parametrize("failing_hash", ["phash", "dhash"])
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_acquisition_assessment_preserves_identity_when_hash_backend_breaks(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_hash: str, different: bool
+    ) -> None:
+        """Backend recovery must still reject a different work at the acquisition boundary."""
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        backend = SimpleNamespace(phash=Mock(return_value=0), dhash=Mock(return_value=0))
+        getattr(backend, failing_hash).side_effect = ValueError("incompatible scipy backend")
+        monkeypatch.setitem(sys.modules, "imagehash", backend)
+    
+        assessment = af.assess_master(
+            candidate, source="met", h_cm=8.0, w_cm=9.0, reference_path=reference
+        )
+    
+        expected = "FAIL" if different else "PASS"
+>       assert assessment.verification["status"] == expected
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:85: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash] - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.22s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.13s
+

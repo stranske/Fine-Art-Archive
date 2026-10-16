@@ -174,7 +174,10 @@ def check_perceptual_hash(
             p_dist = imagehash.phash(cand_img) - imagehash.phash(ref_img)
             d_dist = imagehash.dhash(cand_img) - imagehash.dhash(ref_img)
             hash_backend = "imagehash"
-        except ImportError:
+        except (ImportError, ValueError):
+            # ``imagehash`` delegates pHash to SciPy.  A compatible-but-broken
+            # SciPy/NumPy pairing can raise ValueError there; retain the
+            # documented local fallback instead of failing identity assessment.
             p_dist = _average_hash_distance(cand_img, ref_img)
             d_dist = _difference_hash_distance(cand_img, ref_img)
             hash_backend = "fallback"

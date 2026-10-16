@@ -1,0 +1,257 @@
+{
+  "source_sha256": {
+    "src/fine_art_archive/collect/acquisition_flow.py": "928d59b526659310a5de0c90ff4608aee624e0f990858f75013a81f05de9da86",
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "tests/test_coverage_round_799.py": "5bd857e772252257134a3b8f253a0511724c0f580df84c8b57ce950dbf00d1ab"
+  },
+  "mutation_proofs": [
+    {
+      "test": "test_acquisition_missing_quality_config",
+      "defect": "Raise ValueError instead of FileNotFoundError",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_missing_quality_config",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.55s"
+    },
+    {
+      "test": "test_acquisition_quality_config_without_sources",
+      "defect": "Accept a configuration with no sources",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_quality_config_without_sources",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.11s"
+    },
+    {
+      "test": "test_acquisition_unknown_host_has_no_source_chain",
+      "defect": "Invent a source chain for an unknown host",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_unknown_host_has_no_source_chain",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.12s"
+    },
+    {
+      "test": "test_acquisition_select_source_rejects_empty_candidates",
+      "defect": "Omit the empty candidate guard",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_select_source_rejects_empty_candidates",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.11s"
+    },
+    {
+      "test": "test_acquisition_candidate_artist_name[blank-name]",
+      "defect": "Invent an artist name when all name fields are blank",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[blank-name]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.11s"
+    },
+    {
+      "test": "test_acquisition_candidate_artist_name[label-fallback]",
+      "defect": "Ignore the artist label fallback",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[label-fallback]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.12s"
+    },
+    {
+      "test": "test_acquisition_candidate_artist_name[display-name-fallback]",
+      "defect": "Ignore the display_name fallback",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[display-name-fallback]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.12s"
+    },
+    {
+      "test": "test_acquisition_candidate_artist_name[non-string-artist]",
+      "defect": "Turn a non-string artist into a name",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[non-string-artist]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.15s",
+      "green_result": "1 passed in 0.11s"
+    }
+  ],
+  "baseline": {
+    "result": "4 failed, 2294 passed, 12 skipped, 1 warning in 107.83s (0:01:47)",
+    "totals": {
+      "covered_lines": 9415,
+      "num_statements": 10219,
+      "percent_covered": 89.51023656225132,
+      "percent_covered_display": "90",
+      "missing_lines": 804,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.13230257363735,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 496,
+      "covered_branches": 2958,
+      "missing_branches": 646,
+      "percent_branches_covered": 82.0754716981132,
+      "percent_branches_covered_display": "82"
+    }
+  },
+  "targeted": {
+    "result": "94 passed, 4 skipped in 3.09s",
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "commands": {
+    "baseline": "PYTHONPATH=/tmp/faa804-validation pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:/tmp/faa804-baseline.json -q -m 'not slow'",
+    "final": "PYTHONPATH=/tmp/faa804-validation COVERAGE_FILE=/tmp/faa804-final.coverage pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:/tmp/faa804-final.json -q -m 'not slow'",
+    "focused": "COVERAGE_FILE=/tmp/faa804-focused.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa804-target-after.json -q -m 'not slow'",
+    "format": "PYTHONPATH=/tmp/faa804-validation BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "lint": "ruff check tests/test_coverage_round_799.py"
+  },
+  "environment": [
+    "Python 3.14.8; the full-suite runs and whole-tree Black use the external selector-polling harness below because sandboxed socket wakeup writes fail.",
+    "Four baseline tests cannot create /home/runner/.cache/fine-art-archive on the read-only home filesystem. No tests were skipped to hide failures.",
+    "Whole-tree Black uses BLACK_NUM_WORKERS=1 because sandboxed multiprocessing sockets are unavailable."
+  ],
+  "external_sitecustomize": "\"\"\"Poll selectors when sandboxed socketpair wakeup writes are unavailable.\"\"\"\nimport selectors\n\n_select = selectors.EpollSelector.select\n\n\ndef _poll_select(self, timeout=None):\n    return _select(self, 0.01 if timeout is None else min(timeout, 0.01))\n\n\nselectors.EpollSelector.select = _poll_select\n",
+  "final": {
+    "result": "4 failed, 2301 passed, 12 skipped, 1 warning in 104.57s (0:01:44)",
+    "totals": {
+      "covered_lines": 9415,
+      "num_statements": 10219,
+      "percent_covered": 89.51023656225132,
+      "percent_covered_display": "90",
+      "missing_lines": 804,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.13230257363735,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 496,
+      "covered_branches": 2958,
+      "missing_branches": 646,
+      "percent_branches_covered": 82.0754716981132,
+      "percent_branches_covered_display": "82"
+    }
+  }
+}

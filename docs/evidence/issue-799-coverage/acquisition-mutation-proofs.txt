@@ -1,0 +1,317 @@
+CASE: test_acquisition_missing_quality_config
+Defect: Raise ValueError instead of FileNotFoundError
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_missing_quality_config', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_acquisition_missing_quality_config ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_acquisition_missing_quali0')
+
+    def test_acquisition_missing_quality_config(tmp_path: Path) -> None:
+        """An explicit missing routing config must fail with its path in the error."""
+        missing = tmp_path / "missing.yaml"
+        with pytest.raises(FileNotFoundError, match="source-quality config not found") as exc:
+>           af.load_source_quality_config(missing)
+
+tests/test_coverage_round_799.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_acquisition_missing_quali0/missing.yaml')
+
+    def load_source_quality_config(path: Path | None = None) -> dict:
+        """Load source quality routing config, failing loudly when it is absent."""
+        p = path or SOURCE_QUALITY_PATH
+        if not p.exists():
+>           raise ValueError(f"source-quality config not found: {p}")
+E           ValueError: source-quality config not found: /tmp/pytest-of-runner/pytest-4/test_acquisition_missing_quali0/missing.yaml
+
+src/fine_art_archive/collect/acquisition_flow.py:87: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_missing_quality_config - ValueError: source-quality config not found: /tmp/pytest-of-runner/pytest-4/test_acquisition_missing_quali0/missing.yaml
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.55s
+
+
+CASE: test_acquisition_quality_config_without_sources
+Defect: Accept a configuration with no sources
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_quality_config_without_sources', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_acquisition_quality_config_without_sources ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-6/test_acquisition_quality_confi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd165d522c0>
+
+    def test_acquisition_quality_config_without_sources(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An existing but empty config must fail independently of the missing-file guard."""
+        config = tmp_path / "quality.yaml"
+        config.write_text("sources: {}")
+        loader = Mock(return_value={"sources": {}})
+        monkeypatch.setattr(af.source_quality, "load_aggregates", loader)
+>       with pytest.raises(ValueError, match="has no sources") as exc:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_coverage_round_799.py:296: Failed
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_quality_config_without_sources - Failed: DID NOT RAISE ValueError
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.11s
+
+
+CASE: test_acquisition_unknown_host_has_no_source_chain
+Defect: Invent a source chain for an unknown host
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_unknown_host_has_no_source_chain', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_acquisition_unknown_host_has_no_source_chain _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-8/test_acquisition_unknown_host_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd88dd662c0>
+
+    def test_acquisition_unknown_host_has_no_source_chain(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Unknown hosts return an empty chain using the caller's registry."""
+        config = tmp_path / "hosts.yaml"
+        lookup = Mock(return_value=None)
+        monkeypatch.setattr(af.host_registry, "find_by_wikidata_q", lookup)
+>       assert af.source_chain_for_host("Q0", config) == []
+E       AssertionError: assert ['met'] == []
+E         
+E         Left contains one more item: 'met'
+E         
+E         Full diff:
+E         - []
+E         + [
+E         +     'met',
+E         + ]
+
+tests/test_coverage_round_799.py:309: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_unknown_host_has_no_source_chain - AssertionError: assert ['met'] == []
+  
+  Left contains one more item: 'met'
+  
+  Full diff:
+  - []
+  + [
+  +     'met',
+  + ]
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.12s
+
+
+CASE: test_acquisition_select_source_rejects_empty_candidates
+Defect: Omit the empty candidate guard
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_select_source_rejects_empty_candidates', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_acquisition_select_source_rejects_empty_candidates ____________
+
+    def test_acquisition_select_source_rejects_empty_candidates() -> None:
+        """Empty candidates must produce a useful error rather than an indexing failure."""
+        with pytest.raises(ValueError, match="candidate_sources must not be empty"):
+>           af.select_source("painting", [], {})
+
+tests/test_coverage_round_799.py:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+work_class = 'painting', candidate_sources = [], aggregates = {}
+
+    def select_source(
+        work_class: str, candidate_sources: list[str], aggregates: dict
+    ) -> tuple[str, str]:
+        """Pick a source by margin rule: >=0.10 gap wins, else tied-fallback."""
+        if False:
+            raise ValueError("candidate_sources must not be empty")
+    
+        ranked = rank_sources(work_class, candidate_sources, aggregates)
+        if len(ranked) == 1:
+            return ranked[0][0], "margin"
+    
+>       margin = ranked[0][1] - ranked[1][1]
+                 ^^^^^^^^^
+E       IndexError: list index out of range
+
+src/fine_art_archive/collect/acquisition_flow.py:124: IndexError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_select_source_rejects_empty_candidates - IndexError: list index out of range
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.11s
+
+
+CASE: test_acquisition_candidate_artist_name[blank-name]
+Defect: Invent an artist name when all name fields are blank
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[blank-name]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_acquisition_candidate_artist_name[blank-name] ______________
+
+artist = {'name': '  '}, expected = ''
+
+    @pytest.mark.parametrize(
+        ("artist", "expected"),
+        [
+            ({"name": "  "}, ""),
+            ({"name": 12, "label": "  Artist  "}, "Artist"),
+            ({"name": "", "label": " ", "display_name": "  Display Artist  "}, "Display Artist"),
+            (12, ""),
+        ],
+        ids=["blank-name", "label-fallback", "display-name-fallback", "non-string-artist"],
+    )
+    def test_acquisition_candidate_artist_name(artist: object, expected: str) -> None:
+        """Inventory matching gets a trimmed artist name or an empty string."""
+>       assert af._candidate_artist_name({"artist": artist}) == expected
+E       AssertionError: assert 'Unknown' == ''
+E         
+E         + Unknown
+
+tests/test_coverage_round_799.py:331: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[blank-name] - AssertionError: assert 'Unknown' == ''
+  
+  + Unknown
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.11s
+
+
+CASE: test_acquisition_candidate_artist_name[label-fallback]
+Defect: Ignore the artist label fallback
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[label-fallback]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_acquisition_candidate_artist_name[label-fallback] ____________
+
+artist = {'name': 12, 'label': '  Artist  '}, expected = 'Artist'
+
+    @pytest.mark.parametrize(
+        ("artist", "expected"),
+        [
+            ({"name": "  "}, ""),
+            ({"name": 12, "label": "  Artist  "}, "Artist"),
+            ({"name": "", "label": " ", "display_name": "  Display Artist  "}, "Display Artist"),
+            (12, ""),
+        ],
+        ids=["blank-name", "label-fallback", "display-name-fallback", "non-string-artist"],
+    )
+    def test_acquisition_candidate_artist_name(artist: object, expected: str) -> None:
+        """Inventory matching gets a trimmed artist name or an empty string."""
+>       assert af._candidate_artist_name({"artist": artist}) == expected
+E       AssertionError: assert '' == 'Artist'
+E         
+E         - Artist
+
+tests/test_coverage_round_799.py:331: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[label-fallback] - AssertionError: assert '' == 'Artist'
+  
+  - Artist
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.12s
+
+
+CASE: test_acquisition_candidate_artist_name[display-name-fallback]
+Defect: Ignore the display_name fallback
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[display-name-fallback]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_acquisition_candidate_artist_name[display-name-fallback] _________
+
+artist = {'name': '', 'label': ' ', 'display_name': '  Display Artist  '}
+expected = 'Display Artist'
+
+    @pytest.mark.parametrize(
+        ("artist", "expected"),
+        [
+            ({"name": "  "}, ""),
+            ({"name": 12, "label": "  Artist  "}, "Artist"),
+            ({"name": "", "label": " ", "display_name": "  Display Artist  "}, "Display Artist"),
+            (12, ""),
+        ],
+        ids=["blank-name", "label-fallback", "display-name-fallback", "non-string-artist"],
+    )
+    def test_acquisition_candidate_artist_name(artist: object, expected: str) -> None:
+        """Inventory matching gets a trimmed artist name or an empty string."""
+>       assert af._candidate_artist_name({"artist": artist}) == expected
+E       AssertionError: assert '' == 'Display Artist'
+E         
+E         - Display Artist
+
+tests/test_coverage_round_799.py:331: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[display-name-fallback] - AssertionError: assert '' == 'Display Artist'
+  
+  - Display Artist
+1 failed in 0.16s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.12s
+
+
+CASE: test_acquisition_candidate_artist_name[non-string-artist]
+Defect: Turn a non-string artist into a name
+Command: ['/opt/hostedtoolcache/Python/3.14.8/x64/bin/python', '-m', 'pytest', 'tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[non-string-artist]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_acquisition_candidate_artist_name[non-string-artist] ___________
+
+artist = 12, expected = ''
+
+    @pytest.mark.parametrize(
+        ("artist", "expected"),
+        [
+            ({"name": "  "}, ""),
+            ({"name": 12, "label": "  Artist  "}, "Artist"),
+            ({"name": "", "label": " ", "display_name": "  Display Artist  "}, "Display Artist"),
+            (12, ""),
+        ],
+        ids=["blank-name", "label-fallback", "display-name-fallback", "non-string-artist"],
+    )
+    def test_acquisition_candidate_artist_name(artist: object, expected: str) -> None:
+        """Inventory matching gets a trimmed artist name or an empty string."""
+>       assert af._candidate_artist_name({"artist": artist}) == expected
+E       AssertionError: assert '12' == ''
+E         
+E         + 12
+
+tests/test_coverage_round_799.py:331: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_candidate_artist_name[non-string-artist] - AssertionError: assert '12' == ''
+  
+  + 12
+1 failed in 0.15s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.11s
+
