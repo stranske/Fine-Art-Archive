@@ -2428,7 +2428,7 @@ def _master_path(work_id: str) -> Path | None:
     work_dir = _archive_work_dir_checked(work_id)
     if work_dir.is_dir():
         for f in work_dir.iterdir():
-            if f.is_file() and f.name.startswith("master."):
+            if f.is_file() and sidecar.is_master_image(f.name):
                 return _contained_master_filename(work_dir, f.name)
     # Fallback: read filename from sidecar (handles staging-only works)
     sc = _get_work_checked(work_id)
