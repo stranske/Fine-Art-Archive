@@ -129,78 +129,48 @@ The starting head `d739ecc` has a successful [Gate run](https://github.com/stran
 
 PR #804 was rechecked open with draft=false. Its live body update remains blocked by the approval policy. Staging these changes failed with `Unable to create '.git/index.lock': Read-only file system`; no commit or push was possible. The new tests, receipts, and reconciled body remain in the working tree for the automation handoff.
 
-## Ranked review API follow-up
+## Ranked research-reporting API follow-up
 
-The next target is `api/main.py`, selected from the latest 500 reachable commits
-at `4a68aea` using the repository's documented ranking: repair-history proxy,
-then churn, then missing lines, with path as the tie-breaker. The proxy counts
-commit subjects matching `\b(fix|bug|correct|repair|guard|regression)\w*`; it is
-not a verified escaped-defect count. The target has 27 proxy repairs, 54 touches,
-and 69 missing statements + 42 missing branches in the fresh baseline.
-The [complete ranking](review-gap-ranking.csv) records every measured gap.
-The previously selected verification and acquisition targets remain at 100%.
+At starting head `21c3082`, fresh full-suite coverage is **89.52%**, below the 90% stop condition. `api/main.py` remains the next target under the repository's repair-history proxy, churn, then uncovered-mass ranking: **27 proxy repairs, 56 touches, 69 missing statements + 42 missing branches**. The [refreshed ranking](research-gap-ranking.csv) uses all reachable commit history and missing statements plus branches. The proxy matches commit subjects against `\b(fix|bug|correct|repair|guard|regression)\w*`; it is not a verified escaped-defect count.
 
-Ten new HTTP regression cases in `tests/test_api_review_contracts.py` cover
-review gate summaries, item limits and ordering, unknown gates, early rejection
-of zero limits, missing artist identities, and labels supplied by later works.
-No production defect was exposed and no production change was retained.
-This remains one bounded follow-up on PR #804; no new PR was created.
+The review-contract test file and receipts removed in `21c3082` remain removed. Their earlier 25-unit gain is excluded from these measurements. This follow-up adds ten research-reporting HTTP cases: absent works leave no request or lock state; absent dossier UI produces a handled 404; reference authority includes exactly 8 and excludes unscored/below-threshold sources; reports count unread leads without exposing the source pool; and section, citation, and source-kind saturation are checked independently, below the overall score ceiling. Actual counts remain visible on a fully developed dossier.
 
-Each case below failed with its own temporary production mutation and passed
-after exact byte restoration. The [executed harness](review-mutation-harness.txt)
-and [full RED/GREEN receipts](review-mutation-proofs.json) retain the commands,
-mutations, outputs, exits, and original production SHA-256.
+No production defect was found and no production change is retained. This continues PR #804; no new PR is opened. All ten cases were individually run against temporary production-source mutations, failed, and passed after restoring the original bytes. Commands, complete outputs, exact mutations, coverage changes, and source/test hashes are in [research-reporting-proofs.json](research-reporting-proofs.json).
 
-| Test case | Deliberate defect | Broken | Restored |
+| Test case in `tests/test_api_research_reporting.py` | Deliberate defect | Broken | Restored |
 |---|---|---|---|
-| `test_review_lists_reject_zero_limit_before_loading_state[acquisitions]` | Allow a zero limit to reach the review state loader | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_review_lists_reject_zero_limit_before_loading_state[review/works]` | Allow a zero limit to reach the review state loader | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_review_lists_reject_zero_limit_before_loading_state[review/artists]` | Allow a zero limit to reach the review state loader | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_review_lists_reject_zero_limit_before_loading_state[review/held]` | Allow a zero limit to reach the review state loader | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_gate_details_preserve_summary_and_item_order[truncated]` | Ignore the requested item limit | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_gate_details_preserve_summary_and_item_order[all-items]` | Report zero returned items for a populated gate | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_unknown_gate_is_404_even_when_other_gates_exist[no-gates]` | Return the wrong status for an unknown gate | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_unknown_gate_is_404_even_when_other_gates_exist[other-gate]` | Return the wrong status after searching unrelated gates | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_artist_review_omits_candidates_without_artist_identity` | Include candidates that cannot identify their artist | 1 failed (exit 1) | 1 passed (exit 0) |
-| `test_artist_review_recovers_label_from_a_later_work` | Discard the artist label supplied by a later work | 1 failed (exit 1) | 1 passed (exit 0) |
+| `test_unknown_work_does_not_create_research_state[report]` | Return the wrong status for an unknown research work | 1 failed, 1 warning in 0.93s (exit 1) | 1 passed, 1 warning in 0.46s (exit 0) |
+| `test_unknown_work_does_not_create_research_state[request]` | Accept a research request for an unknown work | 1 failed, 1 warning in 1.06s (exit 1) | 1 passed, 1 warning in 0.45s (exit 0) |
+| `test_missing_dossier_page_returns_a_handled_error` | Remove the missing dossier UI guard | 1 failed, 1 warning in 0.98s (exit 1) | 1 passed, 1 warning in 0.50s (exit 0) |
+| `test_research_report_identifies_missing_authoritative_sources[unscored]` | Treat unscored references as high authority | 1 failed, 1 warning in 0.51s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
+| `test_research_report_identifies_missing_authoritative_sources[below]` | Accept sources below the high-authority threshold | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
+| `test_research_report_identifies_missing_authoritative_sources[boundary]` | Exclude sources exactly at the high-authority threshold | 1 failed, 1 warning in 0.54s (exit 1) | 1 passed, 1 warning in 0.49s (exit 0) |
+| `test_developed_dossier_saturates_score_without_hiding_actual_counts` | Clip reported section counts to the scoring cap | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
+| `test_dossier_score_saturates_each_evidence_component[section]` | Remove the section score saturation | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.48s (exit 0) |
+| `test_dossier_score_saturates_each_evidence_component[citations]` | Remove the citation score saturation | 1 failed, 1 warning in 0.52s (exit 1) | 1 passed, 1 warning in 0.50s (exit 0) |
+| `test_dossier_score_saturates_each_evidence_component[source-kinds]` | Remove the source-kind score saturation | 1 failed, 1 warning in 0.52s (exit 1) | 1 passed, 1 warning in 0.48s (exit 0) |
 
-Targeted validation passes **161 tests, 4 skipped**; `collect/verify.py` and
-`collect/acquisition_flow.py` both show **100%**. The review-only selection passes
-**56 tests** and the unchanged 25% coverage floor. Running only the 10 added
-cases initially passed all tests but failed that floor (20.32% over the entire
-API module); the broader targeted selection fixes the measurement scope without
-changing the floor. Whole-tree Black checks **362 files**; changed-file Ruff and
-`git diff --check` pass.
+Matched full-suite `api/main.py` coverage: **69 + 42 (93.95%) → 65 + 37 (94.44%)** missing statements + branches. This covers **9 additional units**, with 0 lost statements and 0 lost branches. Repository blended coverage rises **89.52% → 89.59%**. The original `verify.py` and `acquisition_flow.py` targets remain at **100%** with zero missing statements or branches; their previously established 62-unit improvement is preserved.
 
-Matched full-suite measurements cover **25 more units** (14 statements + 11
-branches) in `api/main.py`: **69 + 42 missing (93.95%) → 55 + 31 missing
-(95.32%)**. No previously covered API statements or branches were lost.
-Repository blended coverage rises **89.52% → 89.71%**. The original targets
-remain **100%**; this adds 25 units to the PR's previously established 62-unit
-improvement. The fresh starting result is below 90%, so the stop rule does not
-apply.
+- Targeted coverage: **836 passed, 5 skipped, 1 warning in 102.22s (0:01:42)**. `api/main.py`: **94.44%**; both original target rows: **100%**.
+- Baseline full suite: **4 failed, 2312 passed, 12 skipped, 1 warning in 157.77s (0:02:37)**.
+- Final full suite: **4 failed, 2322 passed, 12 skipped, 1 warning in 160.60s (0:02:40)**.
+- Both full suites have the same four `tests/test_workspace_conflict_guard.py` failures because `/home/runner/.cache/fine-art-archive` is read-only. No existing tests were disabled. Fresh CI acceptance for these changes remains pending.
+- Whole-tree Black: **362 files unchanged**, exit 0. Changed-file Ruff and `git diff --check` pass.
 
-Baseline: **4 failed, 2312 passed, 12 skipped in 124.24s**. Candidate:
-**4 failed, 2322 passed, 12 skipped in 126.98s**. The four failures are exactly
-the baseline read-only-home failures documented above. No tests were disabled,
-no coverage floor changed, and no new production bug was found. Full commands,
-exact coverage summaries, changed arcs, source hashes, and environment details
-are in [review-followup.json](review-followup.json).
+Targeted command:
+```bash
+PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-target-complete.coverage pytest tests/test_companion_api.py tests/test_companion_app*.py tests/test_api_*.py tests/test_review_gates.py tests/test_acquisition_review.py tests/test_eink_*.py tests/test_judgement_surfaces.py tests/test_subject_action_state.py tests/test_variant_candidate_path_confinement.py tests/test_variant_upgrade_labels_and_dims.py tests/test_deepzoom_*.py tests/test_healthz_manifest_drift.py tests/test_candidate_image_proxy.py tests/test_operator_messages_name_real_artifacts.py tests/test_quarantine_ttl_report.py tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -q -m 'not slow' --cov-reset --cov=fine_art_archive.api.main --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa804-target-complete.json
+```
 
-The starting commit `4a68aea` passed [Gate](https://github.com/stranske/Fine-Art-Archive/actions/runs/38962798201),
-including both Python 3.12 and 3.13 unit-test and coverage jobs. This verifies the
-preceding iteration only; CI for these new tests remains pending. The five
-continuation-contract items below have local implementation evidence: current
-ranking, individual executed proofs, no new production bug, test-only scope,
-and the same PR #804.
+Full-suite command (use `start` for the matched baseline):
+```bash
+PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-final.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa804-final.json
+```
 
-PR #804 was rechecked **open** with **draft=false**. Staging the source tests and
-receipts failed with `Unable to create '.git/index.lock': Read-only file system`.
-The sandbox therefore prevents a commit or push; the source changes and verified
-receipts remain available for the automation handoff. The GitHub connector also
-rejected the prepared PR title/body update with `MCP tool call requires approval,
-but approval policy is never`; the live PR's five continuation checkboxes could
-not be reconciled. This file remains the complete proposed body and proof table.
+The commands use the unchanged temporary selector-polling harness documented in [verification-followup.json](verification-followup.json) because sandboxed socketpair wakeups are unavailable. The harness changes no repository code or tests.
+
+Staging the verified tests failed because `.git/index.lock` cannot be created on the read-only `.git` filesystem. No commit or push was possible; the source tests and evidence are ready for the automation handoff. The connector rejected the PR title/body update: `MCP tool call requires approval, but approval policy is never`. Final readiness recheck confirms PR #804 is open with `draft=false`, still at `21c3082`. The five continuation checkboxes are supported by local evidence in this proposed body; the live PR body could not be updated.
 
 ## Tasks
 
