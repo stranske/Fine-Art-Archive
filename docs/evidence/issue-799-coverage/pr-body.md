@@ -102,7 +102,32 @@ The starting full suite at `62b7bde` measured **89.51%** blended coverage, with 
 
 Final targeted coverage: **101 passed, 4 skipped in 3.27s**, both target rows **100%** with zero missing statements or branches. Final full suite: **4 failed, 2308 passed, 12 skipped in 119.25s**, with exactly the same four read-only-home failures and unchanged **89.51%** blended coverage. No additional covered units are claimed for this follow-up. All 30 collected cases match executed RED/GREEN receipts. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` passed.
 
-Task reconciliation: the recent commits and a fresh targeted run verify that both coverage targets are complete. The checked-in body records those completed tasks and all executed mutation proofs. The GitHub connector confirmed PR #804 is **open** with **draft=false**. Updating its live body was blocked: `MCP tool call requires approval, but approval policy is never`. The shell GitHub client also cannot connect to `api.github.com`, so the live checkbox update remains outstanding. Committing was also blocked: Git cannot create `.git/index.lock` on the read-only filesystem. The source changes and updated evidence remain in the working tree.
+Prior iteration reconciliation: both coverage targets were verified complete, and their completed checkboxes and mutation proofs were recorded here. The GitHub connector confirmed PR #804 was open with draft=false, but its live body update required unavailable approval. Git staging was also blocked by the read-only `.git` directory. The automation subsequently committed that iteration as `d739ecc`.
+
+## Acquisition assessment follow-up
+
+Reviewed `9dfd595`, `38d72e0`, `62b7bde`, and `d739ecc` before continuing. A fresh starting targeted run on `d739ecc` passed **101 tests, 4 skipped**, with both targets at **100%**. The first unchecked coverage task in the live body is already implemented; this file's reconciled checkboxes remain the accurate local record. An attempt to update the live PR body was rejected: `MCP tool call requires approval, but approval policy is never`.
+
+Four acquisition-level regression cases now exercise the existing backend bug fix through `assess_master`. Matching and different reference images are assessed when either pHash or dHash raises `ValueError`. The latter also checks recovery after pHash has already returned a misleading zero distance. Matching images must pass and different images must fail, with fallback distances, the blocking hash result, quality, and fitness preserved. No production changes were needed.
+
+Each new case was individually run with a temporary production mutation, then with the exact original bytes restored:
+
+| New case suffix | Deliberate defect | Broken | Restored |
+|---|---|---|---|
+| `same-work-phash` | Remove the ValueError fallback | 1 failed in 0.21s (exit 1) | 1 passed in 0.24s (exit 0) |
+| `same-work-dhash` | Remove the ValueError fallback | 1 failed in 0.21s (exit 1) | 1 passed in 0.12s (exit 0) |
+| `different-work-phash` | Discard the fallback average-hash distance | 1 failed in 0.16s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `different-work-dhash` | Discard the fallback average-hash distance | 1 failed in 0.22s (exit 1) | 1 passed in 0.13s (exit 0) |
+
+All four are parameters of `test_acquisition_assessment_preserves_identity_when_hash_backend_breaks`. Together with the prior 30 cases, all **34 cases** have executed break-and-revert receipts. Commands and full output are in [acquisition-boundary-mutation-proofs.txt](acquisition-boundary-mutation-proofs.txt); hashes and coverage summaries are in [acquisition-boundary-followup.json](acquisition-boundary-followup.json).
+
+Final targeted run: **105 passed, 4 skipped in 2.84s**. Both targets remain at **100%**, with zero missing statements or branches. The PR's 62-unit improvement is unchanged; these tests validate the existing production fix through its acquisition caller. Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` passed.
+
+Final full suite: **4 failed, 2312 passed, 12 skipped in 103.21s**, with exactly the same four read-only-home failures as the prior baseline. Blended coverage is **89.52%**. No tests were disabled or skipped to hide those failures, and the full-suite-green task remains unchecked. The run uses `PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-boundary-full.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa804-boundary-full.json`; the unchanged external selector-polling harness is recorded in `verification-followup.json`.
+
+The starting head `d739ecc` has a successful [Gate run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38961466698), including passing [Python 3.12](https://github.com/stranske/Fine-Art-Archive/actions/runs/38961466698/job/117177542253) and [Python 3.13](https://github.com/stranske/Fine-Art-Archive/actions/runs/38961466698/job/117177542269) unit-test jobs. These results validate the preceding iteration, not these four uncommitted cases. CI acceptance stays unchecked for the additions.
+
+PR #804 was rechecked open with draft=false. Its live body update remains blocked by the approval policy. Staging these changes failed with `Unable to create '.git/index.lock': Read-only file system`; no commit or push was possible. The new tests, receipts, and reconciled body remain in the working tree for the automation handoff.
 
 ## Tasks
 

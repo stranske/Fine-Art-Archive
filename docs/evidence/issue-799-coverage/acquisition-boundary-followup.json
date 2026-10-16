@@ -1,0 +1,218 @@
+{
+  "production_head": "d739ecc8c481f39b4e044b3cd85300a217676fb4",
+  "source_sha256": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+  "source_restored": true,
+  "mutation_proofs": [
+    {
+      "test": "test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash]",
+      "defect": "Reintroduce the backend ValueError crash fixed by this PR",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-phash]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.21s",
+      "green_result": "1 passed in 0.24s"
+    },
+    {
+      "test": "test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash]",
+      "defect": "Reintroduce the backend ValueError crash fixed by this PR",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[same-work-dhash]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.21s",
+      "green_result": "1 passed in 0.12s"
+    },
+    {
+      "test": "test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash]",
+      "defect": "Accept a different work by discarding the fallback average-hash distance",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-phash]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.16s",
+      "green_result": "1 passed in 0.13s"
+    },
+    {
+      "test": "test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash]",
+      "defect": "Accept a different work by discarding the fallback average-hash distance",
+      "command": [
+        "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_assessment_preserves_identity_when_hash_backend_breaks[different-work-dhash]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.22s",
+      "green_result": "1 passed in 0.13s"
+    }
+  ],
+  "targeted_command": "COVERAGE_FILE=/tmp/faa804-boundary-target.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -q -m 'not slow' --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa804-boundary-target.json",
+  "targeted_result": "105 passed, 4 skipped in 2.84s",
+  "targets": {
+    "src/fine_art_archive/collect/acquisition_flow.py": {
+      "covered_lines": 127,
+      "num_statements": 127,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 38,
+      "num_partial_branches": 0,
+      "covered_branches": 38,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "src/fine_art_archive/collect/verify.py": {
+      "covered_lines": 238,
+      "num_statements": 238,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 60,
+      "num_partial_branches": 0,
+      "covered_branches": 60,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    }
+  },
+  "test_sha256": "d9d2269d87b452a10ab09bd80651d8586c13ca7aa153a27b8a2bd9387fa3dc57",
+  "formatting": {
+    "format_command": "black --line-length 100 tests/test_coverage_round_799.py",
+    "check_command": "PYTHONPATH=/tmp/faa804-harness BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "check_result": "361 files would be left unchanged; exit 0",
+    "lint_command": "ruff check tests/test_coverage_round_799.py",
+    "lint_result": "All checks passed; exit 0"
+  },
+  "starting_gate": {
+    "head": "d739ecc8c481f39b4e044b3cd85300a217676fb4",
+    "run_id": 38961466698,
+    "conclusion": "success",
+    "python_312_job": 117177542253,
+    "python_313_job": 117177542269
+  },
+  "remote_reconciliation": {
+    "pr": 804,
+    "state": "open",
+    "draft": false,
+    "body_updated": false,
+    "update_error": "MCP tool call requires approval, but approval policy is never"
+  },
+  "commit_error": "fatal: Unable to create '.git/index.lock': Read-only file system",
+  "environment": [
+    "Python 3.14.8",
+    "Full-suite and Black use the unchanged external selector-polling harness from verification-followup.json. No repository code or tests are altered by the harness."
+  ],
+  "full_suite": {
+    "command": "PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-boundary-full.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa804-boundary-full.json",
+    "exit_code": 1,
+    "result": "4 failed, 2312 passed, 12 skipped, 1 warning in 103.21s (0:01:43)",
+    "failures": [
+      "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+      "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+      "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+      "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+    ],
+    "totals": {
+      "covered_lines": 9416,
+      "num_statements": 10219,
+      "percent_covered": 89.5247052014758,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.14208826695372,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 495,
+      "covered_branches": 2959,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.10321864594894,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "production_files_unchanged": true,
+  "pr_readiness_rechecked": {
+    "number": 804,
+    "state": "open",
+    "draft": false,
+    "head": "d739ecc8c481f39b4e044b3cd85300a217676fb4"
+  }
+}

@@ -61,6 +61,45 @@ def test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error(
     assert result.detail["hash_backend"] == "fallback"
 
 
+@pytest.mark.parametrize("failing_hash", ["phash", "dhash"])
+@pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+def test_acquisition_assessment_preserves_identity_when_hash_backend_breaks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_hash: str, different: bool
+) -> None:
+    """Backend recovery must still reject a different work at the acquisition boundary."""
+    image = Image.new("L", (9, 8))
+    image.putdata([x * 30 for _ in range(8) for x in range(9)])
+    candidate = tmp_path / "candidate.png"
+    reference = tmp_path / "reference.png"
+    image.save(candidate)
+    (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+    backend = SimpleNamespace(phash=Mock(return_value=0), dhash=Mock(return_value=0))
+    getattr(backend, failing_hash).side_effect = ValueError("incompatible scipy backend")
+    monkeypatch.setitem(sys.modules, "imagehash", backend)
+
+    assessment = af.assess_master(
+        candidate, source="met", h_cm=8.0, w_cm=9.0, reference_path=reference
+    )
+
+    expected = "FAIL" if different else "PASS"
+    assert assessment.verification["status"] == expected
+    checks = {check["name"]: check for check in assessment.verification["checks"]}
+    assert checks["aspect_ratio"]["status"] == "PASS"
+    hash_check = checks["perceptual_hash"]
+    assert hash_check["status"] == expected
+    assert hash_check["blocks_overall"] is True
+    assert hash_check["detail"]["hash_backend"] == "fallback"
+    assert hash_check["detail"]["phash_distance"] == (64 if different else 0)
+    assert hash_check["detail"]["dhash_distance"] == (64 if different else 0)
+    assert getattr(backend, failing_hash).call_count == 1
+    if failing_hash == "dhash":
+        assert backend.phash.call_count == 2
+    assert assessment.source == "met"
+    assert assessment.work_dir == tmp_path
+    assert assessment.quality
+    assert assessment.fitness
+
+
 @pytest.mark.parametrize(
     ("phash_distance", "dhash_distance", "status"),
     [(12, 8, "PASS"), (13, 7, "PASS"), (13, 8, "FAIL")],
