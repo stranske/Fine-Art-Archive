@@ -1,0 +1,863 @@
+CASE 01: test_report_unverified_inputs_distinguish_skip_from_failure
+Deliberate defect: Report unverified-only checks as PASS
+Command: pytest tests/test_coverage_round_799.py::test_report_unverified_inputs_distinguish_skip_from_failure -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_report_unverified_inputs_distinguish_skip_from_failure __________
+
+    def test_report_unverified_inputs_distinguish_skip_from_failure() -> None:
+        report = VerificationReport([CheckResult("aspect_ratio", "SKIP")])
+    
+        assert report.overall == "UNVERIFIED"
+        assert report.to_source_quality_inputs() == {
+            "verify_match": None,
+            "phash_match": None,
+            "aspect_match": None,
+            "dim_match": None,
+        }
+    
+>       assert VerificationReport([CheckResult("other", "UNVERIFIED")]).overall == "UNVERIFIED"
+E       AssertionError: assert 'PASS' == 'UNVERIFIED'
+E         
+E         - UNVERIFIED
+E         + PASS
+
+tests/test_coverage_round_799.py:42: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_report_unverified_inputs_distinguish_skip_from_failure - AssertionError: assert 'PASS' == 'UNVERIFIED'
+  
+  - UNVERIFIED
+  + PASS
+1 failed in 0.26s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 02: test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error
+Deliberate defect: Remove ValueError fallback
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error ___
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_perceptual_hash_falls_bac0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7d72357a80>
+
+    def test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+    
+        class BrokenImageHash:
+            @staticmethod
+            def phash(_: Image.Image) -> object:
+                raise ValueError("incompatible scipy backend")
+    
+        monkeypatch.setitem(sys.modules, "imagehash", BrokenImageHash)
+    
+>       result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_coverage_round_799.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/verify.py:174: in check_perceptual_hash
+    p_dist = imagehash.phash(cand_img) - imagehash.phash(ref_img)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+_ = <PIL.Image.Image image mode=RGB size=16x12 at 0x7F7D70B815B0>
+
+    @staticmethod
+    def phash(_: Image.Image) -> object:
+>       raise ValueError("incompatible scipy backend")
+E       ValueError: incompatible scipy backend
+
+tests/test_coverage_round_799.py:54: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error - ValueError: incompatible scipy backend
+1 failed in 0.29s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 03: test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold]
+Deliberate defect: Reject pHash exactly at threshold
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-6/test_perceptual_hash_uses_work0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f0cd3767a80>
+phash_distance = 12, dhash_distance = 8, status = 'PASS'
+
+    @pytest.mark.parametrize(
+        ("phash_distance", "dhash_distance", "status"),
+        [(12, 8, "PASS"), (13, 7, "PASS"), (13, 8, "FAIL")],
+        ids=["phash-at-threshold", "dhash-at-threshold", "both-over-threshold"],
+    )
+    def test_perceptual_hash_uses_working_imagehash_backend(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        phash_distance: int,
+        dhash_distance: int,
+        status: str,
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+    
+        monkeypatch.setitem(
+            sys.modules,
+            "imagehash",
+            SimpleNamespace(
+                phash=Mock(side_effect=[phash_distance, 0]),
+                dhash=Mock(side_effect=[dhash_distance, 0]),
+            ),
+        )
+    
+        result = check_perceptual_hash(
+            candidate_path=candidate,
+            reference_path=reference,
+            phash_threshold=12,
+            dhash_threshold=7,
+            blocks_overall=False,
+        )
+    
+>       assert result.status == status
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:96: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.69s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 04: test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold]
+Deliberate defect: Reject dHash exactly at threshold
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-8/test_perceptual_hash_uses_work0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f5477357a80>
+phash_distance = 13, dhash_distance = 7, status = 'PASS'
+
+    @pytest.mark.parametrize(
+        ("phash_distance", "dhash_distance", "status"),
+        [(12, 8, "PASS"), (13, 7, "PASS"), (13, 8, "FAIL")],
+        ids=["phash-at-threshold", "dhash-at-threshold", "both-over-threshold"],
+    )
+    def test_perceptual_hash_uses_working_imagehash_backend(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        phash_distance: int,
+        dhash_distance: int,
+        status: str,
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+    
+        monkeypatch.setitem(
+            sys.modules,
+            "imagehash",
+            SimpleNamespace(
+                phash=Mock(side_effect=[phash_distance, 0]),
+                dhash=Mock(side_effect=[dhash_distance, 0]),
+            ),
+        )
+    
+        result = check_perceptual_hash(
+            candidate_path=candidate,
+            reference_path=reference,
+            phash_threshold=12,
+            dhash_threshold=7,
+            blocks_overall=False,
+        )
+    
+>       assert result.status == status
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:96: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.25s
+
+CASE 05: test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold]
+Deliberate defect: Accept when both hashes exceed threshold
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-10/test_perceptual_hash_uses_work0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f5a1215ba80>
+phash_distance = 13, dhash_distance = 8, status = 'FAIL'
+
+    @pytest.mark.parametrize(
+        ("phash_distance", "dhash_distance", "status"),
+        [(12, 8, "PASS"), (13, 7, "PASS"), (13, 8, "FAIL")],
+        ids=["phash-at-threshold", "dhash-at-threshold", "both-over-threshold"],
+    )
+    def test_perceptual_hash_uses_working_imagehash_backend(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        phash_distance: int,
+        dhash_distance: int,
+        status: str,
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+    
+        monkeypatch.setitem(
+            sys.modules,
+            "imagehash",
+            SimpleNamespace(
+                phash=Mock(side_effect=[phash_distance, 0]),
+                dhash=Mock(side_effect=[dhash_distance, 0]),
+            ),
+        )
+    
+        result = check_perceptual_hash(
+            candidate_path=candidate,
+            reference_path=reference,
+            phash_threshold=12,
+            dhash_threshold=7,
+            blocks_overall=False,
+        )
+    
+>       assert result.status == status
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:96: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold] - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 06: test_perceptual_hash_fallback_preserves_image_discrimination[same-work]
+Deliberate defect: Add a spurious bit difference to fallback hashes
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[same-work] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_perceptual_hash_fallback_preserves_image_discrimination[same-work] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-12/test_perceptual_hash_fallback_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd158373a80>
+different = False
+
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_perceptual_hash_fallback_preserves_image_discrimination(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, different: bool
+    ) -> None:
+        # Exact-size opposing gradients give 64 differing bits in both fallback hashes.
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        monkeypatch.setitem(sys.modules, "imagehash", None)
+    
+        result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+    
+        assert result.status == ("FAIL" if different else "PASS")
+        assert result.detail["hash_backend"] == "fallback"
+>       assert result.detail["phash_distance"] == (64 if different else 0)
+E       assert 1 == 0
+
+tests/test_coverage_round_799.py:120: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[same-work] - assert 1 == 0
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 07: test_perceptual_hash_fallback_preserves_image_discrimination[different-work]
+Deliberate defect: Make fallback hashes identical for every image
+Command: pytest tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[different-work] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_perceptual_hash_fallback_preserves_image_discrimination[different-work] _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-14/test_perceptual_hash_fallback_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f19fed57a80>
+different = True
+
+    @pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+    def test_perceptual_hash_fallback_preserves_image_discrimination(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, different: bool
+    ) -> None:
+        # Exact-size opposing gradients give 64 differing bits in both fallback hashes.
+        image = Image.new("L", (9, 8))
+        image.putdata([x * 30 for _ in range(8) for x in range(9)])
+        candidate = tmp_path / "candidate.png"
+        reference = tmp_path / "reference.png"
+        image.save(candidate)
+        (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+        monkeypatch.setitem(sys.modules, "imagehash", None)
+    
+        result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+    
+>       assert result.status == ("FAIL" if different else "PASS")
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:118: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[different-work] - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.27s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 08: test_open_clip_backend_wraps_model_embedding
+Deliberate defect: Omit embedding normalization
+Command: pytest tests/test_coverage_round_799.py::test_open_clip_backend_wraps_model_embedding -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_open_clip_backend_wraps_model_embedding _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7feecef5b820>
+
+    def test_open_clip_backend_wraps_model_embedding(monkeypatch: pytest.MonkeyPatch) -> None:
+        model = Mock()
+        preprocess = Mock()
+        vector = MagicMock()
+        normalized = vector.__truediv__.return_value
+        normalized.squeeze.return_value.detach.return_value.cpu.return_value.tolist.return_value = [
+            0.25,
+            0.75,
+        ]
+        model.encode_image.return_value = vector
+        factory = Mock(return_value=(model, None, preprocess))
+        no_grad = MagicMock()
+        monkeypatch.setitem(
+            sys.modules, "open_clip", SimpleNamespace(create_model_and_transforms=factory)
+        )
+        monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(no_grad=no_grad))
+        verify_module._load_open_clip_backend.cache_clear()
+        try:
+            backend = verify_module._load_open_clip_backend()
+            assert verify_module._load_open_clip_backend() is backend
+            image = Image.new("RGB", (2, 2))
+>           assert backend(image) == [0.25, 0.75]
+E           AssertionError: assert <MagicMock na...663625937792'> == [0.25, 0.75]
+E             
+E             Full diff:
+E             + <MagicMock name='mock.encode_image().squeeze().detach().cpu().tolist()' id='140663625937792'>
+E             - [
+E             -     0.25,
+E             -     0.75,
+E             - ]
+
+tests/test_coverage_round_799.py:145: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_open_clip_backend_wraps_model_embedding - AssertionError: assert <MagicMock na...663625937792'> == [0.25, 0.75]
+  
+  Full diff:
+  + <MagicMock name='mock.encode_image().squeeze().detach().cpu().tolist()' id='140663625937792'>
+  - [
+  -     0.25,
+  -     0.75,
+  - ]
+1 failed in 0.26s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 09: test_embedding_and_site_identity_reject_invalid_inputs
+Deliberate defect: Remove vector length validation
+Command: pytest tests/test_coverage_round_799.py::test_embedding_and_site_identity_reject_invalid_inputs -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_embedding_and_site_identity_reject_invalid_inputs ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-16/test_embedding_and_site_identi0')
+
+    def test_embedding_and_site_identity_reject_invalid_inputs(tmp_path: Path) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+    
+        mismatch = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: [1.0],
+        )
+        assert mismatch.status == "PASS"
+    
+        values = iter(([1.0], [1.0, 2.0]))
+        invalid = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+        assert invalid.status == "FAIL"
+>       assert "same length" in invalid.message
+E       AssertionError: assert 'same length' in 'zip() argument 2 is longer than argument 1'
+E        +  where 'zip() argument 2 is longer than argument 1' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='zip() argument 2 is longer than argument 1', blocks_overall=True).message
+
+tests/test_coverage_round_799.py:178: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_and_site_identity_reject_invalid_inputs - AssertionError: assert 'same length' in 'zip() argument 2 is longer than argument 1'
+ +  where 'zip() argument 2 is longer than argument 1' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='zip() argument 2 is longer than argument 1', blocks_overall=True).message
+1 failed in 0.27s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 10: test_place_similarity_handles_empty_unavailable_and_invalid_references
+Deliberate defect: Pass an empty reference set
+Command: pytest tests/test_coverage_round_799.py::test_place_similarity_handles_empty_unavailable_and_invalid_references -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_place_similarity_handles_empty_unavailable_and_invalid_references ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-18/test_place_similarity_handles_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd173343a80>
+
+    def test_place_similarity_handles_empty_unavailable_and_invalid_references(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        unreadable = tmp_path / "unreadable.png"
+        unreadable.write_text("not an image")
+    
+>       assert (
+            check_place_object_similarity(
+                candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
+            ).status
+            == "FAIL"
+        )
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:199: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_handles_empty_unavailable_and_invalid_references - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.25s
+
+CASE 11: test_place_similarity_records_best_of_multiple_references[later-best]
+Deliberate defect: Keep the first reference even when a later match is better
+Command: pytest tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[later-best] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_place_similarity_records_best_of_multiple_references[later-best] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-20/test_place_similarity_records_0')
+vectors = [(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)], best_index = 1
+scores = [0.0, 0.7071]
+
+    @pytest.mark.parametrize(
+        ("vectors", "best_index", "scores"),
+        [
+            ([(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)], 1, [0.0, 0.7071]),
+            ([(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 0, [0.7071, 0.0]),
+            ([(1.0, 0.0), (1.0, 1.0), (1.0, 1.0)], 0, [0.7071, 0.7071]),
+        ],
+        ids=["later-best", "earlier-best", "tie-keeps-first"],
+    )
+    def test_place_similarity_records_best_of_multiple_references(
+        tmp_path: Path,
+        vectors: list[tuple[float, float]],
+        best_index: int,
+        scores: list[float],
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        first = _image(tmp_path / "first.png")
+        second = _image(tmp_path / "second.png")
+    
+        values = iter(vectors)
+        result = check_place_object_similarity(
+            candidate_path=candidate,
+            reference_paths=[first, second],
+            embedding_backend=lambda _: next(values),
+            threshold=0.7,
+        )
+    
+>       assert result.status == "PASS"
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:258: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[later-best] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 12: test_place_similarity_records_best_of_multiple_references[earlier-best]
+Deliberate defect: Overwrite the best reference with a worse later match
+Command: pytest tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[earlier-best] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_place_similarity_records_best_of_multiple_references[earlier-best] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-22/test_place_similarity_records_0')
+vectors = [(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], best_index = 0
+scores = [0.7071, 0.0]
+
+    @pytest.mark.parametrize(
+        ("vectors", "best_index", "scores"),
+        [
+            ([(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)], 1, [0.0, 0.7071]),
+            ([(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 0, [0.7071, 0.0]),
+            ([(1.0, 0.0), (1.0, 1.0), (1.0, 1.0)], 0, [0.7071, 0.7071]),
+        ],
+        ids=["later-best", "earlier-best", "tie-keeps-first"],
+    )
+    def test_place_similarity_records_best_of_multiple_references(
+        tmp_path: Path,
+        vectors: list[tuple[float, float]],
+        best_index: int,
+        scores: list[float],
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        first = _image(tmp_path / "first.png")
+        second = _image(tmp_path / "second.png")
+    
+        values = iter(vectors)
+        result = check_place_object_similarity(
+            candidate_path=candidate,
+            reference_paths=[first, second],
+            embedding_backend=lambda _: next(values),
+            threshold=0.7,
+        )
+    
+>       assert result.status == "PASS"
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:258: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[earlier-best] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 13: test_place_similarity_records_best_of_multiple_references[tie-keeps-first]
+Deliberate defect: Overwrite the first reference on a tie
+Command: pytest tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[tie-keeps-first] -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_place_similarity_records_best_of_multiple_references[tie-keeps-first] __
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0')
+vectors = [(1.0, 0.0), (1.0, 1.0), (1.0, 1.0)], best_index = 0
+scores = [0.7071, 0.7071]
+
+    @pytest.mark.parametrize(
+        ("vectors", "best_index", "scores"),
+        [
+            ([(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)], 1, [0.0, 0.7071]),
+            ([(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 0, [0.7071, 0.0]),
+            ([(1.0, 0.0), (1.0, 1.0), (1.0, 1.0)], 0, [0.7071, 0.7071]),
+        ],
+        ids=["later-best", "earlier-best", "tie-keeps-first"],
+    )
+    def test_place_similarity_records_best_of_multiple_references(
+        tmp_path: Path,
+        vectors: list[tuple[float, float]],
+        best_index: int,
+        scores: list[float],
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        first = _image(tmp_path / "first.png")
+        second = _image(tmp_path / "second.png")
+    
+        values = iter(vectors)
+        result = check_place_object_similarity(
+            candidate_path=candidate,
+            reference_paths=[first, second],
+            embedding_backend=lambda _: next(values),
+            threshold=0.7,
+        )
+    
+        assert result.status == "PASS"
+>       assert result.detail == {
+            "threshold": 0.7,
+            "reference_count": 2,
+            "best_reference": str([first, second][best_index]),
+            "best_cosine_similarity": 0.7071,
+            "scores": [
+                {"reference": str(first), "cosine_similarity": scores[0]},
+                {"reference": str(second), "cosine_similarity": scores[1]},
+            ],
+        }
+E       AssertionError: assert {'threshold':...: 0.7071, ...} == {'threshold':...: 0.7071, ...}
+E         
+E         Omitting 4 identical items, use -vv to show
+E         Differing items:
+E         {'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png'} != {'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png'}
+E         
+E         Full diff:
+E           {
+E               'threshold': 0.7,
+E               'reference_count': 2,
+E         -     'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png',
+E         ?                                                                                        --- ^
+E         +     'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png',
+E         ?                                                                                         ^^^^^
+E               'best_cosine_similarity': 0.7071,
+E               'scores': [
+E                   {
+E                       'reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png',
+E                       'cosine_similarity': 0.7071,
+E                   },
+E                   {
+E                       'reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png',
+E                       'cosine_similarity': 0.7071,
+E                   },
+E               ],
+E           }
+
+tests/test_coverage_round_799.py:259: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[tie-keeps-first] - AssertionError: assert {'threshold':...: 0.7071, ...} == {'threshold':...: 0.7071, ...}
+  
+  Omitting 4 identical items, use -vv to show
+  Differing items:
+  {'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png'} != {'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png'}
+  
+  Full diff:
+    {
+        'threshold': 0.7,
+        'reference_count': 2,
+  -     'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png',
+  ?                                                                                        --- ^
+  +     'best_reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png',
+  ?                                                                                         ^^^^^
+        'best_cosine_similarity': 0.7071,
+        'scores': [
+            {
+                'reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/first.png',
+                'cosine_similarity': 0.7071,
+            },
+            {
+                'reference': '/tmp/pytest-of-runner/pytest-24/test_place_similarity_records_0/second.png',
+                'cosine_similarity': 0.7071,
+            },
+        ],
+    }
+1 failed in 0.28s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.23s
+
+CASE 14: test_verify_reports_unreadable_candidate_as_aspect_failure
+Deliberate defect: Skip instead of failing an unreadable aspect candidate
+Command: pytest tests/test_coverage_round_799.py::test_verify_reports_unreadable_candidate_as_aspect_failure -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_verify_reports_unreadable_candidate_as_aspect_failure __________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-26/test_verify_reports_unreadable0')
+
+    def test_verify_reports_unreadable_candidate_as_aspect_failure(tmp_path: Path) -> None:
+        missing = tmp_path / "missing.jpg"
+    
+        report = verify(h_cm=10.0, w_cm=10.0, h_px=10, w_px=10, candidate_path=missing)
+    
+>       assert report.overall == "FAIL"
+E       AssertionError: assert 'UNVERIFIED' == 'FAIL'
+E         
+E         - FAIL
+E         + UNVERIFIED
+
+tests/test_coverage_round_799.py:276: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_verify_reports_unreadable_candidate_as_aspect_failure - AssertionError: assert 'UNVERIFIED' == 'FAIL'
+  
+  - FAIL
+  + UNVERIFIED
+1 failed in 0.27s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 15: test_acquisition_configuration_and_artist_name_failure_paths
+Deliberate defect: Raise the wrong error for missing routing configuration
+Command: pytest tests/test_coverage_round_799.py::test_acquisition_configuration_and_artist_name_failure_paths -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_acquisition_configuration_and_artist_name_failure_paths _________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-28/test_acquisition_configuration0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7feb1815ba80>
+
+    def test_acquisition_configuration_and_artist_name_failure_paths(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        missing = tmp_path / "missing.yaml"
+        with pytest.raises(FileNotFoundError, match="source-quality config not found"):
+>           af.load_source_quality_config(missing)
+
+tests/test_coverage_round_799.py:285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-runner/pytest-28/test_acquisition_configuration0/missing.yaml')
+
+    def load_source_quality_config(path: Path | None = None) -> dict:
+        """Load source quality routing config, failing loudly when it is absent."""
+        p = path or SOURCE_QUALITY_PATH
+        if not p.exists():
+>           raise ValueError(f"source-quality config not found: {p}")
+E           ValueError: source-quality config not found: /tmp/pytest-of-runner/pytest-28/test_acquisition_configuration0/missing.yaml
+
+src/fine_art_archive/collect/acquisition_flow.py:87: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_configuration_and_artist_name_failure_paths - ValueError: source-quality config not found: /tmp/pytest-of-runner/pytest-28/test_acquisition_configuration0/missing.yaml
+1 failed in 0.27s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.22s
+
+CASE 16: test_acquisition_flow_accepts_work_without_metadata
+Deliberate defect: Require the optional staged metadata file
+Command: pytest tests/test_coverage_round_799.py::test_acquisition_flow_accepts_work_without_metadata -o addopts= --no-cov -q -m not slow
+
+RED (exit 1):
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_acquisition_flow_accepts_work_without_metadata ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-30/test_acquisition_flow_accepts_0')
+
+    def test_acquisition_flow_accepts_work_without_metadata(tmp_path: Path) -> None:
+        work = tmp_path / "work"
+        work.mkdir()
+        _image(work / "master.jpg")
+    
+>       [result] = af.run_acquisition_flow("met", [work])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_coverage_round_799.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/acquisition_flow.py:251: in run_acquisition_flow
+    meta = json.loads(meta_p.read_text())
+                      ^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-runner/pytest-30/test_acquisition_flow_accepts_0/work/meta.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-30/test_acquisition_flow_accepts_0/work/meta.json'
+
+/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_acquisition_flow_accepts_work_without_metadata - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-30/test_acquisition_flow_accepts_0/work/meta.json'
+1 failed in 0.30s
+
+GREEN (exit 0):
+.                                                                        [100%]
+1 passed in 0.24s

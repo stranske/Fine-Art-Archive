@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from PIL import Image
@@ -60,76 +61,100 @@ def test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error(
     assert result.detail["hash_backend"] == "fallback"
 
 
+@pytest.mark.parametrize(
+    ("phash_distance", "dhash_distance", "status"),
+    [(12, 8, "PASS"), (13, 7, "PASS"), (13, 8, "FAIL")],
+    ids=["phash-at-threshold", "dhash-at-threshold", "both-over-threshold"],
+)
 def test_perceptual_hash_uses_working_imagehash_backend(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    phash_distance: int,
+    dhash_distance: int,
+    status: str,
 ) -> None:
     candidate = _image(tmp_path / "candidate.png")
     reference = _image(tmp_path / "reference.png")
 
-    class Hash:
-        def __sub__(self, _: object) -> int:
-            return 0
-
     monkeypatch.setitem(
         sys.modules,
         "imagehash",
-        SimpleNamespace(phash=lambda _: Hash(), dhash=lambda _: Hash()),
+        SimpleNamespace(
+            phash=Mock(side_effect=[phash_distance, 0]),
+            dhash=Mock(side_effect=[dhash_distance, 0]),
+        ),
     )
 
-    result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+    result = check_perceptual_hash(
+        candidate_path=candidate,
+        reference_path=reference,
+        phash_threshold=12,
+        dhash_threshold=7,
+        blocks_overall=False,
+    )
 
-    assert result.status == "PASS"
+    assert result.status == status
+    assert result.blocks_overall is False
+    assert result.detail["phash_distance"] == phash_distance
+    assert result.detail["dhash_distance"] == dhash_distance
     assert result.detail["hash_backend"] == "imagehash"
 
 
+@pytest.mark.parametrize("different", [False, True], ids=["same-work", "different-work"])
+def test_perceptual_hash_fallback_preserves_image_discrimination(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, different: bool
+) -> None:
+    # Exact-size opposing gradients give 64 differing bits in both fallback hashes.
+    image = Image.new("L", (9, 8))
+    image.putdata([x * 30 for _ in range(8) for x in range(9)])
+    candidate = tmp_path / "candidate.png"
+    reference = tmp_path / "reference.png"
+    image.save(candidate)
+    (image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if different else image).save(reference)
+    monkeypatch.setitem(sys.modules, "imagehash", None)
+
+    result = check_perceptual_hash(candidate_path=candidate, reference_path=reference)
+
+    assert result.status == ("FAIL" if different else "PASS")
+    assert result.detail["hash_backend"] == "fallback"
+    assert result.detail["phash_distance"] == (64 if different else 0)
+    assert result.detail["dhash_distance"] == (64 if different else 0)
+
+
 def test_open_clip_backend_wraps_model_embedding(monkeypatch: pytest.MonkeyPatch) -> None:
-    class Tensor:
-        def unsqueeze(self, _: int) -> Tensor:
-            return self
-
-        def norm(self, *, dim: int, keepdim: bool) -> Tensor:
-            assert (dim, keepdim) == (-1, True)
-            return self
-
-        def __truediv__(self, _: Tensor) -> Tensor:
-            return self
-
-        def squeeze(self, _: int) -> Tensor:
-            return self
-
-        def detach(self) -> Tensor:
-            return self
-
-        def cpu(self) -> Tensor:
-            return self
-
-        def tolist(self) -> list[float]:
-            return [0.25, 0.75]
-
-    class Model:
-        def eval(self) -> None:
-            return None
-
-        def encode_image(self, _: Tensor) -> Tensor:
-            return Tensor()
-
-    class NoGrad:
-        def __enter__(self) -> None:
-            return None
-
-        def __exit__(self, *_: object) -> None:
-            return None
-
-    open_clip = SimpleNamespace(
-        create_model_and_transforms=lambda *_args, **_kwargs: (Model(), None, lambda _: Tensor())
+    model = Mock()
+    preprocess = Mock()
+    vector = MagicMock()
+    normalized = vector.__truediv__.return_value
+    normalized.squeeze.return_value.detach.return_value.cpu.return_value.tolist.return_value = [
+        0.25,
+        0.75,
+    ]
+    model.encode_image.return_value = vector
+    factory = Mock(return_value=(model, None, preprocess))
+    no_grad = MagicMock()
+    monkeypatch.setitem(
+        sys.modules, "open_clip", SimpleNamespace(create_model_and_transforms=factory)
     )
-    torch = SimpleNamespace(no_grad=lambda: NoGrad())
-    monkeypatch.setitem(sys.modules, "open_clip", open_clip)
-    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(no_grad=no_grad))
     verify_module._load_open_clip_backend.cache_clear()
-
-    assert verify_module._load_open_clip_backend()(Image.new("RGB", (2, 2))) == [0.25, 0.75]
-    verify_module._load_open_clip_backend.cache_clear()
+    try:
+        backend = verify_module._load_open_clip_backend()
+        assert verify_module._load_open_clip_backend() is backend
+        image = Image.new("RGB", (2, 2))
+        assert backend(image) == [0.25, 0.75]
+        factory.assert_called_once_with("ViT-B-32", pretrained="laion2b_s34b_b79k")
+        model.eval.assert_called_once_with()
+        preprocess.assert_called_once_with(image)
+        preprocess.return_value.unsqueeze.assert_called_once_with(0)
+        model.encode_image.assert_called_once_with(preprocess.return_value.unsqueeze.return_value)
+        no_grad.return_value.__enter__.assert_called_once_with()
+        no_grad.return_value.__exit__.assert_called_once_with(None, None, None)
+        vector.norm.assert_called_once_with(dim=-1, keepdim=True)
+        vector.__truediv__.assert_called_once_with(vector.norm.return_value)
+        normalized.squeeze.assert_called_once_with(0)
+    finally:
+        verify_module._load_open_clip_backend.cache_clear()
 
 
 def test_embedding_and_site_identity_reject_invalid_inputs(tmp_path: Path) -> None:
@@ -171,15 +196,21 @@ def test_place_similarity_handles_empty_unavailable_and_invalid_references(
     unreadable = tmp_path / "unreadable.png"
     unreadable.write_text("not an image")
 
-    assert check_place_object_similarity(
-        candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
-    ).status == "FAIL"
+    assert (
+        check_place_object_similarity(
+            candidate_path=candidate, reference_paths=[], embedding_backend=lambda _: [1.0]
+        ).status
+        == "FAIL"
+    )
 
     def unavailable() -> object:
         raise ImportError("open_clip")
 
     monkeypatch.setattr(verify_module, "_load_open_clip_backend", unavailable)
-    assert check_place_object_similarity(candidate_path=candidate, reference_paths=[candidate]).status == "FAIL"
+    assert (
+        check_place_object_similarity(candidate_path=candidate, reference_paths=[candidate]).status
+        == "FAIL"
+    )
 
     bad_reference = check_place_object_similarity(
         candidate_path=candidate, reference_paths=[unreadable], embedding_backend=lambda _: [1.0]
@@ -197,20 +228,44 @@ def test_place_similarity_handles_empty_unavailable_and_invalid_references(
     assert "same length" in invalid_vector.message
 
 
-def test_place_similarity_records_best_of_multiple_references(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("vectors", "best_index", "scores"),
+    [
+        ([(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)], 1, [0.0, 0.7071]),
+        ([(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], 0, [0.7071, 0.0]),
+        ([(1.0, 0.0), (1.0, 1.0), (1.0, 1.0)], 0, [0.7071, 0.7071]),
+    ],
+    ids=["later-best", "earlier-best", "tie-keeps-first"],
+)
+def test_place_similarity_records_best_of_multiple_references(
+    tmp_path: Path,
+    vectors: list[tuple[float, float]],
+    best_index: int,
+    scores: list[float],
+) -> None:
     candidate = _image(tmp_path / "candidate.png")
     first = _image(tmp_path / "first.png")
     second = _image(tmp_path / "second.png")
 
+    values = iter(vectors)
     result = check_place_object_similarity(
         candidate_path=candidate,
         reference_paths=[first, second],
-        embedding_backend=lambda _: [1.0],
+        embedding_backend=lambda _: next(values),
+        threshold=0.7,
     )
 
     assert result.status == "PASS"
-    assert result.detail["best_reference"] == str(first)
-    assert len(result.detail["scores"]) == 2
+    assert result.detail == {
+        "threshold": 0.7,
+        "reference_count": 2,
+        "best_reference": str([first, second][best_index]),
+        "best_cosine_similarity": 0.7071,
+        "scores": [
+            {"reference": str(first), "cosine_similarity": scores[0]},
+            {"reference": str(second), "cosine_similarity": scores[1]},
+        ],
+    }
 
 
 def test_verify_reports_unreadable_candidate_as_aspect_failure(tmp_path: Path) -> None:
@@ -253,3 +308,7 @@ def test_acquisition_flow_accepts_work_without_metadata(tmp_path: Path) -> None:
     [result] = af.run_acquisition_flow("met", [work])
 
     assert result.source == "met"
+    assert result.work_dir == work
+    assert result.verification["status"] == "UNVERIFIED"
+    assert result.verification["checks"][0]["status"] == "SKIP"
+    assert result.fitness

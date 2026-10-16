@@ -1,0 +1,603 @@
+{
+  "production_head": "9dfd5951fc036bb1a0680d539c3a05374cd08ad0",
+  "python": "3.14.8",
+  "baseline_scope": "Current production code; all tests except the PR-added tests/test_coverage_round_799.py",
+  "baseline_command": "pytest tests/ --ignore=tests/test_coverage_round_799.py -m 'not slow' --cov-reset --cov=src --cov-report=term --cov-report=json:/tmp/coverage-799-before.json --cov-report=xml:/tmp/coverage-799-before.xml",
+  "final_command": "pytest tests/ -m 'not slow' --cov-reset --cov=src --cov-report=term --cov-report=json:/tmp/coverage-799-after.json --cov-report=xml:/tmp/coverage-799-after.xml",
+  "focused_command": "pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -m 'not slow' --cov-reset --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/coverage-799-target-after.json --cov-report=xml:/tmp/coverage-799-target-after.xml",
+  "environment": [
+    "Each coverage run used its own COVERAGE_FILE under /tmp.",
+    "For full-suite pytest and whole-tree Black only, PYTHONPATH=/tmp/faa799-validation loaded a temporary sitecustomize that caps selector waits at 10 ms. Sandboxed socketpair writes return EPERM, which otherwise hangs asyncio thread completion. No repository source or tests were patched by this harness.",
+    "Black used BLACK_NUM_WORKERS=1 because sandboxed multiprocessing forkserver sockets are unavailable.",
+    "Both full-suite runs have the same four failures in tests/test_workspace_conflict_guard.py: the default automation lock directory under /home/runner/.cache/fine-art-archive is read-only. No tests were skipped to hide these failures."
+  ],
+  "baseline_result": "4 failed, 2278 passed, 12 skipped, 1 warning in 158.43s (0:02:38)",
+  "final_result": "4 failed, 2294 passed, 12 skipped, 1 warning in 160.51s (0:02:40)",
+  "focused_result": "87 passed, 4 skipped in 5.21s",
+  "baseline": {
+    "totals": {
+      "covered_lines": 9368,
+      "num_statements": 10219,
+      "percent_covered": 89.06170874629241,
+      "percent_covered_display": "89",
+      "missing_lines": 851,
+      "excluded_lines": 6,
+      "percent_statements_covered": 91.67237498776788,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 511,
+      "covered_branches": 2943,
+      "missing_branches": 661,
+      "percent_branches_covered": 81.65926748057714,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 196,
+          "num_statements": 238,
+          "percent_covered": 83.22147651006712,
+          "percent_covered_display": "83",
+          "missing_lines": 42,
+          "excluded_lines": 0,
+          "percent_statements_covered": 82.3529411764706,
+          "percent_statements_covered_display": "82",
+          "num_branches": 60,
+          "num_partial_branches": 8,
+          "covered_branches": 52,
+          "missing_branches": 8,
+          "percent_branches_covered": 86.66666666666667,
+          "percent_branches_covered_display": "87"
+        },
+        "missing_lines": [
+          55,
+          81,
+          177,
+          181,
+          182,
+          183,
+          226,
+          228,
+          229,
+          230,
+          232,
+          236,
+          238,
+          239,
+          240,
+          242,
+          255,
+          256,
+          258,
+          261,
+          263,
+          264,
+          265,
+          266,
+          267,
+          268,
+          270,
+          277,
+          282,
+          324,
+          325,
+          352,
+          359,
+          392,
+          402,
+          403,
+          435,
+          436,
+          444,
+          445,
+          594,
+          595
+        ],
+        "missing_branches": [
+          [
+            53,
+            55
+          ],
+          [
+            79,
+            81
+          ],
+          [
+            276,
+            277
+          ],
+          [
+            281,
+            282
+          ],
+          [
+            351,
+            352
+          ],
+          [
+            358,
+            359
+          ],
+          [
+            391,
+            392
+          ],
+          [
+            453,
+            431
+          ]
+        ]
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 122,
+          "num_statements": 127,
+          "percent_covered": 92.72727272727273,
+          "percent_covered_display": "93",
+          "missing_lines": 5,
+          "excluded_lines": 0,
+          "percent_statements_covered": 96.06299212598425,
+          "percent_statements_covered_display": "96",
+          "num_branches": 38,
+          "num_partial_branches": 7,
+          "covered_branches": 31,
+          "missing_branches": 7,
+          "percent_branches_covered": 81.57894736842105,
+          "percent_branches_covered_display": "82"
+        },
+        "missing_lines": [
+          87,
+          90,
+          118,
+          166,
+          167
+        ],
+        "missing_branches": [
+          [
+            86,
+            87
+          ],
+          [
+            89,
+            90
+          ],
+          [
+            117,
+            118
+          ],
+          [
+            161,
+            167
+          ],
+          [
+            162,
+            166
+          ],
+          [
+            164,
+            162
+          ],
+          [
+            249,
+            258
+          ]
+        ]
+      }
+    }
+  },
+  "final": {
+    "totals": {
+      "covered_lines": 9415,
+      "num_statements": 10219,
+      "percent_covered": 89.51023656225132,
+      "percent_covered_display": "90",
+      "missing_lines": 804,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.13230257363735,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3604,
+      "num_partial_branches": 496,
+      "covered_branches": 2958,
+      "missing_branches": 646,
+      "percent_branches_covered": 82.0754716981132,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 238,
+          "num_statements": 238,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 60,
+          "num_partial_branches": 0,
+          "covered_branches": 60,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 127,
+          "num_statements": 127,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 38,
+          "num_partial_branches": 0,
+          "covered_branches": 38,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      }
+    }
+  },
+  "focused": {
+    "totals": {
+      "covered_lines": 365,
+      "num_statements": 365,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 98,
+      "num_partial_branches": 0,
+      "covered_branches": 98,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "summary": {
+          "covered_lines": 238,
+          "num_statements": 238,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 60,
+          "num_partial_branches": 0,
+          "covered_branches": 60,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "summary": {
+          "covered_lines": 127,
+          "num_statements": 127,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100",
+          "num_branches": 38,
+          "num_partial_branches": 0,
+          "covered_branches": 38,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100"
+        },
+        "missing_lines": [],
+        "missing_branches": []
+      }
+    }
+  },
+  "source_sha256": {
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "src/fine_art_archive/collect/acquisition_flow.py": "928d59b526659310a5de0c90ff4608aee624e0f990858f75013a81f05de9da86",
+    "tests/test_coverage_round_799.py": "b74180b4a1099d3a7aabbc4f8bfccbf7cc49f01d2bdfb21b043bdf00a21ce417"
+  },
+  "mutation_proofs": [
+    {
+      "test": "test_report_unverified_inputs_distinguish_skip_from_failure",
+      "defect": "Report unverified-only checks as PASS",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_report_unverified_inputs_distinguish_skip_from_failure",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.26s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error",
+      "defect": "Remove ValueError fallback",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_falls_back_when_imagehash_backend_raises_value_error",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.29s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold]",
+      "defect": "Reject pHash exactly at threshold",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[phash-at-threshold]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.69s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold]",
+      "defect": "Reject dHash exactly at threshold",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[dhash-at-threshold]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.25s"
+    },
+    {
+      "test": "test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold]",
+      "defect": "Accept when both hashes exceed threshold",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_uses_working_imagehash_backend[both-over-threshold]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_perceptual_hash_fallback_preserves_image_discrimination[same-work]",
+      "defect": "Add a spurious bit difference to fallback hashes",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[same-work]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_perceptual_hash_fallback_preserves_image_discrimination[different-work]",
+      "defect": "Make fallback hashes identical for every image",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_perceptual_hash_fallback_preserves_image_discrimination[different-work]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.27s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_open_clip_backend_wraps_model_embedding",
+      "defect": "Omit embedding normalization",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_open_clip_backend_wraps_model_embedding",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.26s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_embedding_and_site_identity_reject_invalid_inputs",
+      "defect": "Remove vector length validation",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_and_site_identity_reject_invalid_inputs",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.27s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_place_similarity_handles_empty_unavailable_and_invalid_references",
+      "defect": "Pass an empty reference set",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_handles_empty_unavailable_and_invalid_references",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.25s"
+    },
+    {
+      "test": "test_place_similarity_records_best_of_multiple_references[later-best]",
+      "defect": "Keep the first reference even when a later match is better",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[later-best]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_place_similarity_records_best_of_multiple_references[earlier-best]",
+      "defect": "Overwrite the best reference with a worse later match",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[earlier-best]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_place_similarity_records_best_of_multiple_references[tie-keeps-first]",
+      "defect": "Overwrite the first reference on a tie",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_place_similarity_records_best_of_multiple_references[tie-keeps-first]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.28s",
+      "green_result": "1 passed in 0.23s"
+    },
+    {
+      "test": "test_verify_reports_unreadable_candidate_as_aspect_failure",
+      "defect": "Skip instead of failing an unreadable aspect candidate",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_verify_reports_unreadable_candidate_as_aspect_failure",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.27s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_acquisition_configuration_and_artist_name_failure_paths",
+      "defect": "Raise the wrong error for missing routing configuration",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_configuration_and_artist_name_failure_paths",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.27s",
+      "green_result": "1 passed in 0.22s"
+    },
+    {
+      "test": "test_acquisition_flow_accepts_work_without_metadata",
+      "defect": "Require the optional staged metadata file",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_acquisition_flow_accepts_work_without_metadata",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.30s",
+      "green_result": "1 passed in 0.24s"
+    }
+  ]
+}
