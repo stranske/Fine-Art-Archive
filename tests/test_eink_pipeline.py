@@ -256,6 +256,61 @@ def test_period_filter_and_missing_year_is_reported_not_hidden():
     assert res.coverage["excluded_for_missing_metadata"]["no year"] == 1
 
 
+@pytest.mark.parametrize(
+    "year_from,year_to,expected",
+    [
+        (None, 0, ["minus-one", "zero"]),
+        (0, None, ["zero", "one"]),
+        (0, 0, ["zero"]),
+    ],
+    ids=["upper-only", "lower-only", "double-zero"],
+)
+def test_year_zero_bounds_filter_and_report_missing_year(year_from, year_to, expected):
+    """An explicit bound of 0 is a real bound, not "no filter" (#806)."""
+    rows = [
+        sidecar("minus-one", year=-1),
+        sidecar("zero", year=0),
+        sidecar("one", year=1),
+        sidecar("undated", year=None),
+    ]
+    res = build(rows, PlaylistSpec(year_from=year_from, year_to=year_to, sort="year"))
+    assert res.work_ids == expected
+    assert res.coverage["excluded_for_missing_metadata"]["no year"] == 1
+
+
+def test_year_zero_omitted_bounds_leave_the_date_filter_off():
+    rows = [
+        sidecar("minus-one", year=-1),
+        sidecar("zero", year=0),
+        sidecar("one", year=1),
+        sidecar("undated", year=None),
+    ]
+    res = build(rows, PlaylistSpec(sort="year"))
+    assert set(res.work_ids) == {"minus-one", "zero", "one", "undated"}
+    assert "no year" not in res.coverage["excluded_for_missing_metadata"]
+
+
+@pytest.mark.parametrize("field,value", [("year_from", ""), ("year_to", "0"), ("year_from", True)])
+def test_year_bounds_reject_non_integer_values_before_filtering(field, value):
+    with pytest.raises(ValueError, match=f"{field} must be an integer or null"):
+        PlaylistSpec.from_dict({field: value})
+
+
+@pytest.mark.parametrize(
+    "year_from,year_to,expected",
+    [
+        (None, 0, set()),
+        (0, 0, set()),
+        (None, None, {"dated", "undated"}),
+    ],
+    ids=["upper-zero", "double-zero", "no-date-filter"],
+)
+def test_year_zero_bounds_on_schema_shaped_string_years(year_from, year_to, expected):
+    rows = [sidecar("dated", year="1500"), sidecar("undated", year=None)]
+    res = build(rows, PlaylistSpec(year_from=year_from, year_to=year_to))
+    assert set(res.work_ids) == expected
+
+
 def test_exclude_filters_accepts_bare_or_prefixed_names():
     rows = [sidecar("nude", tags=["filter:nudity-full"]), sidecar("clean", tags=[])]
     for spec in (["nudity-full"], ["filter:nudity-full"]):

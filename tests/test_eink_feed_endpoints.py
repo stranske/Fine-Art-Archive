@@ -664,6 +664,47 @@ def test_preference_diverse_preview_saved_feed_and_exports_agree(
             assert not card.exists(), "dry-run must not write a card"
 
 
+def test_year_zero_lower_bound_agrees_across_preview_saved_feed_and_export(
+    client, archive, tmp_path, monkeypatch
+):
+    """An explicit year_from=0 filters on every delivery path, not just the preview (#806)."""
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+    _work(archive, "aaa1111-dated", title="Dated")
+    _work(archive, "bbb2222-undated", title="Undated")
+    meta_path = archive / "bbb2222-undated" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["year"] = None
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    api_main._sidecars_cache = None
+    spec = {"year_from": 0}
+
+    preview = client.post("/eink/playlist/preview", json={"spec": spec})
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["work_ids"] == ["aaa1111-dated"]
+    assert preview.json()["coverage"]["excluded_for_missing_metadata"]["no year"] == 1
+
+    saved = _save(client, spec=spec)
+    assert saved["resolved_count"] == 1
+    manifest = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == ["aaa1111-dated"]
+
+    card = tmp_path / "card"
+    exported = client.post(
+        "/eink/playlist/export", json={"spec": spec, "path": str(card), "write": True}
+    )
+    assert exported.status_code == 200, exported.text
+    assert exported.json()["selected"] == 1
+    written = json.loads((card / "playlist.json").read_text())
+    assert [row["work_id"] for row in written["items"]] == ["aaa1111-dated"]
+
+
+def test_preview_rejects_non_integer_year_bound(client):
+    response = client.post("/eink/playlist/preview", json={"spec": {"year_from": ""}})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "year_from must be an integer or null"
+
+
 @pytest.mark.parametrize("update", [False, True])
 @pytest.mark.parametrize("missing", ["quality", "master", "unreadable", "zero-vector"])
 def test_preference_diverse_invalid_evidence_never_commits(
