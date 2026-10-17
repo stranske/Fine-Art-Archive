@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 
 import pytest
 from PIL import Image
@@ -1232,3 +1234,100 @@ def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     assert 'id="ek-selmode"' in ui, "no control emits it"
     assert "preference-diverse" in ui
     assert "selection_diagnostics" in ui, "the explanations are returned and rendered by nothing"
+
+
+@pytest.mark.parametrize("fit", ["", "contain", "cover", "stretch"])
+def test_ui_preview_save_and_export_carry_the_same_inputs(tmp_path, fit):
+    """Execute the UI producers: a hand-built payload cannot prove UI parity."""
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's request producers"
+    ui = UI_FILE.read_text()
+    functions = []
+    for start, end in (
+        ("    function einkSpec() {", "    async function einkSavePlaylist()"),
+        ("    async function einkSavePlaylist() {", "    let einkCardPlaylistId"),
+        ("    async function einkPreview() {", "    async function einkExport(write)"),
+        ("    async function einkExport(write) {", "    function toggleGallery()"),
+    ):
+        functions.append(ui[ui.index(start) : ui.index(end, ui.index(start))])
+
+    # Compile checked-in functions as a normal script, with only DOM/network
+    # boundaries replaced. No copied implementation or dynamic evaluation.
+    runner = tmp_path / "companion-inputs.cjs"
+    runner.write_text(
+        "const selectedFit = "
+        + json.dumps(fit)
+        + ";\n"
+        + """
+const controls = {
+  'ek-sort': {value: 'fit'}, 'ek-limit': {value: '2'},
+  'ek-selmode': {value: 'preference-diverse'},
+  'ek-target': {value: 'gooddisplay-315-diy'},
+  'ek-dither': {value: 'atkinson'}, 'ek-fitmode': {value: selectedFit},
+  'ek-plname': {value: 'Input parity'}, 'ek-interval': {value: 'daily'},
+  'ek-path': {value: '/fixture/card'},
+  'ek-out': {innerHTML: '', insertAdjacentHTML() {}}, 'ek-status': {},
+};
+const document = {
+  getElementById: id => controls[id] || null,
+  querySelectorAll: () => [],
+};
+const calls = [];
+let einkLastPreview, einkCardPlaylistId = null;
+const messages = [];
+const toast = message => messages.push(message);
+const einkLoadPlaylists = async () => {};
+const einkEsc = value => String(value);
+const confirm = () => true;
+const fetch = async (url, options) => {
+  calls.push({url, body: JSON.parse(options.body)});
+  return {ok: true, json: async () => ({
+    coverage: {}, items: [{work_id: 'fixture/work', has_master: true}],
+    selected: 1, matched: 1, total_candidates: 1, selection_diagnostics: [],
+    name: 'Input parity', resolved_count: 1, written: 1, palette_measured: true,
+  })};
+};
+"""
+        + "\n".join(functions)
+        + """
+(async () => {
+  await einkPreview();
+  const previewHTML = controls['ek-out'].innerHTML;
+  await einkSavePlaylist();
+  await einkExport(false);
+  console.log(JSON.stringify({calls, previewHTML}));
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run([node, str(runner)], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    preview, saved, exported = observed["calls"]
+    assert [call["url"] for call in observed["calls"]] == [
+        "/eink/playlist/preview",
+        "/eink/playlists",
+        "/eink/playlist/export",
+    ]
+    expected_spec = {"sort": "fit", "limit": 2, "selection_mode": "preference-diverse"}
+    assert preview["body"]["spec"] == saved["body"]["spec"] == exported["body"]["spec"]
+    assert preview["body"]["spec"] == expected_spec
+    assert preview["body"]["target"] == saved["body"]["target"] == exported["body"]["target"]
+    assert saved["body"]["fit"] == exported["body"]["fit"] == (fit or None)
+    assert saved["body"]["dither"] == exported["body"]["dither"] == "atkinson"
+
+    from html import unescape
+    from urllib.parse import parse_qs, urlsplit
+
+    html = observed["previewHTML"]
+    image_url = unescape(html.split('src="', 1)[1].split('"', 1)[0])
+    assert urlsplit(image_url).path == "/works/fixture%2Fwork/eink_preview"
+    params = parse_qs(urlsplit(image_url).query)
+    assert params == {
+        "target": [saved["body"]["target"]],
+        "dither": [saved["body"]["dither"]],
+        "max_px": ["380"],
+        **({"fit": [fit]} if fit else {}),
+    }

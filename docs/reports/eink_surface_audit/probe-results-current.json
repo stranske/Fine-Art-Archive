@@ -1,0 +1,186 @@
+{
+  "inspected_commit": "ee75d23ad0e06cb73a2647a5c9dd0db569e43182",
+  "probe_sha256": "a8b7e9064ab440b9e38c795f6548b3dbdae0d9223b142bab8f8f7f9252425e4f",
+  "python": "3.14.8",
+  "inventory": {
+    "playlist_defaults": {
+      "artists": [],
+      "genres": [],
+      "moods": [],
+      "periods": [],
+      "year_from": null,
+      "year_to": null,
+      "any_tags": [],
+      "all_tags": [],
+      "not_tags": [],
+      "exclude_filters": [],
+      "min_fit": null,
+      "min_quality": null,
+      "require_dossier": false,
+      "selection_mode": "ordered",
+      "limit": null,
+      "sort": "fit",
+      "seed": 42
+    },
+    "request_fields": {
+      "PlaylistIn": [
+        "spec",
+        "quality_scores",
+        "embeddings",
+        "target",
+        "sample"
+      ],
+      "SavePlaylistIn": [
+        "name",
+        "spec",
+        "target",
+        "dither",
+        "fit",
+        "interval",
+        "id"
+      ],
+      "ExportIn": [
+        "playlist_id",
+        "spec",
+        "target",
+        "path",
+        "dither",
+        "fit",
+        "fmt",
+        "write",
+        "overwrite"
+      ]
+    },
+    "render_defaults": {
+      "fit": null,
+      "method": "floyd-steinberg",
+      "compress_range": true,
+      "fast": true,
+      "strategy": null
+    }
+  },
+  "probes": {
+    "explicit_preview_evidence": {
+      "derived_preview": [
+        "aaa1111-red-work",
+        "ccc3333-blue-work"
+      ],
+      "explicit_preview": [
+        "bbb2222-near-red",
+        "ccc3333-blue-work"
+      ],
+      "saved_feed": [
+        "aaa1111-red-work",
+        "ccc3333-blue-work"
+      ],
+      "derived_matches_saved": true,
+      "explicit_matches_saved": false
+    },
+    "request_only_controls": {
+      "sample_zero_work_ids": [
+        "aaa1111-red-work",
+        "ccc3333-blue-work"
+      ],
+      "sample_zero_items": [],
+      "explicit_empty_status": {
+        "quality_scores": 400,
+        "embeddings": 400
+      }
+    },
+    "navigation": {
+      "cursors": [
+        {
+          "after": null,
+          "work_id": "aaa1111-red-work"
+        },
+        {
+          "after": "aaa1111-red-work",
+          "work_id": "ccc3333-blue-work"
+        },
+        {
+          "after": "ccc3333-blue-work",
+          "work_id": "aaa1111-red-work"
+        },
+        {
+          "after": "unknown-work",
+          "work_id": "aaa1111-red-work"
+        }
+      ],
+      "invalid_index_status": 404,
+      "offset_changes_work": true
+    },
+    "native_surface_pixels": [
+      {
+        "export": "inline",
+        "work_id": "aaa1111-red-work",
+        "size": [
+          40,
+          20
+        ],
+        "pixels_equal": true,
+        "unchanged_validator_status": 304,
+        "implicit_explicit_fit_equal": true
+      },
+      {
+        "export": "inline",
+        "work_id": "ccc3333-blue-work",
+        "size": [
+          40,
+          20
+        ],
+        "pixels_equal": true,
+        "unchanged_validator_status": 304,
+        "implicit_explicit_fit_equal": true
+      },
+      {
+        "export": "saved",
+        "work_id": "aaa1111-red-work",
+        "size": [
+          40,
+          20
+        ],
+        "pixels_equal": true,
+        "unchanged_validator_status": 304,
+        "implicit_explicit_fit_equal": true
+      },
+      {
+        "export": "saved",
+        "work_id": "ccc3333-blue-work",
+        "size": [
+          40,
+          20
+        ],
+        "pixels_equal": true,
+        "unchanged_validator_status": 304,
+        "implicit_explicit_fit_equal": true
+      }
+    ],
+    "same_name_palette_change": {
+      "before_status": 200,
+      "after_status": 200,
+      "bytes_changed": true,
+      "etag_changed": false,
+      "old_validator_status": 304,
+      "before_sha256": "bf103c4e975919fa6c4ba68fb9cdf5dcd2c6863370914f33d317aef27867e62d",
+      "after_sha256": "5cd23961bdc1133144aa24a26295bfc5f21f2d3724439a0c3f0e1230ee813570"
+    },
+    "measurement_status_change": {
+      "before": "False",
+      "after": "True",
+      "etag_changed": false,
+      "old_validator_status": 304,
+      "conditional_measurement_header": null
+    }
+  },
+  "source_integrity": {
+    "before": {
+      "files": 246,
+      "sha256": "147084d6920cfaf25dc3515ac13ead728663fe8c687367b1e6568c156638d362"
+    },
+    "after": {
+      "files": 246,
+      "sha256": "147084d6920cfaf25dc3515ac13ead728663fe8c687367b1e6568c156638d362"
+    },
+    "byte_identical": true
+  }
+}
