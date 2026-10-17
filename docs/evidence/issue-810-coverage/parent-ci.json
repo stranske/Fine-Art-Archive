@@ -1,0 +1,77 @@
+{
+  "pr": {
+    "url": "https://github.com/stranske/Fine-Art-Archive/pull/813",
+    "state": "open",
+    "isDraft": false,
+    "head": "1472a49576c01baf4ec466295093cd153b44715c"
+  },
+  "checks": [
+    {
+      "name": "gate-summary",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117264107698"
+    },
+    {
+      "name": "Python CI / logs summary",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117264048995"
+    },
+    {
+      "name": "Python CI / python 3.13",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263293330"
+    },
+    {
+      "name": "Python CI / python 3.12",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263293299"
+    },
+    {
+      "name": "Python CI / lint-format",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263271303"
+    },
+    {
+      "name": "Python CI / select reusable CI scope",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263271277"
+    },
+    {
+      "name": "Python CI / typecheck-mypy",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263271262"
+    },
+    {
+      "name": "Python CI / lint-ruff",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263271235"
+    },
+    {
+      "name": "Python CI / Validate inputs",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809/job/117263247160"
+    }
+  ],
+  "coverage_log_lines": [
+    "2026-10-17T00:48:22.0389115Z src/fine_art_archive/api/main.py                               1438      3    398     10    99%   531, 626->628, 1213->1230, 1234->1230, 1670, 2437->2441, 2959, 2977->2982, 3105->3115, 3113->3115",
+    "2026-10-17T00:48:22.0390230Z src/fine_art_archive/api/store.py                               436      0    112      1    99%   761->759",
+    "2026-10-17T00:48:22.0434954Z src/fine_art_archive/enrichment/source_resolver.py              782     81    346     59    86%   120->exit, 155, 197, 224, 231, 235, 238-239, 275->280, 278->280, 295, 298, 359->357, 431, 434-437, 442-447, 450, 462, 498, 501, 535, 546, 582, 596, 725, 727, 731->733, 742, 768-772, 787, 885, 912-916, 924-928, 955, 977, 979, 994, 1010-1011, 1013->1036, 1016->1036, 1024-1025, 1028, 1038->1045, 1049, 1057-1062, 1133->1125, 1147-1155, 1175, 1188, 1191, 1194->1189, 1197->1199, 1227->1226, 1229-1231, 1235, 1275->1273, 1277, 1341, 1354->1346, 1392, 1468, 1476, 1514",
+    "2026-10-17T00:48:22.0478451Z TOTAL                                                         10228    660   3608    446    91%",
+    "2026-10-17T00:48:22.1007023Z Required test coverage of 25.0% reached. Total coverage: 91.02%",
+    "2026-10-17T00:48:22.1008580Z =========== 2394 passed, 12 skipped, 4 warnings in 103.47s (0:01:43) ==========="
+  ],
+  "ci_workflow": "https://github.com/stranske/Workflows/blob/main/.github/workflows/reusable-10-ci-python.yml",
+  "ci_lint_commands": [
+    "black --check --line-length 100 --exclude '(\\.venv|\\.workflows-lib|node_modules)' .",
+    "ruff check --output-format github --extend-exclude .workflows-lib ."
+  ]
+}

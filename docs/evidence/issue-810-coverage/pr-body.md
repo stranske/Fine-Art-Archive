@@ -1,48 +1,52 @@
-The master-facts loader now treats JSON caches whose `entries` field is a list or null as a cache miss. Previously those shapes raised `AttributeError` and could break acquisition review. Two new regressions reproduced the failure before the four-line guard was added.
+Malformed master-facts caches whose `entries` value is a list or null now count as cache misses. Previously those shapes raised `AttributeError` during acquisition review. Two regression cases reproduced the failure before the small cache-shape guard was added; this is the only production change.
 
-The PR adds 65 offline cases for API delivery, review gates, store recovery, museum artist resolution, and discovery. The final production diff is limited to the cache-shape guard. Targets follow `issue-799-coverage/review-gap-ranking.csv`: `api/main.py`, then `api/store.py`, then `enrichment/source_resolver.py`; the ranking's repair-history proxy is not asserted to be a verified escaped-defect count.
+The PR adds **71 offline cases** for API delivery and review gates, cache recovery, discovery, and museum artist resolution. The latest six cases check low-confidence and QID-less aliases, Getty-to-Wikidata bridging, absent/invalid Getty results, an unavailable Wikidata provider, and a Wikidata link embedded in museum creator text. No additional production bug was found.
 
-- [x] Use whole-suite coverage as the baseline and disclose differences from CI. The supplied CI baseline is **89.64%**; the fresh starting-head whole-suite baseline is **89.9790326%** (2335 passed, 12 skipped, four environment failures). The rounded table says 90%, but the unrounded measurement is below the stop threshold. CI's counts remain authoritative for Gate acceptance.
-- [x] Run the repository's Black and Ruff checks before committing. Both whole-tree Black commands pass for 367 files; whole-tree Ruff and `git diff --check` pass.
-- [x] Verify each added test with an executed break-and-revert run. All 55 cases added in this round, plus all ten inherited API/discovery cases, individually fail under mutation (exit 1) and pass after restoration (exit 0). See [the receipt index](mutation-summary.md) and [exact mutations and outputs](mutation-proofs.json.gz).
-- [x] Confirm the final full-suite coverage improvement: **89.9790% → 90.9801%**, with **135 fewer missing target units**.
-- [ ] Verify fresh-head pytest and the ~120-unit reduction in Gate coverage. GitHub access is unavailable; local evidence does not replace this required check.
+Targets follow [the repository ranking](https://github.com/stranske/Fine-Art-Archive/blob/codex/issue-810-api-discovery-coverage/docs/evidence/issue-799-coverage/review-gap-ranking.csv): API main, API store, then source resolver. Repair-history matches are a proxy, not a verified escaped-defect count. Fresh history counts preserve that order: 28/57, 6/21, and 5/9 repair matches/touches respectively. This follow-up continues the already selected resolver target in the same logical PR.
 
-The starting local run fails four tests in `test_workspace_conflict_guard.py` because `/home/runner/.cache/fine-art-archive` is read-only. No tests were disabled to hide those failures. The temporary external polling harness used by prior coverage rounds is needed here too: it bounds selector waits because sandboxed socketpair writes cannot wake the event loop. It changes no repository code or tests. Black uses one worker because sandboxed multiprocessing sockets are unavailable.
+### Coverage
 
-GitHub API access is unavailable in this environment (`gh pr view` reports a connection failure). Updating the live PR body and verifying fresh Gate results require a connected run; this file is the prepared PR description.
+The supplied CI baseline is **89.64%**. The original starting-head whole-suite baseline was **89.9790326%**, below the 90% stop threshold despite displaying as 90% in the rounded table. This continuation does not open a new PR. Matched local whole-suite coverage now rises **89.9790% → 91.0234%**, covering **141 previously missing target statements and branches**. CI's numbers remain authoritative for Gate acceptance.
 
+| Target | Original local missing statements + branches | Latest local missing statements + branches | Reduction | Latest cover |
+|---|---:|---:|---:|---:|
+| `api/main.py` | 63 + 35 | 3 + 10 | 85 | 99.29% |
+| `api/store.py` | 20 + 6 | 0 + 1 | 25 | 99.82% |
+| `enrichment/source_resolver.py` | 95 + 88 | 78 + 74 | 31 | 86.52% |
 
-Whole-suite target measurements (statements + branches missing):
+The published whole-CI ranking has 111, 26, and 183 missing units for these targets. The matched local reduction above uses the original baseline reports retained in this PR, rather than crediting inherited tests twice. The cache fix's three new statements and two new branches are fully covered and excluded from the count of formerly uncovered units.
 
-| Ranked target | Published CI reference | Local before | Local after | Local reduction | Final cover |
-|---|---:|---:|---:|---:|---:|
-| `api/main.py` | 69 + 42 = 111 | 63 + 35 = 98 | 3 + 10 = 13 | 85 | 99.29% |
-| `api/store.py` | 20 + 6 = 26 | 20 + 6 = 26 | 0 + 1 = 1 | 25 | 99.82% |
-| `enrichment/source_resolver.py` | 95 + 88 = 183 | 95 + 88 = 183 | 81 + 77 = 158 | 25 | 85.99% |
+The immediately preceding head `1472a49576c01baf4ec466295093cd153b44715c` has a [successful Gate run](https://github.com/stranske/Fine-Art-Archive/actions/runs/38987800809), including Python 3.12 and 3.13, Black and Ruff. Its Python 3.12 job reports **2394 passed, 12 skipped** and **91.02%**. [The CI receipt](parent-ci.json) records its target rows and exact checks. That success validates the previous 65 cases and cache fix; fresh CI for this six-case follow-up remains pending.
 
-The published reference is the repository's whole-CI ranking in `docs/evidence/issue-799-coverage/review-gap-ranking.csv`; it remains the CI comparison basis. The final local targets have 148 fewer missing units than that published reference, while the matched local runs establish 135. A fresh Gate run must confirm the CI delta. The earlier head already contains the API/discovery tests, so the fresh baseline includes those tests rather than crediting them again. The cache fix adds three statements and two branches, all covered; those new units are not counted as formerly uncovered units.
+The latest six cases reduce resolver missing units **158 → 152** in matched whole-suite runs. Targeted verification: **194 passed in 3.82s**; the resolver row is **86.52%**. The resolver is not claimed fully covered. The remaining API lines are Pydantic v1 compatibility fallbacks and the zero-attempt retry fallback; this chunk does not synthesize unsupported runtime conditions to cover them. The original ~120-unit chunk is already exceeded.
 
-Final full suite: **2390 passed, 12 skipped, four unchanged read-only-home failures** in 159.63 seconds. New-test targeted run: **55 passed**. No other failures were introduced. Baseline and final runs both use `pytest tests/ -o addopts= --cov=src -q -m 'not slow'` with distinct coverage data/report paths. Exact commands, module summaries, environment limitations, and source hashes are in [validation.json](validation.json); full reports and outputs are compressed beside it.
+### Executed mutation proofs
 
-All **65** PR-added cases were run individually against a temporary production mutation and again after restoring the exact source bytes: **65 failed broken / 65 passed restored**. This includes the ten API/discovery cases from the starting head. Every mutation and both complete pytest outputs are retained in [mutation-proofs.json.gz](mutation-proofs.json.gz), indexed in [mutation-summary.md](mutation-summary.md). The two failing cache-shape regressions before the fix are separately retained in [cache-bug-before-fix.txt.gz](cache-bug-before-fix.txt.gz).
+All **71 PR-added cases** individually fail with a deliberate production defect (exit 1) and pass after exact source restoration (exit 0). [The original 65-case index](mutation-summary.md) links to the original full receipts. [The six new cases](artist-mutation-summary.md) have separate [exact mutations, commands and complete outputs](artist-mutation-proofs.json.gz). The two cache regressions' failure before the fix is retained in [cache-bug-before-fix.txt.gz](cache-bug-before-fix.txt.gz).
 
-The remaining API lines are the Pydantic v1 compatibility fallbacks and the zero-attempt retry fallback; this chunk does not synthesize unsupported runtime conditions to cover them. Remaining resolver paths are outside the bounded ~120-unit chunk. No target is claimed fully covered.
+| New case | Deliberate defect | Broken | Restored |
+|---|---|---|---|
+| Low-confidence alias | Accept an alias below the threshold | 1 failed | 1 passed |
+| Alias without QID | Accept an alias with no QID | 1 failed | 1 passed |
+| Getty absence | Stop resolution on no Getty result | 1 failed | 1 passed |
+| Invalid Getty ULAN | Pass the unnormalized ULAN to Wikidata | 1 failed | 1 passed |
+| Wikidata unavailable | Remove the provider guard | 1 failed | 1 passed |
+| Embedded artist link | Ignore the museum's Wikidata link | 1 failed | 1 passed |
 
-- [x] Pick targets in repository ranking order, rather than by file size.
-- [x] Fix real bugs found by tests with a minimal production diff; the only fix is the malformed cache `entries` guard described above.
-- [x] Keep the work to one logical API/enrichment coverage chunk, without refactors.
+### Validation and task reconciliation
 
-Required checks executed locally:
+Fresh local baseline: **4 failed, 2390 passed, 12 skipped, 1 warning in 160.05s (0:02:40)**. Latest full suite: **4 failed, 2396 passed, 12 skipped, 1 warning in 155.44s (0:02:35)**. Both have exactly the same four `test_workspace_conflict_guard.py` failures because the default `/home/runner/.cache/fine-art-archive` directory is read-only; no tests were disabled. CI passes those tests at the preceding head. The external selector-polling harness from prior rounds and one Black worker are required by this sandbox; they change no repository code or tests.
 
-```bash
-black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
-black --check --line-length 100 --exclude '(\.venv|\.workflows-lib|node_modules)' .
-ruff check --output-format github --extend-exclude .workflows-lib .
-git diff --check
-```
+- [x] Select targets in repository ranking order, rather than by file size.
+- [x] Execute a failing mutation and passing restoration for every new test; 71/71 cases have receipts.
+- [x] Fix real bugs minimally: only the malformed-cache shape guard is retained. The existing negative-cache regression also passes in the targeted suite.
+- [x] Keep low blast radius: tests and the targeted cache fix, with no refactors.
+- [x] Keep one PR for this logical API/enrichment coverage chunk.
+- [x] Verify the preceding committed head's Gate, Python 3.12/3.13 tests and lint checks.
+- [ ] Verify fresh Gate on the commit containing the latest six cases. Local checks do not replace it.
 
-Both Black checks pass for all 367 Python files. Ruff and whitespace checks pass. Black formatting was also applied to all changed Python files before these checks.
+Applied Black to the changed Python file. Required whole-tree Black, CI whole-tree Black, CI whole-tree Ruff, and `git diff --check` pass. Exact commands, coverage summaries and hashes are in [artist-followup.json](artist-followup.json); [the latest full-suite coverage](artist-followup-coverage.json.gz) and [pytest output](artist-followup-pytest.txt.gz) are retained alongside the targeted reports.
 
+The checkout's Git metadata is read-only, so staging into its branch fails creating `.git/index.lock`. A separate bare clone under `/tmp` preserves a handoff commit and bundle without changing the checkout's branch. Publishing that commit and running fresh CI remain outstanding. The GitHub connector rejected the live PR title/body and task-checkbox update: `MCP tool call requires approval, but approval policy is never`. The verified checklist above is the prepared local reconciliation. PR #813 was confirmed open with `isDraft=false`; no additional PR was opened.
 
-Commit handoff is blocked by the execution environment: staging the scoped files fails with `Unable to create .git/index.lock: Read-only file system`. No commit or push was created. The existing branch is `codex/issue-810-api-discovery-coverage`, still at `e2ea975175e5eb16abc963db1abad3f670e9918f`. The source change, three new test files, and evidence are ready for a runner with writable Git metadata. The live PR state, ready-for-review flag, and fresh CI results remain unverified because GitHub API access fails.
+Closes #810
