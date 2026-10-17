@@ -151,10 +151,10 @@ class PlaylistSpec:
             raise ValueError(f"unknown playlist sort {sort!r}; expected one of {_SORT_KEYS}")
         if d.get("selection_mode", "ordered") not in {"ordered", "preference-diverse"}:
             raise ValueError("selection_mode must be 'ordered' or 'preference-diverse'")
-        for field in ("year_from", "year_to"):
-            value = d.get(field)
+        for bound_name in ("year_from", "year_to"):
+            value = d.get(bound_name)
             if value is not None and type(value) is not int:
-                raise ValueError(f"{field} must be an integer or null")
+                raise ValueError(f"{bound_name} must be an integer or null")
         return cls(**d)
 
 
