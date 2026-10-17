@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/opt/anaconda3/bin/python3",
+    "-m",
+    "pytest",
+    "tests/test_eink_audit_selector.py",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "red_exit": 1,
+  "red_result": "2 failed, 3 passed",
+  "green_exit": 0,
+  "green_result": "5 passed",
+  "source_sha256_before": "ae3cefefcdf9349ac81765429e3852f60e45d209312bfa7397e5e19db561dc34",
+  "source_sha256_after": "ae3cefefcdf9349ac81765429e3852f60e45d209312bfa7397e5e19db561dc34",
+  "test_sha256": "27a629b89e6d0315e0da96fd0f1b94950c1f6e4a5b0de6da2b639d51f93c6008",
+  "actual_io": "none; fake selector parent"
+}
