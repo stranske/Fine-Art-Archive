@@ -191,7 +191,11 @@ def test_source_quality_aggregate_ignores_bad_sidecars_and_seeds_host_priors(
     }
 
 
-def test_semantic_corpus_and_comma_tie_breaks_are_deterministic(tmp_path: Path) -> None:
+def test_semantic_corpus_and_comma_tie_breaks_are_deterministic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(semantic, "_KNOWN_ARTISTS_FULL", set())
+    monkeypatch.setattr(semantic, "_KNOWN_ARTISTS_SURNAMES", set())
     inventory = tmp_path / "inventory.csv"
     inventory.write_text("artist\nEugène Boudin\nEugène Boudin\nClaude Monet\n")
     assert semantic.load_known_artists(inventory, min_frequency=2)[0] >= 2
