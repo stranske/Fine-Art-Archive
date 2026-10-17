@@ -139,6 +139,24 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **3 passed**
   (fit + dither/target + shared-spec). No file under `src/` is touched
   by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_einkspec_forwards_each_spec_control` in
+  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1171):
+  locks the builder side of the `spec.*` row — every `ek-*` control
+  (`ek-sort`, `ek-artist`, `ek-period`, `.ek-fam`, `ek-mood`, `ek-fit`,
+  `ek-limit`, `ek-excl`, `ek-dossier`, `ek-selmode`) populates
+  `einkSpec()`, so preview/save/export cannot silently lose an operator
+  filter while still agreeing with each other. **1 passed**; no new
+  issue filed, since this locks an already-correct row.
+- Deliberate-break gate for it: deleting
+  `if (v("ek-limit")) spec.limit = parseInt(v("ek-limit"), 10);` from
+  `einkSpec()` in `index.html` → that test **FAILED** with
+  "einkSpec() does not forward limit (ek-limit)". Restored via
+  `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **4 passed**
+  (fit + dither/target + shared-spec + einkSpec controls). Full
+  re-run `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow" --no-cov`
+  → **187 passed**. No file under `src/` is touched by the committed
+  change.
 
 ## Follow-up filing and dedup
 

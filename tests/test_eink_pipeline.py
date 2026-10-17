@@ -1166,3 +1166,41 @@ def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
     assert (
         ui.count("spec: einkSpec()") == 3
     ), "exactly preview, save and export should consume the shared spec builder"
+
+
+def test_operator_ui_einkspec_forwards_each_spec_control():
+    """Every ``ek-*`` spec control must populate the shared ``einkSpec()``.
+
+    The shared-spec regression above proves preview, save and export all
+    call ``einkSpec()``; it does not prove the builder reads each control.
+    If ``einkSpec()`` dropped e.g. ``ek-limit`` or ``ek-excl``, all three
+    surfaces would agree with each other but silently diverge from the
+    operator's stated filters — the ``spec.*`` row of the divergence
+    audit, already-correct only on source reading. Removing any single
+    control mapping inside ``einkSpec()`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "function einkSpec()" in ui, "no shared spec builder exists"
+    mappings = [
+        ('const spec = { sort: v("ek-sort") || "fit" };', "sort (ek-sort)"),
+        ('if (v("ek-artist")) spec.artists = [v("ek-artist")];', "artists (ek-artist)"),
+        ('if (v("ek-period")) spec.periods = [v("ek-period")];', "periods (ek-period)"),
+        ("if (tags.length) spec.all_tags = tags;", "all_tags (.ek-fam family selects)"),
+        ('if (v("ek-mood")) spec.moods = [v("ek-mood")];', "moods (ek-mood)"),
+        ('if (v("ek-fit")) spec.min_fit = parseInt(v("ek-fit"), 10);', "min_fit (ek-fit)"),
+        ('if (v("ek-limit")) spec.limit = parseInt(v("ek-limit"), 10);', "limit (ek-limit)"),
+        (
+            'if (on("ek-excl")) spec.exclude_filters = ["nudity-full", "violence", "disturbing"];',
+            "exclude_filters (ek-excl)",
+        ),
+        ('if (on("ek-dossier")) spec.require_dossier = true;', "require_dossier (ek-dossier)"),
+        (
+            'if (v("ek-selmode") === "preference-diverse" && spec.limit) {',
+            "selection_mode guard (ek-selmode, requires limit)",
+        ),
+        ('spec.selection_mode = "preference-diverse";', "selection_mode (ek-selmode)"),
+    ]
+    for snippet, label in mappings:
+        assert snippet in ui, f"einkSpec() does not forward {label} — operator filter is lost"
