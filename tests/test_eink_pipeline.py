@@ -1204,3 +1204,33 @@ def test_operator_ui_einkspec_forwards_each_spec_control():
     ]
     for snippet, label in mappings:
         assert snippet in ui, f"einkSpec() does not forward {label} — operator filter is lost"
+
+
+def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
+    """Save/export bodies must carry the exact delivery fields, not just counts.
+
+    Earlier forwarding tests assert read counts (``>= 2``/``>= 3``), which
+    still pass if one surface drops a field while another reads it twice.
+    This locks the literal body fields: saved feed and SD export each send
+    ``target``/``dither``/``fit`` from their controls, and export forwards
+    a chosen saved feed as ``playlist_id`` so the card uses the feed's
+    selection (main.py:813) instead of re-resolving the filter spec.
+    Deleting the ``body.playlist_id`` line in ``index.html`` must fail it.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    # Saved feed body: exact delivery fields persisted for feed rendering.
+    assert 'target: document.getElementById("ek-target").value,' in ui
+    assert 'dither: document.getElementById("ek-dither").value,' in ui
+    # Both save and export send fit as ``|| null`` (unset means panel default).
+    assert (
+        ui.count('fit: document.getElementById("ek-fitmode").value || null,') == 2
+    ), "fit must be sent exactly by playlist save (feed) and SD export"
+    # SD export body: card destination/write flags plus saved-feed selection.
+    assert "path, write, overwrite: true," in ui, "export loses card path/write flags"
+    assert "if (einkCardPlaylistId) body.playlist_id = einkCardPlaylistId;" in ui, (
+        "export does not forward the chosen saved feed — card would "
+        "re-resolve filters instead of using the feed selection"
+    )
+    assert "einkCardPlaylistId = id;" in ui, "no UI path chooses a saved feed for the card"

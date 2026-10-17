@@ -157,6 +157,19 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   re-run `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow" --no-cov`
   → **187 passed**. No file under `src/` is touched by the committed
   change.
+- Follow-on regression (this change)
+  `test_operator_ui_forwards_exact_delivery_fields_to_save_and_export`:
+  locks exact (not count-based) save/export body fields
+  (`target`/`dither`/`fit … || null`, export `path, write, overwrite`)
+  and the saved-feed `playlist_id` forwarding
+  (`if (einkCardPlaylistId) body.playlist_id = …`, consumed at
+  main.py:813) that count-based tests could miss. **1 passed**.
+- Deliberate-break gate for it: deleting the `body.playlist_id` line
+  from `index.html` → that test **FAILED** with "export does not
+  forward the chosen saved feed". Restored via `git checkout`;
+  SHA-256 back to `d65b9650…a52`; rerun **5 passed** (all UI
+  forwarding regressions). No file under `src/` is touched by the
+  committed change.
 
 ## Follow-up filing and dedup
 
