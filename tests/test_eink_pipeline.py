@@ -1086,3 +1086,41 @@ def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
     assert (
         ui.count('document.getElementById("ek-fitmode").value || null') >= 2
     ), "fit must be sent both when saving a playlist (feed) and on export (SD card)"
+
+
+def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export():
+    """Dither and panel target must reach every surface the preview claims to match.
+
+    ``eink_preview`` renders with its ``target``/``dither`` query params
+    (api/main.py), the saved feed renders with ``pl.target``/``pl.dither``
+    and the SD export with the export body's ``target``/``dither``. If the
+    UI's ``ek-target``/``ek-dither`` values reached only the export, the
+    on-screen preview would show a different panel size and dither texture
+    than the card/feed delivered — the same preview-vs-delivery divergence
+    class the audit tracks for ``fit``. Disconnecting the ``dither``
+    interpolation in the preview ``<img>`` URL must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'id="ek-target"' in ui, "no target control exists for the operator to set"
+    assert 'id="ek-dither"' in ui, "no dither control exists for the operator to set"
+    # Preview images: both values are read from their controls in
+    # einkPreview() and interpolated into the eink_preview URL on screen.
+    assert 'const target = document.getElementById("ek-target").value;' in ui
+    assert 'const dither = document.getElementById("ek-dither").value;' in ui
+    assert (
+        "eink_preview?target=${encodeURIComponent(target)}"
+        "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui
+    ), (
+        "preview <img> does not forward the chosen target/dither — preview "
+        "would not match the panel/dither delivered by feed/export"
+    )
+    # Saved feed and SD export consume the same controls, so all three
+    # surfaces agree on panel and dither for one operator action.
+    assert ui.count('document.getElementById("ek-target").value') >= 3, (
+        "target must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    )
+    assert ui.count('document.getElementById("ek-dither").value') >= 3, (
+        "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    )

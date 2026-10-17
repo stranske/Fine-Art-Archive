@@ -2,7 +2,10 @@
 
 ## Provenance
 
-- Inspected commit: `41144c7ecd686ce55021c16b92a6e422e87b8b31` (branch `muse/issue-805`).
+- Inspected commit: `667c1558018b7d88d15c003ab0530d286204de4e` (re-verified
+  against `41144c7ecd686ce55021c16b92a6e422e87b8b31`; line numbers below are
+  at the inspected commit, where the cited functions sit at main.py:688/744/
+  810/2080/2123, render.py:235, exhibition.py:57, targets.py:210).
 - Companion UI readback: `src/fine_art_archive/ui/index.html` SHA-256
   `d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52`, matching the
   scope note at `84b50094050db03522a2e80c09617c0cc46cb5e2`.
@@ -93,7 +96,7 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
 
 | Test file | Layer checked |
 |---|---|
-| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914) and now fit forwarding (new test below). No HTTP validators, no SD files. |
+| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914), fit forwarding and dither/target forwarding (new tests below). No HTTP validators, no SD files. |
 | [test_eink_feed_endpoints.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_feed_endpoints.py:92) | HTTP validators (ETag/304 on fit and strategy change, :92/:150), image bytes, resolved IDs/counts, rotation. No SD output. |
 | [test_eink_export_format.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
 | [test_render_strategy.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
@@ -101,8 +104,9 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
 ## Executed probes (this session, kept separate from inspected tests)
 
 - Baseline: `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`
-  → **183 passed** (a global 25% coverage gate in config reports 14.72% for
-  this subset run; the tests themselves pass).
+  → **185 passed** at the inspected commit plus this change (184 before the
+  dither/target regression below; a global 25% coverage gate in config
+  reports 14.72% for this subset run; the tests themselves pass).
 - New regression `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
   in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1060):
   **1 passed**.
@@ -110,6 +114,17 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   `src/fine_art_archive/ui/index.html` → that test **FAILED** with
   "preview <img> does not forward the chosen fit". Restored via
   `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **1 passed**.
+- Follow-on regression (this change)
+  `test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export`
+  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1091):
+  locks the already-correct `dither`/`target` rows of the matrix above —
+  both controls are read for the preview `<img>`, playlist save (feed) and
+  export (SD). **1 passed** alongside the fit regression (2 passed).
+- Deliberate-break gate for it: removing
+  `&dither=${encodeURIComponent(dither)}` from the preview `<img>` URL →
+  that test **FAILED** with "preview <img> does not forward the chosen
+  target/dither". Restored via `git checkout`; SHA-256 back to
+  `d65b9650…a52`; rerun **2 passed** (fit + dither/target).
 
 ## Follow-up filing and dedup
 
