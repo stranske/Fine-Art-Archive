@@ -1,0 +1,142 @@
+{
+  "native_head": "dc229bbbb0d0ce373657083c375c7bbb6cda40ce",
+  "previous_union_anchor": "37dc8b0f85b4a087eacd8bd14eae0ecb2832e29d",
+  "mutants": [
+    {
+      "name": "limit",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.49s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_einkspec_forwards_each_spec_control"
+      ]
+    },
+    {
+      "name": "family",
+      "returncode": 1,
+      "summary": "============================== 5 failed in 0.56s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs",
+        "tests/test_eink_pipeline.py::test_operator_ui_einkspec_forwards_each_spec_control"
+      ]
+    },
+    {
+      "name": "saved-feed",
+      "returncode": 1,
+      "summary": "============================== 5 failed in 0.61s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_forwards_exact_delivery_fields_to_save_and_export",
+        "tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs"
+      ]
+    },
+    {
+      "name": "selection-guard",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.31s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_selection_mode_requires_limit_guard"
+      ]
+    },
+    {
+      "name": "buttons",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.31s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_export_write_flag_and_saved_feed_clearing"
+      ]
+    },
+    {
+      "name": "palette",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.30s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_discloses_estimated_palette_on_export"
+      ]
+    },
+    {
+      "name": "no-master",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.30s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_discloses_no_master_works_in_preview"
+      ]
+    },
+    {
+      "name": "skipped",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.30s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_discloses_skipped_works_on_export"
+      ]
+    },
+    {
+      "name": "metadata",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.30s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_discloses_missing_metadata_drops_in_preview"
+      ]
+    },
+    {
+      "name": "diagnostics",
+      "returncode": 1,
+      "summary": "============================== 1 failed in 0.30s ===============================",
+      "portable_replay_argv": [
+        "$AUDIT_PYTHON",
+        "-m",
+        "pytest",
+        "--no-cov",
+        "-q",
+        "tests/test_eink_pipeline.py::test_operator_ui_renders_selection_diagnostics_in_preview"
+      ]
+    }
+  ],
+  "restored_green_summary": "======================= 242 passed, 1 warning in 38.73s ========================",
+  "restored_ui_sha256": "d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52",
+  "unchanged_test_sha256": "3cce1f610cc3388208a2a9bcfa0bc0e811e9e0d3df72d07f9634080aeb75a9da",
+  "environment": "Frozen uv dev environment; approved Python3.12.2; PYTHONPATH adds existing opt-in audit polling-selector harness and src. Exact raw argv/output retained in automation run-20261017T1802, not reinterpreted as physical-panel evidence."
+}
