@@ -259,6 +259,11 @@ def run_acquisition_flow(
                     exc,
                 )
         dim = meta.get("dimensions_original") or {}
+        if not isinstance(dim, dict):
+            LOGGER.warning(
+                "Ignoring malformed dimensions_original in %s; expected a JSON object", meta_p
+            )
+            dim = {}
         assessment = assess_master(
             master,
             source=chosen_source,

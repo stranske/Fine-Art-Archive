@@ -196,6 +196,29 @@ Commands, mutation harness, full individual RED/GREEN output, exact coverage sum
 
 Publication remains blocked: Git staging cannot create `.git/index.lock` on the read-only filesystem. The GitHub connector rejected both the PR-body update and remote source-tree creation with `MCP tool call requires approval, but approval policy is never`. No new commit was created; changes and receipts remain in the working tree. The prepared replacement body is at `/tmp/faa811-current/pr-body.md`. PR #811 was verified open with `isDraft=false`.
 
+## Nested staged dimensions recovery (2026-10-17)
+
+The first unchecked contract asks for the next ranked target. `api/main.py` is next in [review-gap-ranking.csv](review-gap-ranking.csv), but #811 explicitly withdrew API work as outside this issue's verify/acquisition scope. That target is deferred; no new coverage target is selected. Both original targets were already 100% at starting head `c42a060`.
+
+Four new regressions exposed another batch crash: an object sidecar can contain a non-object `dimensions_original` (array, string, number, or boolean). Each failed on the starting production source with `AttributeError`. A five-line guard now warns and assesses the image without physical dimensions. Title and artist remain available for inventory matching, the invalid work remains unverified, and the next valid work is assessed normally. No other production code changed.
+
+Each parameter of `test_run_acquisition_flow_recovers_non_object_dimensions` was run separately with the guard removed, then with the exact source bytes restored in `finally` (SHA-256 checked):
+
+| Case | Broken | Restored |
+|---|---|---|
+| array | 1 failed in 0.27s (exit 1) | 1 passed in 0.63s (exit 0) |
+| string | 1 failed in 0.24s (exit 1) | 1 passed in 0.20s (exit 0) |
+| number | 1 failed in 0.24s (exit 1) | 1 passed in 0.20s (exit 0) |
+| boolean | 1 failed in 0.26s (exit 1) | 1 passed in 0.21s (exit 0) |
+
+Targeted run: **121 passed, 4 skipped in 6.37s**. `verify.py` remains **100% → 100%** (238 statements + 60 branches); `acquisition_flow.py` remains **100% → 100%** (130 + 40 → 133 + 42), zero missing units in both. All newly added units are covered; no reduction of the historical uncovered units is claimed. #804 already delivered the original 62-unit increment.
+
+Full baseline: **4 failed, 2327 passed, 12 skipped, 1 warning in 160.06s (0:02:40)**. Full final: **4 failed, 2331 passed, 12 skipped, 1 warning in 159.21s (0:02:39)**. Blended coverage: **89.5345% → 89.5383%**. Both runs have exactly the same four read-only-home failures in `test_workspace_conflict_guard.py`; no tests were disabled. The full-suite-green requirement remains unchecked. Starting-head [Gate passed](https://github.com/stranske/Fine-Art-Archive/actions/runs/38988750791); CI for these working-tree changes remains unverified.
+
+Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass. Commands, exact coverage summaries, initial failure output, individual RED/GREEN output, mutation harness, and source hashes are in [dimensions-followup.json](dimensions-followup.json). Work stayed in one local integration lane; no work was delegated. The next coverage target and publication are deferred as described here.
+
+Git staging was attempted and failed because `.git` is read-only. No commit or push was created. The ready-for-review PR remains #811; no additional PR was opened. The GitHub connector rejected the live body update: `MCP tool call requires approval, but approval policy is never`. PR #811 was rechecked open with `isDraft=false`. A replacement live body is prepared at `/tmp/faa811-dimensions/pr-body.md`.
+
 ## Tasks
 
 - [x] Cover `src/fine_art_archive/collect/verify.py` (50 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
@@ -210,7 +233,7 @@ Publication remains blocked: Git staging cannot create `.git/index.lock` on the 
 - [ ] The PR's Gate coverage shows the targets' uncovered statements+branches down by about 60 or more, or the PR body explains each target that could not be meaningfully covered.
 - [x] Production code changes only where a test found a real bug, each one explained in the PR body.
 - [x] Same contract as every round in this initiative:
-  1. [x] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then churn, then uncovered mass), not by file size.
+  1. [ ] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then churn, then uncovered mass), not by file size.
   2. [x] Every new test must FAIL when the code it covers is deliberately broken and PASS when reverted -- run that break-and-revert for real and report it, don't assert it.
   3. [x] Real bugs found while writing tests get fixed with a minimal, targeted diff in the same PR, not worked around. Watch for the negative-cache pattern.
   4. [x] Low blast radius only -- test-only or tightly-scoped fixes, no refactors.

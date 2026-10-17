@@ -156,6 +156,45 @@ def test_run_acquisition_flow_continues_after_non_object_meta(
     assert "JSON object" in warning.message
 
 
+@pytest.mark.parametrize(
+    "dimensions", [[60, 80], "60 x 80", 60, True], ids=["array", "string", "number", "boolean"]
+)
+def test_run_acquisition_flow_recovers_non_object_dimensions(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object
+) -> None:
+    invalid = _work(tmp_path / "invalid", w=80, h=60)
+    valid = _work(tmp_path / "valid", w=80, h=60)
+    (invalid / "meta.json").write_text(
+        json.dumps(
+            {
+                "title": "Paris Street",
+                "artist": {"name": "Gustave Caillebotte"},
+                "dimensions_original": dimensions,
+            }
+        )
+    )
+    inventory = tmp_path / "inventory.csv"
+    inventory.write_text(
+        "rel_path,size_bytes,title,artist\n" "Paris.jpeg,1000,Paris Street,Gustave Caillebotte\n"
+    )
+
+    with caplog.at_level(logging.WARNING, logger=af.__name__):
+        results = af.run_acquisition_flow("met", [invalid, valid], inventory_csv=inventory)
+
+    assert [result.work_dir for result in results] == [invalid, valid]
+    assert [result.verification["status"] for result in results] == ["UNVERIFIED", "PASS"]
+    assert all(result.quality and result.fitness for result in results)
+    # Recover only dimensions: title/artist must still participate in deduplication.
+    assert results[0].inventory_match is not None
+    assert results[0].inventory_match.has_strong_match
+    assert results[1].inventory_match is not None
+    assert not results[1].inventory_match.has_strong_match
+    [warning] = [record for record in caplog.records if record.name == af.__name__]
+    assert str(invalid / "meta.json") in warning.message
+    assert "dimensions_original" in warning.message
+    assert "JSON object" in warning.message
+
+
 def test_run_acquisition_flow_selects_candidate_source_by_scores(tmp_path: Path) -> None:
     work = _work(tmp_path / "w0")
     aggregates = {
