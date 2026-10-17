@@ -153,7 +153,7 @@ with (
     navigation = []
     for cursor, expected in [
         (None, feed_ids[0]),
-        *zip(feed_ids, feed_ids[1:] + feed_ids[:1]),
+        *zip(feed_ids, feed_ids[1:] + feed_ids[:1], strict=True),
         ("unknown-work", feed_ids[0]),
     ]:
         params = {} if cursor is None else {"after": cursor}
