@@ -755,21 +755,33 @@ def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
     client, archive, diverse_archive, monkeypatch
 ):
     saved = _save(client, spec=diverse_archive)
+    url = f"/feed/{saved['id']}/manifest.json"
+    # Resolve once with storage disabled to compare membership with no reuse.
+    with monkeypatch.context() as uncached:
+        uncached.setattr(api_main, "_visual_descriptor_cache", {})
+        uncached.setattr(api_main, "_VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES", 0)
+        baseline = client.get(url)
+    assert baseline.status_code == 200, baseline.text
     monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
     reads = []
-    original_open = Image.open
+    original_compute = api_main._compute_visual_descriptor
 
-    def counted_open(*args, **kwargs):
-        reads.append(args[0])
-        return original_open(*args, **kwargs)
+    def counted_compute(source):
+        reads.append(source.name)
+        return original_compute(source)
 
-    monkeypatch.setattr(Image, "open", counted_open)
-    url = f"/feed/{saved['id']}/manifest.json"
+    monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
     cold = client.get(url)
     warm = client.get(url)
     assert cold.status_code == warm.status_code == 200
-    assert cold.json()["items"] == warm.json()["items"]
-    assert len(reads) == 3, "manifest requests must decode each matching master only once"
+    assert cold.json()["items"] == warm.json()["items"] == baseline.json()["items"]
+    assert sorted(reads) == sorted(
+        str(archive / wid / "master.jpeg")
+        for wid in ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+    ), "manifest requests must decode each matching descriptor only once"
+    rendered = client.get(f"/feed/{saved['id']}/image/0")
+    assert rendered.status_code == 200, rendered.text
+    assert len(reads) == 3, "response image rendering must not derive descriptors again"
     old_ids = [row["work_id"] for row in warm.json()["items"]]
     api_store.RATINGS_LOG.write_text(
         "\n".join(
@@ -785,6 +797,17 @@ def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
     assert changed.status_code == 200
     assert [row["work_id"] for row in changed.json()["items"]] != old_ids
     assert len(reads) == 3, "ratings must stay live without decoding unchanged descriptors"
+
+    # A new matching work must enter selection while the first three still hit.
+    new_id = "ddd4444-new-work"
+    _work(archive, new_id, title="New matching work")
+    with api_store.RATINGS_LOG.open("a") as log:
+        log.write("\n" + json.dumps({"work_id": new_id, "fit": 10, "quality": 10}))
+    added = client.get(url)
+    assert added.status_code == 200, added.text
+    assert new_id in [row["work_id"] for row in added.json()["items"]]
+    assert len(reads) == 4
+    assert reads[-1] == str(archive / new_id / "master.jpeg")
 
 
 @pytest.mark.parametrize("failure", ["missing", "unreadable", "access"])
@@ -808,9 +831,10 @@ def test_warm_descriptor_cache_preserves_http_evidence_failure(
             return original_open(path, *args, **kwargs)
 
         monkeypatch.setattr(Path, "open", deny_master)
-    failed = client.get(url)
-    assert failed.status_code == 400, failed.text
-    assert "evidence" in failed.json()["detail"]
+    for endpoint in ["manifest.json", "next", "current", "image/0"]:
+        failed = client.get(f"/feed/{saved['id']}/{endpoint}")
+        assert failed.status_code == 400, failed.text
+        assert "evidence" in failed.json()["detail"]
 
 
 @pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])

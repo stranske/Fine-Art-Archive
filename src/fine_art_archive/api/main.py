@@ -28,7 +28,7 @@ import zipfile
 from contextlib import contextmanager, suppress
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, BinaryIO, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
@@ -551,6 +551,15 @@ def _visual_descriptor_key(master: Path, observed: os.stat_result) -> tuple[obje
     )
 
 
+def _compute_visual_descriptor(source: BinaryIO) -> tuple[float, ...]:
+    """Decode descriptor pixels separately from response image rendering."""
+    from PIL import Image
+
+    with Image.open(source) as image:
+        image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+        return tuple(channel / 255.0 for pixel in image.getdata() for channel in pixel)
+
+
 def _local_visual_embedding(work_id: str) -> list[float]:
     """Return a deterministic, local pixel descriptor for one archive master.
 
@@ -566,8 +575,6 @@ def _local_visual_embedding(work_id: str) -> list[float]:
             "cannot derive a preference-diverse embedding"
         )
     try:
-        from PIL import Image
-
         # Open even on cache hits: revoked access and missing masters must keep
         # failing live. Identity comes from this open file, not an earlier stat.
         with master.open("rb") as source:
@@ -577,9 +584,7 @@ def _local_visual_embedding(work_id: str) -> list[float]:
                 if cached is not None:
                     _visual_descriptor_cache[key] = cached
                     return list(cached)
-            with Image.open(source) as image:
-                image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
-                vector = tuple(channel / 255.0 for pixel in image.getdata() for channel in pixel)
+            vector = _compute_visual_descriptor(source)
             # Do not retain a descriptor if the file changed during decoding.
             if key == _visual_descriptor_key(master, os.fstat(source.fileno())):
                 with _visual_descriptor_cache_lock:
