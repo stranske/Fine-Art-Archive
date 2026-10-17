@@ -1295,3 +1295,33 @@ def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     assert (
         "if (einkCardPlaylistId === id) einkCardPlaylistId = null;" in ui
     ), "deleting the chosen saved feed must clear it from export, not send a stale id"
+
+
+def test_operator_ui_discloses_estimated_palette_on_export():
+    """Export must warn when the palette is estimated, not measured.
+
+    The export response carries ``palette_measured`` from the target palette
+    (main.py, ``tgt.palette.measured``; also in the SD manifest at
+    sdcard.py). Backend tests lock that flag in the manifest, but nothing
+    locked the operator-facing disclosure: ``einkExport`` appends
+    ``colours estimated`` only when ``d.palette_measured`` is false. Dropping
+    that branch would let an unmeasured palette read as measured on the one
+    screen that writes the card — the audit's palette row and its
+    no-physical-panel-acceptance caveat. Removing the disclosure in
+    ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        'd.palette_measured ? "" : ` · <span style="color:#a06000">colours estimated</span>`' in ui
+    ), (
+        "export result must disclose 'colours estimated' when palette_measured "
+        "is false — an estimated palette must not read as measured"
+    )
+    # The warning must be tied to the export response, not shown (or hidden)
+    # unconditionally: the ternary on d.palette_measured is the disclosure.
+    assert ui.count("d.palette_measured") == 1, (
+        "palette disclosure must come from the export response's "
+        "palette_measured flag exactly once"
+    )

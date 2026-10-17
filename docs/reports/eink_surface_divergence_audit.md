@@ -203,6 +203,20 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   limit". Restored via `git checkout`; SHA-256 back to
   `d65b9650…a52`; rerun **2 passed** (guard + fit forwarding). No
   file under `src/` is touched by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_discloses_estimated_palette_on_export`: locks the
+  operator-facing side of the `Palette / palette.measured` row —
+  `einkExport` appends `colours estimated` only when the export
+  response's `palette_measured` is false, so an unmeasured palette
+  cannot read as measured. Backend tests already lock the flag in
+  the SD manifest; this locks the disclosure. **1 passed**; no new
+  issue filed, since this locks an already-correct row.
+- Deliberate-break gate for it: replacing `d.palette_measured ? ""`
+  with `true ? ""` in `index.html` → that test **FAILED** with
+  "export result must disclose 'colours estimated' when
+  palette_measured is false". Restored via `git checkout`; SHA-256
+  back to `d65b9650…a52`; rerun **2 passed** (palette + fit). No
+  file under `src/` is touched by the committed change.
 
 ## Follow-up filing and dedup
 
