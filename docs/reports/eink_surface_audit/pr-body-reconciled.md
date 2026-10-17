@@ -23,7 +23,7 @@ Related to #805
 <!-- auto-status-summary:start -->
 ## Automated Status Summary
 #### Scope
-Three independently found defects share one shape: an input or policy that companion preview computes is consumed differently by saved-playlist resolution, the feed or SD export. A15 evidence is derived at `src/fine_art_archive/api/main.py:635` but omitted at :785-794 and :2042-2057; A11 strategy is reported at :688-698 and :830-844 but not applied by `src/fine_art_archive/eink/targets.py:206`; and the feed validator at :2096-2105 omits the fit input actually rendered. `docs/PRODUCT_CONTRACT.md:7` and `docs/A_SERIES_ROADMAP.md:10` promise that preview matches delivery. Fixing only the three known sites leaves no check that a fourth input diverges later.
+The audit marks A15 evidence loss on save/feed/export as already-correct because the shared builder and executed ID agreement cover inline and saved export. P1 is separate: direct callers can preview with explicit `quality_scores` and `embeddings`, but persistence of that evidence is intentionally unsupported and remains a proposal under #805.
 
 Current source readback: `src/fine_art_archive/ui/index.html:3179` at `84b50094050db03522a2e80c09617c0cc46cb5e2` (file SHA-256 `d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52`). Earlier detailed line ranges and reproductions retain their reviewed-commit provenance; intervening anchor changes were checked for relevance.
 
