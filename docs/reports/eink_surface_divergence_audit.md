@@ -261,6 +261,21 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   never rendered". Restored via `git checkout`; SHA-256 back to
   `d65b9650…a52`; rerun **2 passed** (missing-metadata + fit). No
   file under `src/` is touched by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_renders_selection_diagnostics_in_preview`:
+  locks the operator-facing rendering of the A15
+  `selection_diagnostics` rows — `einkPreview` builds `diagTxt`
+  from `d.selection_diagnostics` (per-pick `quality_contribution`,
+  `nearest_selected_similarity`, `marginal_determinant`) and
+  interpolates `${diagTxt}` into the preview markup. The earlier
+  UI test only checked the key string exists. **1 passed**; no new
+  issue filed, since this locks an already-correct row.
+- Deliberate-break gate for it: removing the `${diagTxt}`
+  interpolation from the preview markup in `index.html` → that
+  test **FAILED** with "selection diagnostics are built but never
+  rendered". Restored via `git checkout`; SHA-256 back to
+  `d65b9650…a52`; rerun **2 passed** (diagnostics + fit). No file
+  under `src/` is touched by the committed change.
 
 ## Follow-up filing and dedup
 

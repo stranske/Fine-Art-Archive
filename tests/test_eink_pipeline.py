@@ -1408,3 +1408,36 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
     assert ui.count("Dropped for missing metadata") == 1, (
         "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
     )
+
+
+def test_operator_ui_renders_selection_diagnostics_in_preview():
+    """Preview must render the A15 pick explanations, not just receive them.
+
+    ``select_quality_diverse`` explains every pick and the preview response
+    carries ``selection_diagnostics`` (backend rows locked at test level
+    above; the existing UI test only checks the key string exists). The
+    operator-facing rendering in ``einkPreview`` builds ``diagTxt`` from
+    ``d.selection_diagnostics`` — one row per pick with its quality
+    contribution, nearest-selected similarity and marginal gain — and
+    interpolates it into the preview markup only when non-empty. Building
+    the table but never rendering it would discard the reason for the
+    choice on the one screen where the choice is made. Removing the
+    interpolation in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        "const diags = d.selection_diagnostics || [];" in ui
+    ), "preview does not read the response's selection_diagnostics"
+    assert "Why these ${diags.length} were chosen" in ui, (
+        "preview does not label the pick explanations — the A15 quality x "
+        "diversity reasoning would be invisible to the operator"
+    )
+    for field in ("quality_contribution", "nearest_selected_similarity", "marginal_determinant"):
+        assert f"g.{field}" in ui, f"diagnostics table does not render {field} per pick"
+    assert "${diagTxt}" in ui, "selection diagnostics are built but never rendered"
+    assert ui.count("selection_diagnostics") == 1, (
+        "diagnostics rendering must come from the preview response's "
+        "selection_diagnostics exactly once"
+    )
