@@ -8,9 +8,9 @@ Added a Node-executed regression in `tests/test_eink_pipeline.py` that compares 
 
 Validation: 205 passed across the four named suites with `-m "not slow"`; all four new cases passed, and no tests were skipped. The required repository-wide Black check passed (370 files unchanged). These fixture and request checks make no physical-panel acceptance claim.
 
-Remote publication is pending: the CLI cannot connect, and the connector rejected the PR-body update, blocker comment and needs-human label because approval is required while this run's policy is never. These reconciled checkboxes are proposed local state until applied to GitHub. Read-only verification confirmed this PR is open and ready for review. Physical-panel acceptance remains unverified.
+Historical runner limitation: the original CLI and connector could not publish the PR-body update, and the runner's read-only `.git` mount blocked its first commit attempt. Those limitations were superseded by wrapper publication: the regression and receipts are committed in this branch, with subsequent review corrections at `87dd71a` and the sibling-payload reconciliation at `529dd432`.
 
-The required commit attempt was blocked by the runner's read-only `.git` mount before staging (`index.lock` could not be created). The new regression and receipts remain workspace changes pending a permitted commit.
+The PR remains open and ready for review. Current-head CI and review must complete before merge; the historical 205-test result above applies only to its recorded snapshot. The later union receipt records 242 passing tests and ten deliberately broken UI cases. Physical-panel acceptance remains unverified.
 
 <!-- pr-preamble:start -->
 <!-- meta:related-issue:805 -->
