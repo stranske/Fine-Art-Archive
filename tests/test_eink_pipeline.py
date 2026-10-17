@@ -1075,7 +1075,7 @@ def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
     assert 'id="ek-fitmode"' in ui, "no fit control exists for the operator to set"
     # Preview images: the fit query param is built from the control and
     # interpolated into the eink_preview URL actually rendered on screen.
-    assert "const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : \"\";" in ui
+    assert 'const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";' in ui
     assert "eink_preview?target=${encodeURIComponent(target)}" in ui
     assert "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui, (
         "preview <img> does not forward the chosen fit — preview would not "
@@ -1083,6 +1083,6 @@ def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
     )
     # Saved feed and SD export consume the same control, so all three
     # surfaces agree on framing for one operator action.
-    assert ui.count('document.getElementById("ek-fitmode").value || null') >= 2, (
-        "fit must be sent both when saving a playlist (feed) and on export (SD card)"
-    )
+    assert (
+        ui.count('document.getElementById("ek-fitmode").value || null') >= 2
+    ), "fit must be sent both when saving a playlist (feed) and on export (SD card)"
