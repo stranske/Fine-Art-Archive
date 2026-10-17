@@ -231,6 +231,20 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   disclose no-master works". Restored via `git checkout`; SHA-256
   back to `d65b9650…a52`; rerun **2 passed** (no-master + fit). No
   file under `src/` is touched by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_discloses_skipped_works_on_export`: locks the
+  export-facing side of the no-master count row (#827) —
+  `einkExport` appends `· N skipped` only when the export response's
+  `skipped` count (sdcard.py:185, :107) is non-zero, so
+  `Wrote N file(s)` cannot read as the full selected count.
+  **1 passed**; no new issue filed, since #827 already owns this
+  instance.
+- Deliberate-break gate for it: removing
+  `+ (d.skipped ? ` · ${d.skipped} skipped` : "")` from
+  `index.html` → that test **FAILED** with "export result does not
+  disclose skipped works". Restored via `git checkout`; SHA-256
+  back to `d65b9650…a52`; rerun **3 passed** (skipped + no-master +
+  fit). No file under `src/` is touched by the committed change.
 
 ## Follow-up filing and dedup
 

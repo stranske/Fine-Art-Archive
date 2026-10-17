@@ -1353,3 +1353,28 @@ def test_operator_ui_discloses_no_master_works_in_preview():
         "no-master disclosure must come from the preview response's "
         "has_master flags exactly once"
     )
+
+
+def test_operator_ui_discloses_skipped_works_on_export():
+    """Export must disclose works skipped at write, not just files written.
+
+    The SD writer skips selected works with no local master (or a failed
+    render) and reports ``skipped`` in the export response (sdcard.py:185,
+    :107) — the export side of the no-master count row of the divergence
+    audit (#827). The operator-facing mitigation in ``einkExport`` appends
+    ``· N skipped`` to the result line only when ``d.skipped`` is non-zero,
+    so ``Wrote N file(s)`` cannot read as the full selected count. Dropping
+    that disclosure would hide exactly the preview-vs-delivery gap the
+    preview header discloses. Removing it in ``index.html`` must fail
+    this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert '(d.skipped ? ` · ${d.skipped} skipped` : "")' in ui, (
+        "export result does not disclose skipped works — 'Wrote N file(s)' "
+        "would read as the full selection the card cannot show"
+    )
+    assert ui.count("${d.skipped} skipped") == 1, (
+        "skipped disclosure must come from the export response's skipped " "count exactly once"
+    )
