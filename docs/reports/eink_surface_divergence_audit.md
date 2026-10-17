@@ -104,6 +104,16 @@ R; “feed” includes F/H; “export” is E/D.
 | Path, write, overwrite | I | I | I | C: allowed root, dry run, owned-file overwrite, skip failures | E/D; write success evidence differs from dry-run proposal evidence |
 | Custom ICC / forced render policy | I: V has no hints payload | I | I: F has no hints payload | I: HTTP export has no hints payload | `render_for_device` supports separate hints; no claim that companion calls it |
 
+The HTTP render defaults are target `gooddisplay-315-diy` (2560 × 1440,
+Spectra-6, contain, rotation 0), `dither=floyd-steinberg`, and unset `fit`
+(resolved from the target). Per-work preview defaults to `max_px=900` and
+selection preview to `sample=24`. The common pixel renderer and SD writer both
+default `compress_range=True` and `fast=True`; neither option is exposed by
+these HTTP request models. Export defaults to PNG and a dry run, with overwrite
+disabled. The executable inventory below captures all 17 playlist defaults and
+the three request models' fields; its assertions also compare renderer/writer
+defaults.
+
 ## Findings, deduplication and owned work
 
 The search `gh issue list --repo stranske/Fine-Art-Archive --state all --search divergence`
@@ -201,6 +211,79 @@ production-edge control above tests the audited transport seam instead. Keep
 source acceptance pending explicit review of that criterion; a report or green
 suite alone does not close the issue. No additional production authority was
 inferred from the conflicting template text.
+
+## Portable probe verification in the automation sandbox
+
+The retained [probe](eink_surface_audit/probe.py) was extended and executed
+against source at `ee75d23ad0e06cb73a2647a5c9dd0db569e43182` on Python 3.14.8.
+Its [current JSON](eink_surface_audit/probe-results-current.json) binds the probe
+hash to the source commit and records these additional assertions:
+
+- All 17 dataclass fields have rows in this report. Request-model fields and
+  pixel-renderer defaults are inventoried directly from the imported code;
+  renderer/writer defaults agree. This checks inventory completeness, not
+  endpoint behavior for every individual filter.
+- `sample=0` removes diagnostic rows without changing membership. Explicit
+  empty quality or embedding maps each return 400 instead of deriving evidence.
+- A saved two-work feed starts, advances, wraps and restarts on an unknown
+  cursor; its advertised image URLs return the expected work. An out-of-range
+  index returns 404, and `current?offset=1` changes work at a fixed clock instant.
+- For two fixture works at a native **40 × 20**, `dither=none`, default contain
+  target, decoded RGB pixels and dimensions agree across per-work preview,
+  feed and actual PNG card writes. Both inline and saved exports pass; saved
+  export also overrides deliberately invalid inline spec/target/dither/fit.
+  Explicit contain equals implicit fit in preview, and unchanged feed ETags
+  return 304. These bounded pixel checks establish neither thumbnail equality
+  nor parity for every dither, fit, palette, resolution or physical panel.
+- Palette and measurement observations above now have explicit assertions,
+  including the missing measurement header on 304. No new follow-up was filed.
+- Source and existing-test file fingerprints agree before/after all fixture
+  activity. `src/` and `tests/` also have no changes against the source commit.
+
+The [current pytest capture](eink_surface_audit/surface-tests-current.txt) and
+[JUnit](eink_surface_audit/surface-tests-current.xml) record **201 passed**, one
+deprecation warning, in 49.43 seconds. This reruns the same four existing suites
+with `-m "not slow"` and coverage disabled through `-o addopts=`; it is not a
+coverage-target claim. [Validation metadata](eink_surface_audit/validation-current.json)
+records commands, exits, artifact hashes and the successful repository-wide
+Black check. The historical `probe-results.json`, suite summary and production
+break/restore receipts remain intact; `transport-proof.json`'s equal original
+and restored hash was also checked against the current `api/main.py` bytes.
+This receipt check does not claim a new production mutation run.
+
+This sandbox denies socketpair wakeup writes, causing unmodified asyncio
+thread handoffs to stall, and denies Black's process-worker socket binding.
+For these commands only, the retained
+[optional harness](eink_surface_audit/sandbox/sitecustomize.py) bounds selector
+waits to 10 ms; `BLACK_NUM_WORKERS=1` avoids process workers. It leaves I/O
+permissions in force and changes scheduling only in the validation process.
+Use it only on a host with this restriction:
+
+```sh
+export PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src"
+export BLACK_NUM_WORKERS=1
+python docs/reports/eink_surface_audit/probe.py "$PWD" "$(git rev-parse HEAD)"
+python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py tests/test_render_strategy.py -q -o addopts= -m "not slow"
+black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+```
+
+The three prior repair links (#784/#786/#788) and existing owners
+(#806/#807/#808) above were retained. GitHub access was unavailable during this
+rerun, so their current remote states were not revalidated. P1–P3 remain
+proposals under #805; this run published no follow-up issues.
+
+Delivery checklist, verified by the current probe and retained receipts:
+
+- [x] Report includes all 17 playlist fields, request-only evidence, render
+  defaults, navigation and validator identity.
+- [x] Prior repairs and existing owners are linked; P1–P3 remain unpublished
+  proposals under #805.
+- [x] Temporary-fixture probe, observed JSON and byte-identical production
+  break/restore receipts are retained; production code and existing tests are
+  unchanged.
+
+This delivery checklist does not close #805 or resolve its separate literal
+UI-mutation/new-test acceptance conflict described above.
 
 ## Reproducible review checklist
 

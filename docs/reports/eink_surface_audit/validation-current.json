@@ -1,0 +1,85 @@
+{
+  "source_commit": "ee75d23ad0e06cb73a2647a5c9dd0db569e43182",
+  "versions": {
+    "pytest": "9.1.1",
+    "black": "26.10.1",
+    "fastapi": "0.143.3",
+    "starlette": "1.2.0",
+    "httpx": "0.28.1",
+    "pillow": "12.0.0"
+  },
+  "environment": {
+    "PYTHONPATH": "$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src",
+    "BLACK_NUM_WORKERS": "1"
+  },
+  "probe": {
+    "command": [
+      "python",
+      "docs/reports/eink_surface_audit/probe.py",
+      "/home/runner/work/Fine-Art-Archive/Fine-Art-Archive",
+      "ee75d23ad0e06cb73a2647a5c9dd0db569e43182"
+    ],
+    "exit": 0
+  },
+  "existing_tests": {
+    "command": [
+      "python",
+      "-m",
+      "pytest",
+      "tests/test_eink_pipeline.py",
+      "tests/test_eink_feed_endpoints.py",
+      "tests/test_eink_export_format.py",
+      "tests/test_render_strategy.py",
+      "-q",
+      "-o",
+      "addopts=",
+      "-m",
+      "not slow",
+      "--junitxml=/tmp/eink-surface-tests-current.xml"
+    ],
+    "exit": 0,
+    "junit_summary": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "201",
+      "time": "49.426",
+      "timestamp": "2026-10-17T15:08:30.729419+00:00",
+      "hostname": "runnervm8k3b6"
+    }
+  },
+  "black": {
+    "command": [
+      "black",
+      "--check",
+      "--line-length",
+      "100",
+      "--exclude",
+      "(\\.workflows-lib|node_modules)",
+      "."
+    ],
+    "exit": 0,
+    "files_unchanged": 370
+  },
+  "production_and_existing_tests_unchanged_against_source_commit": true,
+  "historical_transport_receipts_verified": {
+    "current_api_main_sha256": "81d7140a0ae00babcde10b989246e9c77117cfbadabcddf6b79f452db122d5fd",
+    "matches_original_and_restored": true,
+    "red_and_green_test_counts_match_captures": true,
+    "new_mutation_run": false
+  },
+  "github_live_state": "UNAVAILABLE: api.github.com connection failed",
+  "physical_panel": "NOT_TESTED",
+  "artifact_sha256": {
+    "probe.py": "a8b7e9064ab440b9e38c795f6548b3dbdae0d9223b142bab8f8f7f9252425e4f",
+    "sandbox/sitecustomize.py": "ae3cefefcdf9349ac81765429e3852f60e45d209312bfa7397e5e19db561dc34",
+    "probe-results-current.json": "9cc2070736bbe02e88fd93e27b782bb0f9c98bf90a7af44086c86cd27e8adce1",
+    "surface-tests-current.txt": "2f13d1b075a9aedf47b661ab88b750f4c00493dc2b318e6ebed20ecb19230b50",
+    "surface-tests-current.xml": "f5076093d3115738f730f2bdab2ffe10b870fa74d188fac19b7492e390217218",
+    "black-current.txt": "58fecb2ac27b3410508cb4f6019893328b3632542de1b53cd52fef26b2457222",
+    "transport-proof.json": "88169b976abc7bd52bf9b896b4d56467aa74993eed127c371f5edabf0f9cfd8a",
+    "transport-red.txt": "b60344bf6bfa861b39f0d2c4f9368e178248e1fe236b47140c6228b7b8325829",
+    "transport-green.txt": "7d23c7ab60bec7b89a89556fbfb03091f4d37d6cfebe071e17380d2f88229c7b"
+  }
+}
