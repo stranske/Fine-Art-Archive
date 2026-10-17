@@ -202,8 +202,10 @@ def test_open_clip_backend_wraps_model_embedding(monkeypatch: pytest.MonkeyPatch
         (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
         (([1.0], [1.0, 2.0]), "FAIL", "same length"),
         (([0.0], [0.0]), "FAIL", "non-zero"),
+        (([], []), "FAIL", "non-empty and the same length"),
+        (([1.0], [0.0]), "FAIL", "non-zero"),
     ],
-    ids=["matching", "length-mismatch", "zero-vector"],
+    ids=["matching", "length-mismatch", "zero-vector", "empty-vectors", "zero-reference"],
 )
 def test_embedding_similarity_validates_vectors(
     tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
@@ -223,6 +225,33 @@ def test_embedding_similarity_validates_vectors(
     assert result.detail == (
         {"cosine_similarity": 1.0, "threshold": 0.88} if status == "PASS" else {"threshold": 0.88}
     )
+
+
+@pytest.mark.parametrize(
+    ("threshold", "status"),
+    [(0.6, "PASS"), (0.6001, "FAIL")],
+    ids=["at-threshold", "below-threshold"],
+)
+def test_embedding_similarity_respects_threshold_boundary(
+    tmp_path: Path, threshold: float, status: str
+) -> None:
+    candidate = _image(tmp_path / "candidate.png")
+    reference = _image(tmp_path / "reference.png")
+    backend = Mock(side_effect=[[1.0, 0.0], [0.6, 0.8]])
+
+    result = check_embedding_similarity(
+        candidate_path=candidate,
+        reference_path=reference,
+        threshold=threshold,
+        embedding_backend=backend,
+    )
+
+    assert result.status == status
+    assert result.detail == {"cosine_similarity": 0.6, "threshold": threshold}
+    assert result.message == (
+        "embedding cosine 0.600" if status == "PASS" else "embedding cosine 0.600 below 0.6001"
+    )
+    assert backend.call_count == 2
 
 
 @pytest.mark.parametrize(

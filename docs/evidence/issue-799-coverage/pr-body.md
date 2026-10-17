@@ -133,6 +133,25 @@ PR #804 was rechecked open with draft=false. Its live body update remains blocke
 
 PR #811 removes the research-reporting API test file and its two evidence artifacts because they are outside issue #799's verify/acquisition scope. Their claims and relative links are withdrawn from this delivery record. Historical bytes remain recoverable from commit `a49cbc6303bf9db8a19fbb66373dce20b6cd2ac0`; they are not current acceptance evidence. Earlier measurements above describe their named historical revisions and do not claim results for this cleanup head.
 
+## Embedding vector and threshold follow-up
+
+The current head already covers both ranked targets at **100%**, with zero missing statements or branches. The original 62-unit increment was merged in #804; this follow-up claims no additional coverage increment. Four new cases strengthen vector validation (empty vectors and a zero reference vector) and the cosine threshold contract (equality passes, a value just below the threshold fails). No production change was necessary.
+
+Each new case was individually run against the stated temporary production-source mutation, failed, then passed after exact source restoration. Detailed output: [embedding-boundary-mutation-proofs.txt](embedding-boundary-mutation-proofs.txt); commands, environment, coverage summaries, and source hashes: [embedding-boundary-followup.json](embedding-boundary-followup.json).
+
+| New case | Deliberate defect | Broken | Restored |
+|---|---|---|---|
+| `test_embedding_similarity_validates_vectors[empty-vectors]` | Remove the empty-vector guard | 1 failed in 0.21s (exit 1) | 1 passed in 0.19s (exit 0) |
+| `test_embedding_similarity_validates_vectors[zero-reference]` | Ignore a zero-norm reference vector | 1 failed in 0.65s (exit 1) | 1 passed in 0.17s (exit 0) |
+| `test_embedding_similarity_respects_threshold_boundary[at-threshold]` | Reject cosine similarity exactly at the threshold | 1 failed in 0.21s (exit 1) | 1 passed in 0.17s (exit 0) |
+| `test_embedding_similarity_respects_threshold_boundary[below-threshold]` | Accept every non-negative cosine regardless of the requested threshold | 1 failed in 0.21s (exit 1) | 1 passed in 0.17s (exit 0) |
+
+Targeted verification: **109 passed, 4 skipped in 4.44s**. `verify.py` (238 statements + 60 branches) and `acquisition_flow.py` (127 statements + 38 branches) each remain **100% → 100%**, with **0 → 0** missing units.
+
+Full baseline: **4 failed, 2315 passed, 12 skipped, 1 warning in 120.82s (0:02:00)**. Full final: **4 failed, 2319 passed, 12 skipped, 1 warning in 120.91s (0:02:00)**. Both report **89.53% → 89.53%** blended coverage and the same four `test_workspace_conflict_guard.py` failures because `/home/runner/.cache/fine-art-archive` is read-only. Full-suite-green and fresh-head CI acceptance remain unchecked. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` pass.
+
+Publication is blocked for this follow-up: local staging cannot create `.git/index.lock` on the read-only filesystem, and the GitHub connector's create-tree call returns `MCP tool call requires approval, but approval policy is never`. The new tests and receipts are working-tree changes; no new commit was created and the live PR body was not updated. A prepared replacement body is available at `/tmp/faa-811-pr-body.md`. The earlier checked tasks below describe the historical merged delivery, not publication of this follow-up.
+
 ## Tasks
 
 - [x] Cover `src/fine_art_archive/collect/verify.py` (50 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.

@@ -1,0 +1,277 @@
+{
+  "starting_head": "88f3d1adca78ff2c058d30c63e3acb296b47fb84",
+  "scope": "Four embedding vector/threshold regression cases in the first ranked target. Production bytes unchanged.",
+  "baseline": {
+    "totals": {
+      "covered_lines": 9422,
+      "num_statements": 10225,
+      "percent_covered": 89.53076422529101,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.14669926650367,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3606,
+      "num_partial_branches": 495,
+      "covered_branches": 2961,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.11314475873544,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "final": {
+    "totals": {
+      "covered_lines": 9422,
+      "num_statements": 10225,
+      "percent_covered": 89.53076422529101,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.14669926650367,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3606,
+      "num_partial_branches": 495,
+      "covered_branches": 2961,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.11314475873544,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "targeted": {
+    "totals": {
+      "covered_lines": 365,
+      "num_statements": 365,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 98,
+      "num_partial_branches": 0,
+      "covered_branches": 98,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "full_suite_baseline_result": "4 failed, 2315 passed, 12 skipped, 1 warning in 120.82s (0:02:00)",
+  "full_suite_final_result": "4 failed, 2319 passed, 12 skipped, 1 warning in 120.91s (0:02:00)",
+  "full_suite_baseline_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "full_suite_final_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "targeted_result": "109 passed, 4 skipped in 4.44s",
+  "commands": {
+    "full_baseline": "PYTHONPATH=/tmp/faa-811-validation COVERAGE_FILE=/tmp/faa-811-before.coverage timeout 300 pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa-811-before.json",
+    "full_final": "PYTHONPATH=/tmp/faa-811-validation COVERAGE_FILE=/tmp/faa-811-after.coverage timeout 300 pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa-811-after.json",
+    "targeted": "COVERAGE_FILE=/tmp/faa-811-target-after.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -m 'not slow' -o addopts= --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa-811-target-after.json -q",
+    "black_format": "black --line-length 100 tests/test_coverage_round_799.py",
+    "black_check": "PYTHONPATH=/tmp/faa-811-validation BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "ruff": "ruff check tests/test_coverage_round_799.py",
+    "whitespace": "git diff --check"
+  },
+  "black_result": "All done! \u2728 \ud83c\udf70 \u2728\n361 files would be left unchanged.",
+  "environment": [
+    "Python 3.14.8. The same four read-only-home failures occur before and after the additions; no tests disabled.",
+    "Full-suite pytest and whole-tree Black use the unchanged external selector polling harness from verification-followup.json. Black uses one worker.",
+    "Local git staging is blocked by the read-only .git directory."
+  ],
+  "external_sitecustomize": "\"\"\"Poll selectors when sandboxed socketpair wakeup writes are unavailable.\"\"\"\nimport selectors\n\n_select = selectors.EpollSelector.select\n\n\ndef _poll_select(self, timeout=None):\n    return _select(self, 0.01 if timeout is None else min(timeout, 0.01))\n\n\nselectors.EpollSelector.select = _poll_select\n",
+  "source_sha256": {
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "src/fine_art_archive/collect/acquisition_flow.py": "928d59b526659310a5de0c90ff4608aee624e0f990858f75013a81f05de9da86",
+    "tests/test_coverage_round_799.py": "904ff92f94b2b617f3360359b7f456ad55b26f179c17c8bb0bcf36b227bf958d"
+  },
+  "mutation_proofs": [
+    {
+      "test": "test_embedding_similarity_validates_vectors[empty-vectors]",
+      "defect": "Remove the empty-vector guard",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[empty-vectors]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.21s",
+      "green_result": "1 passed in 0.19s"
+    },
+    {
+      "test": "test_embedding_similarity_validates_vectors[zero-reference]",
+      "defect": "Ignore a zero-norm reference vector",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[zero-reference]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.65s",
+      "green_result": "1 passed in 0.17s"
+    },
+    {
+      "test": "test_embedding_similarity_respects_threshold_boundary[at-threshold]",
+      "defect": "Reject cosine similarity exactly at the threshold",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[at-threshold]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.21s",
+      "green_result": "1 passed in 0.17s"
+    },
+    {
+      "test": "test_embedding_similarity_respects_threshold_boundary[below-threshold]",
+      "defect": "Accept every non-negative cosine regardless of the requested threshold",
+      "command": [
+        "pytest",
+        "tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[below-threshold]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "red_exit": 1,
+      "green_exit": 0,
+      "red_result": "1 failed in 0.21s",
+      "green_result": "1 passed in 0.17s"
+    }
+  ],
+  "publication": {
+    "local_staging": "git add failed: .git/index.lock cannot be created on the read-only filesystem.",
+    "github_create_tree": "MCP tool call requires approval, but approval policy is never",
+    "commit_created": false,
+    "live_pr_body_updated": false,
+    "prepared_pr_body": "/tmp/faa-811-pr-body.md"
+  }
+}
