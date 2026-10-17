@@ -1,0 +1,195 @@
+{
+  "baseline_head": "e2ea975175e5eb16abc963db1abad3f670e9918f",
+  "branch": "codex/issue-810-api-discovery-coverage",
+  "python": "3.14.8",
+  "published_ci_blended_percent": 89.64,
+  "baseline_totals": {
+    "covered_lines": 9469,
+    "num_statements": 10225,
+    "percent_covered": 89.97903260790977,
+    "percent_covered_display": "90",
+    "missing_lines": 756,
+    "excluded_lines": 6,
+    "percent_statements_covered": 92.60635696821515,
+    "percent_statements_covered_display": "93",
+    "num_branches": 3606,
+    "num_partial_branches": 482,
+    "covered_branches": 2976,
+    "missing_branches": 630,
+    "percent_branches_covered": 82.52911813643927,
+    "percent_branches_covered_display": "83"
+  },
+  "final_totals": {
+    "covered_lines": 9567,
+    "num_statements": 10228,
+    "percent_covered": 90.98005203816132,
+    "percent_covered_display": "91",
+    "missing_lines": 661,
+    "excluded_lines": 6,
+    "percent_statements_covered": 93.53734845522096,
+    "percent_statements_covered_display": "94",
+    "num_branches": 3608,
+    "num_partial_branches": 451,
+    "covered_branches": 3021,
+    "missing_branches": 587,
+    "percent_branches_covered": 83.73059866962306,
+    "percent_branches_covered_display": "84"
+  },
+  "baseline_result": "4 failed, 2335 passed, 12 skipped, 1 warning in 155.71s",
+  "final_result": "4 failed, 2390 passed, 12 skipped, 1 warning in 159.63s",
+  "new_tests_result": "55 passed, 1 warning in 1.74s",
+  "new_tests_mutation_cases": 55,
+  "inherited_tests_mutation_cases": 10,
+  "all_mutation_cases": {
+    "broken_exit": 1,
+    "restored_exit": 0
+  },
+  "local_target_units_reduced": 135,
+  "comparison": {
+    "src/fine_art_archive/api/main.py": {
+      "published_ranking_missing_units": 111,
+      "whole_suite_before": {
+        "covered_lines": 1375,
+        "num_statements": 1438,
+        "percent_covered": 94.66230936819171,
+        "percent_covered_display": "95",
+        "missing_lines": 63,
+        "excluded_lines": 0,
+        "percent_statements_covered": 95.61891515994436,
+        "percent_statements_covered_display": "96",
+        "num_branches": 398,
+        "num_partial_branches": 27,
+        "covered_branches": 363,
+        "missing_branches": 35,
+        "percent_branches_covered": 91.20603015075378,
+        "percent_branches_covered_display": "91"
+      },
+      "whole_suite_after": {
+        "covered_lines": 1435,
+        "num_statements": 1438,
+        "percent_covered": 99.29193899782135,
+        "percent_covered_display": "99",
+        "missing_lines": 3,
+        "excluded_lines": 0,
+        "percent_statements_covered": 99.7913769123783,
+        "percent_statements_covered_display": "99",
+        "num_branches": 398,
+        "num_partial_branches": 10,
+        "covered_branches": 388,
+        "missing_branches": 10,
+        "percent_branches_covered": 97.48743718592965,
+        "percent_branches_covered_display": "97"
+      },
+      "local_missing_units_reduced": 85
+    },
+    "src/fine_art_archive/api/store.py": {
+      "published_ranking_missing_units": 26,
+      "whole_suite_before": {
+        "covered_lines": 413,
+        "num_statements": 433,
+        "percent_covered": 95.21178637200737,
+        "percent_covered_display": "95",
+        "missing_lines": 20,
+        "excluded_lines": 0,
+        "percent_statements_covered": 95.3810623556582,
+        "percent_statements_covered_display": "95",
+        "num_branches": 110,
+        "num_partial_branches": 6,
+        "covered_branches": 104,
+        "missing_branches": 6,
+        "percent_branches_covered": 94.54545454545455,
+        "percent_branches_covered_display": "95"
+      },
+      "whole_suite_after": {
+        "covered_lines": 436,
+        "num_statements": 436,
+        "percent_covered": 99.81751824817518,
+        "percent_covered_display": "99",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 112,
+        "num_partial_branches": 1,
+        "covered_branches": 111,
+        "missing_branches": 1,
+        "percent_branches_covered": 99.10714285714286,
+        "percent_branches_covered_display": "99"
+      },
+      "local_missing_units_reduced": 25
+    },
+    "src/fine_art_archive/enrichment/source_resolver.py": {
+      "published_ranking_missing_units": 183,
+      "whole_suite_before": {
+        "covered_lines": 687,
+        "num_statements": 782,
+        "percent_covered": 83.77659574468085,
+        "percent_covered_display": "84",
+        "missing_lines": 95,
+        "excluded_lines": 0,
+        "percent_statements_covered": 87.85166240409207,
+        "percent_statements_covered_display": "88",
+        "num_branches": 346,
+        "num_partial_branches": 66,
+        "covered_branches": 258,
+        "missing_branches": 88,
+        "percent_branches_covered": 74.56647398843931,
+        "percent_branches_covered_display": "75"
+      },
+      "whole_suite_after": {
+        "covered_lines": 701,
+        "num_statements": 782,
+        "percent_covered": 85.99290780141844,
+        "percent_covered_display": "86",
+        "missing_lines": 81,
+        "excluded_lines": 0,
+        "percent_statements_covered": 89.64194373401534,
+        "percent_statements_covered_display": "90",
+        "num_branches": 346,
+        "num_partial_branches": 59,
+        "covered_branches": 269,
+        "missing_branches": 77,
+        "percent_branches_covered": 77.74566473988439,
+        "percent_branches_covered_display": "78"
+      },
+      "local_missing_units_reduced": 25
+    }
+  },
+  "commands": {
+    "baseline": "PYTHONPATH=/tmp/faa810-harness:src:. COVERAGE_FILE=/tmp/faa810-baseline.coverage pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:/tmp/faa810-baseline.json -q -m 'not slow'",
+    "new_tests_targeted": "PYTHONPATH=/tmp/faa810-harness:src:. COVERAGE_FILE=/tmp/faa810-target.coverage pytest tests/test_api_delivery_boundaries.py tests/test_api_store_recovery.py tests/test_source_resolver_artist_recovery.py -o addopts= --cov=fine_art_archive.api.main --cov=fine_art_archive.api.store --cov=fine_art_archive.enrichment.source_resolver --cov-report=term-missing --cov-report=json:/tmp/faa810-target.json -q -m 'not slow'",
+    "final": "PYTHONPATH=/tmp/faa810-harness:src:. COVERAGE_FILE=/tmp/faa810-final.coverage pytest tests/ -o addopts= --cov=src --cov-report=term-missing --cov-report=json:/tmp/faa810-final.json -q -m 'not slow'",
+    "format": "BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_api_delivery_boundaries.py tests/test_api_store_recovery.py tests/test_source_resolver_artist_recovery.py src/fine_art_archive/api/store.py",
+    "black_required": "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "black_ci": "black --check --line-length 100 --exclude '(\\.venv|\\.workflows-lib|node_modules)' .",
+    "ruff_ci": "ruff check --output-format github --extend-exclude .workflows-lib ."
+  },
+  "formatting": {
+    "required_black": "367 files would be left unchanged",
+    "ci_black": "367 files would be left unchanged",
+    "ruff": "passed (exit 0)",
+    "diff_check": "passed (exit 0)"
+  },
+  "changed_source_and_test_sha256": {
+    "src/fine_art_archive/api/store.py": "572e0add1e6f94151f2c2324df86dd405a58775a93c1589b0fde7fabdea7e39c",
+    "tests/test_api_delivery_boundaries.py": "1de9b7d0de527a49960cacd69b15366f240773cbc72d46eb1bccce205cd2e3d9",
+    "tests/test_api_store_recovery.py": "84f91fceeadaa82528e1eb56ee88ed954bc91880b7f82a01149701ddbaed6016",
+    "tests/test_source_resolver_artist_recovery.py": "daa0e469d4309a7339ed505df1124764191ae3c149fafe19a0cd2036e7412b21"
+  },
+  "unchanged_production_sha256": {
+    "src/fine_art_archive/api/main.py": "81d7140a0ae00babcde10b989246e9c77117cfbadabcddf6b79f452db122d5fd",
+    "src/fine_art_archive/enrichment/source_resolver.py": "3ccff6cd7e626ef74ddb0feb46bf95dfffc6fa9ec6e839df11582478dcb7bc3e",
+    "src/fine_art_archive/collect/discovery.py": "aaff8ec20902ad4379b675021422a7692af2356ad49f54291ba9bee2e80bc21f"
+  },
+  "environment": [
+    "Both full-suite runs have the same four test_workspace_conflict_guard failures: the default /home/runner/.cache/fine-art-archive directory is read-only. No tests were skipped to hide those failures.",
+    "The temporary external sitecustomize caps EpollSelector.select waits to 10 ms to work around sandboxed socketpair writes being unable to wake event-loop threads. It patches no repository source or tests. All pytest and whole-tree Black runs use it.",
+    "Black uses BLACK_NUM_WORKERS=1 because sandboxed forkserver sockets are unavailable.",
+    "Fresh GitHub PR state and CI cannot be verified: gh pr view reports a connection failure."
+  ],
+  "commit": {
+    "created": false,
+    "failed_action": "git add of the scoped source, tests, and evidence",
+    "error": "fatal: Unable to create '.git/index.lock': Read-only file system"
+  }
+}

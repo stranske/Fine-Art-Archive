@@ -1,0 +1,150 @@
+{
+  "starting_head": "1472a49576c01baf4ec466295093cd153b44715c",
+  "original_round_baseline_percent": 89.97903260790977,
+  "published_ci_baseline_percent": 89.64,
+  "parent_ci": "parent-ci.json",
+  "baseline_result": "4 failed, 2390 passed, 12 skipped, 1 warning in 160.05s (0:02:40)",
+  "final_result": "4 failed, 2396 passed, 12 skipped, 1 warning in 155.44s (0:02:35)",
+  "targeted_result": "194 passed in 3.82s",
+  "before_totals": {
+    "covered_lines": 9567,
+    "num_statements": 10228,
+    "percent_covered": 90.98005203816132,
+    "percent_covered_display": "91",
+    "missing_lines": 661,
+    "excluded_lines": 6,
+    "percent_statements_covered": 93.53734845522096,
+    "percent_statements_covered_display": "94",
+    "num_branches": 3608,
+    "num_partial_branches": 451,
+    "covered_branches": 3021,
+    "missing_branches": 587,
+    "percent_branches_covered": 83.73059866962306,
+    "percent_branches_covered_display": "84"
+  },
+  "after_totals": {
+    "covered_lines": 9570,
+    "num_statements": 10228,
+    "percent_covered": 91.02341717259324,
+    "percent_covered_display": "91",
+    "missing_lines": 658,
+    "excluded_lines": 6,
+    "percent_statements_covered": 93.5666797027767,
+    "percent_statements_covered_display": "94",
+    "num_branches": 3608,
+    "num_partial_branches": 448,
+    "covered_branches": 3024,
+    "missing_branches": 584,
+    "percent_branches_covered": 83.81374722838137,
+    "percent_branches_covered_display": "84"
+  },
+  "targeted_summary": {
+    "covered_lines": 704,
+    "num_statements": 782,
+    "percent_covered": 86.52482269503547,
+    "percent_covered_display": "87",
+    "missing_lines": 78,
+    "excluded_lines": 0,
+    "percent_statements_covered": 90.02557544757033,
+    "percent_statements_covered_display": "90",
+    "num_branches": 346,
+    "num_partial_branches": 56,
+    "covered_branches": 272,
+    "missing_branches": 74,
+    "percent_branches_covered": 78.61271676300578,
+    "percent_branches_covered_display": "79"
+  },
+  "target_before": {
+    "covered_lines": 701,
+    "num_statements": 782,
+    "percent_covered": 85.99290780141844,
+    "percent_covered_display": "86",
+    "missing_lines": 81,
+    "excluded_lines": 0,
+    "percent_statements_covered": 89.64194373401534,
+    "percent_statements_covered_display": "90",
+    "num_branches": 346,
+    "num_partial_branches": 59,
+    "covered_branches": 269,
+    "missing_branches": 77,
+    "percent_branches_covered": 77.74566473988439,
+    "percent_branches_covered_display": "78"
+  },
+  "target_after": {
+    "covered_lines": 704,
+    "num_statements": 782,
+    "percent_covered": 86.52482269503547,
+    "percent_covered_display": "87",
+    "missing_lines": 78,
+    "excluded_lines": 0,
+    "percent_statements_covered": 90.02557544757033,
+    "percent_statements_covered_display": "90",
+    "num_branches": 346,
+    "num_partial_branches": 56,
+    "covered_branches": 272,
+    "missing_branches": 74,
+    "percent_branches_covered": 78.61271676300578,
+    "percent_branches_covered_display": "79"
+  },
+  "new_covered_units": 6,
+  "round_covered_units": 141,
+  "production_changes_in_followup": false,
+  "mutation_cases": 6,
+  "production_sha256": "3ccff6cd7e626ef74ddb0feb46bf95dfffc6fa9ec6e839df11582478dcb7bc3e",
+  "test_sha256": "52872af6a2b0f4a2ec7bbc5bf4cd7de9d02f0db86b5c8c92c00855c696a8b930",
+  "ranking": [
+    {
+      "path": "src/fine_art_archive/api/main.py",
+      "repair_history_proxy": 28,
+      "churn": 57
+    },
+    {
+      "path": "src/fine_art_archive/api/store.py",
+      "repair_history_proxy": 6,
+      "churn": 21
+    },
+    {
+      "path": "src/fine_art_archive/enrichment/source_resolver.py",
+      "repair_history_proxy": 5,
+      "churn": 9
+    }
+  ],
+  "ranking_note": "Published review-gap-ranking.csv ordering retained. Repair-history proxy is not a verified escaped-defect count. Continue the already selected source_resolver target within the existing PR; no new target or PR opened.",
+  "commands": {
+    "baseline": "PYTHONPATH=/tmp/faa813-harness:src:. COVERAGE_FILE=/tmp/faa813-baseline.coverage pytest tests/ -o addopts= --cov=src --cov-report=term --cov-report=json:/tmp/faa813-baseline.json -q -m 'not slow'",
+    "final": "PYTHONPATH=/tmp/faa813-harness:src:. COVERAGE_FILE=/tmp/faa813-final.coverage pytest tests/ -o addopts= --cov=src --cov-report=term-missing --cov-report=json:/tmp/faa813-final.json -q -m 'not slow'",
+    "targeted": "PYTHONPATH=/tmp/faa813-harness:src:. COVERAGE_FILE=/tmp/faa813-target.coverage pytest tests/test_source_resolver*.py tests/test_wikidata_find_artist.py tests/test_wikidata_value_parsing.py tests/test_artist_qid_write_guard.py -o addopts= -q -m 'not slow' --cov=fine_art_archive.enrichment.source_resolver --cov-report=term-missing --cov-report=json:/tmp/faa813-target-final.json",
+    "black_format": "black --line-length 100 tests/test_source_resolver_artist_recovery.py",
+    "black_required": "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "black_ci": "black --check --line-length 100 --exclude '(\\.venv|\\.workflows-lib|node_modules)' .",
+    "ruff_ci": "ruff check --output-format github --extend-exclude .workflows-lib ."
+  },
+  "environment": [
+    "Python 3.14.8; same external EpollSelector polling harness as the preceding round (verification-followup.json external_sitecustomize). No repository code or tests patched by the harness.",
+    "Both local full suites have the same four pre-existing read-only-home failures. None disabled or skipped. Parent Gate Python 3.12/3.13 jobs are green.",
+    "Black uses BLACK_NUM_WORKERS=1 and the external harness because sandboxed multiprocessing sockets and event-loop wakeups are unavailable.",
+    "Checkout .git is read-only: staging fails creating .git/index.lock. A separate bare clone under /tmp holds the handoff commit; the checkout branch is not advanced."
+  ],
+  "formatting": {
+    "required_black": "367 files would be left unchanged; exit 0",
+    "ci_black": "367 files would be left unchanged; exit 0",
+    "ruff_ci": "exit 0",
+    "git_diff_check": "exit 0"
+  },
+  "pr_readiness": {
+    "number": 813,
+    "state": "open",
+    "isDraft": false,
+    "verified_head": "1472a49576c01baf4ec466295093cd153b44715c"
+  },
+  "live_pr_metadata_update": {
+    "attempted": true,
+    "applied": false,
+    "error": "MCP tool call requires approval, but approval policy is never"
+  },
+  "handoff": {
+    "git_dir": "/tmp/faa813-handoff.git",
+    "bundle": "/tmp/faa813-followup.bundle",
+    "checkout_branch_advanced": false
+  }
+}

@@ -346,7 +346,7 @@ def test_corrupt_ratings_are_counted_and_surface_in_health(
     isolated_ratings_log,
 ) -> None:
     isolated_ratings_log.write_text(
-        '{"work_id": "valid", "quality": 8, "surface": "companion-app"}\n' '{"work_id": "broken",\n'
+        '{"work_id": "valid", "quality": 8, "surface": "companion-app"}\n{"work_id": "broken",\n'
     )
     api_store.invalidate_ratings_cache()
 
@@ -470,7 +470,7 @@ def test_rate_work_rejects_non_finite_dwell_seconds(
     r = client.post(
         "/works/test-wid/rate",
         content=(
-            '{"quality": 5, "surface": "companion-app", ' f'"dwell_seconds": {non_finite_literal}}}'
+            f'{{"quality": 5, "surface": "companion-app", "dwell_seconds": {non_finite_literal}}}'
         ),
         headers={"content-type": "application/json"},
     )
@@ -637,7 +637,7 @@ def test_variant_upgrade_decision_rejects_unknown_work_without_append(
     candidates_csv = tmp_path / "variant_upgrade_candidates.csv"
     decisions_log = tmp_path / "variant_upgrade_decisions.jsonl"
     candidates_csv.write_text(
-        "existing_wid,candidate_wid,score\n" "known-work,candidate-work,0.91\n",
+        "existing_wid,candidate_wid,score\nknown-work,candidate-work,0.91\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(api_main, "VARIANT_UPGRADE_CSV", candidates_csv)
@@ -1108,3 +1108,138 @@ def test_deepzoom_tile_prefers_archive_container(
     # A tile absent from the container falls through (some genuinely do not
     # exist upstream) and only then would the network be consulted.
     assert client.get("/works/w1/dz/VIS/12/99_99.jpg").status_code == 502
+
+
+def test_static_assets_report_missing_files_instead_of_serving_stale_paths(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A removed UI asset must be a 404, not an accidental host-file response."""
+    missing = tmp_path / "missing"
+    monkeypatch.setattr(api_main, "UI_FILE", missing / "index.html")
+    monkeypatch.setattr(api_main, "HTMX_FILE", missing / "htmx.min.js")
+
+    assert client.get("/").status_code == 404
+    assert client.get(f"/ui/vendor/htmx-{api_main.HTMX_VERSION}.min.js").status_code == 404
+
+
+def test_quarantine_report_distinguishes_expired_invalid_and_ttl_less_directories(
+    tmp_path: Path,
+) -> None:
+    for name in (
+        "2026-01-01__reason__purge-after-2026-10-01",
+        "2026-01-01__reason__purge-after-not-a-date",
+        "2026-01-01__reason",
+        "2026-01-01__reason__purge-after-2026-12-01",
+    ):
+        (tmp_path / name).mkdir()
+    (tmp_path / "not-a-directory").write_text("ignored")
+
+    report = api_main._quarantine_report(tmp_path, today=api_main.date(2026, 10, 16))
+
+    assert report == {
+        "overdue": [{"name": "2026-01-01__reason__purge-after-2026-10-01", "days_overdue": 15}],
+        "no_ttl": ["2026-01-01__reason", "2026-01-01__reason__purge-after-not-a-date"],
+        "total": 4,
+    }
+
+
+def test_build_eink_playlist_derives_only_missing_preference_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Result:
+        work_ids = ["w1"]
+
+    calls: list[dict] = []
+    monkeypatch.setattr(api_store, "work_ids_with_dossier", lambda: {"w1"})
+    monkeypatch.setattr(
+        api_main._eink,
+        "build",
+        lambda _sidecars, spec, **kwargs: calls.append({"spec": spec, **kwargs}) or Result(),
+    )
+    monkeypatch.setattr(
+        api_main,
+        "_derived_preference_evidence",
+        lambda *_args, **_kwargs: ({"w1": 4.0}, {"w1": [0.5]}),
+    )
+    spec = api_main._eink.PlaylistSpec.from_dict({"selection_mode": "preference-diverse"})
+
+    assert api_main._build_eink_playlist([], spec, ratings={}).work_ids == ["w1"]
+    assert len(calls) == 2
+    assert calls[-1]["quality_scores"] == {"w1": 4.0}
+    assert calls[-1]["embeddings"] == {"w1": [0.5]}
+
+    calls.clear()
+    api_main._build_eink_playlist([], spec, ratings={}, quality_scores={}, embeddings={})
+    assert len(calls) == 1
+    assert calls[0]["quality_scores"] == {}
+    assert calls[0]["embeddings"] == {}
+
+
+def test_active_research_requests_ignores_expired_and_malformed_records(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    requests = tmp_path / "requests.jsonl"
+    requests.write_text(
+        "not json\n"
+        "[]\n"
+        '{"ts": "not-a-date"}\n'
+        '{"ts": "2026-10-15T00:00:00+00:00", "work_id": "recent"}\n'
+        '{"ts": "2026-01-01T00:00:00+00:00", "work_id": "expired"}\n'
+    )
+    monkeypatch.setattr(api_main, "RESEARCH_REQUESTS", requests)
+
+    assert api_main._active_research_requests(
+        api_main.datetime(2026, 10, 1, tzinfo=api_main.UTC).timestamp()
+    ) == [{"ts": "2026-10-15T00:00:00+00:00", "work_id": "recent"}]
+
+
+def test_eink_playlist_preview_returns_selected_items_without_masters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Result:
+        work_ids = ["w1"]
+        total_candidates = 3
+        matched = 2
+        coverage = {"artist": 1}
+        facets = {"artist": [("Artist", 1)]}
+        selection_diagnostics = {"selection_mode": "ordered"}
+
+    monkeypatch.setattr(
+        api_main,
+        "_all_sidecars",
+        lambda: [("w1", {"title": "Work", "artist": {"name": "Artist"}, "year": "1900"})],
+    )
+    monkeypatch.setattr(api_main._eink, "load_ratings", lambda _path: {})
+    monkeypatch.setattr(api_main, "_build_eink_playlist", lambda *_args, **_kwargs: Result())
+    monkeypatch.setattr(api_main, "_eink_master", lambda _work_id: None)
+
+    preview = api_main.eink_playlist_preview(api_main.PlaylistIn(spec={}, sample=1))
+
+    assert preview["total_candidates"] == 3
+    assert preview["work_ids"] == ["w1"]
+    assert preview["items"] == [
+        {
+            "work_id": "w1",
+            "title": "Work",
+            "artist": "Artist",
+            "year": 1900,
+            "has_master": False,
+        }
+    ]
+
+
+def test_eink_preview_renders_a_local_master(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from PIL import Image
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (100, 120, 140)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _work_id: master)
+
+    response = api_main.eink_preview("w1", dither="none", max_px=120)
+
+    assert response.media_type == "image/png"
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Render-Strategy"]
+    assert response.body.startswith(b"\x89PNG")

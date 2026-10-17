@@ -1,0 +1,83 @@
+{
+  "head_sha": "5818dbf06dad3c2ffc488ca79a6037babef593db",
+  "pr": {
+    "number": 813,
+    "state": "open",
+    "isDraft": false
+  },
+  "gate_run_id": 38988785858,
+  "gate_url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38988785858",
+  "gate_conclusion": "success",
+  "jobs": [
+    {
+      "id": 117266267710,
+      "name": "classify changed paths",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266289150,
+      "name": "Python CI / Validate inputs",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266312396,
+      "name": "Python CI / lint-ruff",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266312403,
+      "name": "Python CI / select reusable CI scope",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266312442,
+      "name": "Python CI / lint-format",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266312453,
+      "name": "Python CI / typecheck-mypy",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266337057,
+      "name": "Python CI / python 3.12",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117266337114,
+      "name": "Python CI / python 3.13",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117267128259,
+      "name": "Python CI / logs summary",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 117267197020,
+      "name": "gate-summary",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "python_312_job_id": 117266337057,
+  "python_312_summary": [
+    "2026-10-17T01:01:32.9231133Z src/fine_art_archive/api/main.py                               1438      4    398     11    99%   531, 626->628, 1159, 1213->1230, 1234->1230, 1670, 2437->2441, 2959, 2977->2982, 3105->3115, 3113->3115",
+    "2026-10-17T01:01:32.9232699Z src/fine_art_archive/api/store.py                               436      0    112      1    99%   761->759",
+    "2026-10-17T01:01:32.9280747Z src/fine_art_archive/enrichment/source_resolver.py              782     78    346     56    87%   120->exit, 155, 224, 231, 235, 238-239, 275->280, 278->280, 295, 298, 359->357, 431, 434-437, 442-447, 450, 462, 498, 501, 535, 546, 582, 596, 725, 727, 731->733, 742, 768-772, 787, 885, 912-916, 924-928, 955, 977, 979, 994, 1010-1011, 1013->1036, 1016->1036, 1024-1025, 1028, 1038->1045, 1049, 1057-1062, 1133->1125, 1147-1155, 1175, 1188, 1191, 1194->1189, 1197->1199, 1227->1226, 1229-1231, 1235, 1275->1273, 1277, 1354->1346, 1468, 1476, 1514",
+    "2026-10-17T01:01:32.9324383Z TOTAL                                                         10228    658   3608    444    91%",
+    "2026-10-17T01:01:32.9863249Z Required test coverage of 25.0% reached. Total coverage: 91.05%",
+    "2026-10-17T01:01:32.9865118Z =========== 2400 passed, 12 skipped, 4 warnings in 105.40s (0:01:45) ==========="
+  ],
+  "note": "Validates the preceding head including six artist follow-up cases; this round's eleven claim-label cases and one-line outage fix still need fresh CI after publishing."
+}
