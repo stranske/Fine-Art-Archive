@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from fine_art_archive.api import main as api_main
+from fine_art_archive.api import store
 
 NOW = datetime(2026, 10, 6, 12, tzinfo=UTC)
 
@@ -32,6 +33,24 @@ def research_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 def _record(work_id: str, when: datetime, note: str) -> dict:
     return {"work_id": work_id, "ts": when.isoformat(), "note": note}
+
+
+def test_unknown_work_research_request_returns_404_without_creating_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    works = tmp_path / "works"
+    works.mkdir()
+    monkeypatch.setattr(store, "WORKS", works)
+    research_log = tmp_path / "research_requests.jsonl"
+    monkeypatch.setattr(api_main, "RESEARCH_REQUESTS", research_log)
+
+    with TestClient(api_main.app) as client:
+        response = client.post("/works/unknown/research_request", json={"note": "look closer"})
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "no sidecar for unknown"}
+    assert not research_log.exists()
+    assert list(research_log.parent.glob("*.lock")) == []
 
 
 @pytest.mark.parametrize(
