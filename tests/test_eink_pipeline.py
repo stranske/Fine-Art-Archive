@@ -1236,6 +1236,39 @@ def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
     assert "einkCardPlaylistId = id;" in ui, "no UI path chooses a saved feed for the card"
 
 
+def test_operator_ui_selection_mode_requires_limit_guard():
+    """``preference-diverse`` must not be requestable without a limit.
+
+    The backend raises ``preference-diverse selection requires limit``
+    (eink/playlist.py) and ``einkSpec()`` only emits the mode with one, but
+    the operator-facing guard is ``einkSyncSelectionMode()``: it disables
+    the option without a limit, resets a stale selection to ``ordered``
+    and explains why in ``ek-selnote``. Earlier tests only check that
+    ``selection_mode`` exists in the UI. Disconnecting the disable line
+    in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        'oninput="einkSyncSelectionMode()"' in ui
+    ), "changing the limit must re-sync whether preference-diverse is available"
+    assert (
+        'onchange="einkSyncSelectionMode()"' in ui
+    ), "changing the selection mode must re-sync the limit guard"
+    assert "if (opt) opt.disabled = !hasLimit;" in ui, (
+        "preference-diverse must be disabled without a limit — operator "
+        "could otherwise request a mode the backend rejects"
+    )
+    assert (
+        'if (!hasLimit && sel.value === "preference-diverse") sel.value = "ordered";' in ui
+    ), "clearing the limit must reset a chosen preference-diverse mode to ordered"
+    assert (
+        "preference-diverse needs a Limit — set one to enable it." in ui
+    ), "the guard must explain why preference-diverse is unavailable"
+    assert "einkSyncSelectionMode();" in ui, "guard must run on panel render, not only on edit"
+
+
 def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     """Export write flag and saved-feed choice must not drift from delivery.
 

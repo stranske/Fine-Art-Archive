@@ -186,6 +186,24 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   → **189 passed**. No file under `src/` is touched by the
   committed change.
 
+- Follow-on regression (this change)
+  `test_operator_ui_selection_mode_requires_limit_guard` in
+  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1239):
+  locks the operator-facing side of the A15 `selection_mode` row —
+  `einkSyncSelectionMode()` disables `preference-diverse` without a
+  limit, resets a stale choice to `ordered`, and explains why, mirroring
+  the backend `preference-diverse selection requires limit` guard.
+  Earlier tests only checked that `selection_mode` exists in the UI.
+  **1 passed**; no new issue filed, since this locks an
+  already-correct row.
+- Deliberate-break gate for it: replacing
+  `if (opt) opt.disabled = !hasLimit;` with
+  `if (opt) opt.disabled = false;` in `index.html` → that test
+  **FAILED** with "preference-diverse must be disabled without a
+  limit". Restored via `git checkout`; SHA-256 back to
+  `d65b9650…a52`; rerun **2 passed** (guard + fit forwarding). No
+  file under `src/` is touched by the committed change.
+
 ## Follow-up filing and dedup
 
 - Dedup command run: `gh issue list --repo stranske/Fine-Art-Archive --search divergence`.
