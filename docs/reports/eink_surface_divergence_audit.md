@@ -217,6 +217,20 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   palette_measured is false". Restored via `git checkout`; SHA-256
   back to `d65b9650…a52`; rerun **2 passed** (palette + fit). No
   file under `src/` is touched by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_discloses_no_master_works_in_preview`: locks the
+  operator-facing side of the no-master count row (#827) —
+  `einkPreview` counts `!i.has_master` items and appends
+  `— N shown have no local image` to the selection header only when
+  non-zero, so the preview count cannot read as deliverable works the
+  feed excludes and export skips. **1 passed**; no new issue filed,
+  since #827 already owns this instance.
+- Deliberate-break gate for it: removing
+  `${noMaster ? ` — ${noMaster} shown have no local image` : ""}` from
+  `index.html` → that test **FAILED** with "preview header does not
+  disclose no-master works". Restored via `git checkout`; SHA-256
+  back to `d65b9650…a52`; rerun **2 passed** (no-master + fit). No
+  file under `src/` is touched by the committed change.
 
 ## Follow-up filing and dedup
 

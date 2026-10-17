@@ -1325,3 +1325,31 @@ def test_operator_ui_discloses_estimated_palette_on_export():
         "palette disclosure must come from the export response's "
         "palette_measured flag exactly once"
     )
+
+
+def test_operator_ui_discloses_no_master_works_in_preview():
+    """Preview must disclose selected works that have no local image.
+
+    Preview ``selected`` includes no-master works (flagged ``has_master``),
+    while the feed excludes them and export skips them at write — the
+    no-master count row of the divergence audit (#827). The operator-facing
+    mitigation in ``einkPreview`` counts ``!i.has_master`` items and appends
+    ``— N shown have no local image`` to the selection header only when
+    that count is non-zero. Dropping the disclosure would let the preview
+    count read as deliverable works the feed/card cannot show. Removing
+    the conditional disclosure in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        "const noMaster = d.items.filter(i => !i.has_master).length;" in ui
+    ), "preview does not count items flagged has_master=false"
+    assert '${noMaster ? ` — ${noMaster} shown have no local image` : ""}' in ui, (
+        "preview header does not disclose no-master works — preview count "
+        "would read as deliverable works the feed/card cannot show"
+    )
+    assert ui.count("shown have no local image") == 1, (
+        "no-master disclosure must come from the preview response's "
+        "has_master flags exactly once"
+    )
