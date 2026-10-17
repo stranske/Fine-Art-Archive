@@ -128,10 +128,19 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
 
 ## Follow-up filing and dedup
 
-- Dedup command run: `gh issue list --repo stranske/Fine-Art-Archive --search divergence`
-  (returns placeholder rows through this environment's proxy; corroborated with
-  `gh search issues --repo stranske/Fine-Art-Archive divergence` and
-  `gh issue list --search "eink preview fit manifest"`).
+- Dedup command run: `gh issue list --repo stranske/Fine-Art-Archive --search divergence`.
+  Under the default `GH_TOKEN` (`github-actions[bot]`) that exact command
+  returns placeholder rows (`0 … 0001-01-01T00:00:00Z`) in this environment —
+  a credential/proxy visibility blocker, not an empty result. Re-run under
+  the filing credential (`WORKFLOWS_TOKEN`, `stranske-keepalive[bot]`), the
+  exact command succeeds; terminal output:
+
+  ```text
+  826  OPEN  eink divergence: playlist preview ignores PlaylistIn.target
+  825  OPEN  eink divergence: caller-supplied A15 evidence is preview-only
+  827  OPEN  eink divergence: no-master count semantics differ across preview, feed and export
+  805  OPEN  Audit and remediate preview-vs-delivery divergence across the companion e-ink surfaces
+  ```
 - Existing covering candidates: parent
   [#805](https://github.com/stranske/Fine-Art-Archive/issues/805); open
   [PR #821](https://github.com/stranske/Fine-Art-Archive/pull/821) (earlier
@@ -153,11 +162,11 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
      "eink divergence: no-master count semantics differ across preview, feed
      and export"
   Verification: `gh issue view` confirms #825/#826/#827 are OPEN with the
-  titles above; `gh issue list --search divergence` lists #825 alongside
-  parent #805, and `gh search issues "no-master count"` returns #827
-  (search indexing lags for the newest issues, hence per-issue `view`
-  checks). Dedup reasoning is recorded in each issue body: pre-filing
-  searches found no covering issue, and #806/#807/#808 were checked as
+  titles above, and the exact listing command
+  `gh issue list --repo stranske/Fine-Art-Archive --search "divergence"`
+  (filing credential, see above) lists #826, #825, #827 and parent #805.
+  Dedup reasoning is recorded in each issue body: pre-filing searches
+  found no covering issue, and #806/#807/#808 were checked as
   non-covering.
 
 ## Reproducible checklist
