@@ -245,6 +245,22 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   disclose skipped works". Restored via `git checkout`; SHA-256
   back to `d65b9650…a52`; rerun **3 passed** (skipped + no-master +
   fit). No file under `src/` is touched by the committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_discloses_missing_metadata_drops_in_preview`:
+  locks the operator-facing side of the coverage disclosure —
+  `einkPreview` reads `d.coverage.excluded_for_missing_metadata`
+  (built at playlist.py:448, backend counts already locked) and
+  renders `Dropped for missing metadata: …` via `${covTxt}` only
+  when that map is non-empty, so `selected of matched` cannot read
+  as if every matching work were eligible for feed/card. **1
+  passed**; no new issue filed, since this locks an
+  already-correct disclosure rather than uncovering an instance.
+- Deliberate-break gate for it: removing the `${covTxt}`
+  interpolation from the preview markup in `index.html` → that
+  test **FAILED** with "missing-metadata disclosure is built but
+  never rendered". Restored via `git checkout`; SHA-256 back to
+  `d65b9650…a52`; rerun **2 passed** (missing-metadata + fit). No
+  file under `src/` is touched by the committed change.
 
 ## Follow-up filing and dedup
 

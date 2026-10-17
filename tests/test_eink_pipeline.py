@@ -1378,3 +1378,33 @@ def test_operator_ui_discloses_skipped_works_on_export():
     assert ui.count("${d.skipped} skipped") == 1, (
         "skipped disclosure must come from the export response's skipped " "count exactly once"
     )
+
+
+def test_operator_ui_discloses_missing_metadata_drops_in_preview():
+    """Preview must disclose candidates dropped for missing metadata.
+
+    The builder reports ``coverage.excluded_for_missing_metadata`` for
+    candidates excluded because a required field is absent (playlist.py:448;
+    backend counts locked at test level above), and the preview response
+    carries that coverage to the UI. The operator-facing disclosure in
+    ``einkPreview`` renders ``Dropped for missing metadata: <reason> <n>``
+    only when that map is non-empty, so ``selected of matched`` cannot read
+    as if every matching work were eligible for the feed/card. Dropping the
+    disclosure would hide a preview-vs-delivery-relevant exclusion on the
+    one screen where the selection is made. Removing it in ``index.html``
+    must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        "const cov = d.coverage.excluded_for_missing_metadata || {};" in ui
+    ), "preview does not read the response's excluded_for_missing_metadata coverage"
+    assert "Dropped for missing metadata: " in ui, (
+        "preview does not disclose works dropped for missing metadata — "
+        "'selected of matched' would read as fully eligible for feed/card"
+    )
+    assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
+    assert ui.count("Dropped for missing metadata") == 1, (
+        "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
+    )
