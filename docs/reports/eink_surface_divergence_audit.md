@@ -85,10 +85,10 @@ R; “feed” includes F/H; “export” is E/D.
 | Missing master | C: P reports `has_master=false`; V 404 | C: ordered R omits; diverse validates | C: no advertised missing image | C: writer skips/reports missing image | Intended diagnostic vs playable-output distinction; no byte-parity claim |
 | Candidate corpus/metadata | C: current sidecars | C: current sidecars | C: re-resolves live | C: current sidecars | `api/main.py:489–511`; stable snapshot across later calls is I |
 | Target key | C: V validates; P only diagnostic target field | C: saved for F | C: target registry | C: inline or saved target | P alone does not validate/produce target pixels; V does |
-| Target width/height/rotation | C: V scales dimensions, keeps rotation | I: not a selection input | N: pixels use T, ETag only key | C: native T dimensions | P2 proposal: same-key registry geometry replacement not in H identity |
+| Target width/height/rotation | C: V scales dimensions, keeps rotation | I: not a selection input | N: pixels use T, ETag only key | C: native T dimensions | P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805): same-key registry geometry replacement not in H identity |
 | Palette name / actual colors | C: V uses T palette | I: selection does not consume | B: bytes use palette, ETag omits colors | C: T + D palette-conformance assertion | [#808](https://github.com/stranske/Fine-Art-Archive/issues/808); executed changed-bytes/stale-304 probe |
 | Palette `measured` | C: V header | I: selection does not consume | B: 200 header changes; old ETag yields 304 without this header | C: manifest/warning records status | #808; executed header probe; physical fidelity remains unverified |
-| Master pixels + mtime | C: V reads master; no-store | C: Q descriptor derives master | C: mtime in ETag; N: content identity if mtime preserved | C: D reopens master | P2; byte/hash replacement with same mtime not covered by H |
+| Master pixels + mtime | C: V reads master; no-store | C: Q descriptor derives master | C: mtime in ETag; N: content identity if mtime preserved | C: D reopens master | P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805); byte/hash replacement with same mtime not covered by H |
 | A11 verdict and chosen strategy | C: P reports; V applies | I: not stored as selection evidence | C: F applies + H includes choice | C: D applies and records written evidence | [#788](https://github.com/stranske/Fine-Art-Archive/issues/788) closed; strategy-change and native-pixel tests executed |
 | `fit` / target default | C: V `coerce_fit` | C: saved canonical fit | C: F effective fit in pixels + ETag | C: saved or inline fit | [#786](https://github.com/stranske/Fine-Art-Archive/issues/786) closed; changed-byte and default-equivalence tests executed |
 | `dither` | C: V allows none/FS/Atkinson | C: save validates | C: F consumes + H binds | C: D validates/consumes | Shared render T; unsupported names reject |
@@ -99,7 +99,7 @@ R; “feed” includes F/H; “export” is E/D.
 | Saved `playlist_id` | I: preview takes inline spec | C: names stored query | C: retrieves saved query | C: overrides inline spec/target/dither/fit | E/U explicitly select saved feed for card; it is not a frozen membership snapshot |
 | `interval`, time and `offset` | I: selection preview not rotating | C: interval validates/stores | C: H clock index; offset only current | I: filename order, not a timer | H; deterministic rotation tests executed |
 | Cursor `after` / route index | I | I | C: next wraps; unknown cursor restarts; invalid index 404 | I | F; does not change selection policy |
-| Title/artist/year metadata | C: P parses from same sidecars | C: R parses | C: manifest/next include | C: D manifest includes | Metadata is outside image ETag; year-zero UI label P3 below |
+| Title/artist/year metadata | C: P parses from same sidecars; N: UI year-zero caption | C: R parses | C: manifest/next include | C: D manifest includes | Metadata is outside image ETag; P3 caption review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805), distinct from #806's date filtering |
 | `fmt` | I: PNG response | I | I: PNG response | C: PNG/BMP only; JPEG rejects | D; palette round-trip and lossy refusal tests executed |
 | Path, write, overwrite | I | I | I | C: allowed root, dry run, owned-file overwrite, skip failures | E/D; write success evidence differs from dry-run proposal evidence |
 | Custom ICC / forced render policy | I: V has no hints payload | I | I: F has no hints payload | I: HTTP export has no hints payload | `render_for_device` supports separate hints; no claim that companion calls it |
@@ -168,7 +168,8 @@ were temporary; no production archive or removable device was used.
 ```
 
 Result: **201 passed**, one Starlette/httpx deprecation warning, 52.95 seconds.
-No tests were added or weakened for this report. The XML and raw output are held
+That initial run added or weakened no tests; the later UI regression is recorded
+below. The XML and raw output are held
 in the opener receipt directory `run-20261017T1455`; the portable probe and its
 observed results accompany this report in `eink_surface_audit/`.
 
@@ -194,7 +195,7 @@ The temporary-fixture probe additionally observed:
   `X-Palette-Measured` header from `False` to `True`; ETag remains unchanged and
   conditional 304 omits that measurement header. This is also #808.
 
-### Causal control and literal-gate limitation
+### Original production-edge causal control
 
 An unchanged production regression was run with only `_resolve_playlist`'s
 call changed from `_build_eink_playlist` to raw `eink.build`. Both dry/write
@@ -203,14 +204,10 @@ failed at save's expected HTTP 200 because derived evidence no longer reached
 selection. Original production bytes were restored, then both variants passed.
 The SHA-256 equality and exact commands are in `transport-proof.json`.
 
-#805 also contains a literal template criterion asking for a new pipeline test
-and a disconnected change in `ui/index.html`, while its scope forbids bundled
-production fixes and requires the existing suites unchanged. This audit does
-**not** claim that literal UI mutation/new-test criterion was performed. The
-production-edge control above tests the audited transport seam instead. Keep
-source acceptance pending explicit review of that criterion; a report or green
-suite alone does not close the issue. No additional production authority was
-inferred from the conflicting template text.
+The initial audit used this production-edge control rather than the requested
+new pipeline test and `ui/index.html` mutation. The later UI regression below
+now supplies that literal gate without a permanent production edit or changes
+to existing test assertions. These are two distinct controls.
 
 ## Portable probe verification in the automation sandbox
 
@@ -272,7 +269,8 @@ The three prior repair links (#784/#786/#788) and existing owners
 rerun, so their current remote states were not revalidated. P1–P3 remain
 proposals under #805; this run published no follow-up issues.
 
-Delivery checklist, verified by the current probe and retained receipts:
+Historical delivery checklist, verified by that probe and retained receipts
+before the UI regression was added:
 
 - [x] Report includes all 17 playlist fields, request-only evidence, render
   defaults, navigation and validator identity.
@@ -282,8 +280,79 @@ Delivery checklist, verified by the current probe and retained receipts:
   break/restore receipts are retained; production code and existing tests are
   unchanged.
 
-This delivery checklist does not close #805 or resolve its separate literal
-UI-mutation/new-test acceptance conflict described above.
+This historical checklist does not close #805. The UI gate is now verified
+below; remote checklist updates and follow-up publication remain pending.
+
+## Keepalive reconciliation and UI gate (2026-10-17)
+
+Reviewed commits `ee75d23` and `72000af` before continuing. They added this report,
+the enumerated 17-field matrix, owned prior repairs, test-layer descriptions and
+portable probe receipts. The supplied "40 files" warning does not match these
+commits: their combined diff against `3c23a10` contains 13 files, all under
+`docs/reports/`. Re-ran the enumeration commands and traced S → B → Q and
+V/F/D → T → A. Product-contract references for selection rows are C3/C5,
+`docs/PRODUCT_CONTRACT.md:15,17`; pixel-policy and representation rows use C2/C5,
+lines 14,17. HTTP-only or export-only controls inherit those same bounded
+contracts; I cells explicitly decline cross-surface support claims.
+
+Added `tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs`,
+four cases for default fit, contain, cover and stretch. It extracts and executes
+the actual `einkSpec`, `einkPreview`, `einkSavePlaylist` and `einkExport` functions
+in Node with fixture DOM controls and a recording fetch boundary. It checks
+the emitted selection spec (including preference-diverse and limit), target,
+dither, canonical/default fit and the rendered thumbnail URL. This is a
+**request-policy and generated-URL** check: it does not check backend IDs,
+image bytes, HTTP validators, real SD writes or physical panels. Those layers
+remain covered only to the extent stated in the table and prior probes.
+Node is required; this gate fails rather than silently skipping if unavailable.
+
+The [UI mutation proof](eink_surface_audit/ui-inputs-proof.json) records source
+commit `72000af814f558eb241c784d718799d888a53768`, the exact command and hashes:
+
+1. Temporarily replaced the `einkPreview` fit-query producer with
+   `const fitQ = "";` in `src/fine_art_archive/ui/index.html`. Save/export still
+   sent `cover` while the preview image URL omitted it.
+2. Ran the new `[cover]` case: **1 failed**, exit 1, specifically because the
+   generated URL lacked `fit=cover`. See [red capture](eink_surface_audit/ui-inputs-red.txt).
+3. Restored the original bytes in a `finally` block, then ran the same case:
+   **1 passed**, exit 0. See [green capture](eink_surface_audit/ui-inputs-green.txt).
+   Original and restored SHA-256 are both
+   `d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52`,
+   matching the task's reviewed UI readback. No `src/` change remains.
+
+The [full suite capture](eink_surface_audit/ui-inputs-tests.txt) and proof JSON
+record **205 passed**, zero skips/failures/errors, one dependency deprecation
+warning, in 66.76 seconds on Python 3.14.8. The four-file pytest command is the
+one above, with `-o addopts= -m "not slow"`; original test assertions were not
+modified. All four new UI cases passed as part of that run. Black formatted the
+changed test and the mandatory repository-wide check passed with **370 files
+unchanged**, using the opt-in sandbox scheduling harness described above.
+
+GitHub reconciliation used the read-only connector after the required
+`gh issue list --repo stranske/Fine-Art-Archive --search divergence` failed to
+connect. The connector's same repository/divergence search found #805 and
+unrelated archive issues #523/#407/#188. Direct issue reads confirm #784/#786/#788
+closed and #806/#807/#808 open. P2's geometry/content-identity and P3's caption
+candidates remain under the existing [#805 review owner](https://github.com/stranske/Fine-Art-Archive/issues/805):
+neither #808's palette scope nor #806's filter scope covers those distinct
+observations, so neither is falsely claimed as their repair. This is an existing
+covering **review candidate**, not a filed dedicated repair or a claim that an
+unexecuted investigation has reproduced a bug. P1 is intentionally-unsupported
+explicit-evidence persistence and requires no bug issue.
+
+The PR-body update, blocker comment and `needs-human` label were each rejected
+by the connector with `MCP tool call requires approval, but approval policy is never`.
+Consequently no live task checkbox was updated and no new issue was published.
+The issue's separate human-publication boundary also remains recorded above.
+The proposed reconciled PR body is retained in
+[pr-body-reconciled.md](eink_surface_audit/pr-body-reconciled.md); publication
+and the literal successful `gh issue list` acceptance remain unchecked.
+Read-only PR verification confirmed #821 is open with `draft=false`.
+The proposed checklist has 11 verified items and two pending items (dedicated
+follow-up filing and the successful CLI listing). After all checks passed,
+the required `git add`/commit attempt failed before staging because `.git` is
+mounted read-only: `Unable to create .../.git/index.lock: Read-only file system`.
+This iteration therefore leaves reviewable workspace changes, not a new commit.
 
 ## Reproducible review checklist
 
@@ -298,9 +367,13 @@ UI-mutation/new-test acceptance conflict described above.
    palette stale-304 assertions should reproduce; after #808 lands, update the
    audit/probe with new evidence rather than treating historical expectations
    as a permanent product requirement.
-4. Recheck #784/#786/#788 and #806/#807/#808 before proposing work; do not file
+4. With Node installed, run the new UI regression with `-m "not slow"` and
+   `-o addopts=`. To repeat its causal check, apply only the fit-query mutation
+   above, run `[cover]`, restore the source bytes, and rerun the identical case.
+   Require the missing-fit assertion to fail and the restored case to pass.
+5. Recheck #784/#786/#788 and #806/#807/#808 before proposing work; do not file
    duplicates. Return P1–P3 for review under #805. Do not publish new follow-ups
    without their separate approval.
-5. Compare full-size output only with the same master snapshot, target, fit,
+6. Compare full-size output only with the same master snapshot, target, fit,
    strategy and dither. Thumbnail byte equality, freeze-at-preview membership,
    and physical panel acceptance have not been established by this report.
