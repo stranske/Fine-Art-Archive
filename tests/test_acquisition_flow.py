@@ -60,6 +60,37 @@ def test_assess_master_populates_sections(tmp_path: Path) -> None:
     assert isinstance(a.fitness, dict) and a.fitness  # at least one device scored
 
 
+@pytest.mark.parametrize(
+    "missing_reference", [False, True], ids=["no-reference", "missing-reference"]
+)
+@pytest.mark.parametrize("catalogue_matches", [True, False], ids=["upright-match", "raw-size-trap"])
+def test_assess_master_checks_exif_orientation_without_reference(
+    tmp_path: Path, missing_reference: bool, catalogue_matches: bool
+) -> None:
+    """Missing hash references must not change the aspect identity decision."""
+    from PIL import Image
+
+    master = tmp_path / "master.jpg"
+    exif = Image.Exif()
+    exif[274] = 6  # Stored landscape pixels display as a portrait.
+    Image.new("RGB", (120, 80), "navy").save(master, exif=exif)
+    reference = tmp_path / "absent.jpg" if missing_reference else None
+    h_cm, w_cm = (30.0, 20.0) if catalogue_matches else (20.0, 30.0)
+
+    assessment = af.assess_master(
+        master, source="met", h_cm=h_cm, w_cm=w_cm, reference_path=reference
+    )
+
+    expected_status = "PASS" if catalogue_matches else "FAIL"
+    assert assessment.verification["status"] == expected_status
+    [aspect] = assessment.verification["checks"]
+    assert aspect["name"] == "aspect_ratio"
+    assert aspect["status"] == expected_status
+    assert aspect["detail"]["px_aspect"] == 1.5
+    assert assessment.quality
+    assert assessment.fitness
+
+
 def test_run_acquisition_flow_batch_and_cap(tmp_path: Path) -> None:
     dirs = [_work(tmp_path / f"w{i}") for i in range(3)]
     results = af.run_acquisition_flow("met", dirs)

@@ -152,13 +152,34 @@ Full baseline: **4 failed, 2315 passed, 12 skipped, 1 warning in 120.82s (0:02:0
 
 Publication is blocked for this follow-up: local staging cannot create `.git/index.lock` on the read-only filesystem, and the GitHub connector's create-tree call returns `MCP tool call requires approval, but approval policy is never`. The new tests and receipts are working-tree changes; no new commit was created and the live PR body was not updated. A prepared replacement body is available at `/tmp/faa-811-pr-body.md`. The earlier checked tasks below describe the historical merged delivery, not publication of this follow-up.
 
+## Current-run reconciliation (2026-10-17)
+
+Reviewed `e33e8ed`, `45913bd`, `88f3d1a`, and `fea8fed` before continuing. A fresh targeted run at `fea8fed` passed **109 tests, 4 skipped**; both targets show **100%**, zero missing statements or branches. The original 62-unit improvement was merged in #804. The completed coverage checkboxes below reflect verified existing implementation. PR #811 is open with `draft=false`. Its live checklist update was attempted but rejected: `MCP tool call requires approval, but approval policy is never`. Full-suite-green and fresh-head CI acceptance remain unchecked.
+
+## EXIF acquisition bug fix (current run)
+
+The new regression exposes a real bug in `assess_master`: without a usable hash reference, it passed `candidate_path=None` to verification. That prevented the existing EXIF-aware aspect check from reading the master. A rotated portrait was incorrectly rejected against portrait metadata and could be falsely accepted against landscape metadata. The one-line fix always passes the master path; reference-dependent checks retain their existing availability gate.
+
+Four cases in `tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference` cover matching portrait metadata and the false-pass landscape trap, each with no reference and with a missing reference file. All four failed on the original source. Each case was then run separately with the fix deliberately reverted (failure) and restored (pass). Exact source restoration was checked with SHA-256.
+
+| Case suffix | Broken | Restored |
+|---|---|---|
+| `[upright-match-no-reference]` | 1 failed in 0.19s (exit 1) | 1 passed in 0.54s (exit 0) |
+| `[upright-match-missing-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `[raw-size-trap-no-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `[raw-size-trap-missing-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+
+Fresh before/after coverage is **100% → 100%** for both targets, with **0 → 0** missing statements or branches. This behavioral fix claims no additional covered units; #804 already delivered all 62 ranked units. Targeted validation: **113 passed, 4 skipped in 4.65s**. Full baseline: **4 failed, 2319 passed, 12 skipped, 1 warning in 124.75s**. Full final: **4 failed, 2323 passed, 12 skipped, 1 warning in 125.29s**. Both full runs measure **89.53%**, below the stop threshold, and fail only on the same four read-only-home tests. No tests were disabled. The full-suite-green and fresh-head CI requirements remain unmet.
+
+Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass. Commands, individual RED/GREEN output, coverage summaries, environment details, and hashes are in [exif-assessment-followup.json](exif-assessment-followup.json). No changes were deferred within the fix; external publication and fresh CI remain blocked. Local staging failed because `.git` is read-only. Updating the live PR body was rejected because connector approval is required and the approval policy is `never`. No commit or push was created. A prepared replacement body is at `/tmp/faa-811-pr-body.md`.
+
 ## Tasks
 
 - [x] Cover `src/fine_art_archive/collect/verify.py` (50 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
 - [x] Cover `src/fine_art_archive/collect/acquisition_flow.py` (12 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
 - [x] For each new test, run the break-and-revert proof (break the code it covers, `pytest` fails; revert, `pytest` passes) and record both results in the PR body.
 - [ ] If a test exposes a real bug in a target above, fix it with the smallest diff and show `pytest tests/` green again.
-- [x] Open ONE PR whose body states each target's coverage before and after (from `pytest --cov`) and has a closing line for THIS issue (`Closes #<this issue's number>`), so the round closes when the PR merges.
+- [ ] Open ONE PR whose body states each target's coverage before and after (from `pytest --cov`) and has a closing line for THIS issue (`Closes #<this issue's number>`), so the round closes when the PR merges.
 
 ## Acceptance criteria
 

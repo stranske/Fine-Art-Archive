@@ -186,7 +186,7 @@ def assess_master(
         w_cm=w_cm,
         h_px=h_px,
         w_px=w_px,
-        candidate_path=master_path if has_ref else None,
+        candidate_path=master_path,
         reference_path=reference_path if has_ref else None,
     )
     qd = quality_report(master_path, h_cm=h_cm, w_cm=w_cm).to_dict()
