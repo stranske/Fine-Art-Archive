@@ -173,6 +173,29 @@ Fresh before/after coverage is **100% → 100%** for both targets, with **0 → 
 
 Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass. Commands, individual RED/GREEN output, coverage summaries, environment details, and hashes are in [exif-assessment-followup.json](exif-assessment-followup.json). No changes were deferred within the fix; external publication and fresh CI remain blocked. Local staging failed because `.git` is read-only. Updating the live PR body was rejected because connector approval is required and the approval policy is `never`. No commit or push was created. A prepared replacement body is at `/tmp/faa-811-pr-body.md`.
 
+## Non-object staged metadata bug fix (2026-10-17)
+
+The original ranked targets were already 100% at the starting head `fded75b`. No new target was selected: PR #811 explicitly withdrew the API expansion as outside issue #799's verify/acquisition scope. The original ranking remains in [review-gap-ranking.csv](review-gap-ranking.csv); the original 62-unit coverage improvement was merged in #804.
+
+Four new regressions exposed a batch crash when staged `meta.json` contained valid JSON that was not an object (`null`, array, string, or number). All four failed on the original source with `AttributeError`. The targeted fix checks the decoded type and routes invalid values through the existing warning and empty-metadata recovery. Tests verify that the invalid work remains unverified, the next valid work passes, quality/fitness survive, and the warning identifies the bad sidecar.
+
+Each collected case was separately run with the production type guard deliberately removed (failure) and restored (pass). Source restoration was protected by `finally` and verified by SHA-256.
+
+| Case | Guard removed | Restored |
+|---|---|---|
+| `null` | 1 failed in 0.82s (exit 1) | 1 passed in 0.47s (exit 0) |
+| `array` | 1 failed in 0.40s (exit 1) | 1 passed in 0.48s (exit 0) |
+| `string` | 1 failed in 0.39s (exit 1) | 1 passed in 0.47s (exit 0) |
+| `number` | 1 failed in 0.38s (exit 1) | 1 passed in 0.48s (exit 0) |
+
+Targeted baseline: **113 passed, 4 skipped, 4 deselected in 4.41s (new cases omitted for pre-fix measurement)**. Final targeted run: **117 passed, 4 skipped in 6.14s**. Both target rows remain **100% → 100%**, with **0 → 0** missing statements/branches. `acquisition_flow.py` grows from 127 statements + 38 branches to 130 + 40; all new units are covered. This is a behavioral fix, with no new reduction of the historical uncovered units claimed.
+
+Full baseline: **4 failed, 2323 passed, 12 skipped, 1 warning in 157.11s (0:02:37)**. Full final: **4 failed, 2327 passed, 12 skipped, 1 warning in 158.37s (0:02:38)**. Blended coverage: **89.5308% → 89.5345%**. The same four `test_workspace_conflict_guard.py` failures occur in both runs because `/home/runner/.cache/fine-art-archive` is read-only. Full-suite-green and fresh-head CI remain unchecked. No tests were disabled. Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass.
+
+Commands, mutation harness, full individual RED/GREEN output, exact coverage summaries, source hashes, and environment details are in [staged-json-followup.json](staged-json-followup.json).
+
+Publication remains blocked: Git staging cannot create `.git/index.lock` on the read-only filesystem. The GitHub connector rejected both the PR-body update and remote source-tree creation with `MCP tool call requires approval, but approval policy is never`. No new commit was created; changes and receipts remain in the working tree. The prepared replacement body is at `/tmp/faa811-current/pr-body.md`. PR #811 was verified open with `isDraft=false`.
+
 ## Tasks
 
 - [x] Cover `src/fine_art_archive/collect/verify.py` (50 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.

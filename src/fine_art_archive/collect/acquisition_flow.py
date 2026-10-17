@@ -249,7 +249,10 @@ def run_acquisition_flow(
         if meta_p.exists():
             try:
                 meta = json.loads(meta_p.read_text())
-            except json.JSONDecodeError as exc:
+                if not isinstance(meta, dict):
+                    raise ValueError("staged metadata must be a JSON object")
+            except ValueError as exc:
+                meta = {}
                 LOGGER.warning(
                     "Ignoring malformed staged metadata for %s; continuing with empty metadata: %s",
                     meta_p,
