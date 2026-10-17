@@ -1047,6 +1047,122 @@ def test_supplied_embeddings_do_not_require_local_masters(tmp_path, monkeypatch)
     assert response.json()["selection_diagnostics"]
 
 
+def test_local_descriptors_reuse_unchanged_images(tmp_path, monkeypatch):
+    """Repeated derivation reads each master once, without changing its vector."""
+    from fine_art_archive.api import main as api_main
+
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    reads = []
+    original_open = Image.open
+
+    def counted_open(*args, **kwargs):
+        reads.append(args[0])
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", counted_open)
+    first = api_main._derived_preference_evidence(list(paths), {})[1]
+    second = api_main._derived_preference_evidence(list(paths), {})[1]
+    assert first == second
+    assert first["red"] != first["blue"]
+    assert len(reads) == 2, "unchanged masters must not be decoded again"
+
+
+@pytest.mark.parametrize("change", ["pixels", "path", "version", "missing", "unreadable"])
+def test_local_descriptor_cache_revalidates_current_master(tmp_path, monkeypatch, change):
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master if master.exists() else None)
+    first = api_main._local_visual_embedding("work")
+    if change == "pixels":
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(master)
+    elif change == "path":
+        replacement = tmp_path / "replacement.png"
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(replacement)
+        monkeypatch.setattr(api_main, "_eink_master", lambda _: replacement)
+    elif change == "version":
+        monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_VERSION", "test-next-version")
+    elif change == "missing":
+        master.unlink()
+    else:
+        master.write_text("not an image")
+    if change in {"missing", "unreadable"}:
+        with pytest.raises(ValueError, match="evidence.*(missing|cannot be read)"):
+            api_main._local_visual_embedding("work")
+    elif change == "version":
+        reads = []
+        original_open = Image.open
+
+        def counted_open(*args, **kwargs):
+            reads.append(args[0])
+            return original_open(*args, **kwargs)
+
+        monkeypatch.setattr(Image, "open", counted_open)
+        assert api_main._local_visual_embedding("work") == first
+        assert len(reads) == 1, "descriptor recipe version is part of cache identity"
+    else:
+        assert api_main._local_visual_embedding("work") != first
+
+
+def test_local_descriptor_cache_still_checks_read_access(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master)
+    api_main._local_visual_embedding("work")
+    original_open = Path.open
+
+    def deny_master(path, *args, **kwargs):
+        if path == master:
+            raise PermissionError("test master access revoked")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", deny_master)
+    with pytest.raises(ValueError, match="cannot be read"):
+        api_main._local_visual_embedding("work")
+
+
+def test_local_descriptor_cache_is_bounded_and_does_not_share_mutable_vectors(
+    tmp_path, monkeypatch
+):
+    from fine_art_archive.api import main as api_main
+
+    monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES", 2)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("green", (40, 220, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    reads = []
+    original_open = Image.open
+
+    def counted_open(*args, **kwargs):
+        reads.append(args[0])
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", counted_open)
+    red = api_main._local_visual_embedding("red")
+    expected = red.copy()
+    red[0] = -100
+    assert api_main._local_visual_embedding("red") == expected
+    api_main._local_visual_embedding("green")
+    api_main._local_visual_embedding("blue")
+    assert len(api_main._visual_descriptor_cache) == 2
+    assert api_main._local_visual_embedding("red") == expected
+    assert len(reads) == 4, "oldest entry was evicted and must be decoded again"
+
+
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
     from fine_art_archive.api.main import UI_FILE

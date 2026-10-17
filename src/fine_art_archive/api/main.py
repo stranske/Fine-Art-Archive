@@ -532,6 +532,25 @@ def _request_supplies(body: BaseModel, field: str) -> bool:
     return fields_set is not None and field in fields_set
 
 
+_VISUAL_DESCRIPTOR_VERSION = "rgb-16x16-bilinear-v1"
+_VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES = 256
+_visual_descriptor_cache: dict[tuple[object, ...], tuple[float, ...]] = {}
+_visual_descriptor_cache_lock = threading.Lock()
+
+
+def _visual_descriptor_key(master: Path, observed: os.stat_result) -> tuple[object, ...]:
+    return (
+        str(master.resolve(strict=True)),
+        observed.st_dev,
+        observed.st_ino,
+        observed.st_mtime_ns,
+        observed.st_ctime_ns,
+        observed.st_size,
+        observed.st_mode,
+        _VISUAL_DESCRIPTOR_VERSION,
+    )
+
+
 def _local_visual_embedding(work_id: str) -> list[float]:
     """Return a deterministic, local pixel descriptor for one archive master.
 
@@ -549,9 +568,25 @@ def _local_visual_embedding(work_id: str) -> list[float]:
     try:
         from PIL import Image
 
-        with Image.open(master) as image:
-            image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
-            return [channel / 255.0 for pixel in image.getdata() for channel in pixel]
+        # Open even on cache hits: revoked access and missing masters must keep
+        # failing live. Identity comes from this open file, not an earlier stat.
+        with master.open("rb") as source:
+            key = _visual_descriptor_key(master, os.fstat(source.fileno()))
+            with _visual_descriptor_cache_lock:
+                cached = _visual_descriptor_cache.pop(key, None)
+                if cached is not None:
+                    _visual_descriptor_cache[key] = cached
+                    return list(cached)
+            with Image.open(source) as image:
+                image = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+                vector = tuple(channel / 255.0 for pixel in image.getdata() for channel in pixel)
+            # Do not retain a descriptor if the file changed during decoding.
+            if key == _visual_descriptor_key(master, os.fstat(source.fileno())):
+                with _visual_descriptor_cache_lock:
+                    _visual_descriptor_cache[key] = vector
+                    while len(_visual_descriptor_cache) > _VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES:
+                        del _visual_descriptor_cache[next(iter(_visual_descriptor_cache))]
+            return list(vector)
     except OSError as exc:
         raise ValueError(
             f"local master image evidence for {work_id} cannot be read; "

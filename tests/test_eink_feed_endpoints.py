@@ -751,6 +751,68 @@ def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, div
         assert "evidence" in refused.json()["detail"]
 
 
+def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
+    client, archive, diverse_archive, monkeypatch
+):
+    saved = _save(client, spec=diverse_archive)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    reads = []
+    original_open = Image.open
+
+    def counted_open(*args, **kwargs):
+        reads.append(args[0])
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", counted_open)
+    url = f"/feed/{saved['id']}/manifest.json"
+    cold = client.get(url)
+    warm = client.get(url)
+    assert cold.status_code == warm.status_code == 200
+    assert cold.json()["items"] == warm.json()["items"]
+    assert len(reads) == 3, "manifest requests must decode each matching master only once"
+    old_ids = [row["work_id"] for row in warm.json()["items"]]
+    api_store.RATINGS_LOG.write_text(
+        "\n".join(
+            json.dumps({"work_id": wid, "fit": 9, "quality": quality})
+            for wid, quality in zip(
+                ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"],
+                [1, 10, 1],
+                strict=True,
+            )
+        )
+    )
+    changed = client.get(url)
+    assert changed.status_code == 200
+    assert [row["work_id"] for row in changed.json()["items"]] != old_ids
+    assert len(reads) == 3, "ratings must stay live without decoding unchanged descriptors"
+
+
+@pytest.mark.parametrize("failure", ["missing", "unreadable", "access"])
+def test_warm_descriptor_cache_preserves_http_evidence_failure(
+    client, archive, diverse_archive, monkeypatch, failure
+):
+    saved = _save(client, spec=diverse_archive)
+    url = f"/feed/{saved['id']}/manifest.json"
+    assert client.get(url).status_code == 200
+    master = archive / "aaa1111-red-work" / "master.jpeg"
+    if failure == "missing":
+        master.unlink()
+    elif failure == "unreadable":
+        master.write_text("not an image")
+    else:
+        original_open = Path.open
+
+        def deny_master(path, *args, **kwargs):
+            if path == master:
+                raise PermissionError("test master access revoked")
+            return original_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "open", deny_master)
+    failed = client.get(url)
+    assert failed.status_code == 400, failed.text
+    assert "evidence" in failed.json()["detail"]
+
+
 @pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])
 def test_preference_diverse_builder_names_missing_evidence(missing):
     supplied = {"quality_scores": {}, "embeddings": {}}
