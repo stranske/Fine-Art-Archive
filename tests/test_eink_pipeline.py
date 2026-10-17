@@ -1287,3 +1287,355 @@ def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     assert 'id="ek-selmode"' in ui, "no control emits it"
     assert "preference-diverse" in ui
     assert "selection_diagnostics" in ui, "the explanations are returned and rendered by nothing"
+
+
+def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
+    """The fit control must reach every surface the preview claims to match.
+
+    The companion preview renders each item through
+    ``/works/{id}/eink_preview``; the saved feed renders with ``pl.fit`` and
+    the SD export with the export body's ``fit``. If the UI's ``ek-fitmode``
+    value reached only the export, the on-screen preview would show
+    ``contain`` framing while the card/feed delivered ``cover`` — the exact
+    preview-vs-delivery divergence the audit tracks. Disconnecting the
+    ``fitQ`` interpolation in the preview ``<img>`` URL must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'id="ek-fitmode"' in ui, "no fit control exists for the operator to set"
+    # Preview images: the fit query param is built from the control and
+    # interpolated into the eink_preview URL actually rendered on screen.
+    assert 'const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";' in ui
+    assert "eink_preview?target=${encodeURIComponent(target)}" in ui
+    assert "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui, (
+        "preview <img> does not forward the chosen fit — preview would not "
+        "match the framing delivered by feed/export"
+    )
+    # Saved feed and SD export consume the same control, so all three
+    # surfaces agree on framing for one operator action.
+    assert (
+        ui.count('document.getElementById("ek-fitmode").value || null') >= 2
+    ), "fit must be sent both when saving a playlist (feed) and on export (SD card)"
+
+
+def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export():
+    """Dither and panel target must reach every surface the preview claims to match.
+
+    ``eink_preview`` renders with its ``target``/``dither`` query params
+    (api/main.py), the saved feed renders with ``pl.target``/``pl.dither``
+    and the SD export with the export body's ``target``/``dither``. If the
+    UI's ``ek-target``/``ek-dither`` values reached only the export, the
+    on-screen preview would show a different panel size and dither texture
+    than the card/feed delivered — the same preview-vs-delivery divergence
+    class the audit tracks for ``fit``. Disconnecting the ``dither``
+    interpolation in the preview ``<img>`` URL must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'id="ek-target"' in ui, "no target control exists for the operator to set"
+    assert 'id="ek-dither"' in ui, "no dither control exists for the operator to set"
+    # Preview images: both values are read from their controls in
+    # einkPreview() and interpolated into the eink_preview URL on screen.
+    assert 'const target = document.getElementById("ek-target").value;' in ui
+    assert 'const dither = document.getElementById("ek-dither").value;' in ui
+    assert (
+        "eink_preview?target=${encodeURIComponent(target)}"
+        "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui
+    ), (
+        "preview <img> does not forward the chosen target/dither — preview "
+        "would not match the panel/dither delivered by feed/export"
+    )
+    # Saved feed and SD export consume the same controls, so all three
+    # surfaces agree on panel and dither for one operator action.
+    assert ui.count('document.getElementById("ek-target").value') >= 3, (
+        "target must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    )
+    assert ui.count('document.getElementById("ek-dither").value') >= 3, (
+        "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    )
+
+
+def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
+    """One shared ``einkSpec()`` must feed preview, saved feed and SD export.
+
+    ``einkSpec()`` (index.html) builds the ``PlaylistSpec`` — filters, sort,
+    limit and the A15 ``selection_mode`` — from the operator controls. The
+    preview POSTs it to ``/eink/playlist/preview``, ``einkSavePlaylist``
+    persists it for the feed, and ``einkExport`` sends it to
+    ``/eink/playlist/export``. If any surface stopped calling the shared
+    builder (e.g. export inlined its own spec literal), the works previewed
+    could differ from the works delivered — the ``spec.*`` row of the
+    divergence audit, currently marked already-correct only on source
+    reading. Replacing ``spec: einkSpec()`` in the export body must fail
+    this test. The rotation ``interval`` is the one deliberate asymmetry:
+    it is saved with the playlist (feed rotation) and sent nowhere else.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "function einkSpec()" in ui, "no shared spec builder exists"
+    # Preview: the playlist preview request carries the shared spec.
+    assert "body: JSON.stringify({ spec: einkSpec(), target, sample: 24 })" in ui, (
+        "playlist preview does not send the shared einkSpec() — previewed "
+        "selection could diverge from the saved/exported selection"
+    )
+    # Saved feed: the playlist-create body carries the same shared spec,
+    # plus the rotation interval only a saved feed consumes.
+    assert (
+        "name: name.trim(), spec: einkSpec()," in ui
+    ), "saving a playlist (feed) does not send the shared einkSpec()"
+    assert (
+        'interval: document.getElementById("ek-interval").value,' in ui
+    ), "saved feed loses the operator's rotation interval"
+    # SD export: the export body carries the same shared spec.
+    assert 'spec: einkSpec(), target: document.getElementById("ek-target").value,' in ui, (
+        "SD export does not send the shared einkSpec() — exported selection "
+        "could diverge from the previewed/saved selection"
+    )
+    assert (
+        ui.count("spec: einkSpec()") == 3
+    ), "exactly preview, save and export should consume the shared spec builder"
+
+
+def test_operator_ui_einkspec_forwards_each_spec_control():
+    """Every ``ek-*`` spec control must populate the shared ``einkSpec()``.
+
+    The shared-spec regression above proves preview, save and export all
+    call ``einkSpec()``; it does not prove the builder reads each control.
+    If ``einkSpec()`` dropped e.g. ``ek-limit`` or ``ek-excl``, all three
+    surfaces would agree with each other but silently diverge from the
+    operator's stated filters — the ``spec.*`` row of the divergence
+    audit, already-correct only on source reading. Removing any single
+    control mapping inside ``einkSpec()`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "function einkSpec()" in ui, "no shared spec builder exists"
+    mappings = [
+        ('const spec = { sort: v("ek-sort") || "fit" };', "sort (ek-sort)"),
+        ('if (v("ek-artist")) spec.artists = [v("ek-artist")];', "artists (ek-artist)"),
+        ('if (v("ek-period")) spec.periods = [v("ek-period")];', "periods (ek-period)"),
+        ("if (tags.length) spec.all_tags = tags;", "all_tags (.ek-fam family selects)"),
+        ('if (v("ek-mood")) spec.moods = [v("ek-mood")];', "moods (ek-mood)"),
+        ('if (v("ek-fit")) spec.min_fit = parseInt(v("ek-fit"), 10);', "min_fit (ek-fit)"),
+        ('if (v("ek-limit")) spec.limit = parseInt(v("ek-limit"), 10);', "limit (ek-limit)"),
+        (
+            'if (on("ek-excl")) spec.exclude_filters = ["nudity-full", "violence", "disturbing"];',
+            "exclude_filters (ek-excl)",
+        ),
+        ('if (on("ek-dossier")) spec.require_dossier = true;', "require_dossier (ek-dossier)"),
+        (
+            'if (v("ek-selmode") === "preference-diverse" && spec.limit) {',
+            "selection_mode guard (ek-selmode, requires limit)",
+        ),
+        ('spec.selection_mode = "preference-diverse";', "selection_mode (ek-selmode)"),
+    ]
+    for snippet, label in mappings:
+        assert snippet in ui, f"einkSpec() does not forward {label} — operator filter is lost"
+
+
+def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
+    """Save/export bodies must carry the exact delivery fields, not just counts.
+
+    Earlier forwarding tests assert read counts (``>= 2``/``>= 3``), which
+    still pass if one surface drops a field while another reads it twice.
+    This locks the literal body fields: saved feed and SD export each send
+    ``target``/``dither``/``fit`` from their controls, and export forwards
+    a chosen saved feed as ``playlist_id`` so the card uses the feed's
+    selection (main.py:813) instead of re-resolving the filter spec.
+    Deleting the ``body.playlist_id`` line in ``index.html`` must fail it.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    # Saved feed body: exact delivery fields persisted for feed rendering.
+    assert 'target: document.getElementById("ek-target").value,' in ui
+    assert 'dither: document.getElementById("ek-dither").value,' in ui
+    # Both save and export send fit as ``|| null`` (unset means panel default).
+    assert (
+        ui.count('fit: document.getElementById("ek-fitmode").value || null,') == 2
+    ), "fit must be sent exactly by playlist save (feed) and SD export"
+    # SD export body: card destination/write flags plus saved-feed selection.
+    assert "path, write, overwrite: true," in ui, "export loses card path/write flags"
+    assert "if (einkCardPlaylistId) body.playlist_id = einkCardPlaylistId;" in ui, (
+        "export does not forward the chosen saved feed — card would "
+        "re-resolve filters instead of using the feed selection"
+    )
+    assert "einkCardPlaylistId = id;" in ui, "no UI path chooses a saved feed for the card"
+
+
+def test_operator_ui_selection_mode_requires_limit_guard():
+    """``preference-diverse`` must not be requestable without a limit.
+
+    The backend raises ``preference-diverse selection requires limit``
+    (eink/playlist.py) and ``einkSpec()`` only emits the mode with one, but
+    the operator-facing guard is ``einkSyncSelectionMode()``: it disables
+    the option without a limit, resets a stale selection to ``ordered``
+    and explains why in ``ek-selnote``. Earlier tests only check that
+    ``selection_mode`` exists in the UI. Disconnecting the disable line
+    in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        'oninput="einkSyncSelectionMode()"' in ui
+    ), "changing the limit must re-sync whether preference-diverse is available"
+    assert (
+        'onchange="einkSyncSelectionMode()"' in ui
+    ), "changing the selection mode must re-sync the limit guard"
+    assert "if (opt) opt.disabled = !hasLimit;" in ui, (
+        "preference-diverse must be disabled without a limit — operator "
+        "could otherwise request a mode the backend rejects"
+    )
+    assert (
+        'if (!hasLimit && sel.value === "preference-diverse") sel.value = "ordered";' in ui
+    ), "clearing the limit must reset a chosen preference-diverse mode to ordered"
+    assert (
+        "preference-diverse needs a Limit — set one to enable it." in ui
+    ), "the guard must explain why preference-diverse is unavailable"
+    assert "einkSyncSelectionMode();" in ui, "guard must run on panel render, not only on edit"
+
+
+def test_operator_ui_export_write_flag_and_saved_feed_clearing():
+    """Export write flag and saved-feed choice must not drift from delivery.
+
+    The exact-fields test locks the export body (``path, write, …``) but not
+    where ``write`` comes from: ``einkExport(false)`` is the dry run and
+    ``einkExport(true)`` writes the card. Wiring dry run to ``true`` would
+    write files the operator only meant to preview. Likewise a chosen saved
+    feed (``einkCardPlaylistId``) must be clearable via ``ek-clear`` and
+    auto-cleared when that feed is deleted, else export keeps sending a
+    stale ``playlist_id``. Flipping the dry-run button to
+    ``einkExport(true)`` in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'onclick="einkExport(false)"' in ui, "dry run must not write the card"
+    assert 'onclick="einkExport(true)"' in ui, "write button must write the card"
+    assert (
+        'if (!path) { toast("enter a card path first"); return; }' in ui
+    ), "export without a card path must stop before calling the export endpoint"
+    assert (
+        "ev.preventDefault(); einkCardPlaylistId = null;" in ui
+    ), "the 'use filters instead' clear link must drop the saved-feed choice"
+    assert (
+        "if (einkCardPlaylistId === id) einkCardPlaylistId = null;" in ui
+    ), "deleting the chosen saved feed must clear it from export, not send a stale id"
+
+
+def test_operator_ui_discloses_estimated_palette_on_export():
+    """Export must warn when the palette is estimated, not measured.
+
+    The export response carries ``palette_measured`` from the target palette
+    (main.py, ``tgt.palette.measured``; also in the SD manifest at
+    sdcard.py). Backend tests lock that flag in the manifest, but nothing
+    locked the operator-facing disclosure: ``einkExport`` appends
+    ``colours estimated`` only when ``d.palette_measured`` is false. Dropping
+    that branch would let an unmeasured palette read as measured on the one
+    screen that writes the card — the audit's palette row and its
+    no-physical-panel-acceptance caveat. Removing the disclosure in
+    ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        'd.palette_measured ? "" : ` · <span style="color:#a06000">colours estimated</span>`' in ui
+    ), (
+        "export result must disclose 'colours estimated' when palette_measured "
+        "is false — an estimated palette must not read as measured"
+    )
+    # The warning must be tied to the export response, not shown (or hidden)
+    # unconditionally: the ternary on d.palette_measured is the disclosure.
+    assert ui.count("d.palette_measured") == 1, (
+        "palette disclosure must come from the export response's "
+        "palette_measured flag exactly once"
+    )
+
+
+def test_operator_ui_discloses_no_master_works_in_preview():
+    """Preview must disclose selected works that have no local image.
+
+    Preview ``selected`` includes no-master works (flagged ``has_master``),
+    while the feed excludes them and export skips them at write — the
+    no-master count row of the divergence audit (#827). The operator-facing
+    mitigation in ``einkPreview`` counts ``!i.has_master`` items and appends
+    ``— N shown have no local image`` to the selection header only when
+    that count is non-zero. Dropping the disclosure would let the preview
+    count read as deliverable works the feed/card cannot show. Removing
+    the conditional disclosure in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        "const noMaster = d.items.filter(i => !i.has_master).length;" in ui
+    ), "preview does not count items flagged has_master=false"
+    assert '${noMaster ? ` — ${noMaster} shown have no local image` : ""}' in ui, (
+        "preview header does not disclose no-master works — preview count "
+        "would read as deliverable works the feed/card cannot show"
+    )
+    assert ui.count("shown have no local image") == 1, (
+        "no-master disclosure must come from the preview response's "
+        "has_master flags exactly once"
+    )
+
+
+def test_operator_ui_discloses_skipped_works_on_export():
+    """Export must disclose works skipped at write, not just files written.
+
+    The SD writer skips selected works with no local master (or a failed
+    render) and reports ``skipped`` in the export response (sdcard.py:185,
+    :107) — the export side of the no-master count row of the divergence
+    audit (#827). The operator-facing mitigation in ``einkExport`` appends
+    ``· N skipped`` to the result line only when ``d.skipped`` is non-zero,
+    so ``Wrote N file(s)`` cannot read as the full selected count. Dropping
+    that disclosure would hide exactly the preview-vs-delivery gap the
+    preview header discloses. Removing it in ``index.html`` must fail
+    this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert '(d.skipped ? ` · ${d.skipped} skipped` : "")' in ui, (
+        "export result does not disclose skipped works — 'Wrote N file(s)' "
+        "would read as the full selection the card cannot show"
+    )
+    assert ui.count("${d.skipped} skipped") == 1, (
+        "skipped disclosure must come from the export response's skipped " "count exactly once"
+    )
+
+
+def test_operator_ui_discloses_missing_metadata_drops_in_preview():
+    """Preview must disclose candidates dropped for missing metadata.
+
+    The builder reports ``coverage.excluded_for_missing_metadata`` for
+    candidates excluded because a required field is absent (playlist.py:448;
+    backend counts locked at test level above), and the preview response
+    carries that coverage to the UI. The operator-facing disclosure in
+    ``einkPreview`` renders ``Dropped for missing metadata: <reason> <n>``
+    only when that map is non-empty, so ``selected of matched`` cannot read
+    as if every matching work were eligible for the feed/card. Dropping the
+    disclosure would hide a preview-vs-delivery-relevant exclusion on the
+    one screen where the selection is made. Removing it in ``index.html``
+    must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert (
+        "const cov = d.coverage.excluded_for_missing_metadata || {};" in ui
+    ), "preview does not read the response's excluded_for_missing_metadata coverage"
+    assert "Dropped for missing metadata: " in ui, (
+        "preview does not disclose works dropped for missing metadata — "
+        "'selected of matched' would read as fully eligible for feed/card"
+    )
+    assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
+    assert ui.count("Dropped for missing metadata") == 1, (
+        "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
+    )
