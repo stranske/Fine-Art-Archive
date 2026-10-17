@@ -699,6 +699,12 @@ def test_year_zero_lower_bound_agrees_across_preview_saved_feed_and_export(
     assert [row["work_id"] for row in written["items"]] == ["aaa1111-dated"]
 
 
+def test_preview_rejects_non_integer_year_bound(client):
+    response = client.post("/eink/playlist/preview", json={"spec": {"year_from": ""}})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "year_from must be an integer or null"
+
+
 @pytest.mark.parametrize("update", [False, True])
 @pytest.mark.parametrize("missing", ["quality", "master", "unreadable", "zero-vector"])
 def test_preference_diverse_invalid_evidence_never_commits(

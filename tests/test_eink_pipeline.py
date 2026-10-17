@@ -290,6 +290,12 @@ def test_year_zero_omitted_bounds_leave_the_date_filter_off():
     assert "no year" not in res.coverage["excluded_for_missing_metadata"]
 
 
+@pytest.mark.parametrize("field,value", [("year_from", ""), ("year_to", "0"), ("year_from", True)])
+def test_year_bounds_reject_non_integer_values_before_filtering(field, value):
+    with pytest.raises(ValueError, match=f"{field} must be an integer or null"):
+        PlaylistSpec.from_dict({field: value})
+
+
 @pytest.mark.parametrize(
     "year_from,year_to,expected",
     [
