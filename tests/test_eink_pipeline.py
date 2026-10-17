@@ -14,6 +14,7 @@ it, because those are the failures worth locking down:
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 from PIL import Image
@@ -1045,6 +1046,181 @@ def test_supplied_embeddings_do_not_require_local_masters(tmp_path, monkeypatch)
 
     assert response.status_code == 200, response.text
     assert response.json()["selection_diagnostics"]
+
+
+def test_local_descriptors_reuse_unchanged_images(tmp_path, monkeypatch):
+    """Repeated derivation reads each master once, without changing its vector."""
+    from fine_art_archive.api import main as api_main
+
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    # Independent uncached recipe: cache reuse must preserve the original vectors.
+    baseline = {}
+    for wid, path in paths.items():
+        with Image.open(path) as image:
+            pixels = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+            baseline[wid] = [channel / 255.0 for pixel in pixels.getdata() for channel in pixel]
+    reads = []
+    original_compute = api_main._compute_visual_descriptor
+
+    def counted_compute(source):
+        reads.append(source.name)
+        return original_compute(source)
+
+    monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
+    first = api_main._derived_preference_evidence(list(paths), {})[1]
+    second = api_main._derived_preference_evidence(list(paths), {})[1]
+    assert first == second == baseline
+    assert first["red"] != first["blue"]
+    assert reads == [
+        str(path) for path in paths.values()
+    ], "unchanged masters must not be decoded again"
+
+
+@pytest.mark.parametrize("change", ["mtime-ns", "size", "replacement", "symlink"])
+def test_local_descriptor_file_signature_changes_recompute(tmp_path, monkeypatch, change):
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.bmp"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    current = tmp_path / "current.bmp"
+    current.symlink_to(master.name)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: current)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    reads = []
+    original_compute = api_main._compute_visual_descriptor
+
+    def counted_compute(source):
+        reads.append(source.name)
+        return original_compute(source)
+
+    monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
+    first = api_main._local_visual_embedding("work")
+    before = master.stat()
+    replacement = tmp_path / "replacement.bmp"
+    Image.new("RGB", (32, 24), (40, 70, 220)).save(replacement)
+    if change == "symlink":
+        # Even equal timestamps and sizes cannot alias different resolved paths.
+        os.utime(replacement, ns=(before.st_atime_ns, before.st_mtime_ns))
+        current.unlink()
+        current.symlink_to(replacement.name)
+    elif change == "replacement":
+        os.utime(replacement, ns=(before.st_atime_ns, before.st_mtime_ns))
+        replacement.replace(master)
+        assert master.stat().st_ino != before.st_ino
+    else:
+        master.write_bytes(replacement.read_bytes())
+        if change == "mtime-ns":
+            os.utime(master, ns=(before.st_atime_ns, before.st_mtime_ns + 1))
+            assert master.stat().st_size == before.st_size
+            assert master.stat().st_mtime_ns == before.st_mtime_ns + 1
+        else:
+            with master.open("ab") as output:
+                output.write(b"trailing BMP bytes")
+            os.utime(master, ns=(before.st_atime_ns, before.st_mtime_ns))
+            assert master.stat().st_size != before.st_size
+    second = api_main._local_visual_embedding("work")
+    assert second != first
+    assert api_main._local_visual_embedding("work") == second
+    assert len(reads) == 2, "only the changed signature should trigger a second decode"
+
+
+@pytest.mark.parametrize("change", ["pixels", "path", "version", "missing", "unreadable"])
+def test_local_descriptor_cache_revalidates_current_master(tmp_path, monkeypatch, change):
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master if master.exists() else None)
+    first = api_main._local_visual_embedding("work")
+    if change == "pixels":
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(master)
+    elif change == "path":
+        replacement = tmp_path / "replacement.png"
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(replacement)
+        monkeypatch.setattr(api_main, "_eink_master", lambda _: replacement)
+    elif change == "version":
+        monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_VERSION", "test-next-version")
+    elif change == "missing":
+        master.unlink()
+    else:
+        master.write_text("not an image")
+    if change in {"missing", "unreadable"}:
+        with pytest.raises(ValueError, match="evidence.*(missing|cannot be read)"):
+            api_main._local_visual_embedding("work")
+    elif change == "version":
+        reads = []
+        original_open = Image.open
+
+        def counted_open(*args, **kwargs):
+            reads.append(args[0])
+            return original_open(*args, **kwargs)
+
+        monkeypatch.setattr(Image, "open", counted_open)
+        assert api_main._local_visual_embedding("work") == first
+        assert len(reads) == 1, "descriptor recipe version is part of cache identity"
+    else:
+        assert api_main._local_visual_embedding("work") != first
+
+
+def test_local_descriptor_cache_still_checks_read_access(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master)
+    api_main._local_visual_embedding("work")
+    original_open = Path.open
+
+    def deny_master(path, *args, **kwargs):
+        if path == master:
+            raise PermissionError("test master access revoked")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", deny_master)
+    with pytest.raises(ValueError, match="cannot be read"):
+        api_main._local_visual_embedding("work")
+
+
+def test_local_descriptor_cache_is_bounded_and_does_not_share_mutable_vectors(
+    tmp_path, monkeypatch
+):
+    from fine_art_archive.api import main as api_main
+
+    monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES", 2)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("green", (40, 220, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    reads = []
+    original_open = Image.open
+
+    def counted_open(*args, **kwargs):
+        reads.append(args[0])
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", counted_open)
+    red = api_main._local_visual_embedding("red")
+    expected = red.copy()
+    red[0] = -100
+    green = api_main._local_visual_embedding("green")
+    assert api_main._local_visual_embedding("red") == expected
+    api_main._local_visual_embedding("blue")
+    assert len(api_main._visual_descriptor_cache) == 2
+    assert api_main._local_visual_embedding("red") == expected
+    assert len(reads) == 3, "a hit must promote red ahead of green for eviction"
+    assert api_main._local_visual_embedding("green") == green
+    assert len(reads) == 4, "the least recently used entry must be decoded again"
 
 
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
