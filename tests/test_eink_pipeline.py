@@ -1124,3 +1124,45 @@ def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_expor
     assert ui.count('document.getElementById("ek-dither").value') >= 3, (
         "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
     )
+
+
+def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
+    """One shared ``einkSpec()`` must feed preview, saved feed and SD export.
+
+    ``einkSpec()`` (index.html) builds the ``PlaylistSpec`` — filters, sort,
+    limit and the A15 ``selection_mode`` — from the operator controls. The
+    preview POSTs it to ``/eink/playlist/preview``, ``einkSavePlaylist``
+    persists it for the feed, and ``einkExport`` sends it to
+    ``/eink/playlist/export``. If any surface stopped calling the shared
+    builder (e.g. export inlined its own spec literal), the works previewed
+    could differ from the works delivered — the ``spec.*`` row of the
+    divergence audit, currently marked already-correct only on source
+    reading. Replacing ``spec: einkSpec()`` in the export body must fail
+    this test. The rotation ``interval`` is the one deliberate asymmetry:
+    it is saved with the playlist (feed rotation) and sent nowhere else.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "function einkSpec()" in ui, "no shared spec builder exists"
+    # Preview: the playlist preview request carries the shared spec.
+    assert "body: JSON.stringify({ spec: einkSpec(), target, sample: 24 })" in ui, (
+        "playlist preview does not send the shared einkSpec() — previewed "
+        "selection could diverge from the saved/exported selection"
+    )
+    # Saved feed: the playlist-create body carries the same shared spec,
+    # plus the rotation interval only a saved feed consumes.
+    assert (
+        "name: name.trim(), spec: einkSpec()," in ui
+    ), "saving a playlist (feed) does not send the shared einkSpec()"
+    assert (
+        'interval: document.getElementById("ek-interval").value,' in ui
+    ), "saved feed loses the operator's rotation interval"
+    # SD export: the export body carries the same shared spec.
+    assert 'spec: einkSpec(), target: document.getElementById("ek-target").value,' in ui, (
+        "SD export does not send the shared einkSpec() — exported selection "
+        "could diverge from the previewed/saved selection"
+    )
+    assert (
+        ui.count("spec: einkSpec()") == 3
+    ), "exactly preview, save and export should consume the shared spec builder"

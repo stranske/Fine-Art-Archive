@@ -104,8 +104,8 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
 ## Executed probes (this session, kept separate from inspected tests)
 
 - Baseline: `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`
-  → **185 passed** at the inspected commit plus this change (184 before the
-  dither/target regression below; a global 25% coverage gate in config
+  → **186 passed** at the inspected commit plus this change (185 before the
+  shared-spec regression below; a global 25% coverage gate in config
   reports 14.72% for this subset run; the tests themselves pass).
 - New regression `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
   in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1060):
@@ -125,6 +125,20 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   that test **FAILED** with "preview <img> does not forward the chosen
   target/dither". Restored via `git checkout`; SHA-256 back to
   `d65b9650…a52`; rerun **2 passed** (fit + dither/target).
+- Follow-on regression (this change)
+  `test_operator_ui_forwards_same_spec_to_preview_save_and_export`
+  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1129):
+  locks the `spec.*` row of the matrix above — preview, saved feed and SD
+  export all consume the one shared `einkSpec()` builder, and the rotation
+  `interval` reaches only the saved feed (the intentionally-unsupported
+  asymmetry for preview/export). **1 passed**; no new issue filed, since
+  this locks an already-correct row rather than uncovering an instance.
+- Deliberate-break gate for it: replacing `spec: einkSpec(),` with
+  `spec: {},` in the export body of `index.html` → that test **FAILED**
+  with "SD export does not send the shared einkSpec()". Restored via
+  `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **3 passed**
+  (fit + dither/target + shared-spec). No file under `src/` is touched
+  by the committed change.
 
 ## Follow-up filing and dedup
 
