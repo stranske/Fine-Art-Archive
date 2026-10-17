@@ -125,12 +125,20 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) (descriptor
   cache), [#808](https://github.com/stranske/Fine-Art-Archive/issues/808)
   (feed palette validators) — none covers instances 2–4 above.
-- Filing attempt: `gh issue create` for instances 2–4 was refused by the
-  environment token (`GraphQL: Resource not accessible by integration
-  (createIssue)`). **Blocker, not a silent skip:** one issue per
-  needs-investigation instance (2, 3, 4) must be filed by a token with issue
-  write access; until then #805 is the linked covering candidate for each,
-  with the per-instance text in this report as the filing body.
+- Filing attempts (retried individually, one per instance, all refused by
+  the environment token — `GraphQL: Resource not accessible by integration
+  (createIssue)`, exit 1 each):
+  1. "eink divergence: caller-supplied A15 evidence is preview-only" (instance 2)
+  2. "eink divergence: playlist preview ignores PlaylistIn.target" (instance 3)
+  3. "eink divergence: no-master count semantics differ across preview, feed
+     and export" (instance 4)
+  Post-retry verification: `gh search issues --repo stranske/Fine-Art-Archive
+  "eink divergence"` returns `[]`, confirming none was created and no
+  duplicate exists. **Blocker, not a silent skip:** these three issues must
+  be filed by a token with `issues:write`; until then
+  [#805](https://github.com/stranske/Fine-Art-Archive/issues/805) is the
+  linked covering candidate for each instance, and the titles above plus the
+  per-instance text in this report are the ready-to-file bodies.
 
 ## Reproducible checklist
 
