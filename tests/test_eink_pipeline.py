@@ -1234,3 +1234,31 @@ def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
         "re-resolve filters instead of using the feed selection"
     )
     assert "einkCardPlaylistId = id;" in ui, "no UI path chooses a saved feed for the card"
+
+
+def test_operator_ui_export_write_flag_and_saved_feed_clearing():
+    """Export write flag and saved-feed choice must not drift from delivery.
+
+    The exact-fields test locks the export body (``path, write, …``) but not
+    where ``write`` comes from: ``einkExport(false)`` is the dry run and
+    ``einkExport(true)`` writes the card. Wiring dry run to ``true`` would
+    write files the operator only meant to preview. Likewise a chosen saved
+    feed (``einkCardPlaylistId``) must be clearable via ``ek-clear`` and
+    auto-cleared when that feed is deleted, else export keeps sending a
+    stale ``playlist_id``. Flipping the dry-run button to
+    ``einkExport(true)`` in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'onclick="einkExport(false)"' in ui, "dry run must not write the card"
+    assert 'onclick="einkExport(true)"' in ui, "write button must write the card"
+    assert (
+        'if (!path) { toast("enter a card path first"); return; }' in ui
+    ), "export without a card path must stop before calling the export endpoint"
+    assert (
+        "ev.preventDefault(); einkCardPlaylistId = null;" in ui
+    ), "the 'use filters instead' clear link must drop the saved-feed choice"
+    assert (
+        "if (einkCardPlaylistId === id) einkCardPlaylistId = null;" in ui
+    ), "deleting the chosen saved feed must clear it from export, not send a stale id"

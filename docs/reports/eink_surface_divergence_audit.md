@@ -170,6 +170,21 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   SHA-256 back to `d65b9650…a52`; rerun **5 passed** (all UI
   forwarding regressions). No file under `src/` is touched by the
   committed change.
+- Follow-on regression (this change)
+  `test_operator_ui_export_write_flag_and_saved_feed_clearing` in
+  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1239):
+  locks where the export body's `write` flag comes from (dry run =
+  `einkExport(false)`, write card = `einkExport(true)`), the no-path
+  guard, and clearing a chosen saved feed via `ek-clear` or on its
+  deletion so export cannot send a stale `playlist_id`. **1 passed**;
+  no new issue filed, since this locks an already-correct row.
+- Deliberate-break gate for it: flipping the dry-run button to
+  `einkExport(true)` in `index.html` → that test **FAILED** with
+  "dry run must not write the card". Restored via `git checkout`;
+  SHA-256 back to `d65b9650…a52`; full re-run
+  `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow" --no-cov`
+  → **189 passed**. No file under `src/` is touched by the
+  committed change.
 
 ## Follow-up filing and dedup
 
