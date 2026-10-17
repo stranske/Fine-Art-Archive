@@ -1056,3 +1056,33 @@ def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     assert 'id="ek-selmode"' in ui, "no control emits it"
     assert "preference-diverse" in ui
     assert "selection_diagnostics" in ui, "the explanations are returned and rendered by nothing"
+
+
+def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
+    """The fit control must reach every surface the preview claims to match.
+
+    The companion preview renders each item through
+    ``/works/{id}/eink_preview``; the saved feed renders with ``pl.fit`` and
+    the SD export with the export body's ``fit``. If the UI's ``ek-fitmode``
+    value reached only the export, the on-screen preview would show
+    ``contain`` framing while the card/feed delivered ``cover`` — the exact
+    preview-vs-delivery divergence the audit tracks. Disconnecting the
+    ``fitQ`` interpolation in the preview ``<img>`` URL must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert 'id="ek-fitmode"' in ui, "no fit control exists for the operator to set"
+    # Preview images: the fit query param is built from the control and
+    # interpolated into the eink_preview URL actually rendered on screen.
+    assert "const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : \"\";" in ui
+    assert "eink_preview?target=${encodeURIComponent(target)}" in ui
+    assert "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui, (
+        "preview <img> does not forward the chosen fit — preview would not "
+        "match the framing delivered by feed/export"
+    )
+    # Saved feed and SD export consume the same control, so all three
+    # surfaces agree on framing for one operator action.
+    assert ui.count('document.getElementById("ek-fitmode").value || null') >= 2, (
+        "fit must be sent both when saving a playlist (feed) and on export (SD card)"
+    )

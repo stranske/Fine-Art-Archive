@@ -1,0 +1,143 @@
+# E-ink surface divergence audit
+
+## Provenance
+
+- Inspected commit: `41144c7ecd686ce55021c16b92a6e422e87b8b31` (branch `muse/issue-805`).
+- Companion UI readback: `src/fine_art_archive/ui/index.html` SHA-256
+  `d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52`, matching the
+  scope note at `84b50094050db03522a2e80c09617c0cc46cb5e2`.
+- Promise under audit: [PRODUCT_CONTRACT.md](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/docs/PRODUCT_CONTRACT.md:8)
+  (primary journey: "render e-ink cards/playlist → serve feed") and C2/C3/C5 at
+  lines 14–17; [A_SERIES_ROADMAP.md](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/docs/A_SERIES_ROADMAP.md:10)
+  (A11 monochrome-first, A15 quality×diversity). The preview must match delivery.
+- Enumeration method: `grep -rn` (no `rg` binary in this environment; equivalent
+  pattern) over `src/fine_art_archive/api/main.py` and `src/fine_art_archive/eink/`
+  for `eink_preview`, `_resolve_playlist`, `_render_feed_image`,
+  `eink_playlist_export`, `render_evidence`, `item_etag`, plus reading the
+  helpers in `src/fine_art_archive/display/render.py:235`
+  (`gamut_render_evidence`) and `src/fine_art_archive/preference/exhibition.py:58`
+  (`_validate_inputs` / `select_quality_diverse` at :100). Every matrix edge
+  below was verified by reading the cited source, not from search hits alone.
+- Surfaces: companion preview = `eink_playlist_preview` (main.py:688) +
+  `eink_preview` (main.py:744); saved-playlist resolution = `_resolve_playlist`
+  (main.py:2080); feed render = `_render_feed_image` (main.py:2123); SD export =
+  `eink_playlist_export` (main.py:810) → `eink/sdcard.py:export` (:127).
+
+## Input-by-surface matrix
+
+Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use only
+`already-correct`, `confirmed-bug`, `needs-investigation`,
+`intentionally-unsupported`.
+
+| Input | Preview (JSON+img) | _resolve_playlist | Feed image | SD export | Disposition |
+|---|---|---|---|---|---|
+| `spec.*` filters/sort/seed/limit (`PlaylistSpec`, playlist.py:120) | ● via `_build_eink_playlist` (main.py:696) | ● (main.py:2088) | ● via resolve | ● (main.py:825) | already-correct |
+| A15 `selection_mode=preference-diverse` | ● derived evidence when `None` (main.py:611-629) | ● same builder | ● same builder | ● same builder | already-correct |
+| Caller `quality_scores`/`embeddings` (PlaylistIn:589) | ● explicit empty stays empty (main.py:605-606,700-703) | ○ always derives (passes `None`) | ○ via resolve | ○ always derives | needs-investigation |
+| `ratings`, `dossier_ids` | ● inside builder (main.py:608,634) | ● | ● | ● | already-correct |
+| `target` | img ● (main.py:761); JSON ○ (`PlaylistIn.target` unused, main.py:688) | ● `pl.target` (main.py:2130) | ● | ● (main.py:819) | needs-investigation |
+| `dither` | img ● (main.py:763,791) | ● `pl.dither` | ● (main.py:2143,2162) | ● (main.py:852) | already-correct |
+| `fit` | img ● `coerce_fit` (main.py:762,791); UI forwards `fitQ` (index.html, `ek-fitmode`) | ● `pl.fit` (main.py:2134) | ● incl. ETag (main.py:2145) | ● (main.py:853, sdcard:164) | already-correct |
+| A11 `render_strategy` (render.py:235 → targets.py:210) | reported (main.py:727) + applied img (main.py:791) | — | applied + `X-Render-Strategy` + ETag (main.py:2146,2163) | applied + reported (sdcard:198-219, main.py:876) | already-correct |
+| Master file / mtime | ● opened (main.py:787) | ● no-master works dropped (main.py:2103) | ● mtime in ETag (main.py:2144) | ● missing skipped (sdcard:184) | already-correct |
+| `fmt` (png/bmp, main.py:651) | — PNG only | — | — PNG only | ● lossy refused (sdcard:147) | intentionally-unsupported |
+| `max_px` / `sample` | ● presentation only (main.py:749,712) | — | — full size | — full size | intentionally-unsupported |
+| `interval` / rotation `offset` | — | ● manifest/current | ● `rotation_index` (feed.py:150) | — static card order | intentionally-unsupported |
+| `compress_range` / `fast` | defaults (targets.py:227-228) | — | defaults | defaults (sdcard:136-137) | already-correct |
+| Palette / `palette.measured` | header (main.py:803) | — | header (main.py:2179) | manifest (sdcard:261) | already-correct |
+| No-master works in counts | `selected` includes them; `has_master` flags (main.py:719) | excluded | 404 if none (main.py:2275) | counted selected, skipped at write (sdcard:185) | needs-investigation |
+
+## Per-instance dispositions
+
+1. **already-correct — the three scope-named defects at this commit.** A15
+   evidence is derived inside the one shared builder `_build_eink_playlist`
+   (main.py:562-637) used by preview, resolve and export, so it can no longer
+   be derived at :635 and omitted downstream. A11 strategy is computed by
+   `render_evidence` (targets.py:210, delegating to
+   `gamut_render_evidence`, render.py:235) and *applied* by preview
+   (main.py:791), feed (main.py:2163) and SD export (sdcard:219), not merely
+   reported at main.py:727/876. The feed validator `item_etag` (feed.py:166)
+   binds `fit` and `render_strategy` (main.py:2140-2147). Scope line numbers
+   (:635/:785/:2042/:2096, targets.py:206) retain their reviewed-commit
+   provenance; at the inspected commit these edges are closed. Contract:
+   PRODUCT_CONTRACT.md:14-17 (C2/C3/C5).
+2. **needs-investigation — caller-supplied A15 evidence is preview-only.**
+   Only `eink_playlist_preview` forwards `quality_scores`/`embeddings`
+   (main.py:700-703); resolve/export always derive server-owned evidence.
+   A playlist previewed with explicit evidence can therefore select
+   differently once saved. Owner: existing covering candidate
+   [#805](https://github.com/stranske/Fine-Art-Archive/issues/805) (parent
+   audit issue); dedup below. Related open candidate
+   [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) covers
+   descriptor reuse, not this preview-only input.
+3. **needs-investigation — `PlaylistIn.target` is accepted and ignored.**
+   `eink_playlist_preview` never reads `body.target`; per-item evidence is
+   deliberately Spectra-6-calibrated (targets.py:210-218), so this may be
+   intentional, but the field invites a false belief. Owner: #805 (above).
+4. **needs-investigation — count semantics for no-master works differ.**
+   Preview `selected` includes them (flagged `has_master`), the feed excludes
+   them (main.py:2101-2104, by design so a panel never walks into a 404), and
+   export reports `selected` while skipping at write. Each surface is locally
+   justified; whether the counts should be reconciled in the UI is undecided.
+   Owner: #805.
+5. **already-correct — fit/dither/target plumbing.** UI `ek-fitmode` reaches
+   preview images (`fitQ`), saved playlists and export bodies (index.html,
+   verified by the new regression below); feed coerces `pl.fit or tgt.fit`
+   (main.py:2134) and binds the effective fit into the ETag (feed.py:180).
+6. **intentionally-unsupported — `fmt`, `max_px`/`sample`, `interval`.**
+   Feed/preview always serve PNG at panel or preview size; only the card has
+   a file format. Rotation exists only for polling devices. No follow-up.
+
+## What each cited test checks (inspected, not executed here)
+
+| Test file | Layer checked |
+|---|---|
+| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914) and now fit forwarding (new test below). No HTTP validators, no SD files. |
+| [test_eink_feed_endpoints.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_feed_endpoints.py:92) | HTTP validators (ETag/304 on fit and strategy change, :92/:150), image bytes, resolved IDs/counts, rotation. No SD output. |
+| [test_eink_export_format.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
+| [test_render_strategy.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
+
+## Executed probes (this session, kept separate from inspected tests)
+
+- Baseline: `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`
+  → **183 passed** (a global 25% coverage gate in config reports 14.72% for
+  this subset run; the tests themselves pass).
+- New regression `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
+  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1060):
+  **1 passed**.
+- Deliberate-break gate: removing `${fitQ}` from the preview `<img>` URL in
+  `src/fine_art_archive/ui/index.html` → that test **FAILED** with
+  "preview <img> does not forward the chosen fit". Restored via
+  `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **1 passed**.
+
+## Follow-up filing and dedup
+
+- Dedup command run: `gh issue list --repo stranske/Fine-Art-Archive --search divergence`
+  (returns placeholder rows through this environment's proxy; corroborated with
+  `gh search issues --repo stranske/Fine-Art-Archive divergence` and
+  `gh issue list --search "eink preview fit manifest"`).
+- Existing covering candidates: parent
+  [#805](https://github.com/stranske/Fine-Art-Archive/issues/805); open
+  [PR #821](https://github.com/stranske/Fine-Art-Archive/pull/821) (earlier
+  audit attempt on `codex/issue-805-eink-surface-audit`, still open — this
+  report is the `muse/issue-805` counterpart, not a duplicate filing);
+  [#806](https://github.com/stranske/Fine-Art-Archive/issues/806) (year-zero),
+  [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) (descriptor
+  cache), [#808](https://github.com/stranske/Fine-Art-Archive/issues/808)
+  (feed palette validators) — none covers instances 2–4 above.
+- Filing attempt: `gh issue create` for instances 2–4 was refused by the
+  environment token (`GraphQL: Resource not accessible by integration
+  (createIssue)`). **Blocker, not a silent skip:** one issue per
+  needs-investigation instance (2, 3, 4) must be filed by a token with issue
+  write access; until then #805 is the linked covering candidate for each,
+  with the per-instance text in this report as the filing body.
+
+## Reproducible checklist
+
+1. `grep -rn "render_evidence\|item_etag" src/fine_art_archive/api/main.py src/fine_art_archive/eink/`
+   and confirm strategy+fit appear at preview, feed and export call sites.
+2. `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`.
+3. Break/restore probe: delete `${fitQ}` from the preview `<img>` URL in
+   `index.html`, rerun the fit-forwarding test (must fail), restore, rerun.
+4. No physical-panel acceptance is claimed: palettes are estimates
+   (targets.py, `palette.measured` is false) and on-panel colour is unverified.
