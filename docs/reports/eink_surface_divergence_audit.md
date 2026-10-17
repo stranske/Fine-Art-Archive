@@ -182,6 +182,16 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
   Dedup reasoning is recorded in each issue body: pre-filing searches
   found no covering issue, and #806/#807/#808 were checked as
   non-covering.
+- Re-verification at `4d9536f` (shared-`einkSpec()` regression commit):
+  the exact listing command above, re-run under the filing credential,
+  again returns the same four OPEN rows (#826, #825, #827, parent #805),
+  and `gh issue view` for each of #825/#826/#827 again confirms OPEN with
+  the titles above. The default-credential placeholder rows were also
+  reproduced and are not treated as evidence. In the same session
+  `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`
+  re-ran to **186 passed**, and the committed diff from the bootstrap
+  commit `41144c7` to HEAD touches only this report and
+  `tests/test_eink_pipeline.py` — no file under `src/`.
 
 ## Reproducible checklist
 
