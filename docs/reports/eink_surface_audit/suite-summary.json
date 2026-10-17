@@ -1,0 +1,29 @@
+{
+  "inspected_commit": "3c23a10978e1c61151d6856576d56628c8737171",
+  "command": [
+    "/opt/anaconda3/bin/python3",
+    "-m",
+    "pytest",
+    "tests/test_eink_pipeline.py",
+    "tests/test_eink_feed_endpoints.py",
+    "tests/test_eink_export_format.py",
+    "tests/test_render_strategy.py",
+    "-q",
+    "-o",
+    "addopts=",
+    "--junitxml=<absolute-evidence>/805-surface-tests.xml"
+  ],
+  "junit_summary": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "201",
+    "time": "46.173",
+    "timestamp": "2026-10-17T09:56:07.219056-05:00"
+  },
+  "junit_sha256": "6ccbe001743f0410387203f393a75ab61c86b3ffded88bec2c6388b084f8f3e2",
+  "raw_log_sha256": "7b8b2afbe83138ffc53bd716e9ba18bb8655c8d4222c7093ef701b88c5cf79d1",
+  "hosted_ci": "UNKNOWN",
+  "physical_panel": "NOT_TESTED"
+}
