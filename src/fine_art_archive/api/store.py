@@ -447,7 +447,10 @@ def _load_master_facts() -> None:
         return
     if not isinstance(raw, dict):
         return
-    for key, value in list(raw.get("entries", {}).items())[:_MASTER_FACTS_MAX]:
+    entries = raw.get("entries", {})
+    if not isinstance(entries, dict):
+        return
+    for key, value in list(entries.items())[:_MASTER_FACTS_MAX]:
         try:
             path, mtime, size = key.rsplit("\u0000", 2)
             px, size_mb, health = value
