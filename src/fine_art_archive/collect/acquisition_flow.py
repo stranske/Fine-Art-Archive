@@ -186,7 +186,7 @@ def assess_master(
         w_cm=w_cm,
         h_px=h_px,
         w_px=w_px,
-        candidate_path=master_path if has_ref else None,
+        candidate_path=master_path,
         reference_path=reference_path if has_ref else None,
     )
     qd = quality_report(master_path, h_cm=h_cm, w_cm=w_cm).to_dict()
@@ -249,13 +249,21 @@ def run_acquisition_flow(
         if meta_p.exists():
             try:
                 meta = json.loads(meta_p.read_text())
-            except json.JSONDecodeError as exc:
+                if not isinstance(meta, dict):
+                    raise ValueError("staged metadata must be a JSON object")
+            except ValueError as exc:
+                meta = {}
                 LOGGER.warning(
                     "Ignoring malformed staged metadata for %s; continuing with empty metadata: %s",
                     meta_p,
                     exc,
                 )
         dim = meta.get("dimensions_original") or {}
+        if not isinstance(dim, dict):
+            LOGGER.warning(
+                "Ignoring malformed dimensions_original in %s; expected a JSON object", meta_p
+            )
+            dim = {}
         assessment = assess_master(
             master,
             source=chosen_source,

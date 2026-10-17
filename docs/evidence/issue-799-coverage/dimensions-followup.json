@@ -1,0 +1,339 @@
+{
+  "starting_head": "c42a0604dc6021a161414a36a73f5fb04401f462",
+  "scope": "Fix nested non-object dimensions_original recovery in the existing verify/acquisition targets; no new ranking target selected.",
+  "ranking": "The original verify/acquisition coverage targets were already 100% at the starting head; PR #811 withdrew API expansion as outside #799 scope. Existing ranking is retained in review-gap-ranking.csv.",
+  "initial_reproduction": "FFFF                                                                     [100%]\n=================================== FAILURES ===================================\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[array] ________\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco0')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f0c435827b0>\ndimensions = [60, 80]\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\"\n            \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:183: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco0/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco0/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco0/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'list' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[string] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco1')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f0c3fba82d0>\ndimensions = '60 x 80'\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\"\n            \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:183: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco1/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco1/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco1/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'str' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[number] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco2')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f0c3fba8690>\ndimensions = 60\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\"\n            \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:183: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco2/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco2/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco2/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'int' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n______ test_run_acquisition_flow_recovers_non_object_dimensions[boolean] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco3')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f0c4011b6f0>\ndimensions = True\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\"\n            \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:183: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco3/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco3/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-2/test_run_acquisition_flow_reco3/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'bool' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[array] - AttributeError: 'list' object has no attribute 'get'\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[string] - AttributeError: 'str' object has no attribute 'get'\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[number] - AttributeError: 'int' object has no attribute 'get'\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[boolean] - AttributeError: 'bool' object has no attribute 'get'\n4 failed in 0.29s\n",
+  "mutation_proofs": [
+    {
+      "test": "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[array]",
+      "command": [
+        "pytest",
+        "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[array]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "mutation": "Remove the dimensions-object guard",
+      "red_exit": 1,
+      "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[array] ________\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-3/test_run_acquisition_flow_reco0')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f6e711f0050>\ndimensions = [60, 80]\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\" \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:182: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-3/test_run_acquisition_flow_reco0/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-3/test_run_acquisition_flow_reco0/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-3/test_run_acquisition_flow_reco0/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'list' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[array] - AttributeError: 'list' object has no attribute 'get'\n1 failed in 0.27s\n",
+      "green_exit": 0,
+      "green_output": ".                                                                        [100%]\n1 passed in 0.63s\n"
+    },
+    {
+      "test": "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[string]",
+      "command": [
+        "pytest",
+        "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[string]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "mutation": "Remove the dimensions-object guard",
+      "red_exit": 1,
+      "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[string] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-5/test_run_acquisition_flow_reco0')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7ff1b4934050>\ndimensions = '60 x 80'\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\" \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:182: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-5/test_run_acquisition_flow_reco0/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-5/test_run_acquisition_flow_reco0/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-5/test_run_acquisition_flow_reco0/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'str' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[string] - AttributeError: 'str' object has no attribute 'get'\n1 failed in 0.24s\n",
+      "green_exit": 0,
+      "green_output": ".                                                                        [100%]\n1 passed in 0.20s\n"
+    },
+    {
+      "test": "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[number]",
+      "command": [
+        "pytest",
+        "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[number]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "mutation": "Remove the dimensions-object guard",
+      "red_exit": 1,
+      "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_______ test_run_acquisition_flow_recovers_non_object_dimensions[number] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-7/test_run_acquisition_flow_reco0')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7fd03b4bc050>\ndimensions = 60\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\" \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:182: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-7/test_run_acquisition_flow_reco0/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-7/test_run_acquisition_flow_reco0/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-7/test_run_acquisition_flow_reco0/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'int' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[number] - AttributeError: 'int' object has no attribute 'get'\n1 failed in 0.24s\n",
+      "green_exit": 0,
+      "green_output": ".                                                                        [100%]\n1 passed in 0.20s\n"
+    },
+    {
+      "test": "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[boolean]",
+      "command": [
+        "pytest",
+        "tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[boolean]",
+        "-o",
+        "addopts=",
+        "--no-cov",
+        "-q",
+        "-m",
+        "not slow"
+      ],
+      "mutation": "Remove the dimensions-object guard",
+      "red_exit": 1,
+      "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n______ test_run_acquisition_flow_recovers_non_object_dimensions[boolean] _______\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-9/test_run_acquisition_flow_reco0')\ncaplog = <_pytest.logging.LogCaptureFixture object at 0x7f37a9700050>\ndimensions = True\n\n    @pytest.mark.parametrize(\n        \"dimensions\", [[60, 80], \"60 x 80\", 60, True], ids=[\"array\", \"string\", \"number\", \"boolean\"]\n    )\n    def test_run_acquisition_flow_recovers_non_object_dimensions(\n        tmp_path: Path, caplog: pytest.LogCaptureFixture, dimensions: object\n    ) -> None:\n        invalid = _work(tmp_path / \"invalid\", w=80, h=60)\n        valid = _work(tmp_path / \"valid\", w=80, h=60)\n        (invalid / \"meta.json\").write_text(\n            json.dumps(\n                {\n                    \"title\": \"Paris Street\",\n                    \"artist\": {\"name\": \"Gustave Caillebotte\"},\n                    \"dimensions_original\": dimensions,\n                }\n            )\n        )\n        inventory = tmp_path / \"inventory.csv\"\n        inventory.write_text(\n            \"rel_path,size_bytes,title,artist\\n\" \"Paris.jpeg,1000,Paris Street,Gustave Caillebotte\\n\"\n        )\n    \n        with caplog.at_level(logging.WARNING, logger=af.__name__):\n>           results = af.run_acquisition_flow(\"met\", [invalid, valid], inventory_csv=inventory)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_acquisition_flow.py:182: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nsource = 'met'\nwork_dirs = [PosixPath('/tmp/pytest-of-runner/pytest-9/test_run_acquisition_flow_reco0/invalid'), PosixPath('/tmp/pytest-of-runner/pytest-9/test_run_acquisition_flow_reco0/valid')]\nmax_items = None, candidate_sources = None, host_qid = None\nwork_class = 'western-painting-19c', aggregates = None\nsource_quality_path = None, host_registry_path = None, archive = None\ninventory_csv = PosixPath('/tmp/pytest-of-runner/pytest-9/test_run_acquisition_flow_reco0/inventory.csv')\ndino_hook = None\n\n    def run_acquisition_flow(\n        source: str,\n        work_dirs: list[Path],\n        *,\n        max_items: int | None = None,\n        candidate_sources: list[str] | None = None,\n        host_qid: str | None = None,\n        work_class: str = \"western-painting-19c\",\n        aggregates: dict | None = None,\n        source_quality_path: Path | None = None,\n        host_registry_path: Path | None = None,\n        archive: Sequence[ArchiveEntry] | None = None,\n        inventory_csv: Path | None = None,\n        dino_hook=None,\n    ) -> list[AcquisitionAssessment]:\n        \"\"\"Assess a batch of ``source`` acquisitions through verify + quality, and \u2014\n        when an ``archive`` index is supplied \u2014 gate each through the D017 dedup\n        cascade (sha256 -> pHash -> artist-Q-ID -> metadata, plus an optional DINOv2\n        ``dino_hook``), attaching the verdict to each assessment's ``dedup`` field.\n        When ``inventory_csv`` is supplied, the candidate title/artist are also\n        checked against the inventory name index and attached as ``inventory_match``.\n    \n        Each entry in ``work_dirs`` is a directory holding ``master.jpg`` and an\n        optional ``meta.json`` (``dimensions_original`` + ``artist``/``title``). The\n        source name is validated first; directories without a master are skipped.\n        \"\"\"\n        chosen_source = source\n        if candidate_sources is None and host_qid:\n            candidate_sources = source_chain_for_host(host_qid, path=host_registry_path)\n            if not candidate_sources:\n                raise ValueError(f\"host {host_qid!r} has no acquisition source chain\")\n        if candidate_sources:\n            loaded_aggregates = aggregates or load_source_quality_config(source_quality_path)\n            chosen_source, _reason = select_source(work_class, candidate_sources, loaded_aggregates)\n    \n        get_collector(chosen_source)  # validate the source up front\n        selected = work_dirs if max_items is None else work_dirs[:max_items]\n        inventory_rows = load_inventory_rows(inventory_csv) if inventory_csv is not None else None\n        results: list[AcquisitionAssessment] = []\n        for raw in selected:\n            wd = Path(raw)\n            master = wd / \"master.jpg\"\n            if not master.exists():\n                continue\n            meta: dict = {}\n            meta_p = wd / \"meta.json\"\n            if meta_p.exists():\n                try:\n                    meta = json.loads(meta_p.read_text())\n                    if not isinstance(meta, dict):\n                        raise ValueError(\"staged metadata must be a JSON object\")\n                except ValueError as exc:\n                    meta = {}\n                    LOGGER.warning(\n                        \"Ignoring malformed staged metadata for %s; continuing with empty metadata: %s\",\n                        meta_p,\n                        exc,\n                    )\n            dim = meta.get(\"dimensions_original\") or {}\n            assessment = assess_master(\n                master,\n                source=chosen_source,\n>               h_cm=dim.get(\"h_cm\"),\n                     ^^^^^^^\n                w_cm=dim.get(\"w_cm\"),\n            )\nE           AttributeError: 'bool' object has no attribute 'get'\n\nsrc/fine_art_archive/collect/acquisition_flow.py:265: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[boolean] - AttributeError: 'bool' object has no attribute 'get'\n1 failed in 0.26s\n",
+      "green_exit": 0,
+      "green_output": ".                                                                        [100%]\n1 passed in 0.21s\n"
+    }
+  ],
+  "mutation_harness": "import hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\n\nsource = Path('src/fine_art_archive/collect/acquisition_flow.py')\noriginal = source.read_bytes()\nguard = (\n    b'        if not isinstance(dim, dict):\\n'\n    b'            LOGGER.warning(\\n'\n    b'                \"Ignoring malformed dimensions_original in %s; expected a JSON object\", meta_p\\n'\n    b'            )\\n'\n    b'            dim = {}\\n'\n)\nassert original.count(guard) == 1\nrecords = []\nenvironment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')\ntry:\n    for case in ('array', 'string', 'number', 'boolean'):\n        node = 'tests/test_acquisition_flow.py::test_run_acquisition_flow_recovers_non_object_dimensions[' + case + ']'\n        command = ['pytest', node, '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']\n        source.write_bytes(original.replace(guard, b''))\n        try:\n            red = subprocess.run(command, capture_output=True, text=True, env=environment, timeout=60)\n        finally:\n            source.write_bytes(original)\n        green = subprocess.run(command, capture_output=True, text=True, env=environment, timeout=60)\n        records.append(dict(test=node, command=command, mutation='Remove the dimensions-object guard',\n                            red_exit=red.returncode, red_output=red.stdout + red.stderr,\n                            green_exit=green.returncode, green_output=green.stdout + green.stderr))\n        Path('/tmp/faa811-dimensions/proofs.json').write_text(json.dumps(records, indent=2) + '\\n')\n        assert red.returncode == 1 and 'AttributeError' in red.stdout, records[-1]\n        assert green.returncode == 0, records[-1]\n        print(case, 'RED', red.returncode, 'GREEN', green.returncode, flush=True)\nfinally:\n    source.write_bytes(original)\n    assert hashlib.sha256(source.read_bytes()).digest() == hashlib.sha256(original).digest()\n",
+  "source_restoration": "Each source mutation was restored in finally; SHA-256 equality asserted after all four cases.",
+  "source_sha256": {
+    "src/fine_art_archive/collect/acquisition_flow.py": "3ba38323620b71f949ddc9baf92d5b141fa850757ff6a08b48d9eeb6f46db53d",
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "tests/test_acquisition_flow.py": "fe2706eb99c1db4be28dbc4964b320b4b66957dece4318127e7b64f38fd4e5cb"
+  },
+  "environment": "Python 3.14.8; unchanged external selector-polling harness from staged-json-followup.json for full-suite tests and Black. Black uses one worker because sandboxed forkserver sockets are unavailable. No extra test exclusions.",
+  "external_sitecustomize": "\"\"\"Poll selectors when sandboxed socketpair wakeup writes are unavailable.\"\"\"\nimport selectors\n\n_select = selectors.EpollSelector.select\n\n\ndef _poll_select(self, timeout=None):\n    return _select(self, 0.01 if timeout is None else min(timeout, 0.01))\n\n\nselectors.EpollSelector.select = _poll_select\n",
+  "baseline_gate": {
+    "head": "c42a0604dc6021a161414a36a73f5fb04401f462",
+    "url": "https://github.com/stranske/Fine-Art-Archive/actions/runs/38988750791",
+    "conclusion": "success"
+  },
+  "baseline": {
+    "totals": {
+      "covered_lines": 9425,
+      "num_statements": 10228,
+      "percent_covered": 89.53454755709743,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.1490027375831,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3608,
+      "num_partial_branches": 495,
+      "covered_branches": 2963,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.12305986696231,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 130,
+        "num_statements": 130,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 40,
+        "num_partial_branches": 0,
+        "covered_branches": 40,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "targeted_before": {
+    "totals": {
+      "covered_lines": 368,
+      "num_statements": 368,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 100,
+      "num_partial_branches": 0,
+      "covered_branches": 100,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 130,
+        "num_statements": 130,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 40,
+        "num_partial_branches": 0,
+        "covered_branches": 40,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "targeted_after": {
+    "totals": {
+      "covered_lines": 371,
+      "num_statements": 371,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 102,
+      "num_partial_branches": 0,
+      "covered_branches": 102,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 133,
+        "num_statements": 133,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 42,
+        "num_partial_branches": 0,
+        "covered_branches": 42,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "checks": {
+    "black": "All done! \u2728 \ud83c\udf70 \u2728\n361 files would be left unchanged.\n",
+    "ruff": "All checks passed!",
+    "whitespace": "git diff --check passed"
+  },
+  "baseline_result": "4 failed, 2327 passed, 12 skipped, 1 warning in 160.06s (0:02:40)",
+  "targeted_result": "121 passed, 4 skipped in 6.37s",
+  "final": {
+    "totals": {
+      "covered_lines": 9428,
+      "num_statements": 10231,
+      "percent_covered": 89.5383281554801,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.15130485778516,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3610,
+      "num_partial_branches": 495,
+      "covered_branches": 2965,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.13296398891967,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 133,
+        "num_statements": 133,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 42,
+        "num_partial_branches": 0,
+        "covered_branches": 42,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "final_result": "4 failed, 2331 passed, 12 skipped, 1 warning in 159.21s (0:02:39)",
+  "baseline_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "final_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "commands": {
+    "full_baseline": "PYTHONPATH=/tmp/faa811-dimensions COVERAGE_FILE=/tmp/faa811-dimensions/baseline.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa811-dimensions/baseline.json",
+    "full_final": "PYTHONPATH=/tmp/faa811-dimensions COVERAGE_FILE=/tmp/faa811-dimensions/final.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa811-dimensions/final.json",
+    "targeted": "COVERAGE_FILE=/tmp/faa811-dimensions/target.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -q -m 'not slow' --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa811-dimensions/target.json",
+    "black_format": "PYTHONPATH=/tmp/faa811-dimensions BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/collect/acquisition_flow.py tests/test_acquisition_flow.py",
+    "black_check": "PYTHONPATH=/tmp/faa811-dimensions BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "ruff": "ruff check src/fine_art_archive/collect/acquisition_flow.py tests/test_acquisition_flow.py",
+    "whitespace": "git diff --check"
+  },
+  "publication": {
+    "local_staging": "fatal: Unable to create '.git/index.lock': Read-only file system",
+    "commit_created": false,
+    "live_pr_update": "MCP tool call requires approval, but approval policy is never",
+    "pr": 811,
+    "last_observed_state": "open",
+    "last_observed_isDraft": false
+  }
+}

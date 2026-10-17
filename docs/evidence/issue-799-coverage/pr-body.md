@@ -129,48 +129,95 @@ The starting head `d739ecc` has a successful [Gate run](https://github.com/stran
 
 PR #804 was rechecked open with draft=false. Its live body update remains blocked by the approval policy. Staging these changes failed with `Unable to create '.git/index.lock': Read-only file system`; no commit or push was possible. The new tests, receipts, and reconciled body remain in the working tree for the automation handoff.
 
-## Ranked research-reporting API follow-up
+## Research-reporting scope correction
 
-At starting head `21c3082`, fresh full-suite coverage is **89.52%**, below the 90% stop condition. `api/main.py` remains the next target under the repository's repair-history proxy, churn, then uncovered-mass ranking: **27 proxy repairs, 56 touches, 69 missing statements + 42 missing branches**. The [refreshed ranking](research-gap-ranking.csv) uses all reachable commit history and missing statements plus branches. The proxy matches commit subjects against `\b(fix|bug|correct|repair|guard|regression)\w*`; it is not a verified escaped-defect count.
+PR #811 removes the research-reporting API test file and its two evidence artifacts because they are outside issue #799's verify/acquisition scope. Their claims and relative links are withdrawn from this delivery record. Historical bytes remain recoverable from commit `a49cbc6303bf9db8a19fbb66373dce20b6cd2ac0`; they are not current acceptance evidence. Earlier measurements above describe their named historical revisions and do not claim results for this cleanup head.
 
-The review-contract test file and receipts removed in `21c3082` remain removed. Their earlier 25-unit gain is excluded from these measurements. This follow-up adds ten research-reporting HTTP cases: absent works leave no request or lock state; absent dossier UI produces a handled 404; reference authority includes exactly 8 and excludes unscored/below-threshold sources; reports count unread leads without exposing the source pool; and section, citation, and source-kind saturation are checked independently, below the overall score ceiling. Actual counts remain visible on a fully developed dossier.
+## Embedding vector and threshold follow-up
 
-No production defect was found and no production change is retained. This continues PR #804; no new PR is opened. All ten cases were individually run against temporary production-source mutations, failed, and passed after restoring the original bytes. Commands, complete outputs, exact mutations, coverage changes, and source/test hashes are in [research-reporting-proofs.json](research-reporting-proofs.json).
+The current head already covers both ranked targets at **100%**, with zero missing statements or branches. The original 62-unit increment was merged in #804; this follow-up claims no additional coverage increment. Four new cases strengthen vector validation (empty vectors and a zero reference vector) and the cosine threshold contract (equality passes, a value just below the threshold fails). No production change was necessary.
 
-| Test case in `tests/test_api_research_reporting.py` | Deliberate defect | Broken | Restored |
+Each new case was individually run against the stated temporary production-source mutation, failed, then passed after exact source restoration. Detailed output: [embedding-boundary-mutation-proofs.txt](embedding-boundary-mutation-proofs.txt); commands, environment, coverage summaries, and source hashes: [embedding-boundary-followup.json](embedding-boundary-followup.json).
+
+| New case | Deliberate defect | Broken | Restored |
 |---|---|---|---|
-| `test_unknown_work_does_not_create_research_state[report]` | Return the wrong status for an unknown research work | 1 failed, 1 warning in 0.93s (exit 1) | 1 passed, 1 warning in 0.46s (exit 0) |
-| `test_unknown_work_does_not_create_research_state[request]` | Accept a research request for an unknown work | 1 failed, 1 warning in 1.06s (exit 1) | 1 passed, 1 warning in 0.45s (exit 0) |
-| `test_missing_dossier_page_returns_a_handled_error` | Remove the missing dossier UI guard | 1 failed, 1 warning in 0.98s (exit 1) | 1 passed, 1 warning in 0.50s (exit 0) |
-| `test_research_report_identifies_missing_authoritative_sources[unscored]` | Treat unscored references as high authority | 1 failed, 1 warning in 0.51s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
-| `test_research_report_identifies_missing_authoritative_sources[below]` | Accept sources below the high-authority threshold | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
-| `test_research_report_identifies_missing_authoritative_sources[boundary]` | Exclude sources exactly at the high-authority threshold | 1 failed, 1 warning in 0.54s (exit 1) | 1 passed, 1 warning in 0.49s (exit 0) |
-| `test_developed_dossier_saturates_score_without_hiding_actual_counts` | Clip reported section counts to the scoring cap | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.47s (exit 0) |
-| `test_dossier_score_saturates_each_evidence_component[section]` | Remove the section score saturation | 1 failed, 1 warning in 0.53s (exit 1) | 1 passed, 1 warning in 0.48s (exit 0) |
-| `test_dossier_score_saturates_each_evidence_component[citations]` | Remove the citation score saturation | 1 failed, 1 warning in 0.52s (exit 1) | 1 passed, 1 warning in 0.50s (exit 0) |
-| `test_dossier_score_saturates_each_evidence_component[source-kinds]` | Remove the source-kind score saturation | 1 failed, 1 warning in 0.52s (exit 1) | 1 passed, 1 warning in 0.48s (exit 0) |
+| `test_embedding_similarity_validates_vectors[empty-vectors]` | Remove the empty-vector guard | 1 failed in 0.21s (exit 1) | 1 passed in 0.19s (exit 0) |
+| `test_embedding_similarity_validates_vectors[zero-reference]` | Ignore a zero-norm reference vector | 1 failed in 0.65s (exit 1) | 1 passed in 0.17s (exit 0) |
+| `test_embedding_similarity_respects_threshold_boundary[at-threshold]` | Reject cosine similarity exactly at the threshold | 1 failed in 0.21s (exit 1) | 1 passed in 0.17s (exit 0) |
+| `test_embedding_similarity_respects_threshold_boundary[below-threshold]` | Accept every non-negative cosine regardless of the requested threshold | 1 failed in 0.21s (exit 1) | 1 passed in 0.17s (exit 0) |
 
-Matched full-suite `api/main.py` coverage: **69 + 42 (93.95%) → 65 + 37 (94.44%)** missing statements + branches. This covers **9 additional units**, with 0 lost statements and 0 lost branches. Repository blended coverage rises **89.52% → 89.59%**. The original `verify.py` and `acquisition_flow.py` targets remain at **100%** with zero missing statements or branches; their previously established 62-unit improvement is preserved.
+Targeted verification: **109 passed, 4 skipped in 4.44s**. `verify.py` (238 statements + 60 branches) and `acquisition_flow.py` (127 statements + 38 branches) each remain **100% → 100%**, with **0 → 0** missing units.
 
-- Targeted coverage: **836 passed, 5 skipped, 1 warning in 102.22s (0:01:42)**. `api/main.py`: **94.44%**; both original target rows: **100%**.
-- Baseline full suite: **4 failed, 2312 passed, 12 skipped, 1 warning in 157.77s (0:02:37)**.
-- Final full suite: **4 failed, 2322 passed, 12 skipped, 1 warning in 160.60s (0:02:40)**.
-- Both full suites have the same four `tests/test_workspace_conflict_guard.py` failures because `/home/runner/.cache/fine-art-archive` is read-only. No existing tests were disabled. Fresh CI acceptance for these changes remains pending.
-- Whole-tree Black: **362 files unchanged**, exit 0. Changed-file Ruff and `git diff --check` pass.
+Full baseline: **4 failed, 2315 passed, 12 skipped, 1 warning in 120.82s (0:02:00)**. Full final: **4 failed, 2319 passed, 12 skipped, 1 warning in 120.91s (0:02:00)**. Both report **89.53% → 89.53%** blended coverage and the same four `test_workspace_conflict_guard.py` failures because `/home/runner/.cache/fine-art-archive` is read-only. Full-suite-green and fresh-head CI acceptance remain unchecked. Whole-tree Black (361 files), changed-file Ruff, and `git diff --check` pass.
 
-Targeted command:
-```bash
-PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-target-complete.coverage pytest tests/test_companion_api.py tests/test_companion_app*.py tests/test_api_*.py tests/test_review_gates.py tests/test_acquisition_review.py tests/test_eink_*.py tests/test_judgement_surfaces.py tests/test_subject_action_state.py tests/test_variant_candidate_path_confinement.py tests/test_variant_upgrade_labels_and_dims.py tests/test_deepzoom_*.py tests/test_healthz_manifest_drift.py tests/test_candidate_image_proxy.py tests/test_operator_messages_name_real_artifacts.py tests/test_quarantine_ttl_report.py tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -q -m 'not slow' --cov-reset --cov=fine_art_archive.api.main --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa804-target-complete.json
-```
+Publication is blocked for this follow-up: local staging cannot create `.git/index.lock` on the read-only filesystem, and the GitHub connector's create-tree call returns `MCP tool call requires approval, but approval policy is never`. The new tests and receipts are working-tree changes; no new commit was created and the live PR body was not updated. A prepared replacement body is available at `/tmp/faa-811-pr-body.md`. The earlier checked tasks below describe the historical merged delivery, not publication of this follow-up.
 
-Full-suite command (use `start` for the matched baseline):
-```bash
-PYTHONPATH=/tmp/faa804-harness COVERAGE_FILE=/tmp/faa804-final.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa804-final.json
-```
+## Current-run reconciliation (2026-10-17)
 
-The commands use the unchanged temporary selector-polling harness documented in [verification-followup.json](verification-followup.json) because sandboxed socketpair wakeups are unavailable. The harness changes no repository code or tests.
+Reviewed `e33e8ed`, `45913bd`, `88f3d1a`, and `fea8fed` before continuing. A fresh targeted run at `fea8fed` passed **109 tests, 4 skipped**; both targets show **100%**, zero missing statements or branches. The original 62-unit improvement was merged in #804. The completed coverage checkboxes below reflect verified existing implementation. PR #811 is open with `draft=false`. Its live checklist update was attempted but rejected: `MCP tool call requires approval, but approval policy is never`. Full-suite-green and fresh-head CI acceptance remain unchecked.
 
-Staging the verified tests failed because `.git/index.lock` cannot be created on the read-only `.git` filesystem. No commit or push was possible; the source tests and evidence are ready for the automation handoff. The connector rejected the PR title/body update: `MCP tool call requires approval, but approval policy is never`. Final readiness recheck confirms PR #804 is open with `draft=false`, still at `21c3082`. The five continuation checkboxes are supported by local evidence in this proposed body; the live PR body could not be updated.
+## EXIF acquisition bug fix (current run)
+
+The new regression exposes a real bug in `assess_master`: without a usable hash reference, it passed `candidate_path=None` to verification. That prevented the existing EXIF-aware aspect check from reading the master. A rotated portrait was incorrectly rejected against portrait metadata and could be falsely accepted against landscape metadata. The one-line fix always passes the master path; reference-dependent checks retain their existing availability gate.
+
+Four cases in `tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference` cover matching portrait metadata and the false-pass landscape trap, each with no reference and with a missing reference file. All four failed on the original source. Each case was then run separately with the fix deliberately reverted (failure) and restored (pass). Exact source restoration was checked with SHA-256.
+
+| Case suffix | Broken | Restored |
+|---|---|---|
+| `[upright-match-no-reference]` | 1 failed in 0.19s (exit 1) | 1 passed in 0.54s (exit 0) |
+| `[upright-match-missing-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `[raw-size-trap-no-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+| `[raw-size-trap-missing-reference]` | 1 failed in 0.17s (exit 1) | 1 passed in 0.13s (exit 0) |
+
+Fresh before/after coverage is **100% → 100%** for both targets, with **0 → 0** missing statements or branches. This behavioral fix claims no additional covered units; #804 already delivered all 62 ranked units. Targeted validation: **113 passed, 4 skipped in 4.65s**. Full baseline: **4 failed, 2319 passed, 12 skipped, 1 warning in 124.75s**. Full final: **4 failed, 2323 passed, 12 skipped, 1 warning in 125.29s**. Both full runs measure **89.53%**, below the stop threshold, and fail only on the same four read-only-home tests. No tests were disabled. The full-suite-green and fresh-head CI requirements remain unmet.
+
+Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass. Commands, individual RED/GREEN output, coverage summaries, environment details, and hashes are in [exif-assessment-followup.json](exif-assessment-followup.json). No changes were deferred within the fix; external publication and fresh CI remain blocked. Local staging failed because `.git` is read-only. Updating the live PR body was rejected because connector approval is required and the approval policy is `never`. No commit or push was created. A prepared replacement body is at `/tmp/faa-811-pr-body.md`.
+
+## Non-object staged metadata bug fix (2026-10-17)
+
+The original ranked targets were already 100% at the starting head `fded75b`. No new target was selected: PR #811 explicitly withdrew the API expansion as outside issue #799's verify/acquisition scope. The original ranking remains in [review-gap-ranking.csv](review-gap-ranking.csv); the original 62-unit coverage improvement was merged in #804.
+
+Four new regressions exposed a batch crash when staged `meta.json` contained valid JSON that was not an object (`null`, array, string, or number). All four failed on the original source with `AttributeError`. The targeted fix checks the decoded type and routes invalid values through the existing warning and empty-metadata recovery. Tests verify that the invalid work remains unverified, the next valid work passes, quality/fitness survive, and the warning identifies the bad sidecar.
+
+Each collected case was separately run with the production type guard deliberately removed (failure) and restored (pass). Source restoration was protected by `finally` and verified by SHA-256.
+
+| Case | Guard removed | Restored |
+|---|---|---|
+| `null` | 1 failed in 0.82s (exit 1) | 1 passed in 0.47s (exit 0) |
+| `array` | 1 failed in 0.40s (exit 1) | 1 passed in 0.48s (exit 0) |
+| `string` | 1 failed in 0.39s (exit 1) | 1 passed in 0.47s (exit 0) |
+| `number` | 1 failed in 0.38s (exit 1) | 1 passed in 0.48s (exit 0) |
+
+Targeted baseline: **113 passed, 4 skipped, 4 deselected in 4.41s (new cases omitted for pre-fix measurement)**. Final targeted run: **117 passed, 4 skipped in 6.14s**. Both target rows remain **100% → 100%**, with **0 → 0** missing statements/branches. `acquisition_flow.py` grows from 127 statements + 38 branches to 130 + 40; all new units are covered. This is a behavioral fix, with no new reduction of the historical uncovered units claimed.
+
+Full baseline: **4 failed, 2323 passed, 12 skipped, 1 warning in 157.11s (0:02:37)**. Full final: **4 failed, 2327 passed, 12 skipped, 1 warning in 158.37s (0:02:38)**. Blended coverage: **89.5308% → 89.5345%**. The same four `test_workspace_conflict_guard.py` failures occur in both runs because `/home/runner/.cache/fine-art-archive` is read-only. Full-suite-green and fresh-head CI remain unchecked. No tests were disabled. Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass.
+
+Commands, mutation harness, full individual RED/GREEN output, exact coverage summaries, source hashes, and environment details are in [staged-json-followup.json](staged-json-followup.json).
+
+Publication remains blocked: Git staging cannot create `.git/index.lock` on the read-only filesystem. The GitHub connector rejected both the PR-body update and remote source-tree creation with `MCP tool call requires approval, but approval policy is never`. No new commit was created; changes and receipts remain in the working tree. The prepared replacement body is at `/tmp/faa811-current/pr-body.md`. PR #811 was verified open with `isDraft=false`.
+
+## Nested staged dimensions recovery (2026-10-17)
+
+The first unchecked contract asks for the next ranked target. `api/main.py` is next in [review-gap-ranking.csv](review-gap-ranking.csv), but #811 explicitly withdrew API work as outside this issue's verify/acquisition scope. That target is deferred; no new coverage target is selected. Both original targets were already 100% at starting head `c42a060`.
+
+Four new regressions exposed another batch crash: an object sidecar can contain a non-object `dimensions_original` (array, string, number, or boolean). Each failed on the starting production source with `AttributeError`. A five-line guard now warns and assesses the image without physical dimensions. Title and artist remain available for inventory matching, the invalid work remains unverified, and the next valid work is assessed normally. No other production code changed.
+
+Each parameter of `test_run_acquisition_flow_recovers_non_object_dimensions` was run separately with the guard removed, then with the exact source bytes restored in `finally` (SHA-256 checked):
+
+| Case | Broken | Restored |
+|---|---|---|
+| array | 1 failed in 0.27s (exit 1) | 1 passed in 0.63s (exit 0) |
+| string | 1 failed in 0.24s (exit 1) | 1 passed in 0.20s (exit 0) |
+| number | 1 failed in 0.24s (exit 1) | 1 passed in 0.20s (exit 0) |
+| boolean | 1 failed in 0.26s (exit 1) | 1 passed in 0.21s (exit 0) |
+
+Targeted run: **121 passed, 4 skipped in 6.37s**. `verify.py` remains **100% → 100%** (238 statements + 60 branches); `acquisition_flow.py` remains **100% → 100%** (130 + 40 → 133 + 42), zero missing units in both. All newly added units are covered; no reduction of the historical uncovered units is claimed. #804 already delivered the original 62-unit increment.
+
+Full baseline: **4 failed, 2327 passed, 12 skipped, 1 warning in 160.06s (0:02:40)**. Full final: **4 failed, 2331 passed, 12 skipped, 1 warning in 159.21s (0:02:39)**. Blended coverage: **89.5345% → 89.5383%**. Both runs have exactly the same four read-only-home failures in `test_workspace_conflict_guard.py`; no tests were disabled. The full-suite-green requirement remains unchecked. Starting-head [Gate passed](https://github.com/stranske/Fine-Art-Archive/actions/runs/38988750791); CI for these working-tree changes remains unverified.
+
+Whole-tree Black (**361 files**), changed-file Ruff, and `git diff --check` pass. Commands, exact coverage summaries, initial failure output, individual RED/GREEN output, mutation harness, and source hashes are in [dimensions-followup.json](dimensions-followup.json). Work stayed in one local integration lane; no work was delegated. The next coverage target and publication are deferred as described here.
+
+Git staging was attempted and failed because `.git` is read-only. No commit or push was created. The ready-for-review PR remains #811; no additional PR was opened. The GitHub connector rejected the live body update: `MCP tool call requires approval, but approval policy is never`. PR #811 was rechecked open with `isDraft=false`. A replacement live body is prepared at `/tmp/faa811-dimensions/pr-body.md`.
 
 ## Tasks
 
@@ -178,7 +225,7 @@ Staging the verified tests failed because `.git/index.lock` cannot be created on
 - [x] Cover `src/fine_art_archive/collect/acquisition_flow.py` (12 uncovered statements+branches): write tests under `tests/` for its untested lines and branches.
 - [x] For each new test, run the break-and-revert proof (break the code it covers, `pytest` fails; revert, `pytest` passes) and record both results in the PR body.
 - [ ] If a test exposes a real bug in a target above, fix it with the smallest diff and show `pytest tests/` green again.
-- [x] Open ONE PR whose body states each target's coverage before and after (from `pytest --cov`) and has a closing line for THIS issue (`Closes #<this issue's number>`), so the round closes when the PR merges.
+- [ ] Open ONE PR whose body states each target's coverage before and after (from `pytest --cov`) and has a closing line for THIS issue (`Closes #<this issue's number>`), so the round closes when the PR merges.
 
 ## Acceptance criteria
 
@@ -186,7 +233,7 @@ Staging the verified tests failed because `.git/index.lock` cannot be created on
 - [ ] The PR's Gate coverage shows the targets' uncovered statements+branches down by about 60 or more, or the PR body explains each target that could not be meaningfully covered.
 - [x] Production code changes only where a test found a real bug, each one explained in the PR body.
 - [x] Same contract as every round in this initiative:
-  1. [x] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then churn, then uncovered mass), not by file size.
+  1. [ ] Pick the next target by the repo's own coverage-gap ranking (escaped-defect priority, then churn, then uncovered mass), not by file size.
   2. [x] Every new test must FAIL when the code it covers is deliberately broken and PASS when reverted -- run that break-and-revert for real and report it, don't assert it.
   3. [x] Real bugs found while writing tests get fixed with a minimal, targeted diff in the same PR, not worked around. Watch for the negative-cache pattern.
   4. [x] Low blast radius only -- test-only or tightly-scoped fixes, no refactors.

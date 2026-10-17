@@ -1,0 +1,212 @@
+Case: test_embedding_similarity_validates_vectors[empty-vectors]
+Defect: Remove the empty-vector guard
+Command: ['pytest', 'tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[empty-vectors]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+BROKEN (exit 1)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_embedding_similarity_validates_vectors[empty-vectors] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-3/test_embedding_similarity_vali0')
+vectors = ([], []), status = 'FAIL', message = 'non-empty and the same length'
+
+    @pytest.mark.parametrize(
+        ("vectors", "status", "message"),
+        [
+            (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+            (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+            (([0.0], [0.0]), "FAIL", "non-zero"),
+            (([], []), "FAIL", "non-empty and the same length"),
+            (([1.0], [0.0]), "FAIL", "non-zero"),
+        ],
+        ids=["matching", "length-mismatch", "zero-vector", "empty-vectors", "zero-reference"],
+    )
+    def test_embedding_similarity_validates_vectors(
+        tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        values = iter(vectors)
+        result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+    
+        assert result.name == "clip_similarity"
+        assert result.status == status
+>       assert message in result.message
+E       AssertionError: assert 'non-empty and the same length' in 'embedding vectors must be non-zero'
+E        +  where 'embedding vectors must be non-zero' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='embedding vectors must be non-zero', blocks_overall=True).message
+
+tests/test_coverage_round_799.py:224: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[empty-vectors] - AssertionError: assert 'non-empty and the same length' in 'embedding vectors must be non-zero'
+ +  where 'embedding vectors must be non-zero' = CheckResult(name='clip_similarity', status='FAIL', detail={'threshold': 0.88}, message='embedding vectors must be non-zero', blocks_overall=True).message
+1 failed in 0.21s
+
+RESTORED (exit 0)
+.                                                                        [100%]
+1 passed in 0.19s
+
+Case: test_embedding_similarity_validates_vectors[zero-reference]
+Defect: Ignore a zero-norm reference vector
+Command: ['pytest', 'tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[zero-reference]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+BROKEN (exit 1)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_embedding_similarity_validates_vectors[zero-reference] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-5/test_embedding_similarity_vali0')
+vectors = ([1.0], [0.0]), status = 'FAIL', message = 'non-zero'
+
+    @pytest.mark.parametrize(
+        ("vectors", "status", "message"),
+        [
+            (([1.0], [1.0]), "PASS", "embedding cosine 1.000"),
+            (([1.0], [1.0, 2.0]), "FAIL", "same length"),
+            (([0.0], [0.0]), "FAIL", "non-zero"),
+            (([], []), "FAIL", "non-empty and the same length"),
+            (([1.0], [0.0]), "FAIL", "non-zero"),
+        ],
+        ids=["matching", "length-mismatch", "zero-vector", "empty-vectors", "zero-reference"],
+    )
+    def test_embedding_similarity_validates_vectors(
+        tmp_path: Path, vectors: tuple[list[float], list[float]], status: str, message: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        values = iter(vectors)
+>       result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            embedding_backend=lambda _: next(values),
+        )
+
+tests/test_coverage_round_799.py:216: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/fine_art_archive/collect/verify.py:323: in check_embedding_similarity
+    similarity = _cosine_similarity(cand_vec, ref_vec)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+left = [1.0], right = [0.0]
+
+    def _cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
+        import math
+    
+        if len(left) != len(right) or not left:
+            raise ValueError("embedding vectors must be non-empty and the same length")
+        dot = sum(float(a) * float(b) for a, b in zip(left, right, strict=True))
+        left_norm = math.sqrt(sum(float(a) * float(a) for a in left))
+        right_norm = math.sqrt(sum(float(b) * float(b) for b in right))
+        if left_norm == 0:
+            raise ValueError("embedding vectors must be non-zero")
+>       return dot / (left_norm * right_norm)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ZeroDivisionError: division by zero
+
+src/fine_art_archive/collect/verify.py:283: ZeroDivisionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_validates_vectors[zero-reference] - ZeroDivisionError: division by zero
+1 failed in 0.65s
+
+RESTORED (exit 0)
+.                                                                        [100%]
+1 passed in 0.17s
+
+Case: test_embedding_similarity_respects_threshold_boundary[at-threshold]
+Defect: Reject cosine similarity exactly at the threshold
+Command: ['pytest', 'tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[at-threshold]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+BROKEN (exit 1)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_embedding_similarity_respects_threshold_boundary[at-threshold] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-7/test_embedding_similarity_resp0')
+threshold = 0.6, status = 'PASS'
+
+    @pytest.mark.parametrize(
+        ("threshold", "status"),
+        [(0.6, "PASS"), (0.6001, "FAIL")],
+        ids=["at-threshold", "below-threshold"],
+    )
+    def test_embedding_similarity_respects_threshold_boundary(
+        tmp_path: Path, threshold: float, status: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        backend = Mock(side_effect=[[1.0, 0.0], [0.6, 0.8]])
+    
+        result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            threshold=threshold,
+            embedding_backend=backend,
+        )
+    
+>       assert result.status == status
+E       AssertionError: assert 'FAIL' == 'PASS'
+E         
+E         - PASS
+E         + FAIL
+
+tests/test_coverage_round_799.py:249: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[at-threshold] - AssertionError: assert 'FAIL' == 'PASS'
+  
+  - PASS
+  + FAIL
+1 failed in 0.21s
+
+RESTORED (exit 0)
+.                                                                        [100%]
+1 passed in 0.17s
+
+Case: test_embedding_similarity_respects_threshold_boundary[below-threshold]
+Defect: Accept every non-negative cosine regardless of the requested threshold
+Command: ['pytest', 'tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[below-threshold]', '-o', 'addopts=', '--no-cov', '-q', '-m', 'not slow']
+BROKEN (exit 1)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_embedding_similarity_respects_threshold_boundary[below-threshold] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-9/test_embedding_similarity_resp0')
+threshold = 0.6001, status = 'FAIL'
+
+    @pytest.mark.parametrize(
+        ("threshold", "status"),
+        [(0.6, "PASS"), (0.6001, "FAIL")],
+        ids=["at-threshold", "below-threshold"],
+    )
+    def test_embedding_similarity_respects_threshold_boundary(
+        tmp_path: Path, threshold: float, status: str
+    ) -> None:
+        candidate = _image(tmp_path / "candidate.png")
+        reference = _image(tmp_path / "reference.png")
+        backend = Mock(side_effect=[[1.0, 0.0], [0.6, 0.8]])
+    
+        result = check_embedding_similarity(
+            candidate_path=candidate,
+            reference_path=reference,
+            threshold=threshold,
+            embedding_backend=backend,
+        )
+    
+>       assert result.status == status
+E       AssertionError: assert 'PASS' == 'FAIL'
+E         
+E         - FAIL
+E         + PASS
+
+tests/test_coverage_round_799.py:249: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_round_799.py::test_embedding_similarity_respects_threshold_boundary[below-threshold] - AssertionError: assert 'PASS' == 'FAIL'
+  
+  - FAIL
+  + PASS
+1 failed in 0.21s
+
+RESTORED (exit 0)
+.                                                                        [100%]
+1 passed in 0.17s
+

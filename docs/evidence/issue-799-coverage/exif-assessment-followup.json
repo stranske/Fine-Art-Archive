@@ -1,0 +1,281 @@
+{
+  "starting_head": "fea8fed6b30f8b551d427a4c0a0b0de005ae96da",
+  "scope": "Fix assess_master ignoring EXIF orientation without a usable reference; four independently mutation-tested regression cases.",
+  "reconciliation": "Both ranked coverage tasks were already complete, with the historical 62-unit improvement merged in #804. This run fixes a newly exposed bug and claims no additional coverage increment.",
+  "baseline": {
+    "totals": {
+      "covered_lines": 9422,
+      "num_statements": 10225,
+      "percent_covered": 89.53076422529101,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.14669926650367,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3606,
+      "num_partial_branches": 495,
+      "covered_branches": 2961,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.11314475873544,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "final": {
+    "totals": {
+      "covered_lines": 9422,
+      "num_statements": 10225,
+      "percent_covered": 89.53076422529101,
+      "percent_covered_display": "90",
+      "missing_lines": 803,
+      "excluded_lines": 6,
+      "percent_statements_covered": 92.14669926650367,
+      "percent_statements_covered_display": "92",
+      "num_branches": 3606,
+      "num_partial_branches": 495,
+      "covered_branches": 2961,
+      "missing_branches": 645,
+      "percent_branches_covered": 82.11314475873544,
+      "percent_branches_covered_display": "82"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "targeted": {
+    "totals": {
+      "covered_lines": 365,
+      "num_statements": 365,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 98,
+      "num_partial_branches": 0,
+      "covered_branches": 98,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "targets": {
+      "src/fine_art_archive/collect/verify.py": {
+        "covered_lines": 238,
+        "num_statements": 238,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 60,
+        "num_partial_branches": 0,
+        "covered_branches": 60,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/fine_art_archive/collect/acquisition_flow.py": {
+        "covered_lines": 127,
+        "num_statements": 127,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    }
+  },
+  "full_suite_baseline_result": "4 failed, 2319 passed, 12 skipped, 1 warning in 124.75s (0:02:04)",
+  "full_suite_final_result": "4 failed, 2323 passed, 12 skipped, 1 warning in 125.29s (0:02:05)",
+  "targeted_result": "113 passed, 4 skipped in 4.65s",
+  "initial_regression_result": "4 failed, 9 deselected in 0.20s",
+  "full_suite_baseline_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "full_suite_final_failures": [
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_is_not_on_dropbox_tree - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_automation_lock_path_rejects_configured_dropbox_directory - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_resolve_automation_lock_path_redirects_synced_candidate - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'",
+    "FAILED tests/test_workspace_conflict_guard.py::test_sidecar_file_lock_redirects_lock_when_sidecar_is_on_dropbox - OSError: [Errno 30] Read-only file system: '/home/runner/.cache/fine-art-archive'"
+  ],
+  "commands": {
+    "full_baseline": "PYTHONPATH=/tmp/faa-811-validation COVERAGE_FILE=/tmp/faa-811-current-baseline.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa-811-current-baseline.json",
+    "full_final": "PYTHONPATH=/tmp/faa-811-validation COVERAGE_FILE=/tmp/faa-811-exif-final.coverage pytest tests/ -o addopts= -q -m 'not slow' --cov=src --cov-report=term --cov-report=json:/tmp/faa-811-exif-final.json",
+    "targeted": "COVERAGE_FILE=/tmp/faa-811-exif-target.coverage pytest tests/test_verify.py tests/test_verify_embeddings.py tests/test_site_anchored.py tests/test_coverage_round_799.py tests/test_acquisition_flow.py tests/test_acquisition_routing.py tests/test_dedup_cascade.py tests/test_source_quality_wiring.py -o addopts= -q -m 'not slow' --cov=fine_art_archive.collect.verify --cov=fine_art_archive.collect.acquisition_flow --cov-report=term-missing --cov-report=json:/tmp/faa-811-exif-target.json",
+    "black_format": "PYTHONPATH=/tmp/faa-811-validation BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/collect/acquisition_flow.py tests/test_acquisition_flow.py",
+    "black_check": "PYTHONPATH=/tmp/faa-811-validation BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "ruff": "ruff check src/fine_art_archive/collect/acquisition_flow.py tests/test_acquisition_flow.py",
+    "whitespace": "git diff --check"
+  },
+  "environment": "Python 3.14.8. Full-suite and Black use the existing external selector-polling harness from embedding-boundary-followup.json; Black uses one worker after the default forkserver was denied. No tests disabled. The same four read-only-home failures occur before and after.",
+  "external_sitecustomize": "\"\"\"Poll selectors when sandboxed socketpair wakeup writes are unavailable.\"\"\"\nimport selectors\n\n_select = selectors.EpollSelector.select\n\n\ndef _poll_select(self, timeout=None):\n    return _select(self, 0.01 if timeout is None else min(timeout, 0.01))\n\n\nselectors.EpollSelector.select = _poll_select\n",
+  "black_result": "All done! \u2728 \ud83c\udf70 \u2728\n361 files would be left unchanged.",
+  "mutation_proofs": {
+    "proofs": [
+      {
+        "test": "test_assess_master_checks_exif_orientation_without_reference[upright-match-no-reference]",
+        "defect": "Withhold the candidate path when a reference is absent",
+        "command": [
+          "pytest",
+          "tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[upright-match-no-reference]",
+          "-o",
+          "addopts=",
+          "--no-cov",
+          "-q",
+          "-m",
+          "not slow"
+        ],
+        "red_exit": 1,
+        "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_ test_assess_master_checks_exif_orientation_without_reference[upright-match-no-reference] _\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-3/test_assess_master_checks_exif0')\nmissing_reference = False, catalogue_matches = True\n\n    @pytest.mark.parametrize(\n        \"missing_reference\", [False, True], ids=[\"no-reference\", \"missing-reference\"]\n    )\n    @pytest.mark.parametrize(\"catalogue_matches\", [True, False], ids=[\"upright-match\", \"raw-size-trap\"])\n    def test_assess_master_checks_exif_orientation_without_reference(\n        tmp_path: Path, missing_reference: bool, catalogue_matches: bool\n    ) -> None:\n        \"\"\"Missing hash references must not change the aspect identity decision.\"\"\"\n        from PIL import Image\n    \n        master = tmp_path / \"master.jpg\"\n        exif = Image.Exif()\n        exif[274] = 6  # Stored landscape pixels display as a portrait.\n        Image.new(\"RGB\", (120, 80), \"navy\").save(master, exif=exif)\n        reference = tmp_path / \"absent.jpg\" if missing_reference else None\n        h_cm, w_cm = (30.0, 20.0) if catalogue_matches else (20.0, 30.0)\n    \n        assessment = af.assess_master(\n            master, source=\"met\", h_cm=h_cm, w_cm=w_cm, reference_path=reference\n        )\n    \n        expected_status = \"PASS\" if catalogue_matches else \"FAIL\"\n>       assert assessment.verification[\"status\"] == expected_status\nE       AssertionError: assert 'FAIL' == 'PASS'\nE         \nE         - PASS\nE         + FAIL\n\ntests/test_acquisition_flow.py:85: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[upright-match-no-reference] - AssertionError: assert 'FAIL' == 'PASS'\n  \n  - PASS\n  + FAIL\n1 failed in 0.19s\n",
+        "green_exit": 0,
+        "green_output": ".                                                                        [100%]\n1 passed in 0.54s\n"
+      },
+      {
+        "test": "test_assess_master_checks_exif_orientation_without_reference[upright-match-missing-reference]",
+        "defect": "Withhold the candidate path when a reference is absent",
+        "command": [
+          "pytest",
+          "tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[upright-match-missing-reference]",
+          "-o",
+          "addopts=",
+          "--no-cov",
+          "-q",
+          "-m",
+          "not slow"
+        ],
+        "red_exit": 1,
+        "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_ test_assess_master_checks_exif_orientation_without_reference[upright-match-missing-reference] _\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-5/test_assess_master_checks_exif0')\nmissing_reference = True, catalogue_matches = True\n\n    @pytest.mark.parametrize(\n        \"missing_reference\", [False, True], ids=[\"no-reference\", \"missing-reference\"]\n    )\n    @pytest.mark.parametrize(\"catalogue_matches\", [True, False], ids=[\"upright-match\", \"raw-size-trap\"])\n    def test_assess_master_checks_exif_orientation_without_reference(\n        tmp_path: Path, missing_reference: bool, catalogue_matches: bool\n    ) -> None:\n        \"\"\"Missing hash references must not change the aspect identity decision.\"\"\"\n        from PIL import Image\n    \n        master = tmp_path / \"master.jpg\"\n        exif = Image.Exif()\n        exif[274] = 6  # Stored landscape pixels display as a portrait.\n        Image.new(\"RGB\", (120, 80), \"navy\").save(master, exif=exif)\n        reference = tmp_path / \"absent.jpg\" if missing_reference else None\n        h_cm, w_cm = (30.0, 20.0) if catalogue_matches else (20.0, 30.0)\n    \n        assessment = af.assess_master(\n            master, source=\"met\", h_cm=h_cm, w_cm=w_cm, reference_path=reference\n        )\n    \n        expected_status = \"PASS\" if catalogue_matches else \"FAIL\"\n>       assert assessment.verification[\"status\"] == expected_status\nE       AssertionError: assert 'FAIL' == 'PASS'\nE         \nE         - PASS\nE         + FAIL\n\ntests/test_acquisition_flow.py:85: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[upright-match-missing-reference] - AssertionError: assert 'FAIL' == 'PASS'\n  \n  - PASS\n  + FAIL\n1 failed in 0.17s\n",
+        "green_exit": 0,
+        "green_output": ".                                                                        [100%]\n1 passed in 0.13s\n"
+      },
+      {
+        "test": "test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-no-reference]",
+        "defect": "Withhold the candidate path when a reference is absent",
+        "command": [
+          "pytest",
+          "tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-no-reference]",
+          "-o",
+          "addopts=",
+          "--no-cov",
+          "-q",
+          "-m",
+          "not slow"
+        ],
+        "red_exit": 1,
+        "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_ test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-no-reference] _\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-7/test_assess_master_checks_exif0')\nmissing_reference = False, catalogue_matches = False\n\n    @pytest.mark.parametrize(\n        \"missing_reference\", [False, True], ids=[\"no-reference\", \"missing-reference\"]\n    )\n    @pytest.mark.parametrize(\"catalogue_matches\", [True, False], ids=[\"upright-match\", \"raw-size-trap\"])\n    def test_assess_master_checks_exif_orientation_without_reference(\n        tmp_path: Path, missing_reference: bool, catalogue_matches: bool\n    ) -> None:\n        \"\"\"Missing hash references must not change the aspect identity decision.\"\"\"\n        from PIL import Image\n    \n        master = tmp_path / \"master.jpg\"\n        exif = Image.Exif()\n        exif[274] = 6  # Stored landscape pixels display as a portrait.\n        Image.new(\"RGB\", (120, 80), \"navy\").save(master, exif=exif)\n        reference = tmp_path / \"absent.jpg\" if missing_reference else None\n        h_cm, w_cm = (30.0, 20.0) if catalogue_matches else (20.0, 30.0)\n    \n        assessment = af.assess_master(\n            master, source=\"met\", h_cm=h_cm, w_cm=w_cm, reference_path=reference\n        )\n    \n        expected_status = \"PASS\" if catalogue_matches else \"FAIL\"\n>       assert assessment.verification[\"status\"] == expected_status\nE       AssertionError: assert 'PASS' == 'FAIL'\nE         \nE         - FAIL\nE         + PASS\n\ntests/test_acquisition_flow.py:85: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-no-reference] - AssertionError: assert 'PASS' == 'FAIL'\n  \n  - FAIL\n  + PASS\n1 failed in 0.17s\n",
+        "green_exit": 0,
+        "green_output": ".                                                                        [100%]\n1 passed in 0.13s\n"
+      },
+      {
+        "test": "test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-missing-reference]",
+        "defect": "Withhold the candidate path when a reference is absent",
+        "command": [
+          "pytest",
+          "tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-missing-reference]",
+          "-o",
+          "addopts=",
+          "--no-cov",
+          "-q",
+          "-m",
+          "not slow"
+        ],
+        "red_exit": 1,
+        "red_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_ test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-missing-reference] _\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-9/test_assess_master_checks_exif0')\nmissing_reference = True, catalogue_matches = False\n\n    @pytest.mark.parametrize(\n        \"missing_reference\", [False, True], ids=[\"no-reference\", \"missing-reference\"]\n    )\n    @pytest.mark.parametrize(\"catalogue_matches\", [True, False], ids=[\"upright-match\", \"raw-size-trap\"])\n    def test_assess_master_checks_exif_orientation_without_reference(\n        tmp_path: Path, missing_reference: bool, catalogue_matches: bool\n    ) -> None:\n        \"\"\"Missing hash references must not change the aspect identity decision.\"\"\"\n        from PIL import Image\n    \n        master = tmp_path / \"master.jpg\"\n        exif = Image.Exif()\n        exif[274] = 6  # Stored landscape pixels display as a portrait.\n        Image.new(\"RGB\", (120, 80), \"navy\").save(master, exif=exif)\n        reference = tmp_path / \"absent.jpg\" if missing_reference else None\n        h_cm, w_cm = (30.0, 20.0) if catalogue_matches else (20.0, 30.0)\n    \n        assessment = af.assess_master(\n            master, source=\"met\", h_cm=h_cm, w_cm=w_cm, reference_path=reference\n        )\n    \n        expected_status = \"PASS\" if catalogue_matches else \"FAIL\"\n>       assert assessment.verification[\"status\"] == expected_status\nE       AssertionError: assert 'PASS' == 'FAIL'\nE         \nE         - FAIL\nE         + PASS\n\ntests/test_acquisition_flow.py:85: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_acquisition_flow.py::test_assess_master_checks_exif_orientation_without_reference[raw-size-trap-missing-reference] - AssertionError: assert 'PASS' == 'FAIL'\n  \n  - FAIL\n  + PASS\n1 failed in 0.17s\n",
+        "green_exit": 0,
+        "green_output": ".                                                                        [100%]\n1 passed in 0.13s\n"
+      }
+    ],
+    "source_sha256": "3969bbc37b75a1728dc5db4f815440375365b6528530131a361ce26b52ca0b6a",
+    "source_restored": true
+  },
+  "source_sha256": {
+    "src/fine_art_archive/collect/verify.py": "a24158c679b92aca7cdba2a4bdfab40394b7154515c725595bf30465acb2026b",
+    "src/fine_art_archive/collect/acquisition_flow.py": "3969bbc37b75a1728dc5db4f815440375365b6528530131a361ce26b52ca0b6a",
+    "tests/test_acquisition_flow.py": "8d6bc0c119675f6ff31d113b1d0eb19a27bc0526940b1619af0b616f846d4f98"
+  },
+  "publication": {
+    "local_staging": "git add failed: .git/index.lock cannot be created on the read-only filesystem.",
+    "live_pr_body_update": "MCP tool call requires approval, but approval policy is never",
+    "commit_created": false,
+    "prepared_pr_body": "/tmp/faa-811-pr-body.md",
+    "pr": 811,
+    "last_observed_state": "open",
+    "last_observed_draft": false
+  }
+}
