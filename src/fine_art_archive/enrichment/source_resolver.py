@@ -447,7 +447,7 @@ class WikidataProvider:
             return ", ".join(strings) if strings else None
         entities = self._entities(qids)
         if entities is None:
-            return None
+            raise ConnectionError("Wikidata label lookup failed")
         labels = [
             label
             for qid in qids
