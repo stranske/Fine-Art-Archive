@@ -335,7 +335,7 @@ def build(
                 continue
             if genre not in spec.genres:
                 continue
-        if period_ranges or spec.year_from or spec.year_to:
+        if period_ranges or spec.year_from is not None or spec.year_to is not None:
             if year is None:
                 skipped["no year"] += 1
                 continue
