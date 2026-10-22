@@ -30,7 +30,7 @@ click==8.4.2
     #   black
     #   huggingface-hub
     #   uvicorn
-coverage==7.16.2
+coverage==7.17.0
     # via pytest-cov
 cuda-bindings==13.4.3
     # via torch
@@ -208,7 +208,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.17.1
+ruff==0.17.2
     # via fine-art-archive (pyproject.toml)
 safetensors==0.8.0
     # via transformers
