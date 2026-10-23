@@ -693,7 +693,13 @@ def test_every_declared_interval_actually_rotates(interval):
 
 
 # ---- etag ------------------------------------------------------------------
-def test_etag_changes_when_the_master_or_render_settings_change():
+def test_etag_changes_when_the_master_or_render_settings_change(monkeypatch):
+    from fine_art_archive.eink.targets import TARGETS, RenderTarget
+
+    t1 = RenderTarget("t1", "ETag t1", 30, 20, "spectra6")
+    t2 = RenderTarget("t2", "ETag t2", 30, 20, "spectra6")
+    monkeypatch.setitem(TARGETS, t1.key, t1)
+    monkeypatch.setitem(TARGETS, t2.key, t2)
     base = item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
     assert base == item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
     assert base != item_etag("w1", "t1", "floyd-steinberg", 1001, fit="contain")

@@ -19,6 +19,7 @@ Neither was tested.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
@@ -32,6 +33,7 @@ from fine_art_archive.api import main as api_main
 from fine_art_archive.api import store as api_store
 from fine_art_archive.api.main import app
 from fine_art_archive.eink.feed import rotation_index
+from fine_art_archive.eink.palette import PALETTES, Palette
 from fine_art_archive.eink.targets import TARGETS, RenderTarget
 
 
@@ -83,6 +85,143 @@ def _save(client: TestClient, **body) -> dict:
     response = client.post("/eink/playlists", json=payload)
     assert response.status_code == 200, response.text
     return response.json()
+
+
+def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
+    palette = Palette("feed-validator", ((0, 0, 0), (255, 255, 255)))
+    target = RenderTarget("palette-validator", "Palette validator", 8, 6, palette.name)
+    monkeypatch.setitem(TARGETS, target.key, target)
+    monkeypatch.setitem(PALETTES, palette.name, palette)
+
+    colour_changed = replace(palette, colours=((1, 2, 3), (255, 255, 255)))
+    order_changed = replace(palette, colours=tuple(reversed(palette.colours)))
+    measured_changed = replace(palette, measured=True)
+    provenance_only = replace(palette, name="alias", note="provenance only")
+
+    # Fingerprint is ordered colours + measured only; provenance fields are ignored.
+    base_fp = _eink.palette_fingerprint(palette)
+    assert base_fp == "[[[0,0,0],[255,255,255]],false]"
+    assert _eink.palette_fingerprint(replace(palette)) == base_fp
+    assert _eink.palette_fingerprint(provenance_only) == base_fp
+    colour_fp = _eink.palette_fingerprint(colour_changed)
+    order_fp = _eink.palette_fingerprint(order_changed)
+    measured_fp = _eink.palette_fingerprint(measured_changed)
+    assert colour_fp != base_fp
+    assert order_fp != base_fp
+    assert measured_fp != base_fp
+    # Colour and measured are separate obligations: each mutates a different part.
+    assert colour_fp != measured_fp
+    assert colour_fp == "[[[1,2,3],[255,255,255]],false]"
+    assert measured_fp == "[[[0,0,0],[255,255,255]],true]"
+
+    def tag(value):
+        return _eink.item_etag("work", target.key, "none", 123, fit="contain", palette=value)
+
+    def tag_identity(value):
+        # Feed routes pass the fingerprint through item_etag before conditionals.
+        return _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            123,
+            fit="contain",
+            palette_identity=_eink.palette_fingerprint(value),
+        )
+
+    original = tag(palette)
+    assert tag_identity(palette) == original
+    # Unchanged palette (and provenance-only edits) keep a stable validator.
+    assert tag(replace(palette)) == original
+    assert tag(provenance_only) == original
+    # Colour-changing mutations invalidate; measured-only is a distinct invalidation.
+    colour_tag = tag(colour_changed)
+    order_tag = tag(order_changed)
+    measured_tag = tag(measured_changed)
+    assert colour_tag != original
+    assert order_tag != original
+    assert measured_tag != original
+    assert colour_tag != measured_tag
+    assert tag_identity(colour_changed) == colour_tag != original
+    assert tag_identity(measured_changed) == measured_tag != original
+    # Master mtime, fit and strategy stay in the validator alongside the fingerprint.
+    assert (
+        _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            123,
+            fit="contain",
+            render_strategy="color",
+            palette=palette,
+        )
+        == original
+    )
+    assert (
+        _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            124,
+            fit="contain",
+            render_strategy="color",
+            palette=palette,
+        )
+        != original
+    )
+    # The default path must also observe palette changes for existing callers.
+    assert _eink.item_etag("work", target.key, "none", 123, fit="contain") == original
+    monkeypatch.setitem(PALETTES, palette.name, measured_changed)
+    assert _eink.item_etag("work", target.key, "none", 123, fit="contain") != original
+
+
+@pytest.mark.parametrize("route", ["image/0", "current"])
+@pytest.mark.parametrize("change", ["colours", "measured"])
+def test_palette_change_revalidates_feed_image(client, archive, monkeypatch, route, change):
+    work_id = "aaa1111-palette-cache"
+    _work(archive, work_id, title="Palette cache")
+    palette = Palette("feed-cache", ((0, 0, 0), (255, 255, 255), (255, 0, 0)))
+    target = RenderTarget("palette-cache", "Palette cache", 8, 6, palette.name)
+    monkeypatch.setitem(PALETTES, palette.name, palette)
+    monkeypatch.setitem(TARGETS, target.key, target)
+    saved = _save(client, target=target.key, dither="none", fit="contain")
+    url = f"/feed/{saved['id']}/{route}"
+    master_mtime = (archive / work_id / "master.jpeg").stat().st_mtime
+    original = client.get(url)
+    assert original.status_code == 200
+    old_tag = original.headers["ETag"]
+    assert original.headers["X-Palette-Measured"] == "False"
+    unchanged = client.get(url)
+    assert unchanged.headers["ETag"] == old_tag
+    assert unchanged.content == original.content
+    assert client.get(url, headers={"If-None-Match": old_tag}).status_code == 304
+
+    updated_palette = (
+        replace(palette, colours=((10, 20, 30), (220, 230, 240), (100, 150, 200)))
+        if change == "colours"
+        else replace(palette, measured=True)
+    )
+    monkeypatch.setitem(PALETTES, palette.name, updated_palette)
+    refreshed = client.get(url, headers={"If-None-Match": old_tag})
+    assert refreshed.status_code == 200, "palette changes must invalidate the old validator"
+    assert refreshed.headers["ETag"] != old_tag
+    assert refreshed.headers["X-Palette-Measured"] == str(updated_palette.measured)
+    assert refreshed.headers["X-Render-Strategy"] == original.headers["X-Render-Strategy"]
+    assert refreshed.headers["Cache-Control"] == original.headers["Cache-Control"]
+    assert (archive / work_id / "master.jpeg").stat().st_mtime == master_mtime
+    with (
+        Image.open(BytesIO(original.content)) as before,
+        Image.open(BytesIO(refreshed.content)) as after,
+    ):
+        before_pixels = list(before.convert("RGB").getdata())
+        after_pixels = list(after.convert("RGB").getdata())
+    if change == "colours":
+        assert after_pixels != before_pixels
+        assert set(after_pixels) <= set(updated_palette.colours)
+    else:
+        assert after_pixels == before_pixels
+    current = client.get(url, headers={"If-None-Match": refreshed.headers["ETag"]})
+    assert current.status_code == 304
+    assert current.content == b""
 
 
 @pytest.mark.parametrize("route", ["image/0", "current"])
