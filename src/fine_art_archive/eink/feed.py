@@ -182,19 +182,26 @@ def item_etag(
     fit: FitMode | None,
     render_strategy: str = "color",
     palette: Palette | None = None,
+    palette_identity: str | None = None,
 ) -> str:
     """Stable identity for rendered pixels and their palette measurement metadata.
 
     The target and dithering identify the panel's output. Fit and strategy must
     also change the validator when the saved representation changes. Palette
     colours are ordered; measurement status also identifies response metadata.
-    Callers may supply the response palette instead of resolving it again.
+
+    Feed image routes must pass ``palette_identity`` from the response palette
+    (via :func:`palette_fingerprint`) before conditional matching so the
+    validator tracks the palette actually used for that response. Callers may
+    instead supply ``palette``; omitting both resolves the target's palette.
     """
     effective_fit = coerce_fit(fit) or get_target(target_key).fit
-    response_palette = palette if palette is not None else get_target(target_key).palette
+    if palette_identity is None:
+        response_palette = palette if palette is not None else get_target(target_key).palette
+        palette_identity = palette_fingerprint(response_palette)
     h = hashlib.sha256(
         f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}"
-        f"|palette-v1|{palette_fingerprint(response_palette)}".encode()
+        f"|palette-v1|{palette_identity}".encode()
     ).hexdigest()
     return f'W/"{h[:24]}"'
 

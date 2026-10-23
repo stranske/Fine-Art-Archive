@@ -2177,6 +2177,9 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
     try:
         with Image.open(master) as im:
             evidence = _eink.render_evidence(im)
+            # Fingerprint the palette used for this response before If-None-Match
+            # so colour or measured changes invalidate prior validators.
+            response_palette = tgt.palette
             etag = _eink.item_etag(
                 work_id,
                 tgt.key,
@@ -2184,7 +2187,7 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
                 master.stat().st_mtime,
                 fit=fit,
                 render_strategy=evidence.strategy,
-                palette=tgt.palette,
+                palette_identity=_eink.palette_fingerprint(response_palette),
             )
             if request.headers.get("if-none-match") == etag:
                 return Response(
@@ -2217,7 +2220,7 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
             "Cache-Control": "public, max-age=300",
             "X-Work-Id": work_id,
             "X-Render-Strategy": evidence.strategy,
-            "X-Palette-Measured": str(tgt.palette.measured),
+            "X-Palette-Measured": str(response_palette.measured),
         },
     )
 

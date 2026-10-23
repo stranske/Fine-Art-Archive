@@ -111,12 +111,26 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
     def tag(value):
         return _eink.item_etag("work", target.key, "none", 123, fit="contain", palette=value)
 
+    def tag_identity(value):
+        # Feed routes pass the fingerprint through item_etag before conditionals.
+        return _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            123,
+            fit="contain",
+            palette_identity=_eink.palette_fingerprint(value),
+        )
+
     original = tag(palette)
+    assert tag_identity(palette) == original
     assert tag(replace(palette)) == original
     assert tag(replace(palette, name="alias", note="provenance only")) == original
     assert tag(replace(palette, colours=((1, 2, 3), (255, 255, 255)))) != original
     assert tag(replace(palette, colours=tuple(reversed(palette.colours)))) != original
     assert tag(replace(palette, measured=True)) != original
+    assert tag_identity(replace(palette, colours=((1, 2, 3), (255, 255, 255)))) != original
+    assert tag_identity(replace(palette, measured=True)) != original
     # Master mtime, fit and strategy stay in the validator alongside the fingerprint.
     assert (
         _eink.item_etag(
