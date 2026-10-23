@@ -164,6 +164,15 @@ def rotation_index(
     return (int(now.timestamp()) // secs + offset) % n_items
 
 
+def palette_fingerprint(palette: Palette) -> str:
+    """Deterministic identity of ordered RGB colours and measurement status.
+
+    Name, note, source and other provenance fields are excluded: they do not
+    change rendered pixels or the X-Palette-Measured response header.
+    """
+    return json.dumps([palette.colours, palette.measured], separators=(",", ":"))
+
+
 def item_etag(
     work_id: str,
     target_key: str,
@@ -183,12 +192,9 @@ def item_etag(
     """
     effective_fit = coerce_fit(fit) or get_target(target_key).fit
     response_palette = palette if palette is not None else get_target(target_key).palette
-    palette_identity = json.dumps(
-        [response_palette.colours, response_palette.measured], separators=(",", ":")
-    )
     h = hashlib.sha256(
         f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}"
-        f"|palette-v1|{palette_identity}".encode()
+        f"|palette-v1|{palette_fingerprint(response_palette)}".encode()
     ).hexdigest()
     return f'W/"{h[:24]}"'
 

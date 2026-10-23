@@ -93,6 +93,21 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
     monkeypatch.setitem(TARGETS, target.key, target)
     monkeypatch.setitem(PALETTES, palette.name, palette)
 
+    # Fingerprint is ordered colours + measured only; provenance fields are ignored.
+    assert _eink.palette_fingerprint(palette) == "[[[0,0,0],[255,255,255]],false]"
+    assert _eink.palette_fingerprint(replace(palette, name="alias", note="x")) == (
+        _eink.palette_fingerprint(palette)
+    )
+    assert _eink.palette_fingerprint(
+        replace(palette, colours=((1, 2, 3), (255, 255, 255)))
+    ) != _eink.palette_fingerprint(palette)
+    assert _eink.palette_fingerprint(
+        replace(palette, colours=tuple(reversed(palette.colours)))
+    ) != _eink.palette_fingerprint(palette)
+    assert _eink.palette_fingerprint(replace(palette, measured=True)) != (
+        _eink.palette_fingerprint(palette)
+    )
+
     def tag(value):
         return _eink.item_etag("work", target.key, "none", 123, fit="contain", palette=value)
 
@@ -102,6 +117,31 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
     assert tag(replace(palette, colours=((1, 2, 3), (255, 255, 255)))) != original
     assert tag(replace(palette, colours=tuple(reversed(palette.colours)))) != original
     assert tag(replace(palette, measured=True)) != original
+    # Master mtime, fit and strategy stay in the validator alongside the fingerprint.
+    assert (
+        _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            123,
+            fit="contain",
+            render_strategy="color",
+            palette=palette,
+        )
+        == original
+    )
+    assert (
+        _eink.item_etag(
+            "work",
+            target.key,
+            "none",
+            124,
+            fit="contain",
+            render_strategy="color",
+            palette=palette,
+        )
+        != original
+    )
     # The default path must also observe palette changes for existing callers.
     assert _eink.item_etag("work", target.key, "none", 123, fit="contain") == original
     monkeypatch.setitem(PALETTES, palette.name, replace(palette, measured=True))
