@@ -39,6 +39,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .palette import Palette
 from .targets import FitMode, coerce_fit, get_target
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
@@ -171,15 +172,23 @@ def item_etag(
     *,
     fit: FitMode | None,
     render_strategy: str = "color",
+    palette: Palette | None = None,
 ) -> str:
-    """Stable identity for one rendered image, including fit and A11 strategy.
+    """Stable identity for rendered pixels and their palette measurement metadata.
 
     The target and dithering identify the panel's output. Fit and strategy must
-    also change the validator when the saved representation changes.
+    also change the validator when the saved representation changes. Palette
+    colours are ordered; measurement status also identifies response metadata.
+    Callers may supply the response palette instead of resolving it again.
     """
     effective_fit = coerce_fit(fit) or get_target(target_key).fit
+    response_palette = palette if palette is not None else get_target(target_key).palette
+    palette_identity = json.dumps(
+        [response_palette.colours, response_palette.measured], separators=(",", ":")
+    )
     h = hashlib.sha256(
-        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}".encode()
+        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}"
+        f"|palette-v1|{palette_identity}".encode()
     ).hexdigest()
     return f'W/"{h[:24]}"'
 

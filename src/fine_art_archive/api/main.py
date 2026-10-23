@@ -2184,6 +2184,7 @@ def _render_feed_image(pl, work_id: str, request: Request) -> Response:
                 master.stat().st_mtime,
                 fit=fit,
                 render_strategy=evidence.strategy,
+                palette=tgt.palette,
             )
             if request.headers.get("if-none-match") == etag:
                 return Response(
