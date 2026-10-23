@@ -24,6 +24,6 @@ Commands used the isolated worktree `.venv/bin/python` (Python 3.12), with depen
 # 95 passed.
 ```
 
-The deliberately broken implementation retained the existing validator inputs and replaced only the `|palette-v1|{palette_identity}` hash component with `|palette-v1`. All five regressions detected this missing input. The restored `src/fine_art_archive/eink/feed.py` SHA-256 is `24c0c87f63271d68080419cbe554761adf8725af19728c804bc6b84ed305c818`.
+The deliberately broken implementation retained the existing validator inputs and replaced only the `|palette-v1|{palette_identity}` hash component with `|palette-v1`. All five regressions detected this missing input. Re-run at current HEAD (2026-10-23): 5 failed while disconnected, 5 passed after exact-byte restore. The restored `src/fine_art_archive/eink/feed.py` SHA-256 is `71d9263a0a5ad33197217dd1df4aabf23e40a5918dce961bda13518eb57cbb46`.
 
 Hosted current-head CI, review and post-merge verification remain separate delivery gates.

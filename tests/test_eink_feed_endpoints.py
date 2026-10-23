@@ -93,20 +93,26 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
     monkeypatch.setitem(TARGETS, target.key, target)
     monkeypatch.setitem(PALETTES, palette.name, palette)
 
+    colour_changed = replace(palette, colours=((1, 2, 3), (255, 255, 255)))
+    order_changed = replace(palette, colours=tuple(reversed(palette.colours)))
+    measured_changed = replace(palette, measured=True)
+    provenance_only = replace(palette, name="alias", note="provenance only")
+
     # Fingerprint is ordered colours + measured only; provenance fields are ignored.
-    assert _eink.palette_fingerprint(palette) == "[[[0,0,0],[255,255,255]],false]"
-    assert _eink.palette_fingerprint(replace(palette, name="alias", note="x")) == (
-        _eink.palette_fingerprint(palette)
-    )
-    assert _eink.palette_fingerprint(
-        replace(palette, colours=((1, 2, 3), (255, 255, 255)))
-    ) != _eink.palette_fingerprint(palette)
-    assert _eink.palette_fingerprint(
-        replace(palette, colours=tuple(reversed(palette.colours)))
-    ) != _eink.palette_fingerprint(palette)
-    assert _eink.palette_fingerprint(replace(palette, measured=True)) != (
-        _eink.palette_fingerprint(palette)
-    )
+    base_fp = _eink.palette_fingerprint(palette)
+    assert base_fp == "[[[0,0,0],[255,255,255]],false]"
+    assert _eink.palette_fingerprint(replace(palette)) == base_fp
+    assert _eink.palette_fingerprint(provenance_only) == base_fp
+    colour_fp = _eink.palette_fingerprint(colour_changed)
+    order_fp = _eink.palette_fingerprint(order_changed)
+    measured_fp = _eink.palette_fingerprint(measured_changed)
+    assert colour_fp != base_fp
+    assert order_fp != base_fp
+    assert measured_fp != base_fp
+    # Colour and measured are separate obligations: each mutates a different part.
+    assert colour_fp != measured_fp
+    assert colour_fp == "[[[1,2,3],[255,255,255]],false]"
+    assert measured_fp == "[[[0,0,0],[255,255,255]],true]"
 
     def tag(value):
         return _eink.item_etag("work", target.key, "none", 123, fit="contain", palette=value)
@@ -124,13 +130,19 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
 
     original = tag(palette)
     assert tag_identity(palette) == original
+    # Unchanged palette (and provenance-only edits) keep a stable validator.
     assert tag(replace(palette)) == original
-    assert tag(replace(palette, name="alias", note="provenance only")) == original
-    assert tag(replace(palette, colours=((1, 2, 3), (255, 255, 255)))) != original
-    assert tag(replace(palette, colours=tuple(reversed(palette.colours)))) != original
-    assert tag(replace(palette, measured=True)) != original
-    assert tag_identity(replace(palette, colours=((1, 2, 3), (255, 255, 255)))) != original
-    assert tag_identity(replace(palette, measured=True)) != original
+    assert tag(provenance_only) == original
+    # Colour-changing mutations invalidate; measured-only is a distinct invalidation.
+    colour_tag = tag(colour_changed)
+    order_tag = tag(order_changed)
+    measured_tag = tag(measured_changed)
+    assert colour_tag != original
+    assert order_tag != original
+    assert measured_tag != original
+    assert colour_tag != measured_tag
+    assert tag_identity(colour_changed) == colour_tag != original
+    assert tag_identity(measured_changed) == measured_tag != original
     # Master mtime, fit and strategy stay in the validator alongside the fingerprint.
     assert (
         _eink.item_etag(
@@ -158,7 +170,7 @@ def test_feed_etag_tracks_ordered_palette_and_measurement_only(monkeypatch):
     )
     # The default path must also observe palette changes for existing callers.
     assert _eink.item_etag("work", target.key, "none", 123, fit="contain") == original
-    monkeypatch.setitem(PALETTES, palette.name, replace(palette, measured=True))
+    monkeypatch.setitem(PALETTES, palette.name, measured_changed)
     assert _eink.item_etag("work", target.key, "none", 123, fit="contain") != original
 
 
