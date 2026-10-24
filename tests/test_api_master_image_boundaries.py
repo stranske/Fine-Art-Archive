@@ -197,6 +197,12 @@ def test_a_sidecar_beside_the_master_is_not_served_as_the_image(
 def test_eink_master_rejects_xmp_only_directory(
     image_files: dict[str, Path], monkeypatch: pytest.MonkeyPatch, extension: str
 ) -> None:
+    """XMP-only dirs have no master; with a JPEG present, the glob must skip sidecars.
+
+    The preferred exact-name loop is forced closed so both cases exercise the
+    `master.*` glob + `is_master_image` path. Sidecars are ordered first so a
+    missing guard cannot pass by lucky filename order.
+    """
     work = image_files["work"]
     (work / "master.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
     assert api_main._eink_master("sample-work") is None
@@ -205,11 +211,14 @@ def test_eink_master_rejects_xmp_only_directory(
     Image.new("RGB", (64, 32), "blue").save(master, format="JPEG")
     (work / f"master.{extension}.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
 
-    # Exercise the uppercase glob fallback on case-insensitive filesystems too.
+    # Skip the lowercase preferred loop so selection goes through glob fallback.
+    preferred_exact = {
+        work / f"master.{ext}" for ext in ("jpeg", "jpg", "png", "tif", "tiff", "webp")
+    }
     real_exists = Path.exists
 
     def preferred_candidate_exists(path: Path) -> bool:
-        if extension == "JPEG" and path == work / "master.jpeg":
+        if path in preferred_exact:
             return False
         return real_exists(path)
 
