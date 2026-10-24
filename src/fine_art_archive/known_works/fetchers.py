@@ -304,6 +304,25 @@ def fetch_met(artist_name: str, *, max_objects: int = 100) -> list[KnownWork]:
 # --------------------------------------------------------------------------
 # Merger
 # --------------------------------------------------------------------------
+# Inclusive year window for same-title merges. Separate when abs(diff) > this.
+_YEAR_MERGE_WINDOW = 2
+
+
+def _merge_work_metadata(existing: KnownWork, incoming: KnownWork) -> None:
+    """Fold source tags and fill-empty fields from incoming into existing."""
+    for s in incoming.sources:
+        if s not in existing.sources:
+            existing.sources.append(s)
+    existing.source_ids.update(incoming.source_ids)
+    if not existing.year and incoming.year:
+        existing.year = incoming.year
+    if not existing.image_url and incoming.image_url:
+        existing.image_url = incoming.image_url
+    if not existing.holder and incoming.holder:
+        existing.holder = incoming.holder
+    existing.sitelinks = max(existing.sitelinks, incoming.sitelinks)
+
+
 def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
     """Dedupe by (folded title, year ±2). When two sources agree, the
     merged record shows both source tags."""
@@ -316,23 +335,17 @@ def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
             if key in merged:
                 # Year proximity check (or no year on either side)
                 existing = merged[key]
-                if w.year and existing.year and abs(w.year - existing.year) > 2:
-                    # Probably different works with the same title — keep both
+                if w.year and existing.year and abs(w.year - existing.year) > _YEAR_MERGE_WINDOW:
+                    # Probably different works with the same title — keep both.
+                    # If another source already parked the same year under the
+                    # disambiguated key, merge into that row instead of overwriting.
                     key = f"{key}#{w.year}"
-                    merged[key] = w
+                    if key in merged:
+                        _merge_work_metadata(merged[key], w)
+                    else:
+                        merged[key] = w
                     continue
-                # Merge metadata
-                for s in w.sources:
-                    if s not in existing.sources:
-                        existing.sources.append(s)
-                existing.source_ids.update(w.source_ids)
-                if not existing.year and w.year:
-                    existing.year = w.year
-                if not existing.image_url and w.image_url:
-                    existing.image_url = w.image_url
-                if not existing.holder and w.holder:
-                    existing.holder = w.holder
-                existing.sitelinks = max(existing.sitelinks, w.sitelinks)
+                _merge_work_metadata(existing, w)
             else:
                 merged[key] = w
     return sorted(
