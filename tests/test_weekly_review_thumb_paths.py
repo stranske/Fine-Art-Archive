@@ -519,6 +519,61 @@ def _write_workspace_inputs(workspace: Path, works: Path) -> None:
     )
 
 
+@pytest.mark.parametrize("primary", [None, ""], ids=["unset", "empty"])
+def test_build_weekly_review_honors_faa_staging_dir_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, primary: str | None
+) -> None:
+    _assert_works_root_selection(tmp_path, monkeypatch, primary=primary)
+
+
+@pytest.mark.parametrize("explicit", [False, True], ids=["primary-env", "explicit-cli"])
+def test_build_weekly_review_works_root_override_precedence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, explicit: bool
+) -> None:
+    _assert_works_root_selection(tmp_path, monkeypatch, primary="primary", explicit=explicit)
+
+
+def _assert_works_root_selection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    primary: str | None,
+    explicit: bool = False,
+) -> None:
+    builder = load_builder()
+    # Keep a regression of the old module-level default inside this fixture too.
+    unused_default = tmp_path / "unused-default-works"
+    unused_default.mkdir()
+    monkeypatch.setattr(builder, "DEFAULT_ART_WORKS_ROOT", unused_default, raising=False)
+    roots = [tmp_path / name for name in ("legacy-works", "primary-works", "cli-works")]
+    for count, root in enumerate(roots, start=1):
+        root.mkdir()
+        for index in range(count):
+            work = root / f"wid-{index}"
+            work.mkdir()
+            (work / "meta.json").write_text(json.dumps({"title": f"Work {index}"}))
+    workspace = tmp_path / "workspace"
+    _write_workspace_inputs(workspace, roots[0])
+    reports = tmp_path / "reports"
+    monkeypatch.setattr(builder, "REPORTS", reports)
+    monkeypatch.setenv("FAA_WORKSPACE", str(workspace))
+    monkeypatch.setenv("FAA_STAGING_DIR", str(roots[0]))
+    monkeypatch.delenv("FAA_FRONTIER_JSON", raising=False)
+    monkeypatch.delenv("FAA_STAGING_ROOT", raising=False)
+    if primary is None:
+        monkeypatch.delenv("FAA_WORKS_DIR", raising=False)
+    else:
+        monkeypatch.setenv("FAA_WORKS_DIR", str(roots[1]) if primary else "")
+
+    args = ["--works-root", str(roots[2])] if explicit else []
+    assert builder.main(args) == 0
+    outputs = list(reports.glob("weekly_review_*.json"))
+    assert len(outputs) == 1
+    report = json.loads(outputs[0].read_text())
+    assert report["live_works"] == (3 if explicit else 2 if primary else 1)
+    assert report["unpromoted"] == []
+
+
 def test_build_weekly_review_uses_workspace_defaults_and_explicit_override(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
