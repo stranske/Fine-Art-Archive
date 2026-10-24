@@ -592,6 +592,41 @@ def test_merge_works_same_year_outside_window_merges_disambiguated_key():
     assert by_year[1883].source_ids == {"wikidata": "Q2", "wikipedia": "List"}
 
 
+@pytest.mark.parametrize("other_year", [-3, 3])
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_merge_works_year_zero_outside_window_stays_separate(other_year, reverse_sources):
+    zero = KnownWork(title="Study", year=0, sources=["met"], source_ids={"met": "1"})
+    other = KnownWork(
+        title="STUDY!", year=other_year, sources=["wikidata"], source_ids={"wikidata": "Q2"}
+    )
+    sources = ([other], [zero]) if reverse_sources else ([zero], [other])
+
+    merged = merge_works(*sources)
+
+    assert [work.year for work in merged] == sorted([0, other_year])
+    assert zero.sources == ["met"]
+    assert zero.source_ids == {"met": "1"}
+    assert other.sources == ["wikidata"]
+    assert other.source_ids == {"wikidata": "Q2"}
+
+
+@pytest.mark.parametrize("other_year", [-2, -1, 1, 2, None])
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_merge_works_year_zero_merges_without_replacing_known_year(other_year, reverse_sources):
+    zero = KnownWork(title="Study", year=0, sources=["met"], source_ids={"met": "1"})
+    other = KnownWork(
+        title="STUDY!", year=other_year, sources=["wikidata"], source_ids={"wikidata": "Q2"}
+    )
+    sources = ([other], [zero]) if reverse_sources else ([zero], [other])
+
+    merged = merge_works(*sources)
+
+    assert len(merged) == 1
+    assert merged[0].year == (other_year if reverse_sources and other_year is not None else 0)
+    assert set(merged[0].sources) == {"met", "wikidata"}
+    assert merged[0].source_ids == {"met": "1", "wikidata": "Q2"}
+
+
 def test_merge_works_sorts_astronomical_year_zero_before_year_one():
     merged = merge_works(
         [
