@@ -439,7 +439,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--date", default=date.today().isoformat())
     parser.add_argument("--since")
-    parser.add_argument("--works-root", type=Path, default=default_works_dir())
+    parser.add_argument(
+        "--works-root",
+        type=Path,
+        default=default_works_dir(),
+        help=(
+            "archive sidecar root "
+            "(default: $FAA_WORKS_DIR, then $FAA_STAGING_DIR, then the canonical archive)"
+        ),
+    )
     parser.add_argument("--staging-root", type=Path)
     workspace = _default_workspace()
     parser.add_argument("--frontier", type=Path, default=_default_frontier())

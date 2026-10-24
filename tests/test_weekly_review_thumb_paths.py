@@ -541,10 +541,15 @@ def _assert_works_root_selection(
     explicit: bool = False,
 ) -> None:
     builder = load_builder()
-    # Keep a regression of the old module-level default inside this fixture too.
+    # Isolate the shared resolver's last-resort root (and the pre-fix
+    # module-level DEFAULT_ART_WORKS_ROOT if a revert reintroduces it) so the
+    # real Art/works tree cannot satisfy live_works counts by accident.
     unused_default = tmp_path / "unused-default-works"
     unused_default.mkdir()
     monkeypatch.setattr(builder, "DEFAULT_ART_WORKS_ROOT", unused_default, raising=False)
+    shared_default = getattr(builder, "default_works_dir", None)
+    if shared_default is not None:
+        monkeypatch.setitem(shared_default.__globals__, "DEFAULT_ART_WORKS_ROOT", unused_default)
     roots = [tmp_path / name for name in ("legacy-works", "primary-works", "cli-works")]
     for count, root in enumerate(roots, start=1):
         root.mkdir()
