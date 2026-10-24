@@ -12,6 +12,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from fine_art_archive.known_works.fetchers import (  # noqa: E402
@@ -535,6 +537,59 @@ def test_merge_works():
 
     assert merged[3].title == "Self Portrait"
     assert merged[3].year == 1510
+
+
+@pytest.mark.parametrize("year", [1877, 1883])
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_merge_works_year_three_apart_stays_separate(year, reverse_sources):
+    first = KnownWork(title="Study", year=1880, sources=["met"], source_ids={"met": "1"})
+    second = KnownWork(
+        title="STUDY!", year=year, sources=["wikidata"], source_ids={"wikidata": "Q2"}
+    )
+    sources = ([second], [first]) if reverse_sources else ([first], [second])
+
+    merged = merge_works(*sources)
+
+    assert [work.year for work in merged] == sorted([1880, year])
+    assert first.sources == ["met"]
+    assert first.source_ids == {"met": "1"}
+    assert second.sources == ["wikidata"]
+    assert second.source_ids == {"wikidata": "Q2"}
+
+
+@pytest.mark.parametrize("year", [1878, 1882])
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_merge_works_year_two_apart_merges_metadata(year, reverse_sources):
+    first = KnownWork(title="Study", year=1880, sources=["met"], source_ids={"met": "1"})
+    second = KnownWork(
+        title="STUDY!", year=year, sources=["wikidata"], source_ids={"wikidata": "Q2"}
+    )
+    sources = ([second], [first]) if reverse_sources else ([first], [second])
+
+    merged = merge_works(*sources)
+
+    assert len(merged) == 1
+    assert merged[0].year == (year if reverse_sources else 1880)
+    assert set(merged[0].sources) == {"met", "wikidata"}
+    assert merged[0].source_ids == {"met": "1", "wikidata": "Q2"}
+
+
+def test_merge_works_same_year_outside_window_merges_disambiguated_key():
+    """1880 vs 1883 stay separate; a second 1883 source must merge, not overwrite."""
+    early = KnownWork(title="Study", year=1880, sources=["met"], source_ids={"met": "1"})
+    mid = KnownWork(title="STUDY!", year=1883, sources=["wikidata"], source_ids={"wikidata": "Q2"})
+    late = KnownWork(
+        title="Study", year=1883, sources=["wikipedia"], source_ids={"wikipedia": "List"}
+    )
+
+    merged = merge_works([early], [mid], [late])
+
+    assert [work.year for work in merged] == [1880, 1883]
+    by_year = {work.year: work for work in merged}
+    assert by_year[1880].sources == ["met"]
+    assert by_year[1880].source_ids == {"met": "1"}
+    assert set(by_year[1883].sources) == {"wikidata", "wikipedia"}
+    assert by_year[1883].source_ids == {"wikidata": "Q2", "wikipedia": "List"}
 
 
 def test_merge_works_sorts_astronomical_year_zero_before_year_one():
