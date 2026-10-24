@@ -610,7 +610,7 @@ def test_merge_works_year_zero_outside_window_stays_separate(other_year, reverse
     assert other.source_ids == {"wikidata": "Q2"}
 
 
-@pytest.mark.parametrize("other_year", [-2, -1, 1, 2, None])
+@pytest.mark.parametrize("other_year", [-2, -1, 0, 1, 2, None])
 @pytest.mark.parametrize("reverse_sources", [False, True])
 def test_merge_works_year_zero_merges_without_replacing_known_year(other_year, reverse_sources):
     zero = KnownWork(title="Study", year=0, sources=["met"], source_ids={"met": "1"})
@@ -625,6 +625,36 @@ def test_merge_works_year_zero_merges_without_replacing_known_year(other_year, r
     assert merged[0].year == (other_year if reverse_sources and other_year is not None else 0)
     assert set(merged[0].sources) == {"met", "wikidata"}
     assert merged[0].source_ids == {"met": "1", "wikidata": "Q2"}
+
+
+@pytest.mark.parametrize("first_year, second_year", [(0, 3), (3, 0), (0, -3), (-3, 0)])
+def test_merge_works_year_zero_disambiguated_record_retains_metadata(first_year, second_year):
+    first = KnownWork(title="Study", year=first_year, sources=["met"], source_ids={"met": "1"})
+    second = KnownWork(
+        title="STUDY!", year=second_year, sources=["wikidata"], source_ids={"wikidata": "Q2"}
+    )
+    repeated = KnownWork(
+        title="study",
+        year=second_year,
+        sources=["wikipedia"],
+        source_ids={"wikipedia": "List"},
+        holder="Museum",
+        image_url="https://example.com/study.jpg",
+    )
+
+    merged = merge_works([first], [second], [repeated])
+
+    assert [work.year for work in merged] == sorted([first_year, second_year])
+    by_year = {work.year: work for work in merged}
+    assert by_year[first_year].sources == ["met"]
+    assert by_year[first_year].source_ids == {"met": "1"}
+    assert by_year[first_year].holder is None
+    assert by_year[first_year].image_url is None
+    assert by_year[second_year] is second
+    assert by_year[second_year].sources == ["wikidata", "wikipedia"]
+    assert by_year[second_year].source_ids == {"wikidata": "Q2", "wikipedia": "List"}
+    assert by_year[second_year].holder == "Museum"
+    assert by_year[second_year].image_url == "https://example.com/study.jpg"
 
 
 def test_merge_works_sorts_astronomical_year_zero_before_year_one():
