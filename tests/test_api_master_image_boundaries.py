@@ -193,6 +193,45 @@ def test_a_sidecar_beside_the_master_is_not_served_as_the_image(
         assert rendered.format == "JPEG"
 
 
+@pytest.mark.parametrize("extension", ["jpeg", "JPEG"])
+def test_eink_master_rejects_xmp_only_directory(
+    image_files: dict[str, Path], monkeypatch: pytest.MonkeyPatch, extension: str
+) -> None:
+    """XMP-only dirs have no master; with a JPEG present, the glob must skip sidecars.
+
+    The preferred exact-name loop is forced closed so both cases exercise the
+    `master.*` glob + `is_master_image` path. Sidecars are ordered first so a
+    missing guard cannot pass by lucky filename order.
+    """
+    work = image_files["work"]
+    (work / "master.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
+    assert api_main._eink_master("sample-work") is None
+
+    master = work / f"master.{extension}"
+    Image.new("RGB", (64, 32), "blue").save(master, format="JPEG")
+    (work / f"master.{extension}.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
+
+    # Skip the lowercase preferred loop so selection goes through glob fallback.
+    preferred_exact = {
+        work / f"master.{ext}" for ext in ("jpeg", "jpg", "png", "tif", "tiff", "webp")
+    }
+    real_exists = Path.exists
+
+    def preferred_candidate_exists(path: Path) -> bool:
+        if path in preferred_exact:
+            return False
+        return real_exists(path)
+
+    monkeypatch.setattr(Path, "exists", preferred_candidate_exists)
+
+    # Put sidecars first even after sorting so filename order cannot hide a bug.
+    def sidecars_first(paths):
+        return sorted(paths, key=lambda path: (path.suffix.lower() != ".xmp", path.name))
+
+    monkeypatch.setattr(api_main, "sorted", sidecars_first, raising=False)
+    assert api_main._eink_master("sample-work") == master
+
+
 def test_no_caller_locates_the_master_by_prefix_alone() -> None:
     """The prefix test lives in is_master_image and nowhere else.
 
