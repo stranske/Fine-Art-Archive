@@ -314,7 +314,7 @@ def _merge_work_metadata(existing: KnownWork, incoming: KnownWork) -> None:
         if s not in existing.sources:
             existing.sources.append(s)
     existing.source_ids.update(incoming.source_ids)
-    if not existing.year and incoming.year:
+    if existing.year is None and incoming.year is not None:
         existing.year = incoming.year
     if not existing.image_url and incoming.image_url:
         existing.image_url = incoming.image_url
@@ -335,7 +335,11 @@ def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
             if key in merged:
                 # Year proximity check (or no year on either side)
                 existing = merged[key]
-                if w.year and existing.year and abs(w.year - existing.year) > _YEAR_MERGE_WINDOW:
+                if (
+                    w.year is not None
+                    and existing.year is not None
+                    and abs(w.year - existing.year) > _YEAR_MERGE_WINDOW
+                ):
                     # Probably different works with the same title — keep both.
                     # If another source already parked the same year under the
                     # disambiguated key, merge into that row instead of overwriting.
