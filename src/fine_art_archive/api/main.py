@@ -480,6 +480,8 @@ def _eink_master(work_id: str) -> Path | None:
                 return contained
     found = sorted(work_dir.glob("master.*"))
     for candidate in found:
+        if not sidecar.is_master_image(candidate.name):
+            continue
         contained = contained_master(candidate)
         if contained is not None:
             return contained

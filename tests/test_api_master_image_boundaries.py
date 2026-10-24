@@ -193,6 +193,36 @@ def test_a_sidecar_beside_the_master_is_not_served_as_the_image(
         assert rendered.format == "JPEG"
 
 
+@pytest.mark.parametrize("extension", ["jpeg", "JPEG"])
+def test_eink_master_rejects_xmp_only_directory(
+    image_files: dict[str, Path], monkeypatch: pytest.MonkeyPatch, extension: str
+) -> None:
+    work = image_files["work"]
+    (work / "master.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
+    assert api_main._eink_master("sample-work") is None
+
+    master = work / f"master.{extension}"
+    Image.new("RGB", (64, 32), "blue").save(master, format="JPEG")
+    (work / f"master.{extension}.xmp").write_text("<x:xmpmeta/>", encoding="utf-8")
+
+    # Exercise the uppercase glob fallback on case-insensitive filesystems too.
+    real_exists = Path.exists
+
+    def preferred_candidate_exists(path: Path) -> bool:
+        if extension == "JPEG" and path == work / "master.jpeg":
+            return False
+        return real_exists(path)
+
+    monkeypatch.setattr(Path, "exists", preferred_candidate_exists)
+
+    # Put sidecars first even after sorting so filename order cannot hide a bug.
+    def sidecars_first(paths):
+        return sorted(paths, key=lambda path: (path.suffix.lower() != ".xmp", path.name))
+
+    monkeypatch.setattr(api_main, "sorted", sidecars_first, raising=False)
+    assert api_main._eink_master("sample-work") == master
+
+
 def test_no_caller_locates_the_master_by_prefix_alone() -> None:
     """The prefix test lives in is_master_image and nowhere else.
 
