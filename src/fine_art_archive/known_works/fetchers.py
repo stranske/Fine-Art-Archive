@@ -316,7 +316,7 @@ def merge_works(*sources: list[KnownWork]) -> list[KnownWork]:
             if key in merged:
                 # Year proximity check (or no year on either side)
                 existing = merged[key]
-                if w.year and existing.year and abs(w.year - existing.year) > 3:
+                if w.year and existing.year and abs(w.year - existing.year) > 2:
                     # Probably different works with the same title — keep both
                     key = f"{key}#{w.year}"
                     merged[key] = w
