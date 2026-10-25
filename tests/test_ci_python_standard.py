@@ -21,6 +21,25 @@ RUNTIME_KEYS = {
 }
 
 
+class _UniqueKeySafeLoader(yaml.SafeLoader):
+    """Reject ambiguous workflow mappings before any runtime pins can be discarded."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        self.flatten_mapping(node)
+        keys = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in keys:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a workflow mapping",
+                    node.start_mark,
+                    f"duplicate key {key!r}",
+                    key_node.start_mark,
+                )
+            keys.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
 def _runtime_pins(
     node: Any, location: str, *, in_matrix: bool = False
 ) -> Iterator[tuple[str, Any]]:
@@ -55,7 +74,7 @@ def _contains_old_runtime(value: Any) -> bool:
 
 def test_workflow_python_pins_follow_standard() -> None:
     workflows = {
-        path.name: yaml.safe_load(path.read_text(encoding="utf-8"))
+        path.name: yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeySafeLoader)
         for path in sorted(WORKFLOWS.iterdir())
         if path.is_file() and path.suffix in {".yml", ".yaml"}
     }
@@ -124,3 +143,44 @@ def test_json_matrix_deliberate_break_and_restore(
 
 def test_unrelated_python_metadata_is_not_a_runtime_pin() -> None:
     assert list(_runtime_pins({"metadata": {"python": "3.12"}}, "ci.yml")) == []
+
+
+@pytest.mark.parametrize("filename, job", [("ci.yml", "python"), ("pr-00-gate.yml", "python-ci")])
+@pytest.mark.parametrize("old_pin_first", [True, False])
+def test_duplicate_runtime_pin_is_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    filename: str,
+    job: str,
+    old_pin_first: bool,
+) -> None:
+    """Duplicate keys must not silently discard either caller's runtime pin."""
+    for name in ("ci.yml", "pr-00-gate.yml"):
+        (tmp_path / name).write_bytes((WORKFLOWS / name).read_bytes())
+    monkeypatch.setattr(f"{__name__}.WORKFLOWS", tmp_path)
+    pins = ['["3.12", "3.14"]', '["3.13", "3.14"]']
+    if not old_pin_first:
+        pins.reverse()
+    (tmp_path / filename).write_text(
+        f"jobs:\n  {job}:\n    with:\n"
+        f"      python-versions: '{pins[0]}'\n"
+        f"      python-versions: '{pins[1]}'\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(yaml.constructor.ConstructorError, match="duplicate key 'python-versions'"):
+        test_workflow_python_pins_follow_standard()
+
+
+@pytest.mark.parametrize("suffix", [".yml", ".yaml"])
+def test_duplicate_environment_pin_in_another_workflow_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, suffix: str
+) -> None:
+    """The guard must inspect duplicate pins outside the two repository-owned callers."""
+    for name in ("ci.yml", "pr-00-gate.yml"):
+        (tmp_path / name).write_bytes((WORKFLOWS / name).read_bytes())
+    monkeypatch.setattr(f"{__name__}.WORKFLOWS", tmp_path)
+    (tmp_path / f"other{suffix}").write_text(
+        "env:\n  PYTHON_VERSION: '3.12'\n  PYTHON_VERSION: '3.14'\n", encoding="utf-8"
+    )
+    with pytest.raises(yaml.constructor.ConstructorError, match="duplicate key 'PYTHON_VERSION'"):
+        test_workflow_python_pins_follow_standard()
