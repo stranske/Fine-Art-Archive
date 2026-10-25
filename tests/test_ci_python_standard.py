@@ -10,6 +10,8 @@ from typing import Any
 import pytest
 import yaml
 
+pytest_plugins = ["pytester"]
+
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".github" / "workflows"
 RUNTIME_KEYS = {
     "python-version",
@@ -118,27 +120,49 @@ def test_named_python_matrix_cannot_hide_old_runtime(matrix: dict[str, Any]) -> 
 
 @pytest.mark.parametrize("filename, job", [("ci.yml", "python"), ("pr-00-gate.yml", "python-ci")])
 def test_json_matrix_deliberate_break_and_restore(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, filename: str, job: str
+    pytester: pytest.Pytester, filename: str, job: str
 ) -> None:
-    """The named guard must reject a restored 3.12 JSON pin in either caller."""
-    for name in ("ci.yml", "pr-00-gate.yml"):
-        (tmp_path / name).write_bytes((WORKFLOWS / name).read_bytes())
-    monkeypatch.setattr(f"{__name__}.WORKFLOWS", tmp_path)
-    test_workflow_python_pins_follow_standard()
+    """Run the named test through pytest: green, deliberate 3.12 failure, then green."""
+    # Keep the guard's source unchanged, redirecting only its input directory.
+    guard = pytester.makepyfile(test_ci_python_standard=Path(__file__).read_text(encoding="utf-8"))
+    pytester.makeconftest("""
+        from pathlib import Path
+        import pytest
 
-    path = tmp_path / filename
+        @pytest.fixture(autouse=True)
+        def workflow_directory(monkeypatch, request):
+            monkeypatch.setattr(request.module, "WORKFLOWS", Path(__file__).parent / "workflows")
+        """)
+    workflows = pytester.path / "workflows"
+    workflows.mkdir()
+    for source in WORKFLOWS.iterdir():
+        if source.is_file() and source.suffix in {".yml", ".yaml"}:
+            (workflows / source.name).write_bytes(source.read_bytes())
+    args = ("-q", "-o", "addopts=", f"{guard}::test_workflow_python_pins_follow_standard")
+    baseline = pytester.runpytest_subprocess(*args, timeout=30)
+    assert baseline.ret == pytest.ExitCode.OK
+    baseline.assert_outcomes(passed=1)
+
+    path = workflows / filename
     original = path.read_bytes()
-    workflow = yaml.safe_load(original)
-    workflow["jobs"][job]["with"]["python-versions"] = '["3.12", "3.14"]'
-    path.write_text(yaml.safe_dump(workflow), encoding="utf-8")
-    with pytest.raises(AssertionError, match="Python 3.12 runtime pins remain") as failure:
-        test_workflow_python_pins_follow_standard()
-    assert str(failure.value).splitlines()[0] == (
-        f"Python 3.12 runtime pins remain: ['{filename}.jobs.{job}.with.python-versions']"
-    )
+    try:
+        # Change only the runtime value, preserving the rest of the caller byte for byte.
+        standard = b'python-versions: \'["3.13", "3.14"]\''
+        assert original.count(standard) == 1
+        path.write_bytes(original.replace(standard, b'python-versions: \'["3.12", "3.14"]\''))
+        failure = pytester.runpytest_subprocess(*args, timeout=30)
+        assert failure.ret == pytest.ExitCode.TESTS_FAILED
+        failure.assert_outcomes(failed=1)
+        assert (
+            f"Python 3.12 runtime pins remain: ['{filename}.jobs.{job}.with.python-versions']"
+            in failure.stdout.str()
+        )
+    finally:
+        path.write_bytes(original)
 
-    path.write_bytes(original)
-    test_workflow_python_pins_follow_standard()
+    restored = pytester.runpytest_subprocess(*args, timeout=30)
+    assert restored.ret == pytest.ExitCode.OK
+    restored.assert_outcomes(passed=1)
 
 
 def test_unrelated_python_metadata_is_not_a_runtime_pin() -> None:
