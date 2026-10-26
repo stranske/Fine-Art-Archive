@@ -97,10 +97,13 @@ def test_authority_ordering() -> None:
 
 # --- assembly --------------------------------------------------------------
 def test_sidecar_facts_includes_astronomical_year_zero() -> None:
+    assert d._sidecar_facts({"year": 0}) == [{"text": "Dated 0.", "source_id": "archive"}]
+
+
+def test_build_dossier_includes_astronomical_year_zero() -> None:
     sidecar = {**SIDECAR, "year": 0}
     expected = {"text": "Dated 0.", "source_id": "archive"}
 
-    assert expected in d._sidecar_facts(sidecar)
     doss = d.build_dossier(sidecar, client=FakeClient(), retrieved_at="2026-07-26T00:00:00Z")
     assert expected in doss.key_facts
 
