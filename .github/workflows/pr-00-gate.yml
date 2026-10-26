@@ -126,7 +126,7 @@ jobs:
       }}
     uses: stranske/Workflows/.github/workflows/reusable-10-ci-python.yml@main
     with:
-      python-versions: '["3.12", "3.13"]'
+      python-versions: '["3.13", "3.14"]'
       # PR Gate is optimized for fast feedback. Full coverage enforcement runs on main.
       # The Gate measured no coverage while ci.yml has had `coverage: true` all along, and
       # this repo's own ci.yml payload measures 81.45% over 8,639 statements. The Gate's
