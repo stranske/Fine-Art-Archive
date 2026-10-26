@@ -113,6 +113,14 @@ def test_sidecar_facts_omits_unset_year(sidecar: dict[str, Any]) -> None:
     assert not any(fact["text"].startswith("Dated ") for fact in d._sidecar_facts(sidecar))
 
 
+def test_sidecar_facts_omits_empty_string_year() -> None:
+    sidecar = {**SIDECAR, "year": ""}
+
+    assert not any(fact["text"].startswith("Dated ") for fact in d._sidecar_facts(sidecar))
+    doss = d.build_dossier(sidecar, client=FakeClient(), retrieved_at="2026-07-26T00:00:00Z")
+    assert not any(fact["text"].startswith("Dated ") for fact in doss.key_facts)
+
+
 @pytest.mark.parametrize("year", [-1, 1, "1944-1948"])
 def test_sidecar_facts_preserves_other_dates(year: int | str) -> None:
     assert {"text": f"Dated {year}.", "source_id": "archive"} in d._sidecar_facts({"year": year})
