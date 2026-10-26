@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from fine_art_archive.enrichment import dossier as d
 
 SIDECAR: dict[str, Any] = {
@@ -94,6 +96,25 @@ def test_authority_ordering() -> None:
 
 
 # --- assembly --------------------------------------------------------------
+def test_sidecar_facts_includes_astronomical_year_zero() -> None:
+    sidecar = {**SIDECAR, "year": 0}
+    expected = {"text": "Dated 0.", "source_id": "archive"}
+
+    assert expected in d._sidecar_facts(sidecar)
+    doss = d.build_dossier(sidecar, client=FakeClient(), retrieved_at="2026-07-26T00:00:00Z")
+    assert expected in doss.key_facts
+
+
+@pytest.mark.parametrize("sidecar", [{}, {"year": None}])
+def test_sidecar_facts_omits_unset_year(sidecar: dict[str, Any]) -> None:
+    assert not any(fact["text"].startswith("Dated ") for fact in d._sidecar_facts(sidecar))
+
+
+@pytest.mark.parametrize("year", [-1, 1, "1944-1948"])
+def test_sidecar_facts_preserves_other_dates(year: int | str) -> None:
+    assert {"text": f"Dated {year}.", "source_id": "archive"} in d._sidecar_facts({"year": year})
+
+
 def test_build_dossier_full() -> None:
     doss = d.build_dossier(SIDECAR, client=FakeClient(), retrieved_at="2026-07-26T00:00:00Z")
     assert doss.viewer_summary and "encyclopedic lead" in doss.viewer_summary

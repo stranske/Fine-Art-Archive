@@ -204,7 +204,7 @@ def _sidecar_facts(sidecar: dict[str, Any]) -> list[dict[str, str | None]]:
     artist = sidecar.get("artist") or {}
     if artist.get("name"):
         facts.append({"text": f"Artist: {artist['name']}.", "source_id": "archive"})
-    if sidecar.get("year"):
+    if sidecar.get("year") is not None:
         facts.append({"text": f"Dated {sidecar['year']}.", "source_id": "archive"})
     if sidecar.get("medium"):
         facts.append({"text": f"Medium: {sidecar['medium']}.", "source_id": "archive"})
