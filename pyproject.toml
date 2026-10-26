@@ -39,7 +39,7 @@ dev = [
     "mypy==2.4.0",
     "black==26.10.1",
     "httpx>=0.27",
-    "starlette==1.2.0",
+    "starlette==1.9.0",
 ]
 app = [
     "uvicorn>=0.30",
