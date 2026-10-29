@@ -7,7 +7,7 @@ name = "fine-art-archive"
 version = "0.1.0"
 description = "Fine Art Archive — importable domain library, schema, collectors, and Companion API."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = {text = "MIT"}
 authors = [
     {name = "Tim Stranske", email = "tim@stranskemo.com"},
@@ -17,8 +17,8 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "fastapi>=0.115",
@@ -80,7 +80,7 @@ exclude_lines = [
 fail_under = 25
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 100
 src = ["src", "tests"]
 
@@ -110,7 +110,7 @@ ignore = [
 known-first-party = ["fine_art_archive", "tools"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -147,4 +147,4 @@ ignore_missing_imports = true
 
 [tool.black]
 line-length = 100
-target-version = ["py312"]
+target-version = ["py313"]
