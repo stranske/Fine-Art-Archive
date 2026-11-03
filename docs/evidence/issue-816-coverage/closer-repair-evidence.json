@@ -1,0 +1,37 @@
+{
+  "issue": "stranske/Fine-Art-Archive#816",
+  "merged_opener_pr": 817,
+  "baseline_commit": "b20aaeeecd1227adb69b00cfcc8c7d38d20b9f9bd",
+  "after_commit": "f0c2a08e303c384385672722822eb5d27292c828",
+  "gate_pytest_command": ".venv/bin/python -m pytest -m \"not release and not slow\" -n auto --dist load --ignore=tests/integration --ignore=tests/integrations --cov=src --cov-branch --cov-report=json:COVERAGE.json -q -o addopts=''",
+  "ranker_command": "ORCH_ESCAPED_DEFECT_PRIORITY=1 python3 ~/.codex/orchestrator-mirror/escaped_defect_priority.py --repo <clone> --coverage-json <baseline.json> --limit 200 --json",
+  "rank_order": "tier1 escaped_defect_priority, tier2 churn, tier3 uncovered statement mass (escaped_defect_priority.py; not file size)",
+  "target_ranks_at_baseline": {
+    "src/fine_art_archive/api/main.py": 1,
+    "src/fine_art_archive/quality/source_quality.py": 30,
+    "src/fine_art_archive/parsers/semantic.py": 52,
+    "src/fine_art_archive/collect/discovery.py": 55
+  },
+  "baseline": {
+    "blended_line_branch_pct": 91.152679,
+    "targets": {
+      "src/fine_art_archive/api/main.py": {"missing_statements": 6, "missing_branches": 14, "units": 20},
+      "src/fine_art_archive/collect/discovery.py": {"missing_statements": 10, "missing_branches": 4, "units": 14},
+      "src/fine_art_archive/quality/source_quality.py": {"missing_statements": 45, "missing_branches": 42, "units": 87},
+      "src/fine_art_archive/parsers/semantic.py": {"missing_statements": 43, "missing_branches": 34, "units": 77}
+    },
+    "targets_total_units": 198
+  },
+  "after": {
+    "blended_line_branch_pct": 91.748795,
+    "targets": {
+      "src/fine_art_archive/api/main.py": {"missing_statements": 6, "missing_branches": 15, "units": 21},
+      "src/fine_art_archive/collect/discovery.py": {"missing_statements": 4, "missing_branches": 2, "units": 6},
+      "src/fine_art_archive/quality/source_quality.py": {"missing_statements": 31, "missing_branches": 33, "units": 64},
+      "src/fine_art_archive/parsers/semantic.py": {"missing_statements": 18, "missing_branches": 19, "units": 37}
+    },
+    "targets_total_units": 128
+  },
+  "targets_total_reduction_units": 70,
+  "measured_at": "2026-11-03T07:12:42Z"
+}
