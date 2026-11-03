@@ -1,37 +1,243 @@
 {
   "issue": "stranske/Fine-Art-Archive#816",
   "merged_opener_pr": 817,
-  "baseline_commit": "b20aaeeecd1227adb69b00cfcc8c7d38d20b9f9bd",
-  "after_commit": "f0c2a08e303c384385672722822eb5d27292c828",
-  "gate_pytest_command": ".venv/bin/python -m pytest -m \"not release and not slow\" -n auto --dist load --ignore=tests/integration --ignore=tests/integrations --cov=src --cov-branch --cov-report=json:COVERAGE.json -q -o addopts=''",
-  "ranker_command": "ORCH_ESCAPED_DEFECT_PRIORITY=1 python3 ~/.codex/orchestrator-mirror/escaped_defect_priority.py --repo <clone> --coverage-json <baseline.json> --limit 200 --json",
-  "rank_order": "tier1 escaped_defect_priority, tier2 churn, tier3 uncovered statement mass (escaped_defect_priority.py; not file size)",
-  "target_ranks_at_baseline": {
-    "src/fine_art_archive/api/main.py": 1,
-    "src/fine_art_archive/quality/source_quality.py": 30,
-    "src/fine_art_archive/parsers/semantic.py": 52,
-    "src/fine_art_archive/collect/discovery.py": 55
+  "baseline_commit": "b20aaeecd1227adb69b00cfcc8c7d38d20b9f9bd",
+  "after_commit": "fc884e7e146477c1b8576f6b0538ee25bf5c3941",
+  "comparison_scope": "Exact parent and merge of #817; supersedes invalid SHA and comparison against later main in prior evidence.",
+  "measured_at": "2026-11-03T08:53:24.992778+00:00",
+  "interpreter": "/Users/teacher/.codex/orchestrator/worktrees/stranske__Fine-Art-Archive__866__closer/.venv/bin/python",
+  "python_version": "3.13.13",
+  "pytest_version": "9.2.0",
+  "coverage_version": "7.17.0",
+  "pytest_xdist_version": "3.8.0",
+  "gate_source": {
+    "consumer": ".github/workflows/pr-00-gate.yml (identical at parent and merge)",
+    "reusable": "https://github.com/stranske/Workflows/blob/62672b61b18b16d6301e5e671dfe43e5fd9f1d15/.github/workflows/reusable-10-ci-python.yml",
+    "notes": "Expanded pytest arguments retain consumer addopts and branch=true from pyproject.toml. Reusable appends --dist=loadgroup, overriding consumer --dist load. Local environment differs from hosted Linux 3.13/3.14; no claim of bit-identical hosted totals."
   },
+  "gate_pytest_command": "/Users/teacher/.codex/orchestrator/worktrees/stranske__Fine-Art-Archive__866__closer/.venv/bin/python -m pytest -m 'not release and not slow' --junitxml=pytest-junit.xml --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --cov-report=term-missing --cov-report=json:coverage.json -n auto --dist load --ignore=tests/integration --ignore=tests/integrations -n auto --dist=loadgroup",
+  "gate_environment": {
+    "FAA_STAGING_DIR": "/private/tmp/faa816-review/empty-works",
+    "FAA_ART_WORKS_ROOT": "/private/tmp/faa816-review/empty-works",
+    "FAA_FRONTIER_JSON": "/private/tmp/faa816-review/absent-frontier.json",
+    "FAA_AUTOMATION_LOCK_DIR": "/private/tmp/faa816-review/locks"
+  },
+  "comparison_checkouts": {
+    "baseline": "/private/tmp/faa816-review/baseline-isolated",
+    "after": "/private/tmp/faa816-review/after-isolated"
+  },
+  "comparison_setup_commands": ["git clone --shared --no-checkout /Users/teacher/.codex/orchestrator/worktrees/stranske__Fine-Art-Archive__866__closer /private/tmp/faa816-review/baseline-isolated", "git -C /private/tmp/faa816-review/baseline-isolated checkout --detach b20aaeecd1227adb69b00cfcc8c7d38d20b9f9bd", "git clone --shared --no-checkout /Users/teacher/.codex/orchestrator/worktrees/stranske__Fine-Art-Archive__866__closer /private/tmp/faa816-review/after-isolated", "git -C /private/tmp/faa816-review/after-isolated checkout --detach fc884e7e146477c1b8576f6b0538ee25bf5c3941"],
   "baseline": {
-    "blended_line_branch_pct": 91.152679,
+    "blended_line_branch_pct": 91.145457,
     "targets": {
-      "src/fine_art_archive/api/main.py": {"missing_statements": 6, "missing_branches": 14, "units": 20},
-      "src/fine_art_archive/collect/discovery.py": {"missing_statements": 10, "missing_branches": 4, "units": 14},
-      "src/fine_art_archive/quality/source_quality.py": {"missing_statements": 45, "missing_branches": 42, "units": 87},
-      "src/fine_art_archive/parsers/semantic.py": {"missing_statements": 43, "missing_branches": 34, "units": 77}
+      "src/fine_art_archive/api/main.py": {
+        "missing_statements": 7,
+        "missing_branches": 15,
+        "units": 22,
+        "remaining_statement_lines": [531, 921, 970, 992, 1159, 1670, 2959],
+        "remaining_branch_outcomes": [[530, 531], [626, 628], [920, 921], [969, 970], [971, 973], [991, 992], [1158, 1159], [1213, 1230], [1234, 1230], [1647, 1670], [2437, 2441], [2957, 2959], [2977, 2982], [3105, 3115], [3113, 3115]]
+      },
+      "src/fine_art_archive/collect/discovery.py": {
+        "missing_statements": 10,
+        "missing_branches": 4,
+        "units": 14,
+        "remaining_statement_lines": [78, 148, 199, 200, 217, 232, 233, 256, 274, 275],
+        "remaining_branch_outcomes": [[77, 78], [147, 148], [216, 217], [255, 256]]
+      },
+      "src/fine_art_archive/quality/source_quality.py": {
+        "missing_statements": 45,
+        "missing_branches": 42,
+        "units": 87,
+        "remaining_statement_lines": [272, 279, 284, 351, 360, 386, 437, 438, 439, 477, 481, 482, 485, 505, 510, 511, 512, 513, 514, 515, 520, 560, 561, 562, 569, 573, 574, 575, 579, 583, 586, 592, 593, 594, 595, 596, 597, 598, 606, 615, 627, 628, 629, 630, 635],
+        "remaining_branch_outcomes": [[165, -144], [255, 257], [271, 272], [278, 279], [283, 284], [350, 351], [352, 360], [384, 386], [435, 437], [476, 477], [484, 485], [490, 496], [502, 505], [510, 511], [510, 527], [511, 510], [511, 512], [513, 514], [513, 515], [568, 569], [572, 573], [573, 574], [573, 577], [574, 573], [574, 575], [578, 579], [582, 583], [584, 581], [585, 586], [588, 592], [592, 584], [592, 593], [594, 595], [594, 596], [596, 592], [596, 597], [597, 596], [597, 598], [605, 606], [614, 615], [624, 626], [634, 635]]
+      },
+      "src/fine_art_archive/parsers/semantic.py": {
+        "missing_statements": 43,
+        "missing_branches": 34,
+        "units": 77,
+        "remaining_statement_lines": [70, 74, 77, 91, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 135, 136, 137, 138, 152, 270, 285, 313, 315, 322, 324, 330, 404, 455, 464, 484, 485, 486, 503, 505, 506, 507, 508, 512, 617, 648],
+        "remaining_branch_outcomes": [[69, 70], [73, 74], [76, 77], [79, -66], [96, 97], [96, 100], [98, 96], [98, 99], [102, 103], [102, 105], [103, 102], [103, 104], [129, 134], [134, 135], [136, 134], [136, 137], [151, 152], [159, 163], [269, 270], [283, 285], [312, 313], [314, 315], [321, 322], [323, 324], [329, 330], [403, 404], [454, 455], [461, 464], [483, 484], [493, 503], [503, 505], [503, 512], [616, 617], [647, 648]]
+      }
     },
-    "targets_total_units": 198
+    "targets_total_units": 200
   },
   "after": {
-    "blended_line_branch_pct": 91.748795,
+    "blended_line_branch_pct": 91.672685,
     "targets": {
-      "src/fine_art_archive/api/main.py": {"missing_statements": 6, "missing_branches": 15, "units": 21},
-      "src/fine_art_archive/collect/discovery.py": {"missing_statements": 4, "missing_branches": 2, "units": 6},
-      "src/fine_art_archive/quality/source_quality.py": {"missing_statements": 31, "missing_branches": 33, "units": 64},
-      "src/fine_art_archive/parsers/semantic.py": {"missing_statements": 18, "missing_branches": 19, "units": 37}
+      "src/fine_art_archive/api/main.py": {
+        "missing_statements": 7,
+        "missing_branches": 15,
+        "units": 22,
+        "remaining_statement_lines": [531, 921, 970, 992, 1159, 1670, 2959],
+        "remaining_branch_outcomes": [[530, 531], [626, 628], [920, 921], [969, 970], [971, 973], [991, 992], [1158, 1159], [1213, 1230], [1234, 1230], [1647, 1670], [2437, 2441], [2957, 2959], [2977, 2982], [3105, 3115], [3113, 3115]]
+      },
+      "src/fine_art_archive/collect/discovery.py": {
+        "missing_statements": 4,
+        "missing_branches": 2,
+        "units": 6,
+        "remaining_statement_lines": [78, 199, 200, 217],
+        "remaining_branch_outcomes": [[77, 78], [216, 217]]
+      },
+      "src/fine_art_archive/quality/source_quality.py": {
+        "missing_statements": 31,
+        "missing_branches": 33,
+        "units": 64,
+        "remaining_statement_lines": [272, 279, 284, 351, 360, 386, 485, 514, 560, 561, 562, 569, 573, 574, 575, 579, 583, 586, 592, 593, 594, 595, 596, 597, 598, 606, 615, 627, 628, 629, 630],
+        "remaining_branch_outcomes": [[165, -144], [255, 257], [271, 272], [278, 279], [283, 284], [350, 351], [352, 360], [384, 386], [484, 485], [490, 496], [513, 514], [568, 569], [572, 573], [573, 574], [573, 577], [574, 573], [574, 575], [578, 579], [582, 583], [584, 581], [585, 586], [588, 592], [592, 584], [592, 593], [594, 595], [594, 596], [596, 592], [596, 597], [597, 596], [597, 598], [605, 606], [614, 615], [624, 626]]
+      },
+      "src/fine_art_archive/parsers/semantic.py": {
+        "missing_statements": 18,
+        "missing_branches": 19,
+        "units": 37,
+        "remaining_statement_lines": [70, 77, 135, 136, 137, 138, 152, 315, 322, 324, 330, 404, 455, 484, 485, 486, 512, 648],
+        "remaining_branch_outcomes": [[69, 70], [76, 77], [79, -66], [98, 96], [129, 134], [134, 135], [136, 134], [136, 137], [151, 152], [159, 163], [314, 315], [321, 322], [323, 324], [329, 330], [403, 404], [454, 455], [483, 484], [503, 512], [647, 648]]
+      }
     },
-    "targets_total_units": 128
+    "targets_total_units": 129
   },
-  "targets_total_reduction_units": 70,
-  "measured_at": "2026-11-03T07:12:42Z"
+  "targets_total_reduction_units": 71,
+  "gate_results": {
+    "baseline": "exit=0; 2418 passed, 12 skipped, 20 warnings in 79.54s",
+    "after": "exit=0; 2426 passed, 12 skipped, 20 warnings in 82.04s"
+  },
+  "ranking_selection_evidence": {
+    "source": "https://github.com/stranske/Fine-Art-Archive/issues/816",
+    "original_order": ["src/fine_art_archive/api/main.py", "src/fine_art_archive/collect/discovery.py", "src/fine_art_archive/quality/source_quality.py", "src/fine_art_archive/parsers/semantic.py"],
+    "original_uncovered_units": [13, 14, 87, 77],
+    "original_churn": [2, 1, 1, 1],
+    "generator": "/Users/teacher/.codex/bin/coverage-autopilot.py",
+    "generator_sha256": "fa0a55342eb1253424c7f7d828ef337ac57f5dcf4bf569276e1aef108f6c984e",
+    "contract": "rank_targets preserves ranker order; next_chunk skips excluded paths and zero-unit files, stops at chunk unit/file limits. Original eligible/excluded queue snapshot is unavailable; current unfiltered ranks are an audit, not a reconstruction of historical selection."
+  },
+  "ranker_revision": "stranske/Orchestrator@3afc2c482f506cfcd644c2942c3f516702264927",
+  "ranker_sha256": "d8d72e34a796b1509fa90081186e9b4be2c792ce657021396dd7baf5a480dc60",
+  "ranker_setup_command": "mkdir -p /private/tmp/faa816-review/tools && curl --fail --location https://raw.githubusercontent.com/stranske/Orchestrator/3afc2c482f506cfcd644c2942c3f516702264927/src/escaped_defect_priority.py -o /private/tmp/faa816-review/tools/escaped_defect_priority.py",
+  "ranker_command": "ORCH_ESCAPED_DEFECT_PRIORITY=1 /opt/anaconda3/bin/python3 /private/tmp/faa816-review/tools/escaped_defect_priority.py --repo /private/tmp/faa816-review/baseline-isolated --coverage-json /private/tmp/faa816-review/baseline-isolated/coverage.json --lookback-days 180 --limit 200 --json > /private/tmp/faa816-review/ranking.json",
+  "ranking_replay_note": "coverage.json is the exact Gate output; no rename. Tool revision and checkout are pinned. The ranker uses a wall-clock-relative 180-day git history window; ranks can drift on a future date. Numeric tiers come from git history; tier1_source is informational Brain availability metadata.",
+  "rank_order": "Lexicographic escaped defects, churn, missing statements; hollow-rate discount; path tie-break; never file size.",
+  "baseline_ranking_audit": {
+    "src/fine_art_archive/api/main.py": {
+      "rank": 1,
+      "path": "src/fine_art_archive/api/main.py",
+      "rank_key": [28.0, 57.0, 7.0],
+      "tier1_escaped_defects": 28.0,
+      "tier2_churn": 57,
+      "tier3_uncovered_statements": 7,
+      "hollow_rate": 0.0,
+      "evidence": ["fix commit touched this file", "fix commit touched this file", "fix commit touched this file", "fix commit touched this file", "fix commit touched this file"]
+    },
+    "src/fine_art_archive/quality/source_quality.py": {
+      "rank": 27,
+      "path": "src/fine_art_archive/quality/source_quality.py",
+      "rank_key": [1.0, 5.0, 45.0],
+      "tier1_escaped_defects": 1.0,
+      "tier2_churn": 5,
+      "tier3_uncovered_statements": 45,
+      "hollow_rate": 0.0,
+      "evidence": ["fix commit touched this file"]
+    },
+    "src/fine_art_archive/parsers/semantic.py": {
+      "rank": 52,
+      "path": "src/fine_art_archive/parsers/semantic.py",
+      "rank_key": [0.0, 2.0, 43.0],
+      "tier1_escaped_defects": 0.0,
+      "tier2_churn": 2,
+      "tier3_uncovered_statements": 43,
+      "hollow_rate": 0.0,
+      "evidence": []
+    },
+    "src/fine_art_archive/collect/discovery.py": {
+      "rank": 55,
+      "path": "src/fine_art_archive/collect/discovery.py",
+      "rank_key": [0.0, 2.0, 10.0],
+      "tier1_escaped_defects": 0.0,
+      "tier2_churn": 2,
+      "tier3_uncovered_statements": 10,
+      "hollow_rate": 0.0,
+      "evidence": []
+    }
+  },
+  "mutation_command": "/Users/teacher/.codex/orchestrator/worktrees/stranske__Fine-Art-Archive__866__closer/.venv/bin/python -m pytest -q tests/test_coverage_round_816.py -k TEST_FUNCTION -o addopts= --tb=short",
+  "mutation_command_note": "TEST_FUNCTION is replaced with each exact test field below; all eight commands and actual assertion failures appear in the PR body.",
+  "mutations": [
+    {
+      "test": "test_api_helpers_keep_paths_contained_and_make_validation_details_json_safe",
+      "path": "src/fine_art_archive/api/main.py",
+      "original": "    if isinstance(value, float) and not math.isfinite(value):\n        return str(value)",
+      "deliberate_break": "    if isinstance(value, float) and not math.isfinite(value):\n        return value",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "be543ee63753540dba6de7545bf746ac8ac9389c49af03e8e2781d087f2ff24c"
+    },
+    {
+      "test": "test_discovery_resolvers_preserve_each_source_failure_shape",
+      "path": "src/fine_art_archive/collect/discovery.py",
+      "original": "            if not image_id:\n                continue",
+      "deliberate_break": "            if not image_id:\n                candidates.append({\"source\": \"artic\", \"error\": \"missing image\"})",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "aaff8ec20902ad4379b675021422a7692af2356ad49f54291ba9bee2e80bc21f"
+    },
+    {
+      "test": "test_source_quality_recovers_legacy_rows_and_rejects_non_finite_publish",
+      "path": "src/fine_art_archive/quality/source_quality.py",
+      "original": "            if isinstance(composite, (int, float)) and not math.isfinite(float(composite)):",
+      "deliberate_break": "            if isinstance(composite, (int, float)) and False and not math.isfinite(float(composite)):",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "c306a9565d5fe23993dab0c785053931e9cc7646c8c65b09f81eebc4b1d3e95f"
+    },
+    {
+      "test": "test_source_quality_loads_empty_and_configured_prior_paths",
+      "path": "src/fine_art_archive/quality/source_quality.py",
+      "original": "        return {\"sources\": {}}",
+      "deliberate_break": "        return {\"sources\": {\"broken\": 1}}",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "c306a9565d5fe23993dab0c785053931e9cc7646c8c65b09f81eebc4b1d3e95f"
+    },
+    {
+      "test": "test_source_quality_aggregate_tracks_observed_and_prior_metrics",
+      "path": "src/fine_art_archive/quality/source_quality.py",
+      "original": "                self.n_verify_pass / self.n_verify_total if self.n_verify_total else None",
+      "deliberate_break": "                0.0 if self.n_verify_total else None",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "c306a9565d5fe23993dab0c785053931e9cc7646c8c65b09f81eebc4b1d3e95f"
+    },
+    {
+      "test": "test_source_quality_aggregate_ignores_bad_sidecars_and_seeds_host_priors",
+      "path": "src/fine_art_archive/quality/source_quality.py",
+      "original": "        \"n_prior_only_rows\": n_priors_seeded,",
+      "deliberate_break": "        \"n_prior_only_rows\": 0,",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "c306a9565d5fe23993dab0c785053931e9cc7646c8c65b09f81eebc4b1d3e95f"
+    },
+    {
+      "test": "test_semantic_corpus_and_comma_tie_breaks_are_deterministic",
+      "path": "src/fine_art_archive/parsers/semantic.py",
+      "original": "        out.notes.append(\"no artist identified — title may be misclassified\")",
+      "deliberate_break": "        out.notes.append(\"no artist identified\")",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "e0b35c04a5309bfc16ce33eaa3c5ed0aa172e04b7a6ed8d46f60f44006a7999d"
+    },
+    {
+      "test": "test_semantic_classifiers_keep_structural_fields_out_of_artist_slots",
+      "path": "src/fine_art_archive/parsers/semantic.py",
+      "original": "        return True, 0.70, \"dimensions-no-unit\"",
+      "deliberate_break": "        return True, 0.50, \"dimensions-no-unit\"",
+      "broken_exit": 1,
+      "restored_exit": 0,
+      "restored_sha256": "e0b35c04a5309bfc16ce33eaa3c5ed0aa172e04b7a6ed8d46f60f44006a7999d"
+    }
+  ],
+  "limitation_note": "71 is below approximately 180. Remaining statement lines and branch outcomes are preserved per target above. The PR body explains what the eight tests do not exercise; these gaps are not claimed to be inherently untestable. No production fix or added test is justified solely by the reporting defects under repair.",
+  "current_head_validation": {
+    "commit": "b073ccbeada6c95d687c74e19399709f6b97cd82",
+    "command": "Same gate_pytest_command and gate_environment, cwd=/private/tmp/faa816-review/current-isolated",
+    "exit": 0,
+    "output": "2550 passed, 12 skipped, 20 warnings in 64.68s; total coverage 91.76%"
+  }
 }
