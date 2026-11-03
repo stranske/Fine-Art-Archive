@@ -1,5 +1,7 @@
 """Focused boundary coverage for coverage-autopilot issue #816.
 
+Closer repair metrics: docs/evidence/issue-816-coverage/closer-repair-evidence.json.
+
 These tests deliberately exercise observable error and recovery paths rather
 than using mocks merely to execute lines: each one pins a contract used by the
 API, discovery pipeline, source-quality publisher, or filename parser.
