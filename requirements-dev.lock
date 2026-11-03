@@ -30,7 +30,7 @@ click==8.4.2
     #   black
     #   huggingface-hub
     #   uvicorn
-coverage==7.17.0
+coverage==7.17.1
     # via pytest-cov
 cuda-bindings==13.4.3
     # via torch
