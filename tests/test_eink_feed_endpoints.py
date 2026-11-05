@@ -935,16 +935,20 @@ def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, div
 
 
 @pytest.mark.parametrize("write", [False, True])
-@pytest.mark.parametrize("field", ["quality_scores", "embeddings"])
+@pytest.mark.parametrize(
+    "fields",
+    [("quality_scores",), ("embeddings",), ("quality_scores", "embeddings")],
+    ids=["quality_scores", "embeddings", "both"],
+)
 def test_preference_diverse_caller_evidence_is_preview_only(
-    client, archive, diverse_archive, tmp_path, monkeypatch, field, write
+    client, archive, diverse_archive, tmp_path, monkeypatch, fields, write
 ):
     ids = ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
     evidence = {
         "quality_scores": dict(zip(ids, [1, 10, 1], strict=True)),
         "embeddings": dict(zip(ids, [[1, 0], [0, 1], [1, 0]], strict=True)),
     }
-    supplied = {field: evidence[field]}
+    supplied = {field: evidence[field] for field in fields}
     target = RenderTarget("preview-contract", "Preview contract", 40, 20, "spectra6")
     monkeypatch.setitem(TARGETS, target.key, target)
     builder = Mock(wraps=api_main._build_eink_playlist)
@@ -960,15 +964,31 @@ def test_preference_diverse_caller_evidence_is_preview_only(
     derive.reset_mock()
     preview = client.post("/eink/playlist/preview", json={"spec": diverse_archive, **supplied})
     assert preview.status_code == 200, preview.text
-    expected = [ids[1], ids[2]] if field == "quality_scores" else [ids[0], ids[1]]
+    expected = [ids[1], ids[2]] if "quality_scores" in fields else [ids[0], ids[1]]
     assert preview.json()["work_ids"] == expected
     assert expected != server_ids
-    assert builder.call_args.kwargs[field] == supplied[field]
+    for field in fields:
+        assert builder.call_args.kwargs[field] == supplied[field]
+    if len(fields) == 2:
+        derive.assert_not_called()
+    else:
+        derive.assert_called_once()
+        assert derive.call_args.kwargs == {
+            "include_quality": "quality_scores" not in fields,
+            "include_embeddings": "embeddings" not in fields,
+        }
+
+    # Overrides belong to one request; a later preview must derive fresh evidence.
+    builder.reset_mock()
+    derive.reset_mock()
+    following = client.post("/eink/playlist/preview", json={"spec": diverse_archive})
+    assert following.status_code == 200, following.text
+    assert following.json()["work_ids"] == server_ids
+    builder.assert_called_once()
+    assert builder.call_args.kwargs["quality_scores"] is None
+    assert builder.call_args.kwargs["embeddings"] is None
     derive.assert_called_once()
-    assert derive.call_args.kwargs == {
-        "include_quality": field != "quality_scores",
-        "include_embeddings": field != "embeddings",
-    }
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
 
     # Only the spec is persisted, even when a caller repeats preview evidence.
     saved = _save(client, spec=diverse_archive, target=target.key, **supplied)
@@ -1048,6 +1068,9 @@ def test_eink_openapi_describes_preview_only_evidence(client):
         assert "not guaranteed" in model["properties"]["spec"]["description"]
     preview = schema["paths"]["/eink/playlist/preview"]["post"]["description"]
     assert "preview-only" in preview
+    assert "applies to this request only" in preview
+    assert "later previews without mappings derive server-owned evidence again" in preview
+    assert "not saved or reused by" in models["preview"]["description"]
     assert "server-owned evidence" in preview
     assert "matching their selection is not guaranteed" in preview
     assert "Ordered mode ignores caller quality_scores/embeddings" in preview
@@ -1068,6 +1091,8 @@ def test_eink_openapi_describes_preview_only_evidence(client):
     export = schema["paths"]["/eink/playlist/export"]["post"]["description"]
     assert "server-owned evidence" in export
     assert "preview-only" in export
+    assert "Selection is resolved live" in export
+    assert "even when the preview did not supply caller evidence" in export
     export_fields = models["export"]["properties"]
     assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
     assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]

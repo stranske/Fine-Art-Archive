@@ -340,6 +340,51 @@ filesystem. No commit or push occurred. Read-only GitHub verification confirmed
 PR #870 is open and `draft=false`; its live checklist was not modified.
 All work stayed in this agent; no work was delegated.
 
+### Request-scoped evidence follow-up (2026-11-05, source `cdcbf48`)
+
+Rechecked the issue-format guide, request schemas and all four selection paths:
+the forwarding behavior remains unchanged. The first unchecked documentation
+task is already implemented in this checkout. The remaining observable contract
+check is that supplying both caller maps changes only that preview request:
+a subsequent preview without maps, saved/served resolution and exports must
+all use server-owned evidence. The existing focused command below passed
+**6 tests**, 94 deselected, in **5.53 s** before changes:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+Clarified the preview model and endpoint descriptions to say overrides apply to
+one request, and the export description to explain that live evidence changes
+can change membership even without caller overrides. Extended the deterministic
+regression to supply both maps together and verify a subsequent preview without
+maps returns to server-owned selection. The existing saved/served and both
+export paths are exercised for this combined case too. Generated OpenAPI checks
+verify the new descriptions.
+
+Validation used Python **3.14.10** at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python` with the existing opt-in
+harness. The focused command above passed **8 tests**, 94 deselected, in
+**8.94 s**. The broad command passed **310 tests**, 2259 deselected, in
+**92.57 s**; both reported 15 existing warnings. Exact remaining commands:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+Black passed with **377 files unchanged**; Ruff and whitespace checks passed.
+The implementation and acceptance checks above are verified, but the required
+commit remains blocked: `git add` returned exit 128 because `.git/index.lock`
+cannot be created on a read-only filesystem. No commit or push occurred.
+The requested `needs-human` label and blocker comment were also rejected by
+the connector: tool approval is required, but this run's approval policy is
+`never`. Read-only verification confirmed PR #870 remains open and ready for
+review (`draft=false`). All work stayed in this agent.
+
 ## Executed evidence and test layers
 
 Local runtime: `/opt/anaconda3/bin/python3`, Python 3.12, pytest 9.1.1,

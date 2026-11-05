@@ -629,8 +629,9 @@ def _derived_preference_evidence(
 class PlaylistIn(BaseModel):
     """Selection preview inputs with preview-only caller quality_scores/embeddings.
 
-    Caller evidence is not saved. Saved/served and exported selections use
-    server-owned evidence, so matching their selection is not guaranteed.
+    Caller evidence applies to this request only; it is not saved or reused by
+    later previews. Saved/served and exported selections use server-owned
+    evidence, so matching their selection is not guaranteed.
     """
 
     spec: dict = Field(
@@ -774,8 +775,10 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
 
     In preference-diverse mode, each omitted evidence mapping is derived from
     server-owned ratings or local masters; explicit mappings, including empty
-    ones, are used as supplied. Caller evidence is not persisted. Saved/served
-    playlists and exports use current server-owned evidence through
+    ones, are used as supplied. Caller evidence applies to this request only;
+    later previews without mappings derive server-owned evidence again.
+    Caller evidence is not persisted. Saved/served playlists and exports use current
+    server-owned evidence through
     _build_eink_playlist, so matching their selection is not guaranteed.
     Ordered mode ignores caller quality_scores/embeddings.
     """
@@ -907,6 +910,8 @@ def eink_playlist_export(body: ExportIn) -> dict:
     embeddings from local masters through _build_eink_playlist, as saved/served
     resolution does. Caller quality_scores/embeddings are preview-only and do
     not apply here; matching an overridden preview's selection is not guaranteed.
+    Selection is resolved live, so later changes to the archive, ratings or masters
+    can change membership even when the preview did not supply caller evidence.
     A saved playlist_id supplies its stored spec and rendering settings.
     """
     dest = _checked_export_dir(body.path)
