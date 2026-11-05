@@ -1126,3 +1126,40 @@ Staging failed because the shared checkout's `.git/index.lock` is read-only.
 The verified changes are preserved for a local commit and patch in the writable
 clone `/tmp/faa-issue827-partial-save-20261105`; this does not advance the
 shared checkout's branch or the remote PR head.
+
+### Production export response in the UI, 2026-11-05
+
+Reconciliation through `71cda28` found every PR #874 task already checked and
+the PR open with `draft=false`; no checkbox corrections were needed. The new
+`test_ui_export_counts_match_the_production_mixed_master_response` passes an
+actual production export response into the production `einkExport` function
+using the existing Node UI test mechanism. The isolated two-work fixture writes
+one PNG and displays selected=2, actually-written=1 and one missing-master
+omission. This closes the API-to-UI validation gap left by constructed payloads.
+
+Using the selected CPython 3.14.10 and existing opt-in scheduling harness:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_export_format.py::test_ui_export_counts_match_the_production_mixed_master_response -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_export_format.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+Temporarily rendering `d.selected` as actually written made the new test fail
+in 0.50 seconds; byte-identical UI restoration made the identical command pass
+in 0.46 seconds. Receipts are `/tmp/eink-production-ui-counts-red.txt` and
+`/tmp/eink-production-ui-counts-green.txt`. The existing UI regression passed
+four cases in 0.48 seconds. The required three suites passed **291 tests**, 15
+warnings, in 85.35 seconds. Black checked 377 files; Ruff and `git diff --check`
+passed.
+
+The plain suite command stalled at the documented sandbox socketpair wakeup
+limitation and was interrupted. The scheduling harness is required on this host.
+The shared `.git` is read-only (`index.lock` could not be created); a writable
+clone at `/tmp/faa-issue827-production-ui-counts` preserves the verified change
+as a local commit and patch without advancing the shared or remote branch.
+Automatic approval review also rejected the blocker comment and `needs-human`
+label: GitHub writes require approval and this run's approval policy is `never`.

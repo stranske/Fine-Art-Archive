@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import io
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -284,6 +286,67 @@ def test_export_counts_follow_files_written_not_master_availability(
     if masters == (True, False) and spec == _COUNT_SPEC:
         assert body["skipped_detail"] == [[_COUNT_SECOND, "no local master image"]]
         assert body["skipped"] == 1
+
+
+def test_ui_export_counts_match_the_production_mixed_master_response(tmp_path, monkeypatch):
+    """Render the real response so API/UI field drift cannot hide behind stubs."""
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    client = _export_client(tmp_path, monkeypatch, (True, False))
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "ui-card")
+    files = list(card.glob("*.png"))
+    assert body["selected"] == 2
+    assert body["written"] == len(files) == 1
+    assert body["missing_master_omissions"] == 1
+
+    ui = api_main.UI_FILE.read_text()
+    start = ui.index("    async function einkExport(write) {")
+    export_function = ui[start : ui.index("    function toggleGallery()", start)]
+    runner = tmp_path / "production-export-counts.cjs"
+    runner.write_text(
+        """
+const response = JSON.parse(process.argv[2]);
+const status = {innerHTML: '', textContent: ''};
+const controls = {
+  'ek-path': {value: response.path},
+  'ek-target': {value: response.target},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-out': {insertAdjacentHTML() {}},
+  'ek-status': status,
+};
+const document = {getElementById: id => controls[id] || null};
+const einkSpec = () => ({sort: 'title'});
+const einkCardPlaylistId = null;
+const einkEsc = value => String(value);
+const confirm = () => true;
+const toast = () => {};
+const fetch = async () => ({ok: true, json: async () => response});
+"""
+        + export_function
+        + """
+einkExport(true).then(() => {
+  console.log(JSON.stringify(status));
+}).catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(runner), json.dumps(body)],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    status = json.loads(result.stdout)
+    assert status["textContent"] == "", status["textContent"]
+    html = status["innerHTML"]
+    assert "<strong>2</strong> selected" in html
+    assert "<strong>1</strong> actually written" in html
+    assert "<strong>2</strong> actually written" not in html
+    assert "1 missing-master omission" in html
+    assert "1 skipped" in html
+    assert "would write" not in html
 
 
 @pytest.mark.parametrize("write", [None, False], ids=["default-dry-run", "explicit-dry-run"])
