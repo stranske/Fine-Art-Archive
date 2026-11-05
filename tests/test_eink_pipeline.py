@@ -1922,10 +1922,18 @@ def test_playlist_preview_counts_selected_and_available_for_delivery(
         assert short["available_for_delivery"] == 1
 
 
-def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path):
-    """Selected, deliverable and written counts stay distinct for a mixed pair.
+@pytest.mark.parametrize(
+    ("selected", "available"),
+    [(2, 1), (2, 2), (2, 0), (0, 0)],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path, selected, available):
+    """Selection, delivery and write labels retain explicit totals, including zero.
 
-    The preview sample marks both rows ``has_master: true`` and the export
+    Nonempty preview samples mark both rows ``has_master: true`` even when
+    the response's full delivery total is zero or one. Empty selections have
+    no rows. A zero total must not fall back to the selection or sample size.
+    The export checks remain independent of the preview: their
     payload carries ``available_for_delivery: 2``. Those are traps: the
     rendered totals must follow ``available_for_delivery`` and the writer's
     ``written`` / ``dry_run`` / ``missing_master_omissions`` fields. A dry
@@ -1967,19 +1975,20 @@ const einkSpec = () => ({sort: 'title'});
 const einkEsc = value => String(value);
 const confirm = () => true;
 const toast = () => {};
+const previewCounts = JSON.parse(process.argv[2]);
 let exportCall = 0;
 const fetch = async (url, options) => {
   const body = JSON.parse(options.body);
   if (url === '/eink/playlist/preview') {
     return {ok: true, json: async () => ({
       coverage: {},
-      items: [
+      items: previewCounts.selected ? [
         {work_id: 'aaa1111-first-work', has_master: true, year: 1650, artist: 'A', title: 'First'},
         {work_id: 'bbb2222-second-work', has_master: true, year: 1650, artist: 'A', title: 'Second'},
-      ],
-      selected: 2,
-      available_for_delivery: 1,
-      matched: 2,
+      ] : [],
+      selected: previewCounts.selected,
+      available_for_delivery: previewCounts.available,
+      matched: previewCounts.selected,
       total_candidates: 2,
       selection_diagnostics: [],
     })};
@@ -2042,7 +2051,12 @@ const fetch = async (url, options) => {
 """,
         encoding="utf-8",
     )
-    result = subprocess.run([node, str(runner)], capture_output=True, text=True, timeout=10)
+    result = subprocess.run(
+        [node, str(runner), json.dumps({"selected": selected, "available": available})],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
     assert result.returncode == 0, result.stderr
     observed = json.loads(result.stdout)
     preview = observed["previewHTML"]
@@ -2050,9 +2064,10 @@ const fetch = async (url, options) => {
     dry = observed["dryHTML"]
     render_fail = observed["renderFailHTML"]
     diverge = observed["divergeHTML"]
-    assert "<strong>2</strong> selected" in preview
-    assert "<strong>1</strong> available for delivery" in preview
-    assert "<strong>2</strong> available for delivery" not in preview
+    assert f"<strong>{selected}</strong> selected" in preview
+    assert f"<strong>{available}</strong> available for delivery" in preview
+    for other in {0, 1, 2} - {available}:
+        assert f"<strong>{other}</strong> available for delivery" not in preview
     assert "<strong>2</strong> selected" in written
     assert "<strong>1</strong> actually written" in written
     assert "<strong>2</strong> actually written" not in written

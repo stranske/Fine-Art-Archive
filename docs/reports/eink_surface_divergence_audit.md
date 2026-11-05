@@ -1012,3 +1012,42 @@ at `/tmp/faa-issue827-count-edges-20261105` for a local commit and patch; this
 does not advance the shared checkout's branch or the remote PR head.
 The GitHub connector rejected the blocker comment and `needs-human` label
 with `MCP tool call requires approval, but approval policy is never`.
+
+### UI zero-count verification, 2026-11-05
+
+Reconciliation through `f2d6bab` confirmed all 22 task and acceptance checkboxes
+were already checked on open, ready-for-review PR #874. Before editing, the
+same-archive production-path cases and existing UI regression passed together
+(6 tests, 3.81 seconds). No checkbox changes were needed.
+
+The named Node-executed UI regression now covers mixed-master, all-master,
+all-missing-master and empty preview totals. Nonempty samples deliberately
+claim both masters exist, so a zero delivery total must come from the response
+instead of the sample or a fallback to selected. Existing writer-result
+assertions still run in every case.
+
+Using CPython 3.14.9 at `/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`
+with the existing opt-in sandbox scheduling harness:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+```
+
+Temporarily rendering `d.available_for_delivery || d.selected` made the exact
+UI command fail only its new all-missing case: **1 failed, 3 passed**, exit 1,
+0.59 seconds. It displayed 2 available instead of 0. Byte-identical UI
+restoration made the same command pass **4 tests**, exit 0, 0.51 seconds.
+Raw outputs remain at `/tmp/eink-ui-zero-count-red.txt` and
+`/tmp/eink-ui-zero-count-green.txt` on this runner. The full focused suites
+passed **287 tests**, 15 warnings, exit 0, 91.06 seconds. Black left **377
+files unchanged**, Ruff passed, and `git diff --check` passed.
+
+The shared `.git` remains read-only; staging failed at `index.lock`. A writable
+checkout at `/tmp/faa-issue827-ui-zero-counts` preserves the change as a local
+commit and patch without advancing the shared branch or remote PR. Automatic
+approval review rejected the PR-body update, blocker comment and `needs-human`
+label because connector approval is required and the approval policy is `never`.
