@@ -2389,3 +2389,90 @@ def test_enumerated_api_only_spec_fields_filter_preview_selection(tmp_path, monk
             f"preview does not consume {sorted(spec_dict)} — previewed works "
             "would diverge from the saved feed and SD export selection"
         )
+
+
+def test_operator_ui_renders_saved_feed_delivery_identity():
+    """Saved feeds must list the delivery identity the operator saved.
+
+    ``GET /eink/playlists`` returns each ``SavedPlaylist`` plus the derived
+    ``resolved_count``/``error``, ``feed_url`` and ``manifest_url``
+    (api/main.py ``eink_playlists``). ``einkLoadPlaylists`` (index.html) is
+    the only operator surface that lists saved feeds: it renders name,
+    work count (or an error marker), panel target, rotation interval and
+    the device URL, and wires the ``to card`` / ``delete`` actions that
+    choose or remove a saved feed for SD export. The enumeration locks
+    the backend fields, and the forwarding tests lock save/export bodies,
+    but nothing locked this list rendering: dropping e.g. the interval
+    cell or the manifest link would leave a saved feed whose delivered
+    panel/rotation the operator could no longer verify against the
+    preview, with every backend test still passing. Removing the
+    interval cell in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "No saved feeds yet." in ui, "empty saved-feed list renders nothing"
+    fields = [
+        ("${einkEsc(p.name)}", "saved feed name"),
+        ("${einkEsc(p.target)}", "saved panel target"),
+        ("${einkEsc(p.interval)}", "saved rotation interval"),
+        ("${einkEsc(origin)}${einkEsc(p.feed_url)}", "device feed URL"),
+        ('href="${einkEsc(p.manifest_url)}"', "manifest link"),
+        ('href="${einkEsc(p.feed_url)}"', "feed view link"),
+        ('data-eink-use="${einkEsc(p.id)}">to card</a>', "to-card action"),
+        ('data-eink-del="${einkEsc(p.id)}"', "delete action"),
+        ('data-eink-name="${einkEsc(p.name)}"', "delete confirmation name"),
+    ]
+    for snippet, label in fields:
+        assert snippet in ui, f"saved-feed list does not render {label}"
+    assert "p.resolved_count == null" in ui, "unresolvable feed must read as an error"
+    assert "'<span style=\"color:#a00\">error</span>'" in ui, "resolve error is not marked"
+    assert ": p.resolved_count}" in ui, "resolved work count is not rendered for a healthy feed"
+    assert 'host.querySelectorAll("[data-eink-use]")' in ui, "to-card action is unwired"
+    assert 'einkUseForCard(a.getAttribute("data-eink-use"));' in ui, (
+        "to-card action does not choose that saved feed for export"
+    )
+    assert 'host.querySelectorAll("[data-eink-del]")' in ui, "delete action is unwired"
+    assert 'einkDeletePlaylist(a.getAttribute("data-eink-del")' in ui, (
+        "delete action does not delete that saved feed"
+    )
+    assert 'a.getAttribute("data-eink-name")' in ui, "delete loses the feed name"
+
+
+def test_operator_ui_discloses_saved_feed_overrides_filters_on_export():
+    """Choosing a saved feed for the card must disclose filters are ignored.
+
+    When ``einkCardPlaylistId`` is set, ``einkExport`` still sends the
+    filter ``spec`` but the backend replaces it with the saved playlist's
+    ``spec``/``target``/``dither``/``fit`` (api/main.py
+    ``eink_playlist_export``, the ``playlist_id`` override in the audit
+    enumeration). ``einkUseForCard`` (index.html) is the operator-facing
+    side of that override: it sets the choice, says the card will use
+    that feed's selection, and renders a banner naming the feed and
+    stating the filters above are ignored, with a ``use filters
+    instead`` clear link. The body-forwarding tests lock that
+    ``playlist_id`` is sent; nothing locked this disclosure. Dropping
+    the banner text in ``index.html`` would let the operator believe
+    the visible filters still shape a card that actually delivers the
+    saved feed. Removing that text must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "function einkUseForCard(id) {" in ui, "no saved-feed card choice exists"
+    assert "einkCardPlaylistId = id;" in ui, "to-card choice is not recorded"
+    assert "card will use that saved feed" in ui, "choice does not say the feed is used"
+    assert "Card uses saved feed <strong>${einkEsc(id)}</strong>" in ui, (
+        "banner does not name the saved feed the card will deliver"
+    )
+    assert "filters above are ignored." in ui, (
+        "banner does not disclose that the filter spec is overridden "
+        "by the saved feed on export"
+    )
+    assert '<a href="#" id="ek-clear">use filters instead</a>' in ui, (
+        "no way back from the saved-feed override to the filter spec"
+    )
+    assert 'document.getElementById("ek-clear")?.addEventListener("click"' in ui, (
+        "the clear link in the override banner is unwired"
+    )
+    assert 'banner.textContent = "";' in ui, "clearing the choice leaves the banner up"

@@ -187,6 +187,55 @@ before marking the enumeration task complete. No new issue filed:
 this locks an already-correct row, and the change touches no file
 under `src/`.
 
+Follow-on lock (this change): the enumeration now also locks the
+operator rendering of the saved-playlist surface itself.
+`test_operator_ui_renders_saved_feed_delivery_identity` in
+`tests/test_eink_pipeline.py` requires `einkLoadPlaylists`
+(index.html:3228) to render each saved feed's name, resolved count
+(or the `error` marker when `resolved_count` is null), panel
+`target`, rotation `interval` and device feed URL, plus the
+manifest/view links and the wired `to card` (`data-eink-use` →
+`einkUseForCard`) and delete (`data-eink-del` → `einkDeletePlaylist`)
+actions returned by `GET /eink/playlists` (main.py:2230, which
+derives `resolved_count`/`feed_url`/`manifest_url` from the saved
+`spec`/`target`/`interval`). A search over `tests/` before this
+change found those list fields only in backend endpoint tests,
+never in the UI rendering. Inspected, not executed, in this
+session: every shell command still fails before starting with
+`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, so
+no pass, Black check, `git` commit or `gh` listing is claimed
+here. Rerun
+`pytest tests/test_eink_pipeline.py::test_operator_ui_renders_saved_feed_delivery_identity -m "not slow" --no-cov`
+plus its deliberate-break probe (temporarily remove the
+`${einkEsc(p.interval)}` cell from `einkLoadPlaylists` in
+`index.html`, rerun — it must fail on the saved rotation
+interval — then restore and rerun to pass) and
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+before marking the enumeration task complete. No new issue filed:
+this locks an already-correct row, and the change touches no file
+under `src/`.
+
+Follow-on lock (this change):
+`test_operator_ui_discloses_saved_feed_overrides_filters_on_export`
+in `tests/test_eink_pipeline.py` locks the operator-facing side of
+the enumerated `playlist_id` override (SD export replaces the
+inline `spec`/`target`/`dither`/`fit` with the saved playlist's,
+main.py:855-858): `einkUseForCard` (index.html:3270) must record
+the choice, name the saved feed in its banner, state that the
+filters above are ignored, and wire the `use filters instead`
+clear link that drops the banner. Body-forwarding tests already
+lock that `playlist_id` is sent; a search over `tests/` before
+this change found the banner disclosure in no test. Inspected,
+not executed, in this session (same shell blocker as above; no
+pass, Black check, `git` commit or `gh` listing claimed). Rerun
+`pytest tests/test_eink_pipeline.py::test_operator_ui_discloses_saved_feed_overrides_filters_on_export -m "not slow" --no-cov`
+plus its deliberate-break probe (temporarily remove
+`filters above are ignored.` from the banner in `index.html`,
+rerun — it must fail on the override disclosure — then restore
+and rerun to pass) and the Black check above before marking the
+enumeration task complete. No new issue filed: this locks an
+already-correct row, and the change touches no file under `src/`.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
@@ -233,7 +282,7 @@ under `src/`.
 
 | Test file | Layer checked |
 |---|---|
-| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914), fit forwarding and dither/target forwarding (new tests below). No HTTP validators, no SD files. |
+| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914), fit/dither/target forwarding, and saved-feed list identity (name/count-or-error/target/interval, feed+manifest URLs, to-card/delete actions). No HTTP validators, no SD files. |
 | [test_eink_feed_endpoints.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_feed_endpoints.py:92) | HTTP validators (ETag/304 on fit and strategy change, :92/:150), image bytes, resolved IDs/counts, rotation. No SD output. |
 | [test_eink_export_format.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
 | [test_render_strategy.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
