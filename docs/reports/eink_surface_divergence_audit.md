@@ -2,9 +2,11 @@
 
 Inspected source: `3c23a10978e1c61151d6856576d56628c8737171`, 2026-10-17.
 Source owner: [#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
-This is a bounded input inventory and evidence report. It changes no production
-code, selector, image, palette, archive record or physical device. New proposals
-below remain report-only under #805's follow-up publication boundary.
+The original audit was a bounded input inventory and evidence report with no
+production changes. The #825 follow-up below documents the selected preview-only
+API contract and its regression tests; it changes no selector, image, palette,
+archive record or physical device. Other proposals remain report-only under
+#805's follow-up publication boundary.
 
 ## Contract and enumeration
 
@@ -80,8 +82,8 @@ R; “feed” includes F/H; “export” is E/D.
 | `seed` | C: B shuffle / Q tie rank | C: same S | C: R order | C: same S | B/Q; seeded selection is deterministic for identical evidence |
 | Ratings quality / fit log | C: P reads current log | C: cached by mtime-ns + size | C: R each request | C: same cache as R | `api/main.py:515–524`; snapshot/live distinction below |
 | Local master-derived embeddings | C: S derives for filtered candidates | C: same S | C: R each request | C: same S | Missing/unreadable/zero vectors refuse; [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) owns descriptor reuse |
-| Caller `quality_scores` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Probe confirms different IDs; P1 proposal below; never promise override persistence |
-| Caller `embeddings` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Explicit empty mappings refuse; P1 |
+| Caller `quality_scores` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Different IDs are allowed by the preview-only contract selected in #825; P1 below |
+| Caller `embeddings` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Explicit empty mappings refuse; preview-only contract in #825; P1 |
 | Missing master | C: P reports `has_master=false`; V 404 | C: ordered R omits; diverse validates | C: no advertised missing image | C: writer skips/reports missing image | Intended diagnostic vs playable-output distinction; no byte-parity claim |
 | Candidate corpus/metadata | C: current sidecars | C: current sidecars | C: re-resolves live | C: current sidecars | `api/main.py:489–511`; stable snapshot across later calls is I |
 | Target key | C: V validates; P only diagnostic target field | C: saved for F | C: target registry | C: inline or saved target | P alone does not validate/produce target pixels; V does |
@@ -129,17 +131,20 @@ and input semantics, because title-only divergence search misses older instances
 | Repeated unchanged descriptor computation | owned optimization, not a correctness fix in this report | #807 open; validation must stay intact |
 | Explicit zero year bounds | confirmed-bug shared by all selectors | #806 / PR820 already owns this; the audit branch preserves that writer |
 
-Additional observations are proposals for human review **within #805**, not newly
-approved repair tasks or published issues:
+Additional observations originated as proposals for human review **within #805**.
+P1 now has the documentation-and-regression scope selected in #825; P2 and P3
+remain proposals, not newly approved repair tasks or published issues:
 
 - **P1 — preview-only explicit evidence.** Direct API callers can preview different
   IDs with explicit quality/embedding maps, then save the same spec and get the
   server-derived IDs. Reproduced: default preview and saved feed select red+blue;
   explicit preview selects near-red+blue. Companion U sends no explicit maps, so
   the UI's normal path is already-correct. The API boundary is intentionally
-  unsupported for persistence. Decide whether documentation should promise only
-  server-derived parity or whether a separate evidence-persistence feature is
-  wanted. Do not add storage or accept fabricated evidence here.
+  unsupported for persistence. The follow-up
+  [#825](https://github.com/stranske/Fine-Art-Archive/issues/825) selects the
+  preview-only contract: document that caller evidence is transient and that
+  selection parity with saved/served playlists or exports is not guaranteed.
+  No evidence storage or forwarding change is part of this contract.
 - **P2 — broader representation identity (needs-investigation).** H binds target
   key, dither, float master mtime, effective fit, `a11-v1` and strategy. It does
   not bind target dimensions/rotation, palette identity or master content hash.
@@ -155,6 +160,333 @@ approved repair tasks or published issues:
   label; a browser interaction was not executed. Proposed gate: render a
   year-zero diagnostic card and assert its caption is `0`, with a missing-year
   control still `????`. No UI edit or new issue is bundled here.
+
+## Preview-only evidence contract (#825 follow-up, 2026-11-05)
+
+Re-read `docs/AGENT_ISSUE_FORMAT.md`, this audit, `PlaylistIn`, `ExportIn`,
+`eink_playlist_preview`, `_resolve_playlist`, `eink_playlist_export` and
+`_build_eink_playlist` at source commit
+`e1a189b` on `codex/issue-825`. **No forwarding-behavior difference** from
+the report was found. Before this follow-up, preview forwarding is at
+`api/main.py:742–745`, rather than the issue's historical `700–703`;
+`_build_eink_playlist` starts at 637, export at 852 and saved resolution at 2122.
+The #807 descriptor cache has landed, without changing this evidence boundary.
+
+The contract selected for
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825), following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805), keeps caller
+`quality_scores` and `embeddings` **preview-only** in preference-diverse mode.
+Each omitted mapping derives server-owned evidence; an explicitly supplied
+mapping, including an empty mapping, is used as supplied and validated. Invalid
+empty evidence still returns HTTP 400. Ordered selection does not use these maps.
+Saved playlists persist the spec, not caller evidence. Saved/served resolution
+and both inline and saved-ID exports call `_build_eink_playlist` without caller
+maps, deriving quality from current ratings and embeddings from local masters.
+Undeclared evidence fields sent to save or export do not override that path.
+
+Consequently, matching a preview that supplies caller evidence to a saved/served
+or exported selection is **not guaranteed**. Without overrides, the same spec
+and same server evidence snapshot share selection behavior; later archive,
+ratings or master changes can still change a live selection. This is a
+documentation contract, not evidence persistence or frozen membership.
+`PlaylistIn` field descriptions and both endpoint docstrings expose the
+contract in generated OpenAPI documentation; `ExportIn` describes its
+server-owned evidence boundary.
+
+`tests/test_eink_feed_endpoints.py::test_preference_diverse_caller_evidence_is_preview_only`
+varies quality and embeddings independently against three temporary works.
+Server evidence selects red+blue; caller quality selects near-red+blue; caller
+embeddings select red+near-red. It checks direct `_resolve_playlist`, served
+manifest membership, and inline/saved-ID exports with both dry runs and actual
+temporary card writes. Spies wrap the real builder and derivation functions to
+verify delivery still derives both server-owned mappings. The existing explicit
+empty-evidence regression remains intact. `test_eink_openapi_describes_preview_only_evidence`
+checks the generated API documentation.
+
+Validation used the active repository automation interpreter, Python 3.14.10
+at `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python`; no `.venv`,
+`.faa-venv` or `/opt/anaconda3/bin/python3` is present here. Exact commands,
+using the existing sandbox scheduling harness described below:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+```
+
+The broad e-ink command passed **308 tests**, with 2259 deselected, in **86.17 s**.
+The narrower regression command passed **6 tests**, with 94 deselected, in
+**4.83 s** after strengthening served-path assertions. Both runs reported
+15 warnings (dependency deprecations and an existing duplicate OpenAPI operation
+ID). `-o addopts=` suppresses repository-wide coverage reporting, as in the
+prior audit's focused runs. Black and Ruff passed.
+
+For a causal control, temporarily replaced both preview forwarding arguments
+with `None` and ran the narrower command with only
+`-k caller_evidence_is_preview_only`. It failed as expected in
+`test_preference_diverse_caller_evidence_is_preview_only[quality_scores-False]`
+at the selected-ID assertion: red+blue instead of near-red+blue (**1 failed**,
+96 deselected, **1.12 s**, exit 1). A `finally` block restored the source bytes;
+restored SHA-256 was
+`1db8397d254c884da3b063378c93ef8687697980c152ac54aad2dc77647a3775`.
+The six-test green run above then passed on the restored source.
+
+### Request-schema follow-up (2026-11-05, source `237d676`)
+
+Rechecked the issue-format guide, this audit, the preview/export request models
+and all four selection functions. The reported evidence forwarding behavior is
+unchanged: caller mappings affect preview only; saved/served resolution and
+both export forms derive server-owned evidence. No selection or persistence
+change was needed for [#825](https://github.com/stranske/Fine-Art-Archive/issues/825),
+following [#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
+
+Expanded the existing `PlaylistIn` model and `spec` descriptions and the
+`ExportIn.spec` / `playlist_id` descriptions. Generated API documentation now
+states the boundary directly on these request fields, including saved-ID
+overrides and the lack of selection-parity guarantees. Preview documentation
+also states that ordered mode ignores caller evidence. The OpenAPI regression
+now follows each endpoint's actual request-schema reference and checks these
+model/field descriptions in addition to the existing endpoint descriptions.
+
+Validation uses the active automation interpreter, Python **3.14.9** at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`. The initial command without
+the opt-in harness stalled and was interrupted; the existing harness below
+resolves this host's scheduling restriction. No application scheduling code
+was changed. Exact focused command:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+Result: **6 passed**, 94 deselected, 15 existing warnings, **4.06 s**.
+The unmodified baseline also passed all six tests in 4.09 s. The expanded
+OpenAPI assertion initially failed on `ExportIn`'s missing explicit
+`preview-only` wording; the model description was corrected before the green
+run above. The deterministic selection regressions continue to verify that
+caller overrides change preview membership while saved/served resolution and
+both export forms derive server-owned evidence.
+
+The broad acceptance command also passed:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+```
+
+Results: **308 passed**, 2259 deselected, 15 existing warnings, **71.79 s**;
+Black passed with **377 files unchanged**; Ruff and `git diff --check` passed.
+As above, `-o addopts=` disables default whole-repository coverage reporting
+for these focused regressions.
+
+Verified local task checklist (does not claim publication of these edits):
+
+- [x] Re-read required guidance and selection paths; recorded unchanged forwarding.
+- [x] Updated preview/export model and API descriptions; generated OpenAPI regression passes.
+- [x] Audit records the preview-only contract, parity consequence, #805 and #825.
+- [x] Deterministic preview/saved/served/export evidence regressions pass.
+- [x] Broad and narrower e-ink commands pass; exact commands and durations recorded.
+
+Publication remains blocked: staging the three changed files failed with
+`fatal: Unable to create .../.git/index.lock: Read-only file system`.
+No new commit or push was possible in this run; the verified changes remain
+in the workspace. Read-only verification confirmed PR #870 is open with
+`draft=false`; its live checklist was not changed.
+
+### Evidence-field validation follow-up (2026-11-05, source `bd1987d`)
+
+Rechecked the request models and all four selection functions for
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825), following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805). The forwarding
+behavior still matches the audit: only preview accepts caller evidence;
+saved/served and exported selections derive server-owned evidence. The
+preview-only contract and selection-parity warning were already implemented
+at this source commit despite unchecked entries in the live work order.
+
+Clarified both preview evidence-field descriptions: omission derives that
+mapping independently of its sibling, an explicit empty mapping returns HTTP
+400 in preference-diverse mode, and ordered mode ignores the mapping. The
+saved-ID export field now also explicitly warns that matching an overridden
+preview's selection is not guaranteed. Extended the existing generated-OpenAPI
+test and empty-evidence regression; the latter now checks each empty override
+with either a supplied sibling or an omitted, server-derived sibling.
+
+Validation used the active automation interpreter, Python **3.14.10** at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python`, and the existing optional
+scheduling harness. Exact commands:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The baseline focused run passed **6 tests** in **5.18 s**. After the changes,
+the focused run passed **6 tests**, 94 deselected, in **5.21 s**; the broad run
+passed **308 tests**, 2259 deselected, in **87.22 s**. Both reported the same
+15 existing warnings. Black's repository-wide check passed with **377 files
+unchanged**; Ruff and whitespace checks passed. The initial Black invocation
+without the harness/worker setting failed on denied worker socket binding;
+the documented configuration above passed.
+
+The implementation and validation tasks remain verified. The required commit
+is blocked: `git add src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py`
+returned exit 128 because `.git/index.lock` cannot be created on a read-only
+filesystem. No commit or push occurred. Read-only GitHub verification confirmed
+PR #870 is open and `draft=false`; its live checklist was not modified.
+All work stayed in this agent; no work was delegated.
+
+### Request-scoped evidence follow-up (2026-11-05, source `cdcbf48`)
+
+Rechecked the issue-format guide, request schemas and all four selection paths:
+the forwarding behavior remains unchanged. The first unchecked documentation
+task is already implemented in this checkout. The remaining observable contract
+check is that supplying both caller maps changes only that preview request:
+a subsequent preview without maps, saved/served resolution and exports must
+all use server-owned evidence. The existing focused command below passed
+**6 tests**, 94 deselected, in **5.53 s** before changes:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+Clarified the preview model and endpoint descriptions to say overrides apply to
+one request, and the export description to explain that live evidence changes
+can change membership even without caller overrides. Extended the deterministic
+regression to supply both maps together and verify a subsequent preview without
+maps returns to server-owned selection. The existing saved/served and both
+export paths are exercised for this combined case too. Generated OpenAPI checks
+verify the new descriptions.
+
+Validation used Python **3.14.10** at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python` with the existing opt-in
+harness. The focused command above passed **8 tests**, 94 deselected, in
+**8.94 s**. The broad command passed **310 tests**, 2259 deselected, in
+**92.57 s**; both reported 15 existing warnings. Exact remaining commands:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+Black passed with **377 files unchanged**; Ruff and whitespace checks passed.
+The implementation and acceptance checks above are verified, but the required
+commit remains blocked: `git add` returned exit 128 because `.git/index.lock`
+cannot be created on a read-only filesystem. No commit or push occurred.
+The requested `needs-human` label and blocker comment were also rejected by
+the connector: tool approval is required, but this run's approval policy is
+`never`. Read-only verification confirmed PR #870 remains open and ready for
+review (`draft=false`). All work stayed in this agent.
+
+### Ignored export fields and task reconciliation (2026-11-05, source `169b9da`)
+
+Reviewed the four implementation commits since bootstrap: their combined
+changes touch four files, not the reported 36. Re-read the required guidance,
+request models and four selection functions; the forwarding boundary is
+unchanged. The baseline focused command below passed **8 tests**, 94 deselected,
+in **8.94 s** using Python **3.14.9** at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`.
+
+The remaining documentation clarification is that undeclared caller evidence
+sent to export is ignored, including empty mappings. The observable regression
+must keep saved/served and both export selections on server-owned evidence even
+when those fields would make a preview invalid. This preserves the selected
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825) contract from
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+The live PR-body reconciliation was rejected by the connector with
+`MCP tool call requires approval, but approval policy is never`. Existing
+implementation tasks and their duplicated entries are verified locally;
+publication of the checklist remains blocked.
+
+After the clarification, the focused command passed **8 tests**, 94 deselected,
+in **8.79 s**. The same interpreter and optional scheduling harness ran:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The broad run passed **310 tests**, 2259 deselected, in **91.89 s**. Both
+pytest runs reported the same 15 existing warnings. Black's repository-wide
+check passed with **377 files unchanged**; Ruff and whitespace checks passed.
+The focused command remains below two minutes. All five implementation tasks
+and four acceptance criteria, including their duplicated entries, are verified
+in the local checklist at `agents/codex-825.md`.
+
+Staging the source, test and audit files failed with exit 128:
+`.git/index.lock: Read-only file system`. No commit or push was possible.
+The connector rejected the requested `needs-human` label and blocker comment
+with the same approval-policy error as the PR-body update. All work stayed in
+this agent; no work was delegated.
+
+### Evidence placement clarification (2026-11-05, source `724c676`)
+
+Reviewed the five implementation commits since bootstrap; their combined diff
+touches four files. The required guide, audit, request models and four selection
+functions were re-read. The caller forwarding boundary remains unchanged.
+The prior implementation already satisfies the repeated task and acceptance
+entries; `agents/codex-825.md` reconciles them locally. The connector rejected
+the live PR-body update, blocker comment and `needs-human` label because tool
+approval is required but the run's approval policy is `never`.
+
+One remaining ambiguity in the descriptions was corrected: caller evidence
+belongs in top-level preview request fields. Top-level export evidence is
+ignored; placing either map inside an inline `spec` returns HTTP 400. The old
+export spec description's "ignored if supplied here" could imply the opposite.
+This clarification preserves the preview-only contract selected in
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825) following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805). Four endpoint
+regressions verify nested-map refusal before the builder runs or output is
+written; generated OpenAPI descriptions now state that boundary too.
+
+Using Python **3.14.9** at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python` and the existing opt-in
+sandbox scheduling harness, the pre-change focused baseline passed **8 tests**
+in **7.38 s**. The expanded focused command is:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or caller_evidence_inside_spec or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+Result: **12 passed**, 94 deselected, 15 existing warnings, **7.41 s**. The
+first run caught a case mismatch in the new OpenAPI assertion; after correcting
+the assertion, the same command passed. A prematurely started broad run was
+cancelled before restarting against the corrected test.
+
+The broad acceptance command and mandatory formatting gate were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The broad run passed **314 tests**, 2259 deselected, 15 existing warnings, in
+**77.92 s**. Black passed with **377 files unchanged**; Ruff and whitespace
+checks passed. Read-only PR verification confirmed #870 is open with
+`draft=false` at source `724c676`.
+
+After validation, staging the four follow-up files failed with exit 128:
+`.git/index.lock: Read-only file system`. No current-run commit or push was
+possible. This failure applies to this follow-up; the earlier implementations
+are already present in the five reviewed runner commits.
 
 ## Executed evidence and test layers
 
