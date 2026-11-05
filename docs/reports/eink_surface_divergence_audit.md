@@ -926,3 +926,47 @@ because `.git` is mounted read-only. The requested blocker comment and
 `needs-human` label on #827 were also rejected by the GitHub connector:
 `MCP tool call requires approval, but approval policy is never`. These changes
 remain in the workspace without a commit or a remote status update.
+
+### Same-archive count verification, 2026-11-05
+
+Reconciliation reviewed the implementation and recent follow-ups through
+`64bbec9`. PR #874 was open, ready for review, and already had all task and
+acceptance checkboxes checked. The mixed-master preview, feed, export and UI
+checks passed together (4 tests, 1.47 seconds); no additional task completion
+claims were needed.
+
+The earlier surface tests used separate archives. The new parametrized
+`test_mixed_master_counts_across_preview_feed_and_export` exercises all three
+production paths sequentially against one unchanged archive and specification.
+It checks both a missing first master and a missing last master. A one-row
+preview therefore samples either the missing or available work, while reporting
+selected=2 and available-for-delivery=1 in both cases. The saved feed resolves
+one work and its advertised image returns HTTP 200. Export of that saved
+playlist writes one decodable 8-by-6 PNG, reports one missing-master omission,
+and records the delivered work in the card manifest. Byte counts match the
+file on disk. A final preview equals the initial response.
+
+The existing opt-in sandbox scheduling harness was used with the selected
+interpreter `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_feed_endpoints.py::test_mixed_master_counts_across_preview_feed_and_export -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_feed_endpoints.py
+```
+
+Results: the new regression passed **2 tests**, 14 warnings, in 1.70 seconds;
+the required three suites passed **281 tests**, 15 warnings, in 83.69 seconds;
+the named UI regression passed **1 test**, 13 warnings, in 0.61 seconds. All
+commands exited zero. Black left **377 files unchanged**, Ruff passed, and
+`git diff --check` passed. The earlier UI mutation's red/green receipts remain
+unchanged; neither the UI implementation nor its regression changed this round.
+
+The shared checkout still mounts `.git` read-only, so staging there failed at
+`index.lock`. A writable checkout under `/tmp/faa-issue827-counts-review` was
+created to preserve this follow-up as a commit and patch. The GitHub connector
+rejected the requested PR-body reconciliation update because approval is
+required while the run's approval policy is `never`; the existing checked
+tasks were left intact.

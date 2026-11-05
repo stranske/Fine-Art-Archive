@@ -1276,6 +1276,76 @@ def test_mixed_master_feed_advertises_only_the_servable_image(client, archive, m
     assert image.headers["X-Work-Id"] == _COUNT_FIRST
 
 
+@pytest.mark.parametrize(
+    ("masters", "available_id"),
+    [((True, False), _COUNT_FIRST), ((False, True), _COUNT_SECOND)],
+    ids=["missing-last", "missing-first"],
+)
+def test_mixed_master_counts_across_preview_feed_and_export(
+    client, archive, tmp_path, monkeypatch, masters, available_id
+):
+    """One unchanged archive and spec distinguish selection from delivery.
+
+    A one-row preview may show either the available or missing work. Neither
+    sample may change the full delivery total, feed membership or card output.
+    """
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+
+    def preview_counts():
+        response = client.post(
+            "/eink/playlist/preview",
+            json={"spec": _COUNT_SPEC, "target": "count-contract", "sample": 1},
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+        assert body["selected"] == 2
+        assert body["available_for_delivery"] == 1
+        assert len(body["items"]) == 1
+        assert body["items"][0]["work_id"] == _COUNT_FIRST
+        assert body["items"][0]["has_master"] is masters[0]
+        return body
+
+    before = preview_counts()
+    playlist = _save_count(client, _COUNT_SPEC)
+    assert playlist["resolved_count"] == before["available_for_delivery"]
+    response = client.get(f"/feed/{playlist['id']}/next")
+    assert response.status_code == 200, response.text
+    advertised = response.json()
+    assert advertised["count"] == 1
+    assert advertised["work_id"] == available_id
+    image = client.get(advertised["image_url"])
+    assert image.status_code == 200, image.text
+    assert image.headers["X-Work-Id"] == available_id
+
+    card = tmp_path / "card"
+    response = client.post(
+        "/eink/playlist/export",
+        json={"playlist_id": playlist["id"], "path": str(card), "write": True},
+    )
+    assert response.status_code == 200, response.text
+    written = response.json()
+    assert written["selected"] == before["selected"]
+    assert written["dry_run"] is False
+    assert written["written"] == 1
+    assert written["missing_master_omissions"] == written["skipped"] == 1
+    filename = f"001_{available_id}.png"
+    assert [path.name for path in card.glob("*.png")] == [filename]
+    assert written["bytes_written"] == (card / filename).stat().st_size > 0
+    with Image.open(card / filename) as delivered:
+        delivered.load()
+        assert delivered.format == "PNG"
+        assert delivered.size == (8, 6)
+    manifest = json.loads((card / "playlist.json").read_text())
+    assert manifest["count"] == 1
+    assert [row["work_id"] for row in manifest["items"]] == [available_id]
+    assert preview_counts() == before
+
+
 def test_all_master_feed_serves_both_selected_images(client, archive, monkeypatch):
     _count_target(monkeypatch)
     _two_selected(archive, (True, True))
