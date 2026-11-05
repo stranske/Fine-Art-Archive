@@ -2116,6 +2116,50 @@ def test_operator_ui_renders_preview_item_identity_in_selection_order():
     )
 
 
+def test_operator_ui_renders_preview_and_delivery_counts():
+    """Preview and delivery counts must both be visible to the operator.
+
+    The audit's no-master row (#827) is that each surface counts
+    differently on purpose: preview ``selected`` includes works with no
+    local image, the saved feed's ``resolved_count`` excludes them, and
+    SD export reports ``written`` after skipping them at write. Those
+    counts are only reconcilable where the operator actually sees them:
+    the preview header (``selected`` of ``matched`` over
+    ``total_candidates``), the save toast (``resolved_count``) and the
+    export result (``written``). Dropping any one would let preview,
+    feed and card report irreconcilable totals with no visible reason.
+    Removing ``selected of ${d.matched}`` in ``index.html`` must fail
+    this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert "<strong>${d.selected}</strong> selected of ${d.matched} matching" in ui, (
+        "preview header does not render selected/matched — preview count "
+        "could not be compared to the feed's resolved count"
+    )
+    assert (
+        "(${d.total_candidates} in archive)" in ui
+    ), "preview header does not render the archive total it matched against"
+    assert 'toast(`saved "${d.name}" — ${d.resolved_count} works`);' in ui, (
+        "save toast does not report the feed's resolved count — a saved "
+        "feed whose count collapsed after the preview would read as saved"
+    )
+    assert '${write ? "Wrote" : "Would write"} ${d.written} file(s)' in ui, (
+        "export result does not render the card's written count — dry-run "
+        "and write would be indistinguishable from a partial card"
+    )
+    assert ui.count("${d.selected}") == 1, (
+        "preview selected count must come from the preview response exactly once"
+    )
+    assert ui.count("${d.resolved_count} works") == 1, (
+        "saved-feed count must come from the save response exactly once"
+    )
+    assert ui.count("${d.written} file(s)") == 1, (
+        "card written count must come from the export response exactly once"
+    )
+
+
 def test_helper_edge_render_evidence_uses_default_spectra6_policy():
     """The A11 edge: e-ink surfaces share one default-policy evidence call.
 

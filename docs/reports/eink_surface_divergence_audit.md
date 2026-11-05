@@ -236,6 +236,36 @@ and rerun to pass) and the Black check above before marking the
 enumeration task complete. No new issue filed: this locks an
 already-correct row, and the change touches no file under `src/`.
 
+Follow-on lock (this change):
+`test_operator_ui_renders_preview_and_delivery_counts` in
+`tests/test_eink_pipeline.py` locks the operator-visible counts
+that make the no-master row (#827) reconcilable across surfaces:
+the preview header must render ``selected`` of ``matched`` over
+``total_candidates`` (main.py:773-781 → index.html `einkPreview`),
+the save toast must report the feed's ``resolved_count``
+(main.py:2289-2291), and the export result must render ``written``
+(sdcard.py reported count). Backend counts were already locked; a
+search over `tests/` before this change found none of these three
+renderings locked (the saved list's count is a separate rendering,
+locked above). Inspected, not executed, in this session (shell
+blocker above; no pass, Black check, `git` commit or `gh` listing
+claimed). Rerun
+`pytest tests/test_eink_pipeline.py::test_operator_ui_renders_preview_and_delivery_counts -m "not slow" --no-cov`
+plus its deliberate-break probe (temporarily remove
+`selected of ${d.matched}` from the preview header in
+`index.html`, rerun — it must fail on the preview count — then
+restore and rerun to pass) and the Black check above before
+marking the enumeration task complete. No new issue filed: this
+locks the operator-visible side of the already-owned #827 row,
+and the change touches no file under `src/`. Re-attempt in this
+session: the targeted pytest, the Black gate, and the
+break/restore probe were each invoked again and each returned
+``bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted``
+before the command started, so no terminal pass or break-failure
+output was captured and no commit was made here; the rerun
+commands above remain the checklist to complete once the shell
+is available.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
