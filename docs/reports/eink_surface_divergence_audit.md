@@ -134,6 +134,31 @@ before marking the enumeration/helper-trace tasks complete. No new
 issue filed: this locks already-correct rows, not an uncovered instance,
 and touches no file under `src/`.
 
+Follow-on locks (this change): the enumeration now also locks what each
+enumerated input means when omitted, not only that it exists.
+`test_enumerated_eink_surface_defaults_match_audit_matrix` asserts the
+defaults the matrix above assumes for `PlaylistIn` / `ExportIn` /
+`SavePlaylistIn` (api/main.py), `PlaylistSpec` (playlist.py),
+`SavedPlaylist` (feed.py) and the traced helper signatures
+(`eink_preview`, `render_for_target`, `gamut_render_evidence`,
+`select_quality_diverse`, `item_etag` — including that `fit` is a
+required keyword there — and `sdcard.export`), because a changed
+default diverges preview from delivery without changing any signature.
+`test_helper_edge_render_for_target_derives_strategy_when_unspecified`
+locks the one helper fallback the earlier trace read but did not
+exercise: `render_for_target(..., strategy=None)` re-derives through
+the same `render_evidence` policy the four surfaces report, byte-equal
+to the explicit render for both a poorly-served (grayscale) and an
+on-palette (color) master. Inspected, not executed, in this session:
+every shell command still fails before starting with
+`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, so no
+pass, Black check, `git` commit or `gh` listing is claimed here. Rerun
+`pytest tests/test_eink_pipeline.py::test_enumerated_eink_surface_defaults_match_audit_matrix tests/test_eink_pipeline.py::test_helper_edge_render_for_target_derives_strategy_when_unspecified -m "not slow" --no-cov`
+plus `black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+before marking the enumeration/helper-trace tasks complete. No new
+issue filed: both lock already-correct rows, and the change touches no
+file under `src/`.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15

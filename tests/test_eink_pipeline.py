@@ -1968,6 +1968,121 @@ def test_enumerated_eink_surface_inputs_match_backend_signatures():
     ]
 
 
+def test_enumerated_eink_surface_defaults_match_audit_matrix():
+    """The enumerated inputs must keep the defaults the audit matrix assumes.
+
+    ``test_enumerated_eink_surface_inputs_match_backend_signatures`` locks
+    which inputs exist; this locks what each input means when the caller
+    omits it. A changed default is a divergence of exactly the audited
+    kind: preview would render with one implicit target/dither/fit while
+    the saved feed or SD card rendered with another, and no signature
+    would have changed. Every value below is the default recorded in the
+    audit's input-by-surface matrix (``PlaylistIn``/``ExportIn``/
+    ``SavePlaylistIn`` in api/main.py, ``PlaylistSpec`` in playlist.py,
+    ``SavedPlaylist`` in feed.py, and the traced helper signatures).
+    """
+    import inspect
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.display.render import gamut_render_evidence
+    from fine_art_archive.eink.feed import SavedPlaylist, item_etag
+    from fine_art_archive.eink.sdcard import export as export_card
+    from fine_art_archive.eink.targets import render_for_target
+    from fine_art_archive.preference.exhibition import select_quality_diverse
+
+    preview_in = api_main.PlaylistIn()
+    assert preview_in.spec == {}
+    assert preview_in.quality_scores == {}
+    assert preview_in.embeddings == {}
+    assert preview_in.target == "gooddisplay-315-diy"
+    assert preview_in.sample == 24
+
+    export_in = api_main.ExportIn(path="card")
+    assert export_in.playlist_id is None
+    assert export_in.spec == {}
+    assert export_in.target == "gooddisplay-315-diy"
+    assert export_in.dither == "floyd-steinberg"
+    assert export_in.fit is None
+    assert export_in.fmt == "png"
+    assert export_in.write is False
+    assert export_in.overwrite is False
+
+    save_in = api_main.SavePlaylistIn(name="Winter")
+    assert save_in.spec == {}
+    assert save_in.target == "gooddisplay-315-diy"
+    assert save_in.dither == "floyd-steinberg"
+    assert save_in.fit is None
+    assert save_in.interval == "daily"
+    assert save_in.id is None
+
+    spec = PlaylistSpec()
+    assert spec.selection_mode == "ordered"
+    assert spec.sort == "fit"
+    assert spec.seed == 42
+    assert spec.require_dossier is False
+    assert spec.limit is None
+    assert spec.min_fit is None
+    assert spec.min_quality is None
+    assert spec.year_from is None
+    assert spec.year_to is None
+    for field_name in (
+        "artists",
+        "genres",
+        "moods",
+        "periods",
+        "any_tags",
+        "all_tags",
+        "not_tags",
+        "exclude_filters",
+    ):
+        assert getattr(spec, field_name) == []
+
+    saved = SavedPlaylist(id="winter-abc123", name="Winter", spec={})
+    assert saved.target == "gooddisplay-315-diy"
+    assert saved.dither == "floyd-steinberg"
+    assert saved.fit is None
+    assert saved.interval == "daily"
+    assert saved.created_at == ""
+    assert saved.updated_at == ""
+
+    def defaults(fn):
+        return {
+            name: param.default for name, param in inspect.signature(fn).parameters.items()
+        }
+
+    preview_defaults = defaults(api_main.eink_preview)
+    assert preview_defaults["target"] == "gooddisplay-315-diy"
+    assert preview_defaults["dither"] == "floyd-steinberg"
+    assert preview_defaults["fit"] is None
+
+    render_defaults = defaults(render_for_target)
+    assert render_defaults["fit"] is None
+    assert render_defaults["method"] == "floyd-steinberg"
+    assert render_defaults["compress_range"] is True
+    assert render_defaults["fast"] is True
+    assert render_defaults["strategy"] is None
+
+    assert defaults(gamut_render_evidence)["policy"] is None
+    assert defaults(select_quality_diverse)["seed"] == 0
+
+    etag_defaults = defaults(item_etag)
+    assert etag_defaults["fit"] is inspect.Parameter.empty
+    assert etag_defaults["render_strategy"] == "color"
+    assert etag_defaults["palette"] is None
+    assert etag_defaults["palette_identity"] is None
+
+    export_defaults = defaults(export_card)
+    assert export_defaults["fmt"] == "png"
+    assert export_defaults["method"] == "floyd-steinberg"
+    assert export_defaults["fit"] is None
+    assert export_defaults["compress_range"] is True
+    assert export_defaults["fast"] is True
+    assert export_defaults["overwrite"] is False
+    assert export_defaults["dry_run"] is True
+    assert export_defaults["spec"] is None
+    assert export_defaults["progress"] is None
+
+
 def test_operator_ui_renders_preview_item_identity_in_selection_order():
     """Preview captions must carry the same item identity as the manifests.
 
@@ -2025,6 +2140,43 @@ def test_helper_edge_render_evidence_uses_default_spectra6_policy():
     assert list(inspect.signature(render_evidence).parameters) == ["img"]
     on_palette = Image.new("RGB", (16, 16), SPECTRA6.colours[2])
     assert render_evidence(on_palette).strategy == "color"
+
+
+def test_helper_edge_render_for_target_derives_strategy_when_unspecified():
+    """The render edge: an omitted strategy must mean the reported strategy.
+
+    Preview, feed and SD export all pass ``strategy=evidence.strategy``
+    explicitly (targets.py ``render_for_target``), but the helper's
+    ``strategy=None`` fallback re-derives from the same
+    ``render_evidence`` policy. If that fallback ever consulted a
+    different policy, any future caller omitting the argument would
+    silently render a different strategy than the surfaces report —
+    the reported-vs-applied divergence the audit closed. The derived
+    render must be byte-identical to the explicit render.
+    """
+    from fine_art_archive.eink.targets import RenderTarget, render_evidence
+
+    small = RenderTarget(
+        key="audit-small",
+        label="Audit small",
+        width=32,
+        height=24,
+        palette_name="spectra6",
+    )
+    magenta = Image.new("RGB", (16, 16), (255, 0, 255))
+    derived = render_for_target(magenta, small)
+    explicit = render_for_target(magenta, small, strategy=render_evidence(magenta).strategy)
+    assert render_evidence(magenta).strategy == "grayscale"
+    assert derived.size == explicit.size == small.size
+    assert derived.tobytes() == explicit.tobytes()
+
+    on_palette = Image.new("RGB", (16, 16), SPECTRA6.colours[2])
+    derived_colour = render_for_target(on_palette, small)
+    explicit_colour = render_for_target(
+        on_palette, small, strategy=render_evidence(on_palette).strategy
+    )
+    assert render_evidence(on_palette).strategy == "color"
+    assert derived_colour.tobytes() == explicit_colour.tobytes()
 
 
 def test_helper_edge_validate_inputs_rejects_each_bad_evidence_class():
