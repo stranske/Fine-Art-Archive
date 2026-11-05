@@ -1089,3 +1089,40 @@ The shared checkout could not stage the change because `.git/index.lock` is
 read-only. A writable clone at `/tmp/faa-issue827-ui-export-counts` preserves
 the test and audit changes for a local commit and patch; it does not advance
 the shared branch or remote PR head.
+
+### Failed-save count verification, 2026-11-05
+
+All supplied checkboxes were already complete at `6559872`; PR #874 was open
+and ready for review. Before editing, the same-archive count cases, UI checks
+and existing render-failure test passed together (10 tests, 3.72 seconds).
+
+`test_render_failure_is_not_a_missing_master_or_a_successful_write` now tests
+both unreadable masters and a card save that writes partial bytes before
+raising `OSError`, in both playlist positions. Each production export reports
+selected=2, written=1 and missing-master omissions=0. The test checks partial
+file cleanup, contiguous numbering, exact successful-image bytes, decoded PNG
+dimensions, JSON/M3U membership and render evidence. This verifies actual save
+results independently of master availability. Production behavior is unchanged.
+
+Using the selected CPython 3.14.9 interpreter with the existing opt-in sandbox
+scheduling harness, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_export_format.py::test_render_failure_is_not_a_missing_master_or_a_successful_write -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_export_format.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+The expanded failure regression passed **4 tests** in 0.60 seconds; the three
+required suites passed **290 tests**, 15 warnings, in 75.34 seconds; the named
+UI regression passed **4 tests** in 0.55 seconds. Black left **377 files
+unchanged**, Ruff passed, and `git diff --check` passed. The UI implementation
+and previous mutation-test receipts are unchanged.
+
+Staging failed because the shared checkout's `.git/index.lock` is read-only.
+The verified changes are preserved for a local commit and patch in the writable
+clone `/tmp/faa-issue827-partial-save-20261105`; this does not advance the
+shared checkout's branch or the remote PR head.

@@ -332,18 +332,36 @@ def test_export_dry_run_reports_planned_counts_without_writing(
     assert not card.exists(), "a dry run must not create card images or manifests"
 
 
-def test_render_failure_is_not_a_missing_master_or_a_successful_write(tmp_path, monkeypatch):
-    """A master file that cannot be rendered is not delivered and not 'missing'.
+@pytest.mark.parametrize("failure", ["unreadable-master", "partial-save"])
+@pytest.mark.parametrize("failed_id", [_COUNT_FIRST, _COUNT_SECOND], ids=["first", "last"])
+def test_render_failure_is_not_a_missing_master_or_a_successful_write(
+    tmp_path, monkeypatch, failure, failed_id
+):
+    """An unreadable master or failed card save is not delivered or 'missing'.
 
     Both master files exist, so master availability is 2. The writer saves
-    one image and records a render failure for the other. ``written`` is that
-    file, and ``missing_master_omissions`` stays 0 rather than becoming
-    ``selected - written``.
+    one image and records a failure for the other, even if the failed save
+    already wrote partial bytes. Only the successful file contributes to
+    ``written``, byte totals, manifests and render evidence. Failure in either
+    playlist position leaves no partial file or gap in the surviving filename.
+    ``missing_master_omissions`` stays 0 rather than ``selected - written``.
     """
     client = _export_client(tmp_path, monkeypatch, (True, True))
     first_master = tmp_path / "works" / _COUNT_FIRST / "master.jpeg"
     second_master = tmp_path / "works" / _COUNT_SECOND / "master.jpeg"
-    second_master.write_bytes(b"not a jpeg")
+    if failure == "unreadable-master":
+        (tmp_path / "works" / failed_id / "master.jpeg").write_bytes(b"not a jpeg")
+    else:
+        original_save = Image.Image.save
+
+        def fail_card_save(image, fp, *args, **kwargs):
+            path = Path(fp)
+            if path.name.endswith(f"_{failed_id}.png.partial"):
+                path.write_bytes(b"incomplete png")
+                raise OSError("fixture card write failed")
+            return original_save(image, fp, *args, **kwargs)
+
+        monkeypatch.setattr(Image.Image, "save", fail_card_save)
     assert first_master.is_file()
     assert second_master.is_file()
 
@@ -354,12 +372,25 @@ def test_render_failure_is_not_a_missing_master_or_a_successful_write(tmp_path, 
     assert body["dry_run"] is False
     assert body["missing_master_omissions"] == 0
     assert body["skipped"] == 1
-    assert body["skipped_detail"][0][0] == _COUNT_SECOND
+    assert body["skipped_detail"][0][0] == failed_id
     assert str(body["skipped_detail"][0][1]).startswith("render failed:")
-    assert sorted(path.name for path in card.glob("*.png")) == ["001_aaa1111-first-work.png"]
+    if failure == "partial-save":
+        assert "fixture card write failed" in body["skipped_detail"][0][1]
+    delivered_id = _COUNT_SECOND if failed_id == _COUNT_FIRST else _COUNT_FIRST
+    filename = f"001_{delivered_id}.png"
+    assert sorted(path.name for path in card.glob("*.png")) == [filename]
+    assert list(card.glob(".*.partial")) == []
+    assert body["bytes_written"] == (card / filename).stat().st_size > 0
+    with Image.open(card / filename) as delivered:
+        delivered.load()
+        assert delivered.format == "PNG"
+        assert delivered.size == (8, 6)
     manifest = json.loads((card / "playlist.json").read_text(encoding="utf-8"))
     assert manifest["count"] == 1
-    assert [row["work_id"] for row in manifest["items"]] == [_COUNT_FIRST]
+    assert [row["work_id"] for row in manifest["items"]] == [delivered_id]
+    assert [row["file"] for row in manifest["items"]] == [filename]
+    assert (card / "playlist.m3u").read_text().splitlines() == [filename]
+    assert [row["work_id"] for row in body["render_evidence"]] == [delivered_id]
 
 
 def test_missing_master_omissions_count_past_the_skipped_detail_cap(tmp_path, monkeypatch):
