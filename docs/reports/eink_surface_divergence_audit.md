@@ -294,6 +294,52 @@ No new commit or push was possible in this run; the verified changes remain
 in the workspace. Read-only verification confirmed PR #870 is open with
 `draft=false`; its live checklist was not changed.
 
+### Evidence-field validation follow-up (2026-11-05, source `bd1987d`)
+
+Rechecked the request models and all four selection functions for
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825), following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805). The forwarding
+behavior still matches the audit: only preview accepts caller evidence;
+saved/served and exported selections derive server-owned evidence. The
+preview-only contract and selection-parity warning were already implemented
+at this source commit despite unchecked entries in the live work order.
+
+Clarified both preview evidence-field descriptions: omission derives that
+mapping independently of its sibling, an explicit empty mapping returns HTTP
+400 in preference-diverse mode, and ordered mode ignores the mapping. The
+saved-ID export field now also explicitly warns that matching an overridden
+preview's selection is not guaranteed. Extended the existing generated-OpenAPI
+test and empty-evidence regression; the latter now checks each empty override
+with either a supplied sibling or an omitted, server-derived sibling.
+
+Validation used the active automation interpreter, Python **3.14.10** at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python`, and the existing optional
+scheduling harness. Exact commands:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The baseline focused run passed **6 tests** in **5.18 s**. After the changes,
+the focused run passed **6 tests**, 94 deselected, in **5.21 s**; the broad run
+passed **308 tests**, 2259 deselected, in **87.22 s**. Both reported the same
+15 existing warnings. Black's repository-wide check passed with **377 files
+unchanged**; Ruff and whitespace checks passed. The initial Black invocation
+without the harness/worker setting failed on denied worker socket binding;
+the documented configuration above passed.
+
+The implementation and validation tasks remain verified. The required commit
+is blocked: `git add src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py`
+returned exit 128 because `.git/index.lock` cannot be created on a read-only
+filesystem. No commit or push occurred. Read-only GitHub verification confirmed
+PR #870 is open and `draft=false`; its live checklist was not modified.
+All work stayed in this agent; no work was delegated.
+
 ## Executed evidence and test layers
 
 Local runtime: `/opt/anaconda3/bin/python3`, Python 3.12, pytest 9.1.1,

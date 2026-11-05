@@ -643,15 +643,17 @@ class PlaylistIn(BaseModel):
     quality_scores: dict[str, float] = Field(
         default_factory=dict,
         description="Preview-only quality evidence for preference-diverse selection. "
-        "Omission derives server-owned ratings; an explicit empty mapping stays empty. "
+        "Omission derives server-owned ratings independently of embeddings. An explicit "
+        "empty mapping is invalid and returns HTTP 400; ordered mode ignores this mapping. "
         "Saved/served and exported selections use server-owned evidence, so matching "
         "their selection is not guaranteed.",
     )
     embeddings: dict[str, list[float]] = Field(
         default_factory=dict,
         description="Preview-only embeddings for preference-diverse selection. "
-        "Omission derives server-owned local-master descriptors; an explicit empty "
-        "mapping stays empty. Saved/served and exported selections use server-owned "
+        "Omission derives server-owned local-master descriptors independently of quality_scores. "
+        "An explicit empty mapping is invalid and returns HTTP 400; ordered mode ignores "
+        "this mapping. Saved/served and exported selections use server-owned "
         "evidence, so matching their selection is not guaranteed.",
     )
     target: str = "gooddisplay-315-diy"
@@ -714,7 +716,8 @@ class ExportIn(BaseModel):
         default=None,
         description="Saved playlist to export. When supplied, its stored spec, target, "
         "dither and fit override the corresponding request fields. Selection uses "
-        "current server-owned evidence, not preview-only caller quality_scores/embeddings.",
+        "current server-owned evidence, not preview-only caller quality_scores/embeddings; "
+        "matching an overridden preview's selection is not guaranteed.",
     )
     spec: dict = Field(
         default_factory=dict,

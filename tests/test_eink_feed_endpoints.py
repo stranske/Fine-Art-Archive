@@ -925,11 +925,13 @@ def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, div
     assert response.status_code == 200, response.text
     assert response.json()["work_ids"][0] == "bbb2222-near-red"
     for field in ["quality_scores", "embeddings"]:
-        refused = client.post(
-            "/eink/playlist/preview", json={"spec": diverse_archive, **supplied, field: {}}
-        )
-        assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
-        assert "evidence" in refused.json()["detail"]
+        # Deriving an omitted sibling must not replace the explicitly empty mapping.
+        for evidence in [{**supplied, field: {}}, {field: {}}]:
+            refused = client.post(
+                "/eink/playlist/preview", json={"spec": diverse_archive, **evidence}
+            )
+            assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
+            assert "evidence" in refused.json()["detail"]
 
 
 @pytest.mark.parametrize("write", [False, True])
@@ -1055,6 +1057,11 @@ def test_eink_openapi_describes_preview_only_evidence(client):
             "description"
         ]
         assert "Preview-only" in description
+        assert "Omission derives server-owned" in description
+        sibling = "embeddings" if field == "quality_scores" else "quality_scores"
+        assert f"independently of {sibling}" in description
+        assert "empty mapping is invalid and returns HTTP 400" in description
+        assert "ordered mode ignores this mapping" in description
         assert "Saved/served and exported selections use server-owned" in description
         assert "not guaranteed" in description
         assert field not in schema["components"]["schemas"]["ExportIn"]["properties"]
@@ -1067,6 +1074,7 @@ def test_eink_openapi_describes_preview_only_evidence(client):
     saved_export = export_fields["playlist_id"]["description"]
     assert "current server-owned evidence" in saved_export
     assert "preview-only caller quality_scores/embeddings" in saved_export
+    assert "matching an overridden preview's selection is not guaranteed" in saved_export
 
 
 def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
