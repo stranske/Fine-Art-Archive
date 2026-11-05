@@ -1358,10 +1358,12 @@ def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_expor
     # Saved feed and SD export consume the same controls, so all three
     # surfaces agree on panel and dither for one operator action.
     assert ui.count('document.getElementById("ek-target").value') >= 3, (
-        "target must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+        "target must be read for preview images, saving a playlist (feed) "
+        "and export (SD card)"
     )
     assert ui.count('document.getElementById("ek-dither").value') >= 3, (
-        "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+        "dither must be read for preview images, saving a playlist (feed) "
+        "and export (SD card)"
     )
 
 
@@ -1739,7 +1741,8 @@ def test_operator_ui_discloses_skipped_works_on_export():
         "would read as the full selection the card cannot show"
     )
     assert ui.count("${d.skipped} skipped") == 1, (
-        "skipped disclosure must come from the export response's skipped " "count exactly once"
+        "skipped disclosure must come from the export response's skipped "
+        "count exactly once"
     )
 
 
@@ -1769,7 +1772,8 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
     )
     assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
     assert ui.count("Dropped for missing metadata") == 1, (
-        "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
+        "missing-metadata disclosure must come from the preview response's "
+        "coverage exactly once"
     )
 
 
