@@ -19,6 +19,7 @@ from .feed import (  # noqa: F401
     SavedPlaylist,
     build_manifest,
     item_etag,
+    palette_fingerprint,
     rotation_index,
     slugify,
 )
@@ -88,6 +89,7 @@ __all__ = [
     "dither_error",
     "export",
     "item_etag",
+    "palette_fingerprint",
     "rotation_index",
     "slugify",
     "fit_to_target",

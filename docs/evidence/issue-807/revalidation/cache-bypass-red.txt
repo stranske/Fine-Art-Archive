@@ -1,0 +1,75 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.8, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/runner/work/Fine-Art-Archive/Fine-Art-Archive
+configfile: pyproject.toml
+plugins: platformdirs-4.13.3, langsmith-0.14.11, cov-7.1.0, anyio-4.15.1
+collected 1 item
+
+tests/test_eink_pipeline.py F                                            [100%]
+
+=================================== FAILURES ===================================
+________________ test_local_descriptors_reuse_unchanged_images _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7feea6fd0180>
+
+    def test_local_descriptors_reuse_unchanged_images(tmp_path, monkeypatch):
+        """Repeated derivation reads each master once, without changing its vector."""
+        from fine_art_archive.api import main as api_main
+    
+        paths = {}
+        for wid, colour in [("red", (220, 40, 40)), ("blue", (40, 70, 220))]:
+            path = tmp_path / f"{wid}.png"
+            Image.new("RGB", (32, 24), colour).save(path)
+            paths[wid] = path
+        monkeypatch.setattr(api_main, "_eink_master", paths.get)
+        monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+        # Independent uncached recipe: cache reuse must preserve the original vectors.
+        baseline = {}
+        for wid, path in paths.items():
+            with Image.open(path) as image:
+                pixels = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+                baseline[wid] = [channel / 255.0 for pixel in pixels.getdata() for channel in pixel]
+        reads = []
+        original_compute = api_main._compute_visual_descriptor
+    
+        def counted_compute(source):
+            reads.append(source.name)
+            return original_compute(source)
+    
+        monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
+        first = api_main._derived_preference_evidence(list(paths), {})[1]
+        second = api_main._derived_preference_evidence(list(paths), {})[1]
+        assert first == second == baseline
+        assert first["red"] != first["blue"]
+>       assert reads == [
+            str(path) for path in paths.values()
+        ], "unchanged masters must not be decoded again"
+E       AssertionError: unchanged masters must not be decoded again
+E       assert ['/tmp/pytest..._u0/blue.png'] == ['/tmp/pytest..._u0/blue.png']
+E         
+E         Left contains 2 more items, first extra item: '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png'
+E         
+E         Full diff:
+E           [
+E               '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png',
+E               '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/blue.png',
+E         +     '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png',
+E         +     '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/blue.png',
+E           ]
+
+tests/test_eink_pipeline.py:1080: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_eink_pipeline.py::test_local_descriptors_reuse_unchanged_images - AssertionError: unchanged masters must not be decoded again
+assert ['/tmp/pytest..._u0/blue.png'] == ['/tmp/pytest..._u0/blue.png']
+  
+  Left contains 2 more items, first extra item: '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png'
+  
+  Full diff:
+    [
+        '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png',
+        '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/blue.png',
+  +     '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/red.png',
+  +     '/tmp/pytest-of-runner/pytest-4/test_local_descriptors_reuse_u0/blue.png',
+    ]
+============================== 1 failed in 0.45s ===============================

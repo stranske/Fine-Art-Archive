@@ -1,0 +1,86 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_preference_diverse_preview_saved_feed_and_exports_agree[False] ______
+
+client = <starlette.testclient.TestClient object at 0x110ede6f0>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4956/test_preference_diverse_previe0/works')
+diverse_archive = {'sort': 'fit', 'min_fit': 8, 'limit': 2, 'selection_mode': 'preference-diverse'}
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4956/test_preference_diverse_previe0')
+write = False
+
+    @pytest.mark.parametrize("write", [False, True])
+    def test_preference_diverse_preview_saved_feed_and_exports_agree(
+        client, archive, diverse_archive, tmp_path, write
+    ):
+        # This is the companion's payload, with no caller-supplied evidence.
+        spec = diverse_archive
+        preview = client.post("/eink/playlist/preview", json={"spec": spec})
+        assert preview.status_code == 200, preview.text
+        selected = preview.json()["work_ids"]
+        assert set(selected) == {"aaa1111-red-work", "ccc3333-blue-work"}
+>       saved = _save(client, spec=spec)
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_eink_feed_endpoints.py:630: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x110ede6f0>
+body = {'spec': {'sort': 'fit', 'min_fit': 8, 'limit': 2, 'selection_mode': 'preference-diverse'}}
+
+    def _save(client: TestClient, **body) -> dict:
+        payload = {"name": "Wall", "spec": {}, "interval": "daily"}
+        payload.update(body)
+        response = client.post("/eink/playlists", json=payload)
+>       assert response.status_code == 200, response.text
+E       AssertionError: {"detail":"playlist wall-358aa6: preference-diverse selection requires quality and embedding evidence"}
+E       assert 400 == 200
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_eink_feed_endpoints.py:84: AssertionError
+______ test_preference_diverse_preview_saved_feed_and_exports_agree[True] ______
+
+client = <starlette.testclient.TestClient object at 0x110eed430>
+archive = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4956/test_preference_diverse_previe1/works')
+diverse_archive = {'sort': 'fit', 'min_fit': 8, 'limit': 2, 'selection_mode': 'preference-diverse'}
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4956/test_preference_diverse_previe1')
+write = True
+
+    @pytest.mark.parametrize("write", [False, True])
+    def test_preference_diverse_preview_saved_feed_and_exports_agree(
+        client, archive, diverse_archive, tmp_path, write
+    ):
+        # This is the companion's payload, with no caller-supplied evidence.
+        spec = diverse_archive
+        preview = client.post("/eink/playlist/preview", json={"spec": spec})
+        assert preview.status_code == 200, preview.text
+        selected = preview.json()["work_ids"]
+        assert set(selected) == {"aaa1111-red-work", "ccc3333-blue-work"}
+>       saved = _save(client, spec=spec)
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_eink_feed_endpoints.py:630: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x110eed430>
+body = {'spec': {'sort': 'fit', 'min_fit': 8, 'limit': 2, 'selection_mode': 'preference-diverse'}}
+
+    def _save(client: TestClient, **body) -> dict:
+        payload = {"name": "Wall", "spec": {}, "interval": "daily"}
+        payload.update(body)
+        response = client.post("/eink/playlists", json=payload)
+>       assert response.status_code == 200, response.text
+E       AssertionError: {"detail":"playlist wall-d6cbc9: preference-diverse selection requires quality and embedding evidence"}
+E       assert 400 == 200
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_eink_feed_endpoints.py:84: AssertionError
+=============================== warnings summary ===============================
+../../../../../../../opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/anaconda3/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_eink_feed_endpoints.py::test_preference_diverse_preview_saved_feed_and_exports_agree[False]
+FAILED tests/test_eink_feed_endpoints.py::test_preference_diverse_preview_saved_feed_and_exports_agree[True]
+2 failed, 1 warning in 0.96s

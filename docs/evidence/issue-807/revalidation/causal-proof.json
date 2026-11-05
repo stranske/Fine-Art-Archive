@@ -1,0 +1,48 @@
+{
+  "command": [
+    "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+    "-m",
+    "pytest",
+    "tests/test_eink_pipeline.py::test_local_descriptors_reuse_unchanged_images",
+    "-m",
+    "not slow",
+    "--no-cov",
+    "-q"
+  ],
+  "mutation": "Disable only the cached-descriptor return branch in main.py",
+  "red_exit": 1,
+  "green_exit": 0,
+  "red_descriptor_computations": 4,
+  "green_descriptor_computations": 2,
+  "source_sha256_before": "02a018ce9526864415d11b196e7db35913fb452fbd3127899a654ae30baccc22",
+  "source_sha256_after": "02a018ce9526864415d11b196e7db35913fb452fbd3127899a654ae30baccc22",
+  "unchanged_tests": {
+    "tests/test_eink_pipeline.py": "4bb9239cf34c5c389806b0879001fbafe6334daa693af20751abd48cab0ee577",
+    "tests/test_eink_feed_endpoints.py": "21fb0e1b0049c8169410db9630eb26bcdce2bc113de10deec29744081e73142c"
+  },
+  "suite_command": "PYTHONPATH=/tmp/faa-validation-support:src timeout 180s pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m 'not slow' --no-cov -q --junitxml=/tmp/faa-descriptor-validation/suites.xml",
+  "full_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "199",
+    "time": "69.109",
+    "timestamp": "2026-10-17T15:14:50.358996+00:00",
+    "hostname": "runnervm8k3b6"
+  },
+  "manifest_descriptor_counts": {
+    "matching_masters": 3,
+    "consecutive_manifest_requests": 2,
+    "after_both_manifests": 3,
+    "after_image_rendering": 3,
+    "after_ratings_change": 3,
+    "after_new_matching_master": 4
+  },
+  "format_command": "PYTHONPATH=/tmp/faa-validation-support BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+  "format_result": "368 files would be left unchanged",
+  "lint_command": "ruff check src/fine_art_archive/api/main.py tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py",
+  "lint_result": "All checks passed",
+  "environment_note": "Sandbox socket wakeups stall asyncio. Validation-only adapter below caps selector sleeps at 20 ms; no repository files or application logic changed for this adapter. BLACK_NUM_WORKERS=1 avoids forbidden process-pool socket creation.",
+  "validation_only_sitecustomize": "\"\"\"Bound selector sleep where sandboxed socket wakeups cannot notify asyncio.\"\"\"\nimport selectors\n\n_original_select = selectors.DefaultSelector.select\n\ndef _bounded_select(self, timeout=None):\n    return _original_select(self, 0.02 if timeout is None else min(timeout, 0.02))\n\nselectors.DefaultSelector.select = _bounded_select\n"
+}

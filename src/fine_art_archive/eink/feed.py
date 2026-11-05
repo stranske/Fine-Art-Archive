@@ -39,6 +39,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .palette import Palette
 from .targets import FitMode, coerce_fit, get_target
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
@@ -163,6 +164,15 @@ def rotation_index(
     return (int(now.timestamp()) // secs + offset) % n_items
 
 
+def palette_fingerprint(palette: Palette) -> str:
+    """Deterministic identity of ordered RGB colours and measurement status.
+
+    Name, note, source and other provenance fields are excluded: they do not
+    change rendered pixels or the X-Palette-Measured response header.
+    """
+    return json.dumps([palette.colours, palette.measured], separators=(",", ":"))
+
+
 def item_etag(
     work_id: str,
     target_key: str,
@@ -171,15 +181,27 @@ def item_etag(
     *,
     fit: FitMode | None,
     render_strategy: str = "color",
+    palette: Palette | None = None,
+    palette_identity: str | None = None,
 ) -> str:
-    """Stable identity for one rendered image, including fit and A11 strategy.
+    """Stable identity for rendered pixels and their palette measurement metadata.
 
     The target and dithering identify the panel's output. Fit and strategy must
-    also change the validator when the saved representation changes.
+    also change the validator when the saved representation changes. Palette
+    colours are ordered; measurement status also identifies response metadata.
+
+    Feed image routes must pass ``palette_identity`` from the response palette
+    (via :func:`palette_fingerprint`) before conditional matching so the
+    validator tracks the palette actually used for that response. Callers may
+    instead supply ``palette``; omitting both resolves the target's palette.
     """
     effective_fit = coerce_fit(fit) or get_target(target_key).fit
+    if palette_identity is None:
+        response_palette = palette if palette is not None else get_target(target_key).palette
+        palette_identity = palette_fingerprint(response_palette)
     h = hashlib.sha256(
-        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}".encode()
+        f"{work_id}|{target_key}|{dither}|{mtime}|{effective_fit}|a11-v1|{render_strategy}"
+        f"|palette-v1|{palette_identity}".encode()
     ).hexdigest()
     return f'W/"{h[:24]}"'
 

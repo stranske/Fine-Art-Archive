@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/opt/anaconda3/bin/python3",
+    "-m",
+    "pytest",
+    "tests/test_eink_pipeline.py::test_local_descriptors_reuse_unchanged_images",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "mutation": "Disable only the cached-descriptor return branch",
+  "red_exit": 1,
+  "red_assertion": "assert 4 == 2",
+  "green_exit": 0,
+  "source_sha256_before": "f1fd201eb358ff80d02e7bdb014ca3c9966d9d347541c7333352becf26e84189",
+  "source_sha256_after": "f1fd201eb358ff80d02e7bdb014ca3c9966d9d347541c7333352becf26e84189",
+  "unchanged_tests": {
+    "tests/test_eink_pipeline.py": "f0aee0045e89713fef1928be84d6a598dfcd326f2e7aae68821f4b5ca1d4a2e6",
+    "tests/test_eink_feed_endpoints.py": "90b364fbdc55f1f9e1084849246161b5e452713553765fba8801f9e1069f82c5"
+  },
+  "full_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "195",
+    "time": "34.849",
+    "timestamp": "2026-10-17T10:06:19.332924-05:00"
+  }
+}

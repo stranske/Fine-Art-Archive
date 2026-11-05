@@ -14,6 +14,9 @@ it, because those are the failures worth locking down:
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
 
 import pytest
 from PIL import Image
@@ -253,6 +256,61 @@ def test_period_filter_and_missing_year_is_reported_not_hidden():
     res = build(rows, PlaylistSpec(periods=["golden-age"]))
     assert res.work_ids == ["in"]
     assert res.coverage["excluded_for_missing_metadata"]["no year"] == 1
+
+
+@pytest.mark.parametrize(
+    "year_from,year_to,expected",
+    [
+        (None, 0, ["minus-one", "zero"]),
+        (0, None, ["zero", "one"]),
+        (0, 0, ["zero"]),
+    ],
+    ids=["upper-only", "lower-only", "double-zero"],
+)
+def test_year_zero_bounds_filter_and_report_missing_year(year_from, year_to, expected):
+    """An explicit bound of 0 is a real bound, not "no filter" (#806)."""
+    rows = [
+        sidecar("minus-one", year=-1),
+        sidecar("zero", year=0),
+        sidecar("one", year=1),
+        sidecar("undated", year=None),
+    ]
+    res = build(rows, PlaylistSpec(year_from=year_from, year_to=year_to, sort="year"))
+    assert res.work_ids == expected
+    assert res.coverage["excluded_for_missing_metadata"]["no year"] == 1
+
+
+def test_year_zero_omitted_bounds_leave_the_date_filter_off():
+    rows = [
+        sidecar("minus-one", year=-1),
+        sidecar("zero", year=0),
+        sidecar("one", year=1),
+        sidecar("undated", year=None),
+    ]
+    res = build(rows, PlaylistSpec(sort="year"))
+    assert set(res.work_ids) == {"minus-one", "zero", "one", "undated"}
+    assert "no year" not in res.coverage["excluded_for_missing_metadata"]
+
+
+@pytest.mark.parametrize("field,value", [("year_from", ""), ("year_to", "0"), ("year_from", True)])
+def test_year_bounds_reject_non_integer_values_before_filtering(field, value):
+    with pytest.raises(ValueError, match=f"{field} must be an integer or null"):
+        PlaylistSpec.from_dict({field: value})
+
+
+@pytest.mark.parametrize(
+    "year_from,year_to,expected",
+    [
+        (None, 0, set()),
+        (0, 0, set()),
+        (None, None, {"dated", "undated"}),
+    ],
+    ids=["upper-zero", "double-zero", "no-date-filter"],
+)
+def test_year_zero_bounds_on_schema_shaped_string_years(year_from, year_to, expected):
+    rows = [sidecar("dated", year="1500"), sidecar("undated", year=None)]
+    res = build(rows, PlaylistSpec(year_from=year_from, year_to=year_to))
+    assert set(res.work_ids) == expected
 
 
 def test_exclude_filters_accepts_bare_or_prefixed_names():
@@ -635,7 +693,13 @@ def test_every_declared_interval_actually_rotates(interval):
 
 
 # ---- etag ------------------------------------------------------------------
-def test_etag_changes_when_the_master_or_render_settings_change():
+def test_etag_changes_when_the_master_or_render_settings_change(monkeypatch):
+    from fine_art_archive.eink.targets import TARGETS, RenderTarget
+
+    t1 = RenderTarget("t1", "ETag t1", 30, 20, "spectra6")
+    t2 = RenderTarget("t2", "ETag t2", 30, 20, "spectra6")
+    monkeypatch.setitem(TARGETS, t1.key, t1)
+    monkeypatch.setitem(TARGETS, t2.key, t2)
     base = item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
     assert base == item_etag("w1", "t1", "floyd-steinberg", 1000, fit="contain")
     assert base != item_etag("w1", "t1", "floyd-steinberg", 1001, fit="contain")
@@ -1047,6 +1111,181 @@ def test_supplied_embeddings_do_not_require_local_masters(tmp_path, monkeypatch)
     assert response.json()["selection_diagnostics"]
 
 
+def test_local_descriptors_reuse_unchanged_images(tmp_path, monkeypatch):
+    """Repeated derivation reads each master once, without changing its vector."""
+    from fine_art_archive.api import main as api_main
+
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    # Independent uncached recipe: cache reuse must preserve the original vectors.
+    baseline = {}
+    for wid, path in paths.items():
+        with Image.open(path) as image:
+            pixels = image.convert("RGB").resize((16, 16), Image.Resampling.BILINEAR)
+            baseline[wid] = [channel / 255.0 for pixel in pixels.getdata() for channel in pixel]
+    reads = []
+    original_compute = api_main._compute_visual_descriptor
+
+    def counted_compute(source):
+        reads.append(source.name)
+        return original_compute(source)
+
+    monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
+    first = api_main._derived_preference_evidence(list(paths), {})[1]
+    second = api_main._derived_preference_evidence(list(paths), {})[1]
+    assert first == second == baseline
+    assert first["red"] != first["blue"]
+    assert reads == [
+        str(path) for path in paths.values()
+    ], "unchanged masters must not be decoded again"
+
+
+@pytest.mark.parametrize("change", ["mtime-ns", "size", "replacement", "symlink"])
+def test_local_descriptor_file_signature_changes_recompute(tmp_path, monkeypatch, change):
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.bmp"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    current = tmp_path / "current.bmp"
+    current.symlink_to(master.name)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: current)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    reads = []
+    original_compute = api_main._compute_visual_descriptor
+
+    def counted_compute(source):
+        reads.append(source.name)
+        return original_compute(source)
+
+    monkeypatch.setattr(api_main, "_compute_visual_descriptor", counted_compute)
+    first = api_main._local_visual_embedding("work")
+    before = master.stat()
+    replacement = tmp_path / "replacement.bmp"
+    Image.new("RGB", (32, 24), (40, 70, 220)).save(replacement)
+    if change == "symlink":
+        # Even equal timestamps and sizes cannot alias different resolved paths.
+        os.utime(replacement, ns=(before.st_atime_ns, before.st_mtime_ns))
+        current.unlink()
+        current.symlink_to(replacement.name)
+    elif change == "replacement":
+        os.utime(replacement, ns=(before.st_atime_ns, before.st_mtime_ns))
+        replacement.replace(master)
+        assert master.stat().st_ino != before.st_ino
+    else:
+        master.write_bytes(replacement.read_bytes())
+        if change == "mtime-ns":
+            os.utime(master, ns=(before.st_atime_ns, before.st_mtime_ns + 1))
+            assert master.stat().st_size == before.st_size
+            assert master.stat().st_mtime_ns == before.st_mtime_ns + 1
+        else:
+            with master.open("ab") as output:
+                output.write(b"trailing BMP bytes")
+            os.utime(master, ns=(before.st_atime_ns, before.st_mtime_ns))
+            assert master.stat().st_size != before.st_size
+    second = api_main._local_visual_embedding("work")
+    assert second != first
+    assert api_main._local_visual_embedding("work") == second
+    assert len(reads) == 2, "only the changed signature should trigger a second decode"
+
+
+@pytest.mark.parametrize("change", ["pixels", "path", "version", "missing", "unreadable"])
+def test_local_descriptor_cache_revalidates_current_master(tmp_path, monkeypatch, change):
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master if master.exists() else None)
+    first = api_main._local_visual_embedding("work")
+    if change == "pixels":
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(master)
+    elif change == "path":
+        replacement = tmp_path / "replacement.png"
+        Image.new("RGB", (32, 24), (40, 70, 220)).save(replacement)
+        monkeypatch.setattr(api_main, "_eink_master", lambda _: replacement)
+    elif change == "version":
+        monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_VERSION", "test-next-version")
+    elif change == "missing":
+        master.unlink()
+    else:
+        master.write_text("not an image")
+    if change in {"missing", "unreadable"}:
+        with pytest.raises(ValueError, match="evidence.*(missing|cannot be read)"):
+            api_main._local_visual_embedding("work")
+    elif change == "version":
+        reads = []
+        original_open = Image.open
+
+        def counted_open(*args, **kwargs):
+            reads.append(args[0])
+            return original_open(*args, **kwargs)
+
+        monkeypatch.setattr(Image, "open", counted_open)
+        assert api_main._local_visual_embedding("work") == first
+        assert len(reads) == 1, "descriptor recipe version is part of cache identity"
+    else:
+        assert api_main._local_visual_embedding("work") != first
+
+
+def test_local_descriptor_cache_still_checks_read_access(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from fine_art_archive.api import main as api_main
+
+    master = tmp_path / "master.png"
+    Image.new("RGB", (32, 24), (220, 40, 40)).save(master)
+    monkeypatch.setattr(api_main, "_eink_master", lambda _: master)
+    api_main._local_visual_embedding("work")
+    original_open = Path.open
+
+    def deny_master(path, *args, **kwargs):
+        if path == master:
+            raise PermissionError("test master access revoked")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", deny_master)
+    with pytest.raises(ValueError, match="cannot be read"):
+        api_main._local_visual_embedding("work")
+
+
+def test_local_descriptor_cache_is_bounded_and_does_not_share_mutable_vectors(
+    tmp_path, monkeypatch
+):
+    from fine_art_archive.api import main as api_main
+
+    monkeypatch.setattr(api_main, "_VISUAL_DESCRIPTOR_CACHE_MAX_ENTRIES", 2)
+    monkeypatch.setattr(api_main, "_visual_descriptor_cache", {})
+    paths = {}
+    for wid, colour in [("red", (220, 40, 40)), ("green", (40, 220, 40)), ("blue", (40, 70, 220))]:
+        path = tmp_path / f"{wid}.png"
+        Image.new("RGB", (32, 24), colour).save(path)
+        paths[wid] = path
+    monkeypatch.setattr(api_main, "_eink_master", paths.get)
+    reads = []
+    original_open = Image.open
+
+    def counted_open(*args, **kwargs):
+        reads.append(args[0])
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", counted_open)
+    red = api_main._local_visual_embedding("red")
+    expected = red.copy()
+    red[0] = -100
+    green = api_main._local_visual_embedding("green")
+    assert api_main._local_visual_embedding("red") == expected
+    api_main._local_visual_embedding("blue")
+    assert len(api_main._visual_descriptor_cache) == 2
+    assert api_main._local_visual_embedding("red") == expected
+    assert len(reads) == 3, "a hit must promote red ahead of green for eviction"
+    assert api_main._local_visual_embedding("green") == green
+    assert len(reads) == 4, "the least recently used entry must be decoded again"
+
+
 def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     """The key and the diagnostics must both exist in the one screen that builds specs."""
     from fine_art_archive.api.main import UI_FILE
@@ -1168,6 +1407,121 @@ def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
     ), "exactly preview, save and export should consume the shared spec builder"
 
 
+@pytest.mark.parametrize("fit", ["", "contain", "cover", "stretch"])
+def test_ui_preview_save_and_export_carry_the_same_inputs(tmp_path, fit):
+    """Execute the UI producers: a hand-built payload cannot prove UI parity."""
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's request producers"
+    ui = UI_FILE.read_text()
+    functions = []
+    for start, end in (
+        ("    function einkSpec() {", "    async function einkSavePlaylist()"),
+        ("    async function einkSavePlaylist() {", "    let einkCardPlaylistId"),
+        ("    async function einkPreview() {", "    async function einkExport(write)"),
+        ("    async function einkExport(write) {", "    function toggleGallery()"),
+    ):
+        functions.append(ui[ui.index(start) : ui.index(end, ui.index(start))])
+
+    # Compile checked-in functions as a normal script, with only DOM/network
+    # boundaries replaced. No copied implementation or dynamic evaluation.
+    runner = tmp_path / "companion-inputs.cjs"
+    runner.write_text(
+        "const selectedFit = "
+        + json.dumps(fit)
+        + ";\n"
+        + """
+const controls = {
+  'ek-sort': {value: 'fit'}, 'ek-limit': {value: '2'},
+  'ek-artist': {value: 'ArtistA'}, 'ek-period': {value: 'Modern'},
+  'ek-mood': {value: 'Quiet'}, 'ek-fit': {value: '3'},
+  'ek-excl': {checked: true}, 'ek-dossier': {checked: true},
+  'ek-selmode': {value: 'preference-diverse'},
+  'ek-target': {value: 'gooddisplay-315-diy'},
+  'ek-dither': {value: 'atkinson'}, 'ek-fitmode': {value: selectedFit},
+  'ek-plname': {value: 'Input parity'}, 'ek-interval': {value: 'daily'},
+  'ek-path': {value: '/fixture/card'},
+  'ek-out': {innerHTML: '', insertAdjacentHTML() {}}, 'ek-status': {},
+};
+const document = {
+  getElementById: id => controls[id] || null,
+  querySelectorAll: selector => selector === ".ek-fam" ? [{value: "shape:round"}, {value: ""}] : [],
+};
+const calls = [];
+let einkLastPreview, einkCardPlaylistId = "fixture/playlist";
+const messages = [];
+const toast = message => messages.push(message);
+const einkLoadPlaylists = async () => {};
+const einkEsc = value => String(value);
+const confirm = () => true;
+const fetch = async (url, options) => {
+  calls.push({url, body: JSON.parse(options.body)});
+  return {ok: true, json: async () => ({
+    coverage: {}, items: [{work_id: 'fixture/work', has_master: true}],
+    selected: 1, matched: 1, total_candidates: 1, selection_diagnostics: [],
+    name: 'Input parity', resolved_count: 1, written: 1, palette_measured: true,
+  })};
+};
+"""
+        + "\n".join(functions)
+        + """
+(async () => {
+  await einkPreview();
+  const previewHTML = controls['ek-out'].innerHTML;
+  await einkSavePlaylist();
+  await einkExport(false);
+  console.log(JSON.stringify({calls, previewHTML}));
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run([node, str(runner)], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    preview, saved, exported = observed["calls"]
+    assert [call["url"] for call in observed["calls"]] == [
+        "/eink/playlist/preview",
+        "/eink/playlists",
+        "/eink/playlist/export",
+    ]
+    expected_spec = {
+        "sort": "fit",
+        "limit": 2,
+        "selection_mode": "preference-diverse",
+        "artists": ["ArtistA"],
+        "periods": ["Modern"],
+        "all_tags": ["shape:round"],
+        "moods": ["Quiet"],
+        "min_fit": 3,
+        "exclude_filters": ["nudity-full", "violence", "disturbing"],
+        "require_dossier": True,
+    }
+    assert preview["body"]["spec"] == saved["body"]["spec"] == exported["body"]["spec"]
+    assert preview["body"]["spec"] == expected_spec
+    assert preview["body"]["target"] == saved["body"]["target"] == exported["body"]["target"]
+    assert saved["body"]["fit"] == exported["body"]["fit"] == (fit or None)
+    assert saved["body"]["dither"] == exported["body"]["dither"] == "atkinson"
+    assert exported["body"]["playlist_id"] == "fixture/playlist"
+    assert exported["body"]["write"] is False
+    assert exported["body"]["overwrite"] is True
+    assert exported["body"]["path"] == "/fixture/card"
+
+    from html import unescape
+    from urllib.parse import parse_qs, urlsplit
+
+    html = observed["previewHTML"]
+    image_url = unescape(html.split('src="', 1)[1].split('"', 1)[0])
+    assert urlsplit(image_url).path == "/works/fixture%2Fwork/eink_preview"
+    params = parse_qs(urlsplit(image_url).query)
+    assert params == {
+        "target": [saved["body"]["target"]],
+        "dither": [saved["body"]["dither"]],
+        "max_px": ["380"],
+        **({"fit": [fit]} if fit else {}),
+    }
+
+
 def test_operator_ui_einkspec_forwards_each_spec_control():
     """Every ``ek-*`` spec control must populate the shared ``einkSpec()``.
 
@@ -1204,6 +1558,8 @@ def test_operator_ui_einkspec_forwards_each_spec_control():
     ]
     for snippet, label in mappings:
         assert snippet in ui, f"einkSpec() does not forward {label} — operator filter is lost"
+    assert 'document.querySelectorAll(".ek-fam")' in ui
+    assert ".map(el => el.value).filter(Boolean)" in ui
 
 
 def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
@@ -1284,8 +1640,14 @@ def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert 'onclick="einkExport(false)"' in ui, "dry run must not write the card"
-    assert 'onclick="einkExport(true)"' in ui, "write button must write the card"
+    import re
+
+    assert re.search(
+        r'<button\b[^>]*onclick="einkExport\(false\)"[^>]*>\s*Dry run\s*</button>', ui
+    ), "Dry run must bind the non-writing action"
+    assert re.search(
+        r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui
+    ), "Write card must bind the writing action"
     assert (
         'if (!path) { toast("enter a card path first"); return; }' in ui
     ), "export without a card path must stop before calling the export endpoint"

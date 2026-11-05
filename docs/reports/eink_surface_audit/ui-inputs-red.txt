@@ -1,0 +1,49 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_ui_preview_save_and_export_carry_the_same_inputs[cover] _________
+tests/test_eink_pipeline.py:1152: in test_ui_preview_save_and_export_carry_the_same_inputs
+    assert params == {
+E   AssertionError: assert {'target': ['..._px': ['380']} == {'target': ['...t': ['cover']}
+E     
+E     Omitting 3 identical items, use -vv to show
+E     Right contains 1 more item:
+E     {'fit': ['cover']}
+E     
+E     Full diff:
+E       {
+E           'target': [
+E               'gooddisplay-315-diy',
+E           ],
+E           'dither': [
+E               'atkinson',
+E           ],
+E           'max_px': [
+E               '380',
+E           ],
+E     -     'fit': [
+E     -         'cover',
+E     -     ],
+E       }
+=========================== short test summary info ============================
+FAILED tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover] - AssertionError: assert {'target': ['..._px': ['380']} == {'target': ['...t': ['cover']}
+  
+  Omitting 3 identical items, use -vv to show
+  Right contains 1 more item:
+  {'fit': ['cover']}
+  
+  Full diff:
+    {
+        'target': [
+            'gooddisplay-315-diy',
+        ],
+        'dither': [
+            'atkinson',
+        ],
+        'max_px': [
+            '380',
+        ],
+  -     'fit': [
+  -         'cover',
+  -     ],
+    }
+1 failed in 0.47s

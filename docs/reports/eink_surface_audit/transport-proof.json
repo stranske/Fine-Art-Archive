@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/opt/anaconda3/bin/python3",
+    "-m",
+    "pytest",
+    "tests/test_eink_feed_endpoints.py::test_preference_diverse_preview_saved_feed_and_exports_agree",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "mutation": "Only _resolve_playlist bypasses _build_eink_playlist and calls raw _eink.build without server-derived evidence",
+  "red_exit": 1,
+  "restored_sha256": "81d7140a0ae00babcde10b989246e9c77117cfbadabcddf6b79f452db122d5fd",
+  "original_sha256": "81d7140a0ae00babcde10b989246e9c77117cfbadabcddf6b79f452db122d5fd",
+  "production_byte_identical": true,
+  "green_exit": 0
+}

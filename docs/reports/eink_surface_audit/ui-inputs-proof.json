@@ -1,0 +1,53 @@
+{
+  "inspected_commit": "72000af814f558eb241c784d718799d888a53768",
+  "test": "tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover]",
+  "command": [
+    "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+    "-m",
+    "pytest",
+    "tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover]",
+    "-q",
+    "-o",
+    "addopts=",
+    "-m",
+    "not slow",
+    "--tb=short"
+  ],
+  "disconnected_edge": "einkPreview image URL loses fitQ while save/export still send cover",
+  "mutation": {
+    "before": "const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : \"\";",
+    "during": "const fitQ = \"\";"
+  },
+  "original_sha256": "d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52",
+  "mutated_sha256": "278f59e21e54a47260d25e84dff88068c728c6482f02b63454defe532718c1e9",
+  "restored_sha256": "d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52",
+  "test_sha256": "733254bd1ffe0d456050c1090e53a38b9640c0b9704177500b95037db0e84580",
+  "red_exit": 1,
+  "green_exit": 0,
+  "physical_panel_tested": false,
+  "validation": {
+    "pytest_command": "python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py tests/test_render_strategy.py -q -o addopts= -m \"not slow\" --junitxml=/tmp/eink-ui-inputs-tests.xml",
+    "pytest_exit": 0,
+    "pytest_summary": {
+      "tests": "205",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "66.752"
+    },
+    "environment": {
+      "PYTHONPATH": "$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src",
+      "BLACK_NUM_WORKERS": "1"
+    },
+    "production_diff_against_base": [],
+    "existing_test_assertions_changed": false,
+    "black_command": "black --check --line-length 100 --exclude '(\\.workflows-lib|node_modules)' .",
+    "black_exit": 0,
+    "black_files_unchanged": 370
+  },
+  "artifact_sha256": {
+    "ui-inputs-red.txt": "413b6bb66e847e019789f857cddafb87386f4ad930638cc352cef8784c08564d",
+    "ui-inputs-green.txt": "59b9466559aeabf218a54ec041fd83cd357cf9bf1d80a17c47aab62ed0c205bf",
+    "ui-inputs-tests.txt": "72c2c4c446f62febce861dae1e2f7bb4c1d5ccee9bf1a97843ee38385f120e6a"
+  }
+}

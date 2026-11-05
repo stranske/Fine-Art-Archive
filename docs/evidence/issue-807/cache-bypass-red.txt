@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_local_descriptors_reuse_unchanged_images _________________
+
+tmp_path = PosixPath('/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4970/test_local_descriptors_reuse_u0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10528e240>
+
+    def test_local_descriptors_reuse_unchanged_images(tmp_path, monkeypatch):
+        """Repeated derivation reads each master once, without changing its vector."""
+        from fine_art_archive.api import main as api_main
+    
+        paths = {}
+        for wid, colour in [("red", (220, 40, 40)), ("blue", (40, 70, 220))]:
+            path = tmp_path / f"{wid}.png"
+            Image.new("RGB", (32, 24), colour).save(path)
+            paths[wid] = path
+        monkeypatch.setattr(api_main, "_eink_master", paths.get)
+        reads = []
+        original_open = Image.open
+    
+        def counted_open(*args, **kwargs):
+            reads.append(args[0])
+            return original_open(*args, **kwargs)
+    
+        monkeypatch.setattr(Image, "open", counted_open)
+        first = api_main._derived_preference_evidence(list(paths), {})[1]
+        second = api_main._derived_preference_evidence(list(paths), {})[1]
+        assert first == second
+        assert first["red"] != first["blue"]
+>       assert len(reads) == 2, "unchanged masters must not be decoded again"
+E       AssertionError: unchanged masters must not be decoded again
+E       assert 4 == 2
+E        +  where 4 = len([<_io.BufferedReader name='/private/var/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4970/test...r/folders/qm/w0dtc0j132gd6ymf1hxtd2p00000gp/T/pytest-of-teacher/pytest-4970/test_local_descriptors_reuse_u0/blue.png'>])
+
+tests/test_eink_pipeline.py:1072: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_eink_pipeline.py::test_local_descriptors_reuse_unchanged_images
+1 failed in 0.91s

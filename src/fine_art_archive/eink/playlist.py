@@ -151,6 +151,10 @@ class PlaylistSpec:
             raise ValueError(f"unknown playlist sort {sort!r}; expected one of {_SORT_KEYS}")
         if d.get("selection_mode", "ordered") not in {"ordered", "preference-diverse"}:
             raise ValueError("selection_mode must be 'ordered' or 'preference-diverse'")
+        for bound_name in ("year_from", "year_to"):
+            value = d.get(bound_name)
+            if value is not None and type(value) is not int:
+                raise ValueError(f"{bound_name} must be an integer or null")
         return cls(**d)
 
 
@@ -335,7 +339,7 @@ def build(
                 continue
             if genre not in spec.genres:
                 continue
-        if period_ranges or spec.year_from or spec.year_to:
+        if period_ranges or spec.year_from is not None or spec.year_to is not None:
             if year is None:
                 skipped["no year"] += 1
                 continue

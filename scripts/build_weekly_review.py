@@ -19,9 +19,12 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
-from fine_art_archive.api.config import DEFAULT_ART_WORKS_ROOT, env_path  # noqa: E402
+from _paths import default_works_dir  # noqa: E402
+
+from fine_art_archive.api.config import env_path  # noqa: E402
 from fine_art_archive.api.gates import (  # noqa: E402
     DEFAULT_WORKSPACE,
     assert_workspace_files_unforked,
@@ -437,7 +440,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--date", default=date.today().isoformat())
     parser.add_argument("--since")
     parser.add_argument(
-        "--works-root", type=Path, default=env_path("FAA_WORKS_DIR", DEFAULT_ART_WORKS_ROOT)
+        "--works-root",
+        type=Path,
+        default=default_works_dir(),
+        help=(
+            "archive sidecar root "
+            "(default: $FAA_WORKS_DIR, then $FAA_STAGING_DIR, then the canonical archive)"
+        ),
     )
     parser.add_argument("--staging-root", type=Path)
     workspace = _default_workspace()

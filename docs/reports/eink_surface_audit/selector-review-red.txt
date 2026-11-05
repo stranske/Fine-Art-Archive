@@ -1,0 +1,76 @@
+FF...                                                                    [100%]
+=================================== FAILURES ===================================
+_____________ test_audit_selector_caps_only_long_waits[None-0.01] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106be85c0>
+requested = None, expected = 0.01
+
+    @pytest.mark.parametrize(
+        ("requested", "expected"), [(None, 0.01), (1.0, 0.01), (0.01, 0.01), (0.005, 0.005), (0, 0)]
+    )
+    def test_audit_selector_caps_only_long_waits(monkeypatch, requested, expected):
+        waits = []
+        result = object()
+    
+        class RecordingSelector:
+            def select(self, timeout=None):
+                waits.append(timeout)
+                return result
+    
+        # Import the actual helper against a fake parent: no process-wide selector
+        # replacement survives fixture teardown and no operating-system I/O occurs.
+        monkeypatch.setattr(selectors, "DefaultSelector", RecordingSelector)
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "docs/reports/eink_surface_audit/sandbox/sitecustomize.py"
+        )
+        spec = importlib.util.spec_from_file_location("audit_selector_under_test", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        assert module.AuditPollingSelector().select(requested) is result
+>       assert waits == [expected]
+E       assert [None] == [0.01]
+E         
+E         At index 0 diff: None != 0.01
+E         Use -v to get more diff
+
+tests/test_eink_audit_selector.py:33: AssertionError
+______________ test_audit_selector_caps_only_long_waits[1.0-0.01] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106d01760>
+requested = 1.0, expected = 0.01
+
+    @pytest.mark.parametrize(
+        ("requested", "expected"), [(None, 0.01), (1.0, 0.01), (0.01, 0.01), (0.005, 0.005), (0, 0)]
+    )
+    def test_audit_selector_caps_only_long_waits(monkeypatch, requested, expected):
+        waits = []
+        result = object()
+    
+        class RecordingSelector:
+            def select(self, timeout=None):
+                waits.append(timeout)
+                return result
+    
+        # Import the actual helper against a fake parent: no process-wide selector
+        # replacement survives fixture teardown and no operating-system I/O occurs.
+        monkeypatch.setattr(selectors, "DefaultSelector", RecordingSelector)
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "docs/reports/eink_surface_audit/sandbox/sitecustomize.py"
+        )
+        spec = importlib.util.spec_from_file_location("audit_selector_under_test", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        assert module.AuditPollingSelector().select(requested) is result
+>       assert waits == [expected]
+E       assert [1.0] == [0.01]
+E         
+E         At index 0 diff: 1.0 != 0.01
+E         Use -v to get more diff
+
+tests/test_eink_audit_selector.py:33: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_eink_audit_selector.py::test_audit_selector_caps_only_long_waits[None-0.01]
+FAILED tests/test_eink_audit_selector.py::test_audit_selector_caps_only_long_waits[1.0-0.01]
+2 failed, 3 passed in 0.19s

@@ -15,6 +15,10 @@ scripts/                 CLI wrappers, automation handlers
 
 ## Setup
 
+The default pytest suite includes companion request-producer coverage that
+executes the checked-in browser JavaScript. Install Node.js 18 or later before
+running it; the supported GitHub Actions agent environment provisions Node.js.
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate

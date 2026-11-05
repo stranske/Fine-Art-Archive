@@ -339,3 +339,30 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
    `index.html`, rerun the fit-forwarding test (must fail), restore, rerun.
 4. No physical-panel acceptance is claimed: palettes are estimates
    (targets.py, `palette.measured` is false) and on-panel colour is unverified.
+
+## Merge reconciliation with `main`
+
+The base branch carried its own audit iteration of this report (inspected
+commit `3c23a10978e1c61151d6856576d56628c8737171`) with a 17-field matrix,
+portable probe receipts under `eink_surface_audit/`, and proposals P1–P3.
+This resolution keeps the PR report above as the canonical document and
+records the base iteration's distinct dispositions here so no finding is
+silently dropped:
+
+- Palette colors/measurement omitted from the feed validator:
+  **confirmed-bug**, owned by
+  [#808](https://github.com/stranske/Fine-Art-Archive/issues/808); the base
+  probe reproduced changed bytes with a stale 304. The matrix row above
+  ("Palette / `palette.measured`") covers header reporting only; validator
+  binding remains #808's scope.
+- Broader representation identity (target dimensions/rotation, master
+  content hash): **needs-investigation**, held as a proposal under
+  [#805](https://github.com/stranske/Fine-Art-Archive/issues/805), not
+  reproduced or filed separately.
+- Zero-year UI caption (`i.year || "????"`): **needs-investigation**,
+  likewise held under #805 and distinct from #806's date-filter scope.
+- Preview-only explicit evidence (base "P1") is the same instance as
+  disposition 2 above, owned by #825; no duplicate was filed.
+- The base iteration's executed-evidence receipts (201 passed across the
+  four e-ink suites, probe JSON/XML under `eink_surface_audit/`) remain on
+  disk and are not superseded by the executed probes listed above.
