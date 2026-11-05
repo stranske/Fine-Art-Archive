@@ -95,9 +95,9 @@ def test_dithering_beats_nearest_colour_perceptually():
     src = gradient()
     plain = dither_error(src, quantize(src, pal, method="none"))
     fs = dither_error(src, quantize(src, pal, method="floyd-steinberg"))
-    assert fs["perceived_error"] < plain["perceived_error"], (
-        "dithering should reduce PERCEIVED error"
-    )
+    assert (
+        fs["perceived_error"] < plain["perceived_error"]
+    ), "dithering should reduce PERCEIVED error"
     # And the counter-intuitive half, asserted so nobody "fixes" it later:
     assert fs["per_pixel_mean"] > plain["per_pixel_mean"], (
         "dithering is expected to INCREASE per-pixel error; that is the "
@@ -988,9 +988,9 @@ def test_ui_shaped_spec_reaches_preference_diverse_selection(tmp_path, monkeypat
     # this the rest of the test would pass against a UI that can never ask for
     # the mode, which is exactly the defect: the selector was reachable from a
     # hand-written spec and from nowhere an operator can click.
-    assert "spec.selection_mode" in UI_FILE.read_text(), (
-        "einkSpec() does not emit selection_mode — the selector is unreachable from the UI"
-    )
+    assert (
+        "spec.selection_mode" in UI_FILE.read_text()
+    ), "einkSpec() does not emit selection_mode — the selector is unreachable from the UI"
 
     spec = {**_ui_shaped_spec(), "selection_mode": "preference-diverse"}
     assert set(spec) == UI_SPEC_KEYS | {"selection_mode"}
@@ -1322,9 +1322,9 @@ def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
     )
     # Saved feed and SD export consume the same control, so all three
     # surfaces agree on framing for one operator action.
-    assert ui.count('document.getElementById("ek-fitmode").value || null') >= 2, (
-        "fit must be sent both when saving a playlist (feed) and on export (SD card)"
-    )
+    assert (
+        ui.count('document.getElementById("ek-fitmode").value || null') >= 2
+    ), "fit must be sent both when saving a playlist (feed) and on export (SD card)"
 
 
 def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export():
@@ -1391,20 +1391,20 @@ def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
     )
     # Saved feed: the playlist-create body carries the same shared spec,
     # plus the rotation interval only a saved feed consumes.
-    assert "name: name.trim(), spec: einkSpec()," in ui, (
-        "saving a playlist (feed) does not send the shared einkSpec()"
-    )
-    assert 'interval: document.getElementById("ek-interval").value,' in ui, (
-        "saved feed loses the operator's rotation interval"
-    )
+    assert (
+        "name: name.trim(), spec: einkSpec()," in ui
+    ), "saving a playlist (feed) does not send the shared einkSpec()"
+    assert (
+        'interval: document.getElementById("ek-interval").value,' in ui
+    ), "saved feed loses the operator's rotation interval"
     # SD export: the export body carries the same shared spec.
     assert 'spec: einkSpec(), target: document.getElementById("ek-target").value,' in ui, (
         "SD export does not send the shared einkSpec() — exported selection "
         "could diverge from the previewed/saved selection"
     )
-    assert ui.count("spec: einkSpec()") == 3, (
-        "exactly preview, save and export should consume the shared spec builder"
-    )
+    assert (
+        ui.count("spec: einkSpec()") == 3
+    ), "exactly preview, save and export should consume the shared spec builder"
 
 
 @pytest.mark.parametrize("fit", ["", "contain", "cover", "stretch"])
@@ -1581,9 +1581,9 @@ def test_operator_ui_forwards_exact_delivery_fields_to_save_and_export():
     assert 'target: document.getElementById("ek-target").value,' in ui
     assert 'dither: document.getElementById("ek-dither").value,' in ui
     # Both save and export send fit as ``|| null`` (unset means panel default).
-    assert ui.count('fit: document.getElementById("ek-fitmode").value || null,') == 2, (
-        "fit must be sent exactly by playlist save (feed) and SD export"
-    )
+    assert (
+        ui.count('fit: document.getElementById("ek-fitmode").value || null,') == 2
+    ), "fit must be sent exactly by playlist save (feed) and SD export"
     # SD export body: card destination/write flags plus saved-feed selection.
     assert "path, write, overwrite: true," in ui, "export loses card path/write flags"
     assert "if (einkCardPlaylistId) body.playlist_id = einkCardPlaylistId;" in ui, (
@@ -1607,22 +1607,22 @@ def test_operator_ui_selection_mode_requires_limit_guard():
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert 'oninput="einkSyncSelectionMode()"' in ui, (
-        "changing the limit must re-sync whether preference-diverse is available"
-    )
-    assert 'onchange="einkSyncSelectionMode()"' in ui, (
-        "changing the selection mode must re-sync the limit guard"
-    )
+    assert (
+        'oninput="einkSyncSelectionMode()"' in ui
+    ), "changing the limit must re-sync whether preference-diverse is available"
+    assert (
+        'onchange="einkSyncSelectionMode()"' in ui
+    ), "changing the selection mode must re-sync the limit guard"
     assert "if (opt) opt.disabled = !hasLimit;" in ui, (
         "preference-diverse must be disabled without a limit — operator "
         "could otherwise request a mode the backend rejects"
     )
-    assert 'if (!hasLimit && sel.value === "preference-diverse") sel.value = "ordered";' in ui, (
-        "clearing the limit must reset a chosen preference-diverse mode to ordered"
-    )
-    assert "preference-diverse needs a Limit — set one to enable it." in ui, (
-        "the guard must explain why preference-diverse is unavailable"
-    )
+    assert (
+        'if (!hasLimit && sel.value === "preference-diverse") sel.value = "ordered";' in ui
+    ), "clearing the limit must reset a chosen preference-diverse mode to ordered"
+    assert (
+        "preference-diverse needs a Limit — set one to enable it." in ui
+    ), "the guard must explain why preference-diverse is unavailable"
     assert "einkSyncSelectionMode();" in ui, "guard must run on panel render, not only on edit"
 
 
@@ -1649,15 +1649,15 @@ def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     assert re.search(
         r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui
     ), "Write card must bind the writing action"
-    assert 'if (!path) { toast("enter a card path first"); return; }' in ui, (
-        "export without a card path must stop before calling the export endpoint"
-    )
-    assert "ev.preventDefault(); einkCardPlaylistId = null;" in ui, (
-        "the 'use filters instead' clear link must drop the saved-feed choice"
-    )
-    assert "if (einkCardPlaylistId === id) einkCardPlaylistId = null;" in ui, (
-        "deleting the chosen saved feed must clear it from export, not send a stale id"
-    )
+    assert (
+        'if (!path) { toast("enter a card path first"); return; }' in ui
+    ), "export without a card path must stop before calling the export endpoint"
+    assert (
+        "ev.preventDefault(); einkCardPlaylistId = null;" in ui
+    ), "the 'use filters instead' clear link must drop the saved-feed choice"
+    assert (
+        "if (einkCardPlaylistId === id) einkCardPlaylistId = null;" in ui
+    ), "deleting the chosen saved feed must clear it from export, not send a stale id"
 
 
 def test_operator_ui_discloses_estimated_palette_on_export():
@@ -1705,9 +1705,9 @@ def test_operator_ui_discloses_no_master_works_in_preview():
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert "const noMaster = d.items.filter(i => !i.has_master).length;" in ui, (
-        "preview does not count items flagged has_master=false"
-    )
+    assert (
+        "const noMaster = d.items.filter(i => !i.has_master).length;" in ui
+    ), "preview does not count items flagged has_master=false"
     assert '${noMaster ? ` — ${noMaster} shown have no local image` : ""}' in ui, (
         "preview header does not disclose no-master works — preview count "
         "would read as deliverable works the feed/card cannot show"
@@ -1760,9 +1760,9 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert "const cov = d.coverage.excluded_for_missing_metadata || {};" in ui, (
-        "preview does not read the response's excluded_for_missing_metadata coverage"
-    )
+    assert (
+        "const cov = d.coverage.excluded_for_missing_metadata || {};" in ui
+    ), "preview does not read the response's excluded_for_missing_metadata coverage"
     assert "Dropped for missing metadata: " in ui, (
         "preview does not disclose works dropped for missing metadata — "
         "'selected of matched' would read as fully eligible for feed/card"
@@ -1790,9 +1790,9 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert "const diags = d.selection_diagnostics || [];" in ui, (
-        "preview does not read the response's selection_diagnostics"
-    )
+    assert (
+        "const diags = d.selection_diagnostics || [];" in ui
+    ), "preview does not read the response's selection_diagnostics"
     assert "Why these ${diags.length} were chosen" in ui, (
         "preview does not label the pick explanations — the A15 quality x "
         "diversity reasoning would be invisible to the operator"
@@ -1975,12 +1975,12 @@ def test_operator_ui_renders_preview_item_identity_in_selection_order():
         "preview caption does not render selection order and year — the "
         "work's identity on screen would not match the feed/card manifest"
     )
-    assert '${einkEsc((i.artist || "—").slice(0, 30))}<br>' in ui, (
-        "preview caption does not render the item artist the manifests carry"
-    )
-    assert '<em>${einkEsc((i.title || "").slice(0, 42))}</em>' in ui, (
-        "preview caption does not render the item title the manifests carry"
-    )
+    assert (
+        '${einkEsc((i.artist || "—").slice(0, 30))}<br>' in ui
+    ), "preview caption does not render the item artist the manifests carry"
+    assert (
+        '<em>${einkEsc((i.title || "").slice(0, 42))}</em>' in ui
+    ), "preview caption does not render the item title the manifests carry"
     assert ui.count('i.year || "????"') == 1, (
         "unknown/zero year must fall back to ???? exactly once, in the "
         "preview caption, so it never reads as a real date"
