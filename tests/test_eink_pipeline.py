@@ -1834,3 +1834,333 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
         "diagnostics rendering must come from the preview response's "
         "selection_diagnostics exactly once"
     )
+
+
+# ---------------------------------------------------------------- counts ----
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _count_client(tmp_path, monkeypatch, masters: tuple[bool, bool]):
+    """Two selected works on an isolated archive. ``masters`` is (first, second)."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.api import store as api_store
+    from fine_art_archive.api.main import app
+
+    works = tmp_path / "works"
+    works.mkdir()
+    monkeypatch.setattr(api_store, "WORKS", works)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", tmp_path / "image_cache")
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_sidecars_cache", None)
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    for work_id, title, master in (
+        (_COUNT_FIRST, "First", masters[0]),
+        (_COUNT_SECOND, "Second", masters[1]),
+    ):
+        directory = works / work_id
+        directory.mkdir()
+        (directory / "meta.json").write_text(
+            json.dumps(
+                {
+                    "work_id": work_id,
+                    "title": title,
+                    "artist": {"name": "A Painter"},
+                    "year": "1650",
+                    "subject": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        if master:
+            Image.new("RGB", (8, 6), (30, 60, 90)).save(directory / "master.jpeg", "JPEG")
+    api_main._sidecars_cache = None
+    return TestClient(app)
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected", "available"),
+    [
+        ((True, False), _COUNT_SPEC, 2, 1),
+        ((True, True), _COUNT_SPEC, 2, 2),
+        ((False, False), _COUNT_SPEC, 2, 0),
+        ((True, False), _EMPTY_SPEC, 0, 0),
+    ],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_playlist_preview_counts_selected_and_available_for_delivery(
+    tmp_path, monkeypatch, masters, spec, selected, available
+):
+    """Selection counts include missing masters; delivery counts do not.
+
+    The mixed case keeps both works and flags the one without a master.
+    ``available_for_delivery`` is computed over the full selection, so a
+    ``sample=0`` response still reports it when ``items`` is empty.
+    """
+    client = _count_client(tmp_path, monkeypatch, masters)
+    response = client.post("/eink/playlist/preview", json={"spec": spec})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == selected
+    assert body["available_for_delivery"] == available
+    assert len(body["work_ids"]) == selected
+    if masters == (True, False) and spec == _COUNT_SPEC:
+        assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+        flagged = {item["work_id"]: item["has_master"] for item in body["items"]}
+        assert flagged == {_COUNT_FIRST: True, _COUNT_SECOND: False}
+        truncated = client.post("/eink/playlist/preview", json={"spec": spec, "sample": 0})
+        assert truncated.status_code == 200, truncated.text
+        short = truncated.json()
+        assert short["items"] == []
+        assert short["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+        assert short["selected"] == 2
+        assert short["available_for_delivery"] == 1
+
+
+@pytest.mark.parametrize("sample", [0, 1, 24], ids=["no-rows", "one-row", "full-sample"])
+@pytest.mark.parametrize(
+    "masters", [(True, False), (False, True)], ids=["missing-last", "missing-first"]
+)
+def test_ui_preview_counts_match_the_production_mixed_master_response(
+    tmp_path, monkeypatch, sample, masters
+):
+    """Real preview responses keep full totals across empty and truncated samples."""
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    client = _count_client(tmp_path, monkeypatch, masters)
+    response = client.post("/eink/playlist/preview", json={"spec": _COUNT_SPEC, "sample": sample})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == 2
+    assert body["available_for_delivery"] == 1
+    assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+    assert [item["has_master"] for item in body["items"]] == list(masters[:sample])
+
+    ui = UI_FILE.read_text()
+    start = ui.index("    async function einkPreview() {")
+    preview_function = ui[start : ui.index("    async function einkExport(write)", start)]
+    runner = tmp_path / "production-preview-counts.cjs"
+    runner.write_text(
+        """
+const response = JSON.parse(process.argv[2]);
+const controls = {
+  'ek-target': {value: response.target},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-out': {innerHTML: ''},
+};
+const document = {getElementById: id => controls[id] || null};
+let einkLastPreview;
+const einkSpec = () => ({sort: 'title'});
+const einkEsc = value => String(value);
+const fetch = async () => ({ok: true, json: async () => response});
+"""
+        + preview_function
+        + """
+einkPreview().then(() => {
+  console.log(JSON.stringify({html: controls['ek-out'].innerHTML, last: einkLastPreview}));
+}).catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(runner), json.dumps(body)],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    assert observed["last"] == body
+    html = observed["html"]
+    assert "<strong>2</strong> selected" in html
+    assert "<strong>1</strong> available for delivery" in html
+    assert "<strong>2</strong> available for delivery" not in html
+    assert "<strong>0</strong> available for delivery" not in html
+    assert html.count('<img loading="lazy"') == min(sample, 2)
+    missing_shown = sum(not item["has_master"] for item in body["items"])
+    if missing_shown:
+        assert f"{missing_shown} shown have no local image" in html
+    else:
+        assert "shown have no local image" not in html
+
+
+@pytest.mark.parametrize(
+    ("selected", "available"),
+    [(2, 1), (2, 2), (2, 0), (0, 0)],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path, selected, available):
+    """Selection, delivery and write labels retain explicit totals, including zero.
+
+    Nonempty preview samples mark both rows ``has_master: true`` even when
+    the response's full delivery total is zero or one. Empty selections have
+    no rows. A zero total must not fall back to the selection or sample size.
+    Export and dry-run responses cover the same four selection cases, but
+    always carry ``available_for_delivery: 2`` as a trap. Their rendered
+    totals must follow the writer's ``written`` / ``dry_run`` /
+    ``missing_master_omissions`` fields, including zero. A dry run must
+    display 0 actually written even when its planned count is nonzero.
+
+    Two further writer payloads keep those fields from collapsing into each
+    other. A render failure has ``written`` 1 and ``missing_master_omissions``
+    0 while ``available_for_delivery`` is still 2, so the screen must not
+    invent an omission from ``selected - written``. A second payload has
+    ``written`` 0, ``skipped`` 2 and ``missing_master_omissions`` 1, so the
+    omission label cannot be the skip total or ``selected - written`` either.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    ui = UI_FILE.read_text()
+    functions = []
+    for start, end in (
+        ("    async function einkPreview() {", "    async function einkExport(write)"),
+        ("    async function einkExport(write) {", "    function toggleGallery()"),
+    ):
+        functions.append(ui[ui.index(start) : ui.index(end, ui.index(start))])
+
+    runner = tmp_path / "count-consumers.cjs"
+    runner.write_text(
+        """
+const controls = {
+  'ek-target': {value: 'count-contract'},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-path': {value: '/fixture/card'},
+  'ek-out': {innerHTML: '', insertAdjacentHTML() {}},
+  'ek-status': {innerHTML: ''},
+};
+const document = {getElementById: id => controls[id] || null};
+let einkLastPreview, einkCardPlaylistId = null;
+const einkSpec = () => ({sort: 'title'});
+const einkEsc = value => String(value);
+const confirm = () => true;
+const toast = () => {};
+const previewCounts = JSON.parse(process.argv[2]);
+let exportCall = 0;
+const fetch = async (url, options) => {
+  const body = JSON.parse(options.body);
+  if (url === '/eink/playlist/preview') {
+    return {ok: true, json: async () => ({
+      coverage: {},
+      items: previewCounts.selected ? [
+        {work_id: 'aaa1111-first-work', has_master: true, year: 1650, artist: 'A', title: 'First'},
+        {work_id: 'bbb2222-second-work', has_master: true, year: 1650, artist: 'A', title: 'Second'},
+      ] : [],
+      selected: previewCounts.selected,
+      available_for_delivery: previewCounts.available,
+      matched: previewCounts.selected,
+      total_candidates: 2,
+      selection_diagnostics: [],
+    })};
+  }
+  exportCall += 1;
+  if (exportCall <= 2) {
+    return {ok: true, json: async () => ({
+      selected: previewCounts.selected,
+      written: previewCounts.available,
+      dry_run: !body.write,
+      bytes_written: body.write ? 2048 * previewCounts.available : 0,
+      path: '/fixture/card',
+      skipped: previewCounts.selected - previewCounts.available,
+      missing_master_omissions: previewCounts.selected - previewCounts.available,
+      available_for_delivery: 2,
+      palette_measured: true,
+    })};
+  }
+  if (exportCall === 3) {
+    return {ok: true, json: async () => ({
+      selected: 2,
+      written: 1,
+      dry_run: !body.write,
+      bytes_written: 2048,
+      path: '/fixture/card',
+      skipped: 1,
+      missing_master_omissions: 0,
+      available_for_delivery: 2,
+      palette_measured: true,
+    })};
+  }
+  return {ok: true, json: async () => ({
+    selected: 2,
+    written: 0,
+    dry_run: !body.write,
+    bytes_written: 0,
+    path: '/fixture/card',
+    skipped: 2,
+    missing_master_omissions: 1,
+    available_for_delivery: 2,
+    palette_measured: true,
+  })};
+};
+"""
+        + "\n".join(functions)
+        + """
+(async () => {
+  await einkPreview();
+  const previewHTML = controls['ek-out'].innerHTML;
+  await einkExport(true);
+  const writeHTML = controls['ek-status'].innerHTML;
+  await einkExport(false);
+  const dryHTML = controls['ek-status'].innerHTML;
+  await einkExport(true);
+  const renderFailHTML = controls['ek-status'].innerHTML;
+  await einkExport(true);
+  const divergeHTML = controls['ek-status'].innerHTML;
+  console.log(JSON.stringify({previewHTML, writeHTML, dryHTML, renderFailHTML, divergeHTML}));
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(runner), json.dumps({"selected": selected, "available": available})],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    preview = observed["previewHTML"]
+    written = observed["writeHTML"]
+    dry = observed["dryHTML"]
+    render_fail = observed["renderFailHTML"]
+    diverge = observed["divergeHTML"]
+    assert f"<strong>{selected}</strong> selected" in preview
+    assert f"<strong>{available}</strong> available for delivery" in preview
+    for other in {0, 1, 2} - {available}:
+        assert f"<strong>{other}</strong> available for delivery" not in preview
+    assert f"<strong>{selected}</strong> selected" in written
+    assert f"<strong>{available}</strong> actually written" in written
+    for other in {0, 1, 2} - {available}:
+        assert f"<strong>{other}</strong> actually written" not in written
+    assert "would write" not in written
+    assert f"<strong>{selected}</strong> selected" in dry
+    assert "<strong>0</strong> actually written" in dry
+    assert "<strong>1</strong> actually written" not in dry
+    assert "<strong>2</strong> actually written" not in dry
+    assert f"would write {available} file(s)" in dry
+    omissions = selected - available
+    for html in (written, dry):
+        if omissions:
+            suffix = "s" if omissions != 1 else ""
+            assert f"{omissions} missing-master omission{suffix}" in html
+            assert f"{omissions} skipped" in html
+        else:
+            assert "missing-master omission" not in html
+            assert " skipped" not in html
+    assert "<strong>1</strong> actually written" in render_fail
+    assert "<strong>2</strong> actually written" not in render_fail
+    assert "missing-master omission" not in render_fail
+    assert "<strong>0</strong> actually written" in diverge
+    assert "<strong>2</strong> actually written" not in diverge
+    assert "1 missing-master omission" in diverge
+    assert "2 missing-master omission" not in diverge

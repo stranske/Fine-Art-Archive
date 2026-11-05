@@ -776,3 +776,438 @@ matches the pre-bypass file: **1 passed**, exit 0, 0.38 seconds. Receipt:
 
 `black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
 left **377 files unchanged**. Physical panel output was not measured.
+
+## Count contract (#827), checked 2026-11-05
+
+This section labels the missing-master counts already described in the matrix
+row "Missing master". It does not change who is selected, which works a feed
+may advertise, or which files the writer skips. [#805](https://github.com/stranske/Fine-Art-Archive/issues/805)
+remains the audit owner. The earlier deduplication still stands:
+[#806](https://github.com/stranske/Fine-Art-Archive/issues/806) is the shared
+year-bound filter, [#807](https://github.com/stranske/Fine-Art-Archive/issues/807)
+is repeated descriptor work, and
+[#808](https://github.com/stranske/Fine-Art-Archive/issues/808) is palette and
+measurement identity in the image validator. None of those owns this count
+labeling. The original divergence search found no separate covering issue.
+
+The #826 target fields above stay on the preview response. `einkPreview`
+prints both the count labels in this section and the `ek-target-evidence`
+disclosure. Those are separate sentences.
+
+### Historical line references are not current locations
+
+The issue text cites the feed exclusion as `api/main.py:2101-2104` and the
+writer skip as `eink/sdcard.py:185`, from the audit that opened this follow-up.
+The anchors earlier in this report belong to inspected commit `3c23a109`:
+preview `687–740`, `_resolve_playlist` `2080–2113`, export `809–901`, and
+`eink/sdcard.py` `127–296`. Those numbers are historical. The symbols below
+are the current producers. Line numbers were re-read on 2026-11-05 after
+merging the #826 preview-target changes, which moved the API symbols, and
+will drift again.
+
+| Symbol | Where read on 2026-11-05 | Count fields | Missing-master behavior |
+|---|---|---|---|
+| `eink_playlist_preview` | `api/main.py:791` | `selected` at `:865` is `len(work_ids)`, including works with no master. Sampled `items[].has_master`. `work_ids` is the full selection. `items` stops at `sample` (default 24). | A missing master stays selected and is flagged on a sampled row. It is not removed. |
+| `_resolve_playlist` | `api/main.py:2226` | Callers publish `resolved_count` and feed `count` as `len` of the returned list. | `:2249` `if _eink_master(wid) is None: continue`. The feed never advertises the missing master. An empty result still 404s with "no works with local images". |
+| `eink_playlist_export` | `api/main.py:945` | Passes every selected id to the writer. Adds `selected` = `len(items)` at `:1034` on top of `ExportReport.as_dict()`. | Does not drop missing masters before the writer. Dry-run render evidence still skips a missing master. |
+| `sdcard.export` | `eink/sdcard.py:133` | `written` is accepted names: the plan on a dry run, and files after a successful save on a real write. `skipped` is every skip. `skipped_detail` is the first 20 `(work_id, reason)` pairs. | `:191` missing or absent master: `skipped.append((work_id, "no local master image"))` and no file. Render failures are a different skip reason. |
+
+`selected` therefore means "chosen", on both preview and export. It does not
+mean "can be served" and it does not mean "was written".
+
+### Chosen contract
+
+Two totals were not recoverable from the existing payloads:
+
+- Preview can flag `has_master` only on sampled rows. `sample=0`, or a sample
+  that happens to contain only works with masters, cannot produce the
+  delivery total for the whole selection. Preview now adds
+  `available_for_delivery`, the count of `_eink_master(wid) is not None`
+  over every selected id. `selected`, `items`, and `has_master` keep their
+  meanings.
+- Export `skipped` mixes missing masters with render failures, and
+  `skipped_detail` stops at 20. Neither is a complete missing-master total.
+  `ExportReport.as_dict()` now adds `missing_master_omissions`, the count of
+  writer skips whose reason is `no local master image`. `written`, `skipped`,
+  `dry_run`, and `selected` keep their meanings.
+
+No further field was added. A feed list is already only the servable works, so
+`resolved_count` / `count` are the delivery total and the missing master is
+absent from the advertised URLs. Actually written is `0` when `dry_run` is
+true and `written` when it is false: a dry run's `written` value is the plan,
+including every master the writer would open, and is not a file on disk.
+
+The companion labels those totals directly:
+
+- Preview: `{selected} selected · {available_for_delivery} available for delivery`.
+  The older "N shown have no local image" note still describes the sample only.
+- Export: `{selected} selected · {actually written} actually written`, plus
+  `{n} missing-master omission(s)` from `missing_master_omissions`. A dry run
+  also says `would write {written} file(s)`. The existing skipped count and
+  estimated-palette note stay.
+
+The UI does not count sampled rows for either total, and it does not treat
+`available_for_delivery` or `selected` as proof that a file was written.
+
+### Verification, 2026-11-05
+
+`/opt/anaconda3/bin/python3` is not installed on this host. The interpreter
+used is CPython 3.14.10 at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`.
+
+```sh
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+```
+
+Observed: **257 passed**, 14 warnings, exit 0, 61.86 seconds. The extra case is
+`test_render_failure_is_not_a_missing_master_or_a_successful_write`: both
+master files exist, the writer saves one image, and
+`missing_master_omissions` is 0. That is the check that a failed write is
+not reported as a missing master and is not counted as written.
+
+UI regression, same interpreter:
+
+```sh
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+```
+
+The fixture response says `selected=2` and `available_for_delivery=1` while
+both sampled rows claim `has_master: true`. The export response says
+`written=1`, `dry_run` follows the button, and `missing_master_omissions=1`,
+while also carrying a trap `available_for_delivery=2`.
+
+Ambiguous rendering, repeated after the render-failure assertions were added
+to the same UI test: the preview label was temporarily changed from
+`${d.available_for_delivery}` to `${d.selected}`, so the screen read
+`<strong>2</strong> selected · <strong>2</strong> available for delivery`.
+The command above exited **1** in 0.44 seconds. The assertion that failed was
+`'<strong>1</strong> available for delivery' in preview`. Captured in
+[count-contract-red.txt](eink_surface_audit/count-contract-red.txt).
+
+The original `index.html` bytes were restored (SHA-256
+`2ce6f914be772753e9b46198b757a47773b40a8f20412d7f1a9074d153678484`
+before the edit and after the restore). The same command then exited **0**,
+**1 passed**, 13 warnings, 0.36 seconds. Captured in
+[count-contract-green.txt](eink_surface_audit/count-contract-green.txt).
+
+Black check, line length 100, excluding `.workflows-lib` and `node_modules`:
+**377 files would be left unchanged**.
+
+### Dry-run count follow-up, 2026-11-05
+
+`test_export_dry_run_reports_planned_counts_without_writing` now exercises the
+production export route for mixed-master, all-master, all-missing-master and
+empty selections. Each runs with `write` omitted and explicitly false. The
+eight cases verify selected and planned-written totals, full missing-master
+omissions, proposed render-evidence IDs, zero bytes written, zero removals and
+an absent output directory. This checks the real response that the UI uses to
+distinguish planned files from actually written files; the existing UI test
+continues to check the displayed distinction.
+
+On this sandbox, the plain pytest command stalled on the documented asyncio
+wakeup restriction and was interrupted. Black's default worker pool failed
+with `PermissionError` on socket binding. Using the existing opt-in scheduling
+harness and one Black worker, the exact successful commands were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_export_format.py::test_export_dry_run_reports_planned_counts_without_writing tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+Interpreter: `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`.
+The three-suite run passed **279 tests**, 15 warnings, exit 0, in 84.34 seconds.
+The new cases plus the UI regression passed **9 tests**, 14 warnings, exit 0,
+in 1.15 seconds. Black left **377 files unchanged** and Ruff passed.
+
+The commit attempt failed at `git add`: `.git/index.lock` could not be created
+because `.git` is mounted read-only. The requested blocker comment and
+`needs-human` label on #827 were also rejected by the GitHub connector:
+`MCP tool call requires approval, but approval policy is never`. These changes
+remain in the workspace without a commit or a remote status update.
+
+### Same-archive count verification, 2026-11-05
+
+Reconciliation reviewed the implementation and recent follow-ups through
+`64bbec9`. PR #874 was open, ready for review, and already had all task and
+acceptance checkboxes checked. The mixed-master preview, feed, export and UI
+checks passed together (4 tests, 1.47 seconds); no additional task completion
+claims were needed.
+
+The earlier surface tests used separate archives. The new parametrized
+`test_mixed_master_counts_across_preview_feed_and_export` exercises all three
+production paths sequentially against one unchanged archive and specification.
+It checks both a missing first master and a missing last master. A one-row
+preview therefore samples either the missing or available work, while reporting
+selected=2 and available-for-delivery=1 in both cases. The saved feed resolves
+one work and its advertised image returns HTTP 200. Export of that saved
+playlist writes one decodable 8-by-6 PNG, reports one missing-master omission,
+and records the delivered work in the card manifest. Byte counts match the
+file on disk. A final preview equals the initial response.
+
+The existing opt-in sandbox scheduling harness was used with the selected
+interpreter `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_feed_endpoints.py::test_mixed_master_counts_across_preview_feed_and_export -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_feed_endpoints.py
+```
+
+Results: the new regression passed **2 tests**, 14 warnings, in 1.70 seconds;
+the required three suites passed **281 tests**, 15 warnings, in 83.69 seconds;
+the named UI regression passed **1 test**, 13 warnings, in 0.61 seconds. All
+commands exited zero. Black left **377 files unchanged**, Ruff passed, and
+`git diff --check` passed. The earlier UI mutation's red/green receipts remain
+unchanged; neither the UI implementation nor its regression changed this round.
+
+The shared checkout still mounts `.git` read-only, so staging there failed at
+`index.lock`. A writable checkout under `/tmp/faa-issue827-counts-review` was
+created to preserve this follow-up as a commit and patch. The GitHub connector
+rejected the requested PR-body reconciliation update because approval is
+required while the run's approval policy is `never`; the existing checked
+tasks were left intact.
+
+### Same-archive edge cases, 2026-11-05
+
+Reconciliation through `384b5b6` confirmed that PR #874 was open and ready for
+review with every task and acceptance checkbox already checked. No checkbox
+changes were needed. The existing mixed-master production-path and UI checks
+passed before editing (3 tests, 1.98 seconds).
+
+`test_counts_across_preview_feed_and_export` extends the previous mixed-master
+test to all-master, all-missing-master and empty selections. Each case uses one
+unchanged archive and specification across preview, saved-feed resolution and
+export. It verifies full totals independently of the one-row preview sample,
+manifest membership, every advertised image's HTTP 200, and export counts and
+byte totals against decoded PNG files on disk. Selections with no deliverable
+works retain empty feed manifests, the existing 404 responses and no card
+manifest. A final preview must still equal the initial preview.
+
+Using the selected CPython 3.14.10 interpreter and existing opt-in sandbox
+scheduling harness, the exact commands were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_feed_endpoints.py::test_counts_across_preview_feed_and_export -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_feed_endpoints.py
+```
+
+Results: the five-case regression passed in 3.45 seconds; the three required
+suites passed **284 tests**, 15 warnings, in 87.80 seconds; the named UI test
+passed **1 test**, 13 warnings, in 0.54 seconds. Black left **377 files
+unchanged**, Ruff passed, and `git diff --check` passed. All commands exited
+zero. The UI implementation and its retained mutation-test receipts are
+unchanged.
+
+Staging in the shared checkout failed because `.git/index.lock` is on a
+read-only filesystem. The verified files were preserved in a writable clone
+at `/tmp/faa-issue827-count-edges-20261105` for a local commit and patch; this
+does not advance the shared checkout's branch or the remote PR head.
+The GitHub connector rejected the blocker comment and `needs-human` label
+with `MCP tool call requires approval, but approval policy is never`.
+
+### UI zero-count verification, 2026-11-05
+
+Reconciliation through `f2d6bab` confirmed all 22 task and acceptance checkboxes
+were already checked on open, ready-for-review PR #874. Before editing, the
+same-archive production-path cases and existing UI regression passed together
+(6 tests, 3.81 seconds). No checkbox changes were needed.
+
+The named Node-executed UI regression now covers mixed-master, all-master,
+all-missing-master and empty preview totals. Nonempty samples deliberately
+claim both masters exist, so a zero delivery total must come from the response
+instead of the sample or a fallback to selected. Existing writer-result
+assertions still run in every case.
+
+Using CPython 3.14.9 at `/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`
+with the existing opt-in sandbox scheduling harness:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+```
+
+Temporarily rendering `d.available_for_delivery || d.selected` made the exact
+UI command fail only its new all-missing case: **1 failed, 3 passed**, exit 1,
+0.59 seconds. It displayed 2 available instead of 0. Byte-identical UI
+restoration made the same command pass **4 tests**, exit 0, 0.51 seconds.
+Raw outputs remain at `/tmp/eink-ui-zero-count-red.txt` and
+`/tmp/eink-ui-zero-count-green.txt` on this runner. The full focused suites
+passed **287 tests**, 15 warnings, exit 0, 91.06 seconds. Black left **377
+files unchanged**, Ruff passed, and `git diff --check` passed.
+
+The shared `.git` remains read-only; staging failed at `index.lock`. A writable
+checkout at `/tmp/faa-issue827-ui-zero-counts` preserves the change as a local
+commit and patch without advancing the shared branch or remote PR. Automatic
+approval review rejected the PR-body update, blocker comment and `needs-human`
+label because connector approval is required and the approval policy is `never`.
+
+### UI export edge counts, 2026-11-05
+
+Reconciliation through `fe47909` found PR #874 open and ready for review, with
+all task and acceptance checkboxes already checked; no checkbox edits were
+needed. The existing same-archive production-path and UI cases passed before
+editing (9 tests, 4.02 seconds).
+
+The named UI regression now exercises write and dry-run results for mixed,
+all-master, all-missing-master and empty selections, instead of repeating the
+mixed export in every preview case. It asserts explicit selected and written
+counts, planned counts for dry runs, and zero, singular and plural omissions.
+The separate render-failure payloads still distinguish missing masters from
+other skips. Production behavior is unchanged.
+
+Using `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python` and the existing
+opt-in sandbox scheduling harness, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+```
+
+Temporarily changing the export's selected label to `${d.selected || 2}` made
+the identical UI command fail its empty case: **1 failed, 3 passed**, exit 1,
+0.60 seconds. Byte-identical UI restoration passed **4 tests**, exit 0,
+0.49 seconds. Raw receipts are `/tmp/eink-ui-export-zero-red.txt` and
+`/tmp/eink-ui-export-zero-green.txt`. The required suites passed **287 tests**,
+15 warnings, exit 0, 86.29 seconds. Black left **377 files unchanged**, Ruff
+passed, and `git diff --check` passed.
+
+The shared checkout could not stage the change because `.git/index.lock` is
+read-only. A writable clone at `/tmp/faa-issue827-ui-export-counts` preserves
+the test and audit changes for a local commit and patch; it does not advance
+the shared branch or remote PR head.
+
+### Failed-save count verification, 2026-11-05
+
+All supplied checkboxes were already complete at `6559872`; PR #874 was open
+and ready for review. Before editing, the same-archive count cases, UI checks
+and existing render-failure test passed together (10 tests, 3.72 seconds).
+
+`test_render_failure_is_not_a_missing_master_or_a_successful_write` now tests
+both unreadable masters and a card save that writes partial bytes before
+raising `OSError`, in both playlist positions. Each production export reports
+selected=2, written=1 and missing-master omissions=0. The test checks partial
+file cleanup, contiguous numbering, exact successful-image bytes, decoded PNG
+dimensions, JSON/M3U membership and render evidence. This verifies actual save
+results independently of master availability. Production behavior is unchanged.
+
+Using the selected CPython 3.14.9 interpreter with the existing opt-in sandbox
+scheduling harness, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_export_format.py::test_render_failure_is_not_a_missing_master_or_a_successful_write -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_export_format.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+The expanded failure regression passed **4 tests** in 0.60 seconds; the three
+required suites passed **290 tests**, 15 warnings, in 75.34 seconds; the named
+UI regression passed **4 tests** in 0.55 seconds. Black left **377 files
+unchanged**, Ruff passed, and `git diff --check` passed. The UI implementation
+and previous mutation-test receipts are unchanged.
+
+Staging failed because the shared checkout's `.git/index.lock` is read-only.
+The verified changes are preserved for a local commit and patch in the writable
+clone `/tmp/faa-issue827-partial-save-20261105`; this does not advance the
+shared checkout's branch or the remote PR head.
+
+### Production export response in the UI, 2026-11-05
+
+Reconciliation through `71cda28` found every PR #874 task already checked and
+the PR open with `draft=false`; no checkbox corrections were needed. The new
+`test_ui_export_counts_match_the_production_mixed_master_response` passes an
+actual production export response into the production `einkExport` function
+using the existing Node UI test mechanism. The isolated two-work fixture writes
+one PNG and displays selected=2, actually-written=1 and one missing-master
+omission. This closes the API-to-UI validation gap left by constructed payloads.
+
+Using the selected CPython 3.14.10 and existing opt-in scheduling harness:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_export_format.py::test_ui_export_counts_match_the_production_mixed_master_response -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_export_format.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+Temporarily rendering `d.selected` as actually written made the new test fail
+in 0.50 seconds; byte-identical UI restoration made the identical command pass
+in 0.46 seconds. Receipts are `/tmp/eink-production-ui-counts-red.txt` and
+`/tmp/eink-production-ui-counts-green.txt`. The existing UI regression passed
+four cases in 0.48 seconds. The required three suites passed **291 tests**, 15
+warnings, in 85.35 seconds. Black checked 377 files; Ruff and `git diff --check`
+passed.
+
+The plain suite command stalled at the documented sandbox socketpair wakeup
+limitation and was interrupted. The scheduling harness is required on this host.
+The shared `.git` is read-only (`index.lock` could not be created); a writable
+clone at `/tmp/faa-issue827-production-ui-counts` preserves the verified change
+as a local commit and patch without advancing the shared or remote branch.
+Automatic approval review also rejected the blocker comment and `needs-human`
+label: GitHub writes require approval and this run's approval policy is `never`.
+
+### Production preview response in the UI, 2026-11-05
+
+At `49abf18`, all supplied tasks were already checked, and PR #874 was open
+with `draft=false`. Before editing, the five same-archive preview/feed/export
+cases passed in 3.47 seconds; the existing preview-count and UI tests passed
+eight cases in 1.11 seconds. No checkbox changes were needed.
+
+`test_ui_preview_counts_match_the_production_mixed_master_response` now feeds
+actual production preview responses into the production `einkPreview` function
+using the existing Node mechanism. Its six cases cover sample sizes 0, 1 and
+24 with the missing master in either playlist position. Every response and
+rendered summary retains selected=2 and available-for-delivery=1, regardless
+of sampled rows. It also checks the rendered row count and missing-image
+notice. This connects the API response to the UI's count contract; selection,
+feed guards and production code are unchanged.
+
+Using CPython 3.14.9 at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_preview_counts_match_the_production_mixed_master_response -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+git diff --check
+```
+
+Temporarily rendering `d.items.filter(i => i.has_master).length` as available
+for delivery made the identical UI command fail: **3 failed, 3 passed**, exit
+1, 1.11 seconds. Byte-identical UI restoration passed **6 tests**, exit 0,
+0.94 seconds. Receipts remain at `/tmp/eink-production-preview-counts-red.txt`
+and `/tmp/eink-production-preview-counts-green.txt`. The required suites passed
+**297 tests**, 15 warnings, exit 0, 89.95 seconds; their output remains at
+`/tmp/eink-production-preview-counts-suites.txt`. Black checked 377 files and
+Ruff passed. The Black check without the documented scheduling harness stalled
+and was interrupted; the harness-enabled command above passed.
+
+The shared checkout cannot stage changes because `.git/index.lock` is
+read-only. The test and audit changes are preserved for a local commit and
+patch in `/tmp/faa-issue827-production-preview-counts`; this does not advance
+the shared branch or remote PR head.
+
+The local commit succeeded; its apply-ready patch is
+`/tmp/eink-production-preview-counts.patch`. Automatic approval review rejected
+the blocker comment and `needs-human` label because GitHub writes require
+approval and this run's approval policy is `never`.

@@ -855,10 +855,15 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
             item["render_strategy_reason"] = evidence.reason
             item["gamut_verdict"] = evidence.gamut_verdict
         items.append(item)
+    # `selected` stays the full selection, including works with no master.
+    # `items` is only the sample, so a master count taken from those rows
+    # under-counts once `sample` truncates. This total covers every selected id.
+    available_for_delivery = sum(_eink_master(wid) is not None for wid in res.work_ids)
     return {
         "total_candidates": res.total_candidates,
         "matched": res.matched,
         "selected": len(res.work_ids),
+        "available_for_delivery": available_for_delivery,
         "coverage": res.coverage,
         "facets": {k: [list(t) for t in v] for k, v in res.facets.items()},
         "selection_diagnostics": res.selection_diagnostics,

@@ -3310,6 +3310,7 @@
         ? `<div class="sub" style="margin-top:2px">Dropped for missing metadata: `
           + Object.entries(cov).map(([k, n]) => `${k} ${n}`).join(", ") + `</div>` : "";
       const noMaster = d.items.filter(i => !i.has_master).length;
+      // Full-selection total. Counting `items` would follow the sample cap.
       const targetEvidence = `<div class="sub" id="ek-target-evidence" style="margin-top:2px">Resolved target ${einkEsc(d.target)}. Strategy and gamut evidence use ${einkEsc(d.evidence_calibration)} policy (${einkEsc(d.evidence_scope)}), rather than a measurement for the selected panel.</div>`;
       const fitMode = (document.getElementById("ek-fitmode") || {}).value || "";
       const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";
@@ -3341,7 +3342,8 @@
         </details>` : "";
 
       out.innerHTML = `
-        <div><strong>${d.selected}</strong> selected of ${d.matched} matching
+        <div><strong>${d.selected}</strong> selected · <strong>${d.available_for_delivery}</strong> available for delivery
+          of ${d.matched} matching
           (${d.total_candidates} in archive)${noMaster ? ` — ${noMaster} shown have no local image` : ""}</div>
         ${targetEvidence}
         ${covTxt}
@@ -3385,9 +3387,16 @@
         d = await r.json();
         const st = document.getElementById("ek-status");
         if (!r.ok) { st.textContent = d.detail || `error ${r.status}`; return; }
-        st.innerHTML = `<strong>${write ? "Wrote" : "Would write"} ${d.written} file(s)</strong>`
+        // `written` on a dry run is the plan, including every master the writer
+        // would open. Only a completed write observes files actually placed.
+        const actuallyWritten = d.dry_run ? 0 : d.written;
+        const omissions = d.missing_master_omissions || 0;
+        st.innerHTML = `<strong>${d.selected}</strong> selected`
+          + ` · <strong>${actuallyWritten}</strong> actually written`
+          + (d.dry_run ? ` · would write ${d.written} file(s)` : "")
           + (write && d.bytes_written ? ` · ${(d.bytes_written / 1e6).toFixed(1)} MB` : "")
           + ` → ${einkEsc(d.path)}`
+          + (omissions ? ` · ${omissions} missing-master omission${omissions === 1 ? "" : "s"}` : "")
           + (d.skipped ? ` · ${d.skipped} skipped` : "")
           + (d.palette_measured ? "" : ` · <span style="color:#a06000">colours estimated</span>`);
       } catch (e) {

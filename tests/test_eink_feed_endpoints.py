@@ -1226,6 +1226,187 @@ def test_warm_descriptor_cache_preserves_http_evidence_failure(
         assert "evidence" in failed.json()["detail"]
 
 
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _two_selected(archive: Path, masters: tuple[bool, bool]) -> None:
+    _work(archive, _COUNT_FIRST, title="First", master=masters[0])
+    _work(archive, _COUNT_SECOND, title="Second", master=masters[1])
+
+
+def _count_target(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        TARGETS,
+        "count-contract",
+        RenderTarget("count-contract", "Count contract", 8, 6, "mono1bit"),
+    )
+
+
+def _save_count(client: TestClient, spec: dict) -> dict:
+    return _save(client, spec=spec, target="count-contract", dither="none")
+
+
+def _assert_empty_feed(client: TestClient, playlist_id: str) -> None:
+    for path in ("current", "next", "image/0"):
+        response = client.get(f"/feed/{playlist_id}/{path}")
+        assert response.status_code == 404, path
+        assert "no works with local images" in response.json()["detail"]
+
+
+def test_mixed_master_feed_advertises_only_the_servable_image(client, archive, monkeypatch):
+    """The saved feed drops the work with no master and serves the other one."""
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, False))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 1
+    manifest = client.get(f"/feed/{playlist['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == [_COUNT_FIRST]
+    nxt = client.get(f"/feed/{playlist['id']}/next")
+    assert nxt.status_code == 200, nxt.text
+    body = nxt.json()
+    assert body["count"] == 1
+    assert body["work_id"] == _COUNT_FIRST
+    image = client.get(body["image_url"].replace("http://testserver", ""))
+    assert image.status_code == 200, image.text
+    assert image.headers["X-Work-Id"] == _COUNT_FIRST
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected_ids", "available_ids"),
+    [
+        ((True, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST]),
+        ((False, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_SECOND]),
+        ((True, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST, _COUNT_SECOND]),
+        ((False, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], []),
+        ((True, False), _EMPTY_SPEC, [], []),
+    ],
+    ids=["missing-last", "missing-first", "all-master", "all-missing", "empty"],
+)
+def test_counts_across_preview_feed_and_export(
+    client, archive, tmp_path, monkeypatch, masters, spec, selected_ids, available_ids
+):
+    """One unchanged archive and spec distinguish selection from delivery.
+
+    A one-row preview may show either the available or missing work. Neither
+    sample may change the full delivery total, feed membership or card output.
+    """
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+
+    def preview_counts():
+        response = client.post(
+            "/eink/playlist/preview",
+            json={"spec": spec, "target": "count-contract", "sample": 1},
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["work_ids"] == selected_ids
+        assert body["selected"] == len(selected_ids)
+        assert body["available_for_delivery"] == len(available_ids)
+        assert len(body["items"]) == min(1, len(selected_ids))
+        if selected_ids:
+            assert body["items"][0]["work_id"] == _COUNT_FIRST
+            assert body["items"][0]["has_master"] is masters[0]
+        return body
+
+    before = preview_counts()
+    playlist = _save_count(client, spec)
+    assert playlist["resolved_count"] == before["available_for_delivery"]
+    response = client.get(f"/feed/{playlist['id']}/manifest.json")
+    assert response.status_code == 200, response.text
+    assert [row["work_id"] for row in response.json()["items"]] == available_ids
+    after = None
+    for available_id in available_ids:
+        params = {"after": after} if after else None
+        response = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert response.status_code == 200, response.text
+        advertised = response.json()
+        assert advertised["count"] == len(available_ids)
+        assert advertised["work_id"] == available_id
+        image = client.get(advertised["image_url"])
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == available_id
+        after = available_id
+    if not available_ids:
+        _assert_empty_feed(client, playlist["id"])
+
+    card = tmp_path / "card"
+    response = client.post(
+        "/eink/playlist/export",
+        json={"playlist_id": playlist["id"], "path": str(card), "write": True},
+    )
+    assert response.status_code == 200, response.text
+    written = response.json()
+    assert written["selected"] == before["selected"]
+    assert written["dry_run"] is False
+    assert written["written"] == len(available_ids)
+    omissions = len(selected_ids) - len(available_ids)
+    assert written["missing_master_omissions"] == written["skipped"] == omissions
+    filenames = [f"{index:03d}_{wid}.png" for index, wid in enumerate(available_ids, 1)]
+    assert sorted(path.name for path in card.glob("*.png")) == filenames
+    assert written["bytes_written"] == sum((card / name).stat().st_size for name in filenames)
+    for filename in filenames:
+        with Image.open(card / filename) as delivered:
+            delivered.load()
+            assert delivered.format == "PNG"
+            assert delivered.size == (8, 6)
+    if available_ids:
+        assert written["bytes_written"] > 0
+        manifest = json.loads((card / "playlist.json").read_text())
+        assert manifest["count"] == len(available_ids)
+        assert [row["work_id"] for row in manifest["items"]] == available_ids
+    else:
+        assert not (card / "playlist.json").exists()
+    assert preview_counts() == before
+
+
+def test_all_master_feed_serves_both_selected_images(client, archive, monkeypatch):
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, True))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 2
+    seen = []
+    after = None
+    for _ in range(2):
+        params = {"after": after} if after else None
+        nxt = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert nxt.status_code == 200, nxt.text
+        body = nxt.json()
+        image = client.get(body["image_url"].replace("http://testserver", ""))
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == body["work_id"]
+        seen.append(body["work_id"])
+        after = body["work_id"]
+    assert seen == [_COUNT_FIRST, _COUNT_SECOND]
+    assert nxt.json()["count"] == 2
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec"),
+    [((False, False), _COUNT_SPEC), ((True, False), _EMPTY_SPEC)],
+    ids=["all-missing", "empty"],
+)
+def test_unservable_selections_keep_the_empty_feed_response(
+    client, archive, monkeypatch, masters, spec
+):
+    """A selection with nothing to serve stays the existing empty-feed 404."""
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    playlist = _save_count(client, spec)
+
+    assert playlist["resolved_count"] == 0
+    _assert_empty_feed(client, playlist["id"])
+
+
 @pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])
 def test_preference_diverse_builder_names_missing_evidence(missing):
     supplied = {"quality_scores": {}, "embeddings": {}}
