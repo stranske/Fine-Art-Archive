@@ -1824,7 +1824,13 @@ def test_enumerated_eink_surface_inputs_match_backend_signatures():
 
     from fine_art_archive.api import main as api_main
     from fine_art_archive.display.render import gamut_render_evidence
-    from fine_art_archive.eink.feed import SavedPlaylist, item_etag
+    from fine_art_archive.eink.feed import (
+        SavedPlaylist,
+        build_manifest,
+        item_etag,
+        palette_fingerprint,
+        rotation_index,
+    )
     from fine_art_archive.eink.sdcard import export as export_card
     from fine_art_archive.eink.targets import render_evidence, render_for_target
     from fine_art_archive.preference.exhibition import _validate_inputs, select_quality_diverse
@@ -1941,6 +1947,12 @@ def test_enumerated_eink_surface_inputs_match_backend_signatures():
         "palette",
         "palette_identity",
     ]
+    # Feed-manifest helpers enumerated in the audit (feed.py) but not
+    # previously locked: a new input here (e.g. a fit or strategy field on
+    # the manifest) must update the audit matrix, not slip in silently.
+    assert params(rotation_index) == ["n_items", "interval", "now", "offset"]
+    assert params(palette_fingerprint) == ["palette"]
+    assert params(build_manifest) == ["playlist", "items", "base_url", "now"]
     assert params(_validate_inputs) == [
         "work_ids",
         "quality_scores",
@@ -2089,3 +2101,67 @@ def test_helper_edge_select_quality_diverse_is_seeded_and_diagnosed():
     assert first.diagnostics[1].nearest_selected_similarity is not None
     with pytest.raises(MissingEvidenceError):
         select_quality_diverse(ids, {"near-a": 1.0}, vectors, 2, seed=17)
+
+
+def test_helper_edge_feed_manifest_consumes_saved_playlist_inputs():
+    """The feed-manifest edge: manifest must carry the saved render inputs.
+
+    ``build_manifest`` (eink/feed.py) is what a polling device reads; it
+    consumes the saved playlist's ``target``/``dither``/``interval`` plus
+    the resolved items in selection order, ``base_url`` and ``now``.
+    ``rotation_index`` turns ``interval``/``now``/``offset`` into the
+    current position, and ``palette_fingerprint`` (bound into the feed
+    ETag by ``_render_feed_image``) must track colours and measured
+    status while ignoring provenance-only fields. If any of these inputs
+    stopped being consumed, the manifest a device polls could diverge
+    from the images the feed renders without any test failing.
+    """
+    from datetime import UTC, datetime
+
+    from fine_art_archive.eink.feed import (
+        SavedPlaylist,
+        build_manifest,
+        palette_fingerprint,
+        rotation_index,
+    )
+
+    playlist = SavedPlaylist(
+        id="winter-abc123",
+        name="Winter",
+        spec={"sort": "fit"},
+        target="gooddisplay-315-diy",
+        dither="atkinson",
+        fit="cover",
+        interval="daily",
+    )
+    items = [
+        {"work_id": "work-a", "title": "A", "artist": "Artist A", "year": 1650},
+        {"work_id": "work-b", "title": "B", "artist": "Artist B", "year": None},
+    ]
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    manifest = build_manifest(playlist, items, base_url="https://panel.example/", now=now)
+    assert manifest["playlist_id"] == "winter-abc123"
+    assert manifest["target"] == "gooddisplay-315-diy"
+    assert manifest["dither"] == "atkinson"
+    assert manifest["interval"] == "daily"
+    assert manifest["count"] == 2
+    assert manifest["current_index"] == rotation_index(2, "daily", now=now)
+    assert manifest["current_url"] == "https://panel.example/feed/winter-abc123/current"
+    assert [item["work_id"] for item in manifest["items"]] == ["work-a", "work-b"]
+    assert manifest["items"][1]["url"] == "https://panel.example/feed/winter-abc123/image/1"
+    assert manifest["items"][1]["year"] is None
+    empty = build_manifest(playlist, [], base_url="https://panel.example", now=now)
+    assert empty["count"] == 0 and empty["current_url"] is None
+    # Rotation: offset separates a second frame; empty playlists index to 0.
+    assert rotation_index(0, "daily", now=now) == 0
+    assert rotation_index(3, "daily", now=now, offset=1) == (
+        rotation_index(3, "daily", now=now) + 1
+    ) % 3
+    # Palette fingerprint: provenance is excluded, pixels/measured are not.
+    base = Palette(name="p", colours=((1, 2, 3), (4, 5, 6)), note="one")
+    renamed = Palette(name="q", colours=((1, 2, 3), (4, 5, 6)), note="two")
+    recoloured = Palette(name="p", colours=((1, 2, 3), (4, 5, 7)), note="one")
+    measured = Palette(name="p", colours=((1, 2, 3), (4, 5, 6)), measured=True)
+    assert palette_fingerprint(base) == palette_fingerprint(renamed)
+    assert palette_fingerprint(base) != palette_fingerprint(recoloured)
+    assert palette_fingerprint(base) != palette_fingerprint(measured)

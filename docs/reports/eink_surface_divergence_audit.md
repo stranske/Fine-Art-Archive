@@ -118,6 +118,22 @@ inspected, not executed, in this session (shell blocker below); rerun
 `pytest tests/test_eink_pipeline.py -k helper_edge -m "not slow" --no-cov`
 before marking the helper-trace task complete.
 
+Follow-on locks (this change): the enumerated-inputs lock now also covers
+the feed-manifest helpers this report enumerates at feed.py:151/167/209
+(`rotation_index`, `palette_fingerprint`, `build_manifest`), which it
+previously listed but did not lock, and
+`test_helper_edge_feed_manifest_consumes_saved_playlist_inputs` verifies
+those helpers actually consume the saved `target`/`dither`/`interval`,
+item order, `base_url`/`now`/`offset`, and palette colours/measured
+status (excluding provenance-only name/note). Inspected, not executed,
+in this session: every shell command fails before starting with
+`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, so no
+pass is claimed here. Rerun
+`pytest tests/test_eink_pipeline.py::test_enumerated_eink_surface_inputs_match_backend_signatures tests/test_eink_pipeline.py::test_helper_edge_feed_manifest_consumes_saved_playlist_inputs -m "not slow" --no-cov`
+before marking the enumeration/helper-trace tasks complete. No new
+issue filed: this locks already-correct rows, not an uncovered instance,
+and touches no file under `src/`.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
