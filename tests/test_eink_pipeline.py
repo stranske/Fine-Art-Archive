@@ -2149,15 +2149,15 @@ def test_operator_ui_renders_preview_and_delivery_counts():
         "export result does not render the card's written count — dry-run "
         "and write would be indistinguishable from a partial card"
     )
-    assert ui.count("${d.selected}") == 1, (
-        "preview selected count must come from the preview response exactly once"
-    )
-    assert ui.count("${d.resolved_count} works") == 1, (
-        "saved-feed count must come from the save response exactly once"
-    )
-    assert ui.count("${d.written} file(s)") == 1, (
-        "card written count must come from the export response exactly once"
-    )
+    assert (
+        ui.count("${d.selected}") == 1
+    ), "preview selected count must come from the preview response exactly once"
+    assert (
+        ui.count("${d.resolved_count} works") == 1
+    ), "saved-feed count must come from the save response exactly once"
+    assert (
+        ui.count("${d.written} file(s)") == 1
+    ), "card written count must come from the export response exactly once"
 
 
 def test_helper_edge_render_evidence_uses_default_spectra6_policy():
