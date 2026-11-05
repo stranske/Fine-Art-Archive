@@ -6,7 +6,7 @@ replaced `${d.available_for_delivery}` with `${d.selected}` in the preview
 "available for delivery" label, then ran the command above.
 
 Exit: 1
-1 failed in 0.64s
+1 failed, 13 warnings in 0.44s
 
 Rendered preview header:
 <strong>2</strong> selected · <strong>2</strong> available for delivery

@@ -6,4 +6,4 @@ SHA-256 before the ambiguous edit and after restore:
 2ce6f914be772753e9b46198b757a47773b40a8f20412d7f1a9074d153678484
 
 Exit: 0
-1 passed, 13 warnings in 0.41s
+1 passed, 13 warnings in 0.36s

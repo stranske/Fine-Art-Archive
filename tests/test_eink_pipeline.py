@@ -1789,6 +1789,13 @@ def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path):
     rendered totals must follow ``available_for_delivery`` and the writer's
     ``written`` / ``dry_run`` / ``missing_master_omissions`` fields. A dry
     run whose plan ``written`` is 1 must still display 0 actually written.
+
+    Two further writer payloads keep those fields from collapsing into each
+    other. A render failure has ``written`` 1 and ``missing_master_omissions``
+    0 while ``available_for_delivery`` is still 2, so the screen must not
+    invent an omission from ``selected - written``. A second payload has
+    ``written`` 0, ``skipped`` 2 and ``missing_master_omissions`` 1, so the
+    omission label cannot be the skip total or ``selected - written`` either.
     """
     from fine_art_archive.api.main import UI_FILE
 
@@ -1819,6 +1826,7 @@ const einkSpec = () => ({sort: 'title'});
 const einkEsc = value => String(value);
 const confirm = () => true;
 const toast = () => {};
+let exportCall = 0;
 const fetch = async (url, options) => {
   const body = JSON.parse(options.body);
   if (url === '/eink/playlist/preview') {
@@ -1835,13 +1843,40 @@ const fetch = async (url, options) => {
       selection_diagnostics: [],
     })};
   }
+  exportCall += 1;
+  if (exportCall <= 2) {
+    return {ok: true, json: async () => ({
+      selected: 2,
+      written: 1,
+      dry_run: !body.write,
+      bytes_written: body.write ? 2048 : 0,
+      path: '/fixture/card',
+      skipped: 1,
+      missing_master_omissions: 1,
+      available_for_delivery: 2,
+      palette_measured: true,
+    })};
+  }
+  if (exportCall === 3) {
+    return {ok: true, json: async () => ({
+      selected: 2,
+      written: 1,
+      dry_run: !body.write,
+      bytes_written: 2048,
+      path: '/fixture/card',
+      skipped: 1,
+      missing_master_omissions: 0,
+      available_for_delivery: 2,
+      palette_measured: true,
+    })};
+  }
   return {ok: true, json: async () => ({
     selected: 2,
-    written: 1,
+    written: 0,
     dry_run: !body.write,
-    bytes_written: body.write ? 2048 : 0,
+    bytes_written: 0,
     path: '/fixture/card',
-    skipped: 1,
+    skipped: 2,
     missing_master_omissions: 1,
     available_for_delivery: 2,
     palette_measured: true,
@@ -1857,7 +1892,11 @@ const fetch = async (url, options) => {
   const writeHTML = controls['ek-status'].innerHTML;
   await einkExport(false);
   const dryHTML = controls['ek-status'].innerHTML;
-  console.log(JSON.stringify({previewHTML, writeHTML, dryHTML}));
+  await einkExport(true);
+  const renderFailHTML = controls['ek-status'].innerHTML;
+  await einkExport(true);
+  const divergeHTML = controls['ek-status'].innerHTML;
+  console.log(JSON.stringify({previewHTML, writeHTML, dryHTML, renderFailHTML, divergeHTML}));
 })().catch(error => { console.error(error); process.exitCode = 1; });
 """,
         encoding="utf-8",
@@ -1865,7 +1904,11 @@ const fetch = async (url, options) => {
     result = subprocess.run([node, str(runner)], capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     observed = json.loads(result.stdout)
-    preview, written, dry = observed["previewHTML"], observed["writeHTML"], observed["dryHTML"]
+    preview = observed["previewHTML"]
+    written = observed["writeHTML"]
+    dry = observed["dryHTML"]
+    render_fail = observed["renderFailHTML"]
+    diverge = observed["divergeHTML"]
     assert "<strong>2</strong> selected" in preview
     assert "<strong>1</strong> available for delivery" in preview
     assert "<strong>2</strong> available for delivery" not in preview
@@ -1879,3 +1922,10 @@ const fetch = async (url, options) => {
     assert "<strong>1</strong> actually written" not in dry
     assert "would write 1 file(s)" in dry
     assert "1 missing-master omission" in dry
+    assert "<strong>1</strong> actually written" in render_fail
+    assert "<strong>2</strong> actually written" not in render_fail
+    assert "missing-master omission" not in render_fail
+    assert "<strong>0</strong> actually written" in diverge
+    assert "<strong>2</strong> actually written" not in diverge
+    assert "1 missing-master omission" in diverge
+    assert "2 missing-master omission" not in diverge

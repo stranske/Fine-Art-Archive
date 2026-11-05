@@ -251,8 +251,9 @@ def test_export_counts_follow_files_written_not_master_availability(
     """The card reports the writer's files and missing-master skips.
 
     ``selected`` still counts every chosen work. ``written`` and the files on
-    disk are the observed write. ``missing_master_omissions`` counts the
-    writer's ``no local master image`` skips, not ``selected - written``.
+    disk are the observed write. These fixtures have no render failure, so
+    ``missing_master_omissions`` happens to equal ``selected - written``;
+    the render-failure test below is what separates those two numbers.
     """
     client = _export_client(tmp_path, monkeypatch, masters)
     card, body = _write_card(client, tmp_path, spec, "card")
@@ -273,3 +274,33 @@ def test_export_counts_follow_files_written_not_master_availability(
     if masters == (True, False) and spec == _COUNT_SPEC:
         assert body["skipped_detail"] == [[_COUNT_SECOND, "no local master image"]]
         assert body["skipped"] == 1
+
+
+def test_render_failure_is_not_a_missing_master_or_a_successful_write(tmp_path, monkeypatch):
+    """A master file that cannot be rendered is not delivered and not 'missing'.
+
+    Both master files exist, so master availability is 2. The writer saves
+    one image and records a render failure for the other. ``written`` is that
+    file, and ``missing_master_omissions`` stays 0 rather than becoming
+    ``selected - written``.
+    """
+    client = _export_client(tmp_path, monkeypatch, (True, True))
+    first_master = tmp_path / "works" / _COUNT_FIRST / "master.jpeg"
+    second_master = tmp_path / "works" / _COUNT_SECOND / "master.jpeg"
+    second_master.write_bytes(b"not a jpeg")
+    assert first_master.is_file()
+    assert second_master.is_file()
+
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "render-fail")
+
+    assert body["selected"] == 2
+    assert body["written"] == 1
+    assert body["dry_run"] is False
+    assert body["missing_master_omissions"] == 0
+    assert body["skipped"] == 1
+    assert body["skipped_detail"][0][0] == _COUNT_SECOND
+    assert str(body["skipped_detail"][0][1]).startswith("render failed:")
+    assert sorted(path.name for path in card.glob("*.png")) == ["001_aaa1111-first-work.png"]
+    manifest = json.loads((card / "playlist.json").read_text(encoding="utf-8"))
+    assert manifest["count"] == 1
+    assert [row["work_id"] for row in manifest["items"]] == [_COUNT_FIRST]

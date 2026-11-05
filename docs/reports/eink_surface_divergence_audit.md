@@ -454,7 +454,11 @@ used is CPython 3.14.10 at
 /opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
 ```
 
-Observed: **256 passed**, 14 warnings, exit 0, 35.93 seconds.
+Observed: **257 passed**, 14 warnings, exit 0, 61.86 seconds. The extra case is
+`test_render_failure_is_not_a_missing_master_or_a_successful_write`: both
+master files exist, the writer saves one image, and
+`missing_master_omissions` is 0. That is the check that a failed write is
+not reported as a missing master and is not counted as written.
 
 UI regression, same interpreter:
 
@@ -467,17 +471,18 @@ both sampled rows claim `has_master: true`. The export response says
 `written=1`, `dry_run` follows the button, and `missing_master_omissions=1`,
 while also carrying a trap `available_for_delivery=2`.
 
-Ambiguous rendering: the preview label was temporarily changed from
+Ambiguous rendering, repeated after the render-failure assertions were added
+to the same UI test: the preview label was temporarily changed from
 `${d.available_for_delivery}` to `${d.selected}`, so the screen read
 `<strong>2</strong> selected · <strong>2</strong> available for delivery`.
-The command above exited **1**. The assertion that failed was
+The command above exited **1** in 0.44 seconds. The assertion that failed was
 `'<strong>1</strong> available for delivery' in preview`. Captured in
 [count-contract-red.txt](eink_surface_audit/count-contract-red.txt).
 
 The original `index.html` bytes were restored (SHA-256
 `2ce6f914be772753e9b46198b757a47773b40a8f20412d7f1a9074d153678484`
 before the edit and after the restore). The same command then exited **0**,
-**1 passed**, 0.41 seconds. Captured in
+**1 passed**, 13 warnings, 0.36 seconds. Captured in
 [count-contract-green.txt](eink_surface_audit/count-contract-green.txt).
 
 Black check, line length 100, excluding `.workflows-lib` and `node_modules`:
