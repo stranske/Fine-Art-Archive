@@ -1933,11 +1933,11 @@ def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path, selec
     Nonempty preview samples mark both rows ``has_master: true`` even when
     the response's full delivery total is zero or one. Empty selections have
     no rows. A zero total must not fall back to the selection or sample size.
-    The export checks remain independent of the preview: their
-    payload carries ``available_for_delivery: 2``. Those are traps: the
-    rendered totals must follow ``available_for_delivery`` and the writer's
-    ``written`` / ``dry_run`` / ``missing_master_omissions`` fields. A dry
-    run whose plan ``written`` is 1 must still display 0 actually written.
+    Export and dry-run responses cover the same four selection cases, but
+    always carry ``available_for_delivery: 2`` as a trap. Their rendered
+    totals must follow the writer's ``written`` / ``dry_run`` /
+    ``missing_master_omissions`` fields, including zero. A dry run must
+    display 0 actually written even when its planned count is nonzero.
 
     Two further writer payloads keep those fields from collapsing into each
     other. A render failure has ``written`` 1 and ``missing_master_omissions``
@@ -1996,13 +1996,13 @@ const fetch = async (url, options) => {
   exportCall += 1;
   if (exportCall <= 2) {
     return {ok: true, json: async () => ({
-      selected: 2,
-      written: 1,
+      selected: previewCounts.selected,
+      written: previewCounts.available,
       dry_run: !body.write,
-      bytes_written: body.write ? 2048 : 0,
+      bytes_written: body.write ? 2048 * previewCounts.available : 0,
       path: '/fixture/card',
-      skipped: 1,
-      missing_master_omissions: 1,
+      skipped: previewCounts.selected - previewCounts.available,
+      missing_master_omissions: previewCounts.selected - previewCounts.available,
       available_for_delivery: 2,
       palette_measured: true,
     })};
@@ -2068,16 +2068,25 @@ const fetch = async (url, options) => {
     assert f"<strong>{available}</strong> available for delivery" in preview
     for other in {0, 1, 2} - {available}:
         assert f"<strong>{other}</strong> available for delivery" not in preview
-    assert "<strong>2</strong> selected" in written
-    assert "<strong>1</strong> actually written" in written
-    assert "<strong>2</strong> actually written" not in written
-    assert "<strong>0</strong> actually written" not in written
-    assert "1 missing-master omission" in written
-    assert "<strong>2</strong> selected" in dry
+    assert f"<strong>{selected}</strong> selected" in written
+    assert f"<strong>{available}</strong> actually written" in written
+    for other in {0, 1, 2} - {available}:
+        assert f"<strong>{other}</strong> actually written" not in written
+    assert "would write" not in written
+    assert f"<strong>{selected}</strong> selected" in dry
     assert "<strong>0</strong> actually written" in dry
     assert "<strong>1</strong> actually written" not in dry
-    assert "would write 1 file(s)" in dry
-    assert "1 missing-master omission" in dry
+    assert "<strong>2</strong> actually written" not in dry
+    assert f"would write {available} file(s)" in dry
+    omissions = selected - available
+    for html in (written, dry):
+        if omissions:
+            suffix = "s" if omissions != 1 else ""
+            assert f"{omissions} missing-master omission{suffix}" in html
+            assert f"{omissions} skipped" in html
+        else:
+            assert "missing-master omission" not in html
+            assert " skipped" not in html
     assert "<strong>1</strong> actually written" in render_fail
     assert "<strong>2</strong> actually written" not in render_fail
     assert "missing-master omission" not in render_fail

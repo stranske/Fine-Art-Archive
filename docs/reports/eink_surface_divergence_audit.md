@@ -1051,3 +1051,41 @@ checkout at `/tmp/faa-issue827-ui-zero-counts` preserves the change as a local
 commit and patch without advancing the shared branch or remote PR. Automatic
 approval review rejected the PR-body update, blocker comment and `needs-human`
 label because connector approval is required and the approval policy is `never`.
+
+### UI export edge counts, 2026-11-05
+
+Reconciliation through `fe47909` found PR #874 open and ready for review, with
+all task and acceptance checkboxes already checked; no checkbox edits were
+needed. The existing same-archive production-path and UI cases passed before
+editing (9 tests, 4.02 seconds).
+
+The named UI regression now exercises write and dry-run results for mixed,
+all-master, all-missing-master and empty selections, instead of repeating the
+mixed export in every preview case. It asserts explicit selected and written
+counts, planned counts for dry runs, and zero, singular and plural omissions.
+The separate render-failure payloads still distinguish missing masters from
+other skips. Production behavior is unchanged.
+
+Using `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python` and the existing
+opt-in sandbox scheduling harness, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+```
+
+Temporarily changing the export's selected label to `${d.selected || 2}` made
+the identical UI command fail its empty case: **1 failed, 3 passed**, exit 1,
+0.60 seconds. Byte-identical UI restoration passed **4 tests**, exit 0,
+0.49 seconds. Raw receipts are `/tmp/eink-ui-export-zero-red.txt` and
+`/tmp/eink-ui-export-zero-green.txt`. The required suites passed **287 tests**,
+15 warnings, exit 0, 86.29 seconds. Black left **377 files unchanged**, Ruff
+passed, and `git diff --check` passed.
+
+The shared checkout could not stage the change because `.git/index.lock` is
+read-only. A writable clone at `/tmp/faa-issue827-ui-export-counts` preserves
+the test and audit changes for a local commit and patch; it does not advance
+the shared branch or remote PR head.
