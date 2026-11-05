@@ -970,3 +970,45 @@ created to preserve this follow-up as a commit and patch. The GitHub connector
 rejected the requested PR-body reconciliation update because approval is
 required while the run's approval policy is `never`; the existing checked
 tasks were left intact.
+
+### Same-archive edge cases, 2026-11-05
+
+Reconciliation through `384b5b6` confirmed that PR #874 was open and ready for
+review with every task and acceptance checkbox already checked. No checkbox
+changes were needed. The existing mixed-master production-path and UI checks
+passed before editing (3 tests, 1.98 seconds).
+
+`test_counts_across_preview_feed_and_export` extends the previous mixed-master
+test to all-master, all-missing-master and empty selections. Each case uses one
+unchanged archive and specification across preview, saved-feed resolution and
+export. It verifies full totals independently of the one-row preview sample,
+manifest membership, every advertised image's HTTP 200, and export counts and
+byte totals against decoded PNG files on disk. Selections with no deliverable
+works retain empty feed manifests, the existing 404 responses and no card
+manifest. A final preview must still equal the initial preview.
+
+Using the selected CPython 3.14.10 interpreter and existing opt-in sandbox
+scheduling harness, the exact commands were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_feed_endpoints.py::test_counts_across_preview_feed_and_export -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_feed_endpoints.py
+```
+
+Results: the five-case regression passed in 3.45 seconds; the three required
+suites passed **284 tests**, 15 warnings, in 87.80 seconds; the named UI test
+passed **1 test**, 13 warnings, in 0.54 seconds. Black left **377 files
+unchanged**, Ruff passed, and `git diff --check` passed. All commands exited
+zero. The UI implementation and its retained mutation-test receipts are
+unchanged.
+
+Staging in the shared checkout failed because `.git/index.lock` is on a
+read-only filesystem. The verified files were preserved in a writable clone
+at `/tmp/faa-issue827-count-edges-20261105` for a local commit and patch; this
+does not advance the shared checkout's branch or the remote PR head.
+The GitHub connector rejected the blocker comment and `needs-human` label
+with `MCP tool call requires approval, but approval policy is never`.

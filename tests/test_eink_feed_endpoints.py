@@ -1277,12 +1277,18 @@ def test_mixed_master_feed_advertises_only_the_servable_image(client, archive, m
 
 
 @pytest.mark.parametrize(
-    ("masters", "available_id"),
-    [((True, False), _COUNT_FIRST), ((False, True), _COUNT_SECOND)],
-    ids=["missing-last", "missing-first"],
+    ("masters", "spec", "selected_ids", "available_ids"),
+    [
+        ((True, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST]),
+        ((False, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_SECOND]),
+        ((True, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST, _COUNT_SECOND]),
+        ((False, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], []),
+        ((True, False), _EMPTY_SPEC, [], []),
+    ],
+    ids=["missing-last", "missing-first", "all-master", "all-missing", "empty"],
 )
-def test_mixed_master_counts_across_preview_feed_and_export(
-    client, archive, tmp_path, monkeypatch, masters, available_id
+def test_counts_across_preview_feed_and_export(
+    client, archive, tmp_path, monkeypatch, masters, spec, selected_ids, available_ids
 ):
     """One unchanged archive and spec distinguish selection from delivery.
 
@@ -1298,29 +1304,39 @@ def test_mixed_master_counts_across_preview_feed_and_export(
     def preview_counts():
         response = client.post(
             "/eink/playlist/preview",
-            json={"spec": _COUNT_SPEC, "target": "count-contract", "sample": 1},
+            json={"spec": spec, "target": "count-contract", "sample": 1},
         )
         assert response.status_code == 200, response.text
         body = response.json()
-        assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
-        assert body["selected"] == 2
-        assert body["available_for_delivery"] == 1
-        assert len(body["items"]) == 1
-        assert body["items"][0]["work_id"] == _COUNT_FIRST
-        assert body["items"][0]["has_master"] is masters[0]
+        assert body["work_ids"] == selected_ids
+        assert body["selected"] == len(selected_ids)
+        assert body["available_for_delivery"] == len(available_ids)
+        assert len(body["items"]) == min(1, len(selected_ids))
+        if selected_ids:
+            assert body["items"][0]["work_id"] == _COUNT_FIRST
+            assert body["items"][0]["has_master"] is masters[0]
         return body
 
     before = preview_counts()
-    playlist = _save_count(client, _COUNT_SPEC)
+    playlist = _save_count(client, spec)
     assert playlist["resolved_count"] == before["available_for_delivery"]
-    response = client.get(f"/feed/{playlist['id']}/next")
+    response = client.get(f"/feed/{playlist['id']}/manifest.json")
     assert response.status_code == 200, response.text
-    advertised = response.json()
-    assert advertised["count"] == 1
-    assert advertised["work_id"] == available_id
-    image = client.get(advertised["image_url"])
-    assert image.status_code == 200, image.text
-    assert image.headers["X-Work-Id"] == available_id
+    assert [row["work_id"] for row in response.json()["items"]] == available_ids
+    after = None
+    for available_id in available_ids:
+        params = {"after": after} if after else None
+        response = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert response.status_code == 200, response.text
+        advertised = response.json()
+        assert advertised["count"] == len(available_ids)
+        assert advertised["work_id"] == available_id
+        image = client.get(advertised["image_url"])
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == available_id
+        after = available_id
+    if not available_ids:
+        _assert_empty_feed(client, playlist["id"])
 
     card = tmp_path / "card"
     response = client.post(
@@ -1331,18 +1347,24 @@ def test_mixed_master_counts_across_preview_feed_and_export(
     written = response.json()
     assert written["selected"] == before["selected"]
     assert written["dry_run"] is False
-    assert written["written"] == 1
-    assert written["missing_master_omissions"] == written["skipped"] == 1
-    filename = f"001_{available_id}.png"
-    assert [path.name for path in card.glob("*.png")] == [filename]
-    assert written["bytes_written"] == (card / filename).stat().st_size > 0
-    with Image.open(card / filename) as delivered:
-        delivered.load()
-        assert delivered.format == "PNG"
-        assert delivered.size == (8, 6)
-    manifest = json.loads((card / "playlist.json").read_text())
-    assert manifest["count"] == 1
-    assert [row["work_id"] for row in manifest["items"]] == [available_id]
+    assert written["written"] == len(available_ids)
+    omissions = len(selected_ids) - len(available_ids)
+    assert written["missing_master_omissions"] == written["skipped"] == omissions
+    filenames = [f"{index:03d}_{wid}.png" for index, wid in enumerate(available_ids, 1)]
+    assert sorted(path.name for path in card.glob("*.png")) == filenames
+    assert written["bytes_written"] == sum((card / name).stat().st_size for name in filenames)
+    for filename in filenames:
+        with Image.open(card / filename) as delivered:
+            delivered.load()
+            assert delivered.format == "PNG"
+            assert delivered.size == (8, 6)
+    if available_ids:
+        assert written["bytes_written"] > 0
+        manifest = json.loads((card / "playlist.json").read_text())
+        assert manifest["count"] == len(available_ids)
+        assert [row["work_id"] for row in manifest["items"]] == available_ids
+    else:
+        assert not (card / "playlist.json").exists()
     assert preview_counts() == before
 
 
