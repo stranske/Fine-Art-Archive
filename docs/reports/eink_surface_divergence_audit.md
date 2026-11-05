@@ -25,6 +25,57 @@
   `eink_preview` (main.py:744); saved-playlist resolution = `_resolve_playlist`
   (main.py:2080); feed render = `_render_feed_image` (main.py:2123); SD export =
   `eink_playlist_export` (main.py:810) → `eink/sdcard.py:export` (:127).
+- Fresh enumeration (this change, current HEAD): re-enumerated by reading
+  `src/fine_art_archive/api/main.py` and `src/fine_art_archive/eink/` at the
+  current checkout (no `rg`/`grep` shell in this session; equivalent
+  search-tool + full-function reads). Current anchors: `PlaylistIn`
+  (main.py:629), `_build_eink_playlist` (:637), `ExportIn` (:682),
+  `eink_playlist_preview` (:729), `eink_preview` (:785),
+  `eink_playlist_export` (:851), `SavePlaylistIn` (:2112),
+  `_resolve_playlist` (:2122), `_render_feed_image` (:2165);
+  `PlaylistSpec` (playlist.py:120, 17 fields), `SavedPlaylist`
+  (feed.py:62), `rotation_index` (feed.py:151), `palette_fingerprint`
+  (feed.py:167), `item_etag` (feed.py:176), `build_manifest` (feed.py:209),
+  `render_evidence` (targets.py:210), `render_for_target` (targets.py:221),
+  `gamut_render_evidence` (render.py:235), `_validate_inputs`
+  (exhibition.py:57), `select_quality_diverse` (exhibition.py:100),
+  `export` (sdcard.py:127). UI producers: `einkSpec` (index.html:3179),
+  `einkSavePlaylist` (:3205), `einkPreview` (:3292), preview `<img>`
+  (:3352), figcaption (:3354), `einkExport` (:3362). Inputs per surface:
+  preview JSON = `spec` (all 17 `PlaylistSpec` fields) + preview-only
+  `quality_scores`/`embeddings` + unused `target` + presentation `sample`;
+  preview image = `work_id`, `target`, `dither`, `fit`, `max_px`;
+  `_resolve_playlist` = saved `spec` only (plus live ratings/dossiers and
+  the no-master filter; `target`/`dither`/`fit`/`interval` are consumed by
+  the feed/export renderers, not by resolution); feed image = saved
+  `target`/`dither`/`fit`, master mtime, `render_strategy`,
+  palette fingerprint (all bound in `item_etag`) and the request's
+  `If-None-Match`; SD export = `playlist_id` (overrides inline
+  `spec`/`target`/`dither`/`fit`) or inline fields, plus `fmt`, `path`,
+  `write`, `overwrite`. The UI emits only a subset of `PlaylistSpec`
+  (`sort`, `artists`, `periods`, `all_tags`, `moods`, `min_fit`, `limit`,
+  `exclude_filters`, `require_dossier`, `selection_mode`); `genres`,
+  `year_from`/`year_to`, `any_tags`, `not_tags`, `min_quality` and `seed`
+  are API-only and still consumed identically by every backend surface,
+  so they are already-correct, not a UI divergence. This enumeration is
+  now locked by
+  `test_enumerated_eink_surface_inputs_match_backend_signatures` and
+  `test_operator_ui_renders_preview_item_identity_in_selection_order`
+  in `tests/test_eink_pipeline.py`: adding an input to any enumerated
+  signature, or removing the preview caption's year fallback, is
+  designed to fail there until the audit is updated. No new issue
+  filed: both lock already-correct rows (the caption's zero-year
+  fallback is the needs-investigation instance already held under
+  #805). Execution note (inspected, not an executed probe): in this
+  session every shell command, including for a delegated verification
+  agent, failed before starting with
+  `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, so
+  the two new tests, the deliberate-break gate for the caption test,
+  the Black check and `git` were not executed here and are not claimed
+  as passed; rerun
+  `pytest tests/test_eink_pipeline.py::test_enumerated_eink_surface_inputs_match_backend_signatures tests/test_eink_pipeline.py::test_operator_ui_renders_preview_item_identity_in_selection_order -m "not slow" --no-cov`
+  plus the break/restore probe from the checklist before marking the
+  enumeration task complete.
 
 ## Input-by-surface matrix
 

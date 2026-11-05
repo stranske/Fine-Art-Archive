@@ -1803,3 +1803,184 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
         "diagnostics rendering must come from the preview response's "
         "selection_diagnostics exactly once"
     )
+
+
+def test_enumerated_eink_surface_inputs_match_backend_signatures():
+    """The audit's input enumeration must stay complete as surfaces evolve.
+
+    The divergence audit enumerates every input consumed by the companion
+    preview (``eink_playlist_preview`` + ``eink_preview``), saved-playlist
+    resolution (``_resolve_playlist``), the feed render
+    (``_render_feed_image``) and the SD export (``eink_playlist_export``),
+    plus the helpers they delegate to (``render_for_target``,
+    ``sdcard.export``, ``item_etag``, ``gamut_render_evidence`` and the
+    exhibition validator). This locks that enumeration to the real
+    signatures: adding an input to any surface without updating the audit
+    (and this test) fails here, which is the check that a fourth input
+    cannot silently diverge the way the three scope-named defects did.
+    """
+    import inspect
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.display.render import gamut_render_evidence
+    from fine_art_archive.eink.feed import SavedPlaylist, item_etag
+    from fine_art_archive.eink.sdcard import export as export_card
+    from fine_art_archive.eink.targets import render_evidence, render_for_target
+    from fine_art_archive.preference.exhibition import _validate_inputs, select_quality_diverse
+
+    def params(fn):
+        return list(inspect.signature(fn).parameters)
+
+    # The four named surfaces (api/main.py).
+    assert params(api_main.eink_playlist_preview) == ["body"]
+    assert set(api_main.PlaylistIn.model_fields) == {
+        "spec",
+        "quality_scores",
+        "embeddings",
+        "target",
+        "sample",
+    }
+    assert params(api_main.eink_preview) == ["work_id", "target", "dither", "fit", "max_px"]
+    assert params(api_main.eink_playlist_export) == ["body"]
+    assert set(api_main.ExportIn.model_fields) == {
+        "playlist_id",
+        "spec",
+        "target",
+        "path",
+        "dither",
+        "fit",
+        "fmt",
+        "write",
+        "overwrite",
+    }
+    assert set(api_main.SavePlaylistIn.model_fields) == {
+        "name",
+        "spec",
+        "target",
+        "dither",
+        "fit",
+        "interval",
+        "id",
+    }
+    assert params(api_main._resolve_playlist) == ["pl", "sidecars"]
+    assert params(api_main._render_feed_image) == ["pl", "work_id", "request"]
+    assert params(api_main._build_eink_playlist) == [
+        "sidecars",
+        "spec",
+        "ratings",
+        "quality_scores",
+        "embeddings",
+    ]
+    # Selection inputs shared by every surface via the one builder.
+    assert set(PlaylistSpec.__dataclass_fields__) == {
+        "artists",
+        "genres",
+        "moods",
+        "periods",
+        "year_from",
+        "year_to",
+        "any_tags",
+        "all_tags",
+        "not_tags",
+        "exclude_filters",
+        "min_fit",
+        "min_quality",
+        "require_dossier",
+        "selection_mode",
+        "limit",
+        "sort",
+        "seed",
+    }
+    assert set(SavedPlaylist.__dataclass_fields__) == {
+        "id",
+        "name",
+        "spec",
+        "target",
+        "dither",
+        "fit",
+        "interval",
+        "created_at",
+        "updated_at",
+    }
+    # Render/validator helpers traced for the audit (render.py, targets.py,
+    # feed.py, sdcard.py, exhibition.py).
+    assert params(render_evidence) == ["img"]
+    assert params(gamut_render_evidence) == ["image", "policy"]
+    assert params(render_for_target) == [
+        "img",
+        "target",
+        "fit",
+        "method",
+        "compress_range",
+        "fast",
+        "strategy",
+    ]
+    assert params(export_card) == [
+        "items",
+        "root",
+        "target",
+        "master_for",
+        "fmt",
+        "method",
+        "fit",
+        "compress_range",
+        "fast",
+        "overwrite",
+        "dry_run",
+        "spec",
+        "progress",
+    ]
+    assert params(item_etag) == [
+        "work_id",
+        "target_key",
+        "dither",
+        "mtime",
+        "fit",
+        "render_strategy",
+        "palette",
+        "palette_identity",
+    ]
+    assert params(_validate_inputs) == [
+        "work_ids",
+        "quality_scores",
+        "embeddings",
+        "subset_size",
+    ]
+    assert params(select_quality_diverse) == [
+        "work_ids",
+        "quality_scores",
+        "embeddings",
+        "subset_size",
+        "seed",
+    ]
+
+
+def test_operator_ui_renders_preview_item_identity_in_selection_order():
+    """Preview captions must carry the same item identity as the manifests.
+
+    ``_resolve_playlist``, the feed manifest and the SD manifest all carry
+    each work's selection order, title, artist and year. The companion
+    preview is the only surface the operator actually reads, and its
+    figcaption renders that same identity: a zero-padded ordinal matching
+    the card's filename order, the year (with a ``????`` fallback so an
+    unknown or zero year never reads as a real date — the zero-year
+    instance held under the parent audit issue), then artist and title.
+    Removing the year fallback in ``index.html`` must fail this test.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    ui = UI_FILE.read_text()
+    assert '${String(n + 1).padStart(3, "0")} · ${einkEsc(i.year || "????")}<br>' in ui, (
+        "preview caption does not render selection order and year — the "
+        "work's identity on screen would not match the feed/card manifest"
+    )
+    assert '${einkEsc((i.artist || "—").slice(0, 30))}<br>' in ui, (
+        "preview caption does not render the item artist the manifests carry"
+    )
+    assert '<em>${einkEsc((i.title || "").slice(0, 42))}</em>' in ui, (
+        "preview caption does not render the item title the manifests carry"
+    )
+    assert ui.count('i.year || "????"') == 1, (
+        "unknown/zero year must fall back to ???? exactly once, in the "
+        "preview caption, so it never reads as a real date"
+    )
