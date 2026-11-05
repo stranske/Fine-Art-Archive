@@ -1985,3 +1985,107 @@ def test_operator_ui_renders_preview_item_identity_in_selection_order():
         "unknown/zero year must fall back to ???? exactly once, in the "
         "preview caption, so it never reads as a real date"
     )
+
+
+def test_helper_edge_render_evidence_uses_default_spectra6_policy():
+    """The A11 edge: e-ink surfaces share one default-policy evidence call.
+
+    ``gamut_render_evidence`` (display/render.py) accepts a ``policy``
+    override, but the e-ink wrapper ``render_evidence`` (eink/targets.py)
+    forwards only the image, so preview, feed and SD export all apply the
+    same Spectra-6-calibrated default policy. A caller that could smuggle
+    a policy into one surface would re-open the reported-vs-applied
+    divergence the audit closed. The display-layer ``render_for_device``
+    path keeps its own hint-driven policy; that input is intentionally
+    unsupported on the e-ink surfaces and has no parameter to reach.
+    """
+    import inspect
+
+    from fine_art_archive.display.render import gamut_render_evidence
+    from fine_art_archive.eink.targets import render_evidence
+
+    magenta = Image.new("RGB", (16, 16), (255, 0, 255))
+    assert render_evidence(magenta) == gamut_render_evidence(magenta)
+    assert render_evidence(magenta).strategy == "grayscale"
+    assert render_evidence(magenta).gamut_verdict == "poorly-served"
+    overridden = gamut_render_evidence(magenta, policy={"poorly-served": "color"})
+    assert overridden.strategy == "color"
+    assert list(inspect.signature(render_evidence).parameters) == ["img"]
+    on_palette = Image.new("RGB", (16, 16), SPECTRA6.colours[2])
+    assert render_evidence(on_palette).strategy == "color"
+
+
+def test_helper_edge_validate_inputs_rejects_each_bad_evidence_class():
+    """The A15 edge: invalid evidence must fail before any selection runs.
+
+    ``_validate_inputs`` (preference/exhibition.py) is the only gate
+    between caller-supplied or derived ``quality_scores``/``embeddings``
+    and the greedy selector reached from ``playlist.build``. Each bad
+    class below must raise its named error; silently coercing any of
+    them would let preview and saved resolution consume different
+    effective evidence for the same spec.
+    """
+    from fine_art_archive.preference.exhibition import (
+        EmbeddingDimensionError,
+        ExhibitionValidationError,
+        MissingEvidenceError,
+        NegativeQualityError,
+        NonFiniteEvidenceError,
+        SubsetSizeError,
+        _validate_inputs,
+    )
+
+    ids = ["a", "b"]
+    qualities = {"a": 1.0, "b": 0.5}
+    vectors = {"a": [1.0, 0.0], "b": [0.0, 1.0]}
+    _validate_inputs(ids, qualities, vectors, 1)
+    with pytest.raises(SubsetSizeError):
+        _validate_inputs(ids, qualities, vectors, 0)
+    with pytest.raises(SubsetSizeError):
+        _validate_inputs(ids, qualities, vectors, True)
+    with pytest.raises(SubsetSizeError):
+        _validate_inputs(ids, qualities, vectors, 3)
+    with pytest.raises(ExhibitionValidationError, match="unique"):
+        _validate_inputs(["a", "a"], qualities, vectors, 1)
+    with pytest.raises(MissingEvidenceError):
+        _validate_inputs(ids, {"a": 1.0}, vectors, 1)
+    with pytest.raises(MissingEvidenceError):
+        _validate_inputs(ids, qualities, {"a": [1.0, 0.0]}, 1)
+    with pytest.raises(NegativeQualityError):
+        _validate_inputs(ids, {"a": -1.0, "b": 0.5}, vectors, 1)
+    with pytest.raises(NonFiniteEvidenceError):
+        _validate_inputs(ids, {"a": float("nan"), "b": 0.5}, vectors, 1)
+    with pytest.raises(EmbeddingDimensionError):
+        _validate_inputs(ids, qualities, {"a": [1.0, 0.0], "b": [1.0]}, 1)
+    with pytest.raises(EmbeddingDimensionError):
+        _validate_inputs(ids, qualities, {"a": [0.0, 0.0], "b": [0.0, 1.0]}, 1)
+    with pytest.raises(NonFiniteEvidenceError):
+        _validate_inputs(ids, qualities, {"a": [float("inf"), 0.0], "b": [0.0, 1.0]}, 1)
+
+
+def test_helper_edge_select_quality_diverse_is_seeded_and_diagnosed():
+    """The selector edge: same evidence and seed must give the same picks.
+
+    ``select_quality_diverse`` validates via ``_validate_inputs``, then
+    picks greedily by determinant with quality and a seeded SHA-256 rank
+    as tie-breaks. Preview and saved resolution share this code through
+    ``_build_eink_playlist``/``playlist.build``, so non-determinism or
+    diagnostics that drift from the pick order would diverge the two
+    surfaces even with identical inputs.
+    """
+    from fine_art_archive.preference.exhibition import (
+        MissingEvidenceError,
+        select_quality_diverse,
+    )
+
+    ids = ["near-a", "near-b", "diverse"]
+    qualities = {"near-a": 1.0, "near-b": 0.99, "diverse": 0.85}
+    vectors = {"near-a": [1.0, 0.0], "near-b": [0.999, 0.04], "diverse": [0.0, 1.0]}
+    first = select_quality_diverse(ids, qualities, vectors, 2, seed=17)
+    second = select_quality_diverse(ids, qualities, vectors, 2, seed=17)
+    assert first.selected_ids == second.selected_ids == ["near-a", "diverse"]
+    assert [item.work_id for item in first.diagnostics] == first.selected_ids
+    assert first.diagnostics[0].nearest_selected_similarity is None
+    assert first.diagnostics[1].nearest_selected_similarity is not None
+    with pytest.raises(MissingEvidenceError):
+        select_quality_diverse(ids, {"near-a": 1.0}, vectors, 2, seed=17)

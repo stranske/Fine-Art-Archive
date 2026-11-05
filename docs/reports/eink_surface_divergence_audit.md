@@ -101,6 +101,23 @@ Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use onl
 | Palette / `palette.measured` | header (main.py:803) | — | header (main.py:2179) | manifest (sdcard:261) | already-correct |
 | No-master works in counts | `selected` includes them; `has_master` flags (main.py:719) | excluded | 404 if none (main.py:2275) | counted selected, skipped at write (sdcard:185) | needs-investigation |
 
+## Helper-edge trace (each edge verified in source)
+
+| Edge (caller → callee) | Inputs forwarded | Inputs dropped / defaulted | Disposition |
+|---|---|---|---|
+| `eink/targets.py:210 render_evidence(img)` → `display/render.py:235 gamut_render_evidence(image, policy=None)` | master pixels only; gamut measured against `spectra6` inside the callee | `policy` never forwarded, so every e-ink surface uses the default verdict→strategy map; the hint-driven `policy`/`render_strategy` override in `render_for_device` (render.py:248) is unreachable from preview/feed/export | already-correct (policy override intentionally-unsupported on e-ink surfaces) |
+| `api/main.py:768/830/917/2181`, `eink/sdcard.py:198`, `targets.py:244` → `render_evidence` → `render_for_target(..., strategy=evidence.strategy)` | chosen `strategy` plus surface `fit`/`method`/`target`; `render_for_target` re-derives only when `strategy is None` | none: reported strategy is the applied strategy on all four surfaces | already-correct |
+| `preference/exhibition.py:57 _validate_inputs(work_ids, quality_scores, embeddings, subset_size)` → `select_quality_diverse` (:100) ← `eink/playlist.py:434 build` ← `_build_eink_playlist` (main.py:637) | candidate IDs in filtered order, quality map, embedding map, `limit` as `subset_size`, `spec.seed` | invalid classes raise before selection (`SubsetSizeError`, `MissingEvidenceError`, `NegativeQualityError`, `NonFiniteEvidenceError`, `EmbeddingDimensionError`); explicit empty evidence stays empty and fails the same way on every surface | already-correct |
+| `eink/feed.py:167 palette_fingerprint` + `:176 item_etag(work_id, target_key, dither, mtime, fit, render_strategy, palette_identity)` ← `_render_feed_image` (main.py:2165) | saved `target`/`dither`, effective `fit` (`pl.fit or tgt.fit`), master mtime, applied strategy, response-palette fingerprint, request `If-None-Match` | provenance-only palette fields (name/note) excluded by design; target dimensions enter only via `target_key` | already-correct (validator binding; palette-colour binding owned by #808) |
+
+Helper locks added with this trace in `tests/test_eink_pipeline.py`:
+`test_helper_edge_render_evidence_uses_default_spectra6_policy`,
+`test_helper_edge_validate_inputs_rejects_each_bad_evidence_class` and
+`test_helper_edge_select_quality_diverse_is_seeded_and_diagnosed`. They are
+inspected, not executed, in this session (shell blocker below); rerun
+`pytest tests/test_eink_pipeline.py -k helper_edge -m "not slow" --no-cov`
+before marking the helper-trace task complete.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
