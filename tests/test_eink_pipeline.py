@@ -2046,9 +2046,7 @@ def test_enumerated_eink_surface_defaults_match_audit_matrix():
     assert saved.updated_at == ""
 
     def defaults(fn):
-        return {
-            name: param.default for name, param in inspect.signature(fn).parameters.items()
-        }
+        return {name: param.default for name, param in inspect.signature(fn).parameters.items()}
 
     preview_defaults = defaults(api_main.eink_preview)
     assert preview_defaults["target"] == "gooddisplay-315-diy"
