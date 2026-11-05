@@ -1054,6 +1054,26 @@ def test_preference_diverse_caller_evidence_is_preview_only(
             assert not card.exists()
 
 
+@pytest.mark.parametrize("field", ["quality_scores", "embeddings"])
+@pytest.mark.parametrize("endpoint", ["preview", "export"])
+def test_eink_caller_evidence_inside_spec_is_rejected(
+    client, archive, diverse_archive, tmp_path, monkeypatch, field, endpoint
+):
+    # Evidence is a preview request input, never part of the reusable selection spec.
+    builder = Mock(wraps=api_main._build_eink_playlist)
+    monkeypatch.setattr(api_main, "_build_eink_playlist", builder)
+    card = tmp_path / "invalid-evidence-spec"
+    response = client.post(
+        f"/eink/playlist/{endpoint}",
+        json={"spec": {**diverse_archive, field: {}}, "path": str(card), "write": True},
+    )
+    assert response.status_code == 400, response.text
+    assert "unknown playlist field(s)" in response.json()["detail"]
+    assert field in response.json()["detail"]
+    builder.assert_not_called()
+    assert not card.exists()
+
+
 def test_eink_openapi_describes_preview_only_evidence(client):
     response = client.get("/openapi.json")
     assert response.status_code == 200, response.text
@@ -1072,6 +1092,11 @@ def test_eink_openapi_describes_preview_only_evidence(client):
             assert field in model["description"]
             assert field in model["properties"]["spec"]["description"]
         assert "not guaranteed" in model["properties"]["spec"]["description"]
+        assert "top-level" in model["properties"]["spec"]["description"]
+        assert (
+            "putting either mapping inside spec returns http 400"
+            in model["properties"]["spec"]["description"].lower()
+        )
     preview = schema["paths"]["/eink/playlist/preview"]["post"]["description"]
     assert "preview-only" in preview
     assert "applies to this request only" in preview
@@ -1106,7 +1131,7 @@ def test_eink_openapi_describes_preview_only_evidence(client):
     assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
     assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]
     assert (
-        "are ignored if supplied here, including empty mappings"
+        "are ignored as top-level export fields, including empty mappings"
         in export_fields["spec"]["description"]
     )
     saved_export = export_fields["playlist_id"]["description"]

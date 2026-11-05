@@ -22,24 +22,35 @@
   selection parity with saved/served or exported playlists is not guaranteed.
 - [x] Deterministic tests change preview IDs while delivery derives server-owned
   evidence through `_build_eink_playlist`; deliberate forwarding removal fails.
-- [x] Broad e-ink suite: 310 passed in 91.89 s. Narrow regression: 8 passed in
-  8.79 s on Python 3.14.9. Both use `-m 'not slow'` and the existing sandbox
+- [x] Broad e-ink suite: 314 passed in 77.92 s. Narrow regression: 12 passed in
+  7.41 s on Python 3.14.9. Both use `-m 'not slow'` and the existing sandbox
   scheduling harness; exact commands are recorded in the audit.
 - [x] Audit records the chosen contract and links #805 and #825.
 
 The repeated task/acceptance entries in the supplied work order correspond to
 the verified items above. All work remained in this agent; nothing was delegated.
 
-## Commit blocker
+## Publication status
 
-Branch: `codex/issue-825`. After Black's repository-wide check passed (377 files
-unchanged), `git add` of the four task files failed with
-`fatal: Unable to create '/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/.git/index.lock': Read-only file system`.
-No files were staged and no commit or push was possible under the current
-filesystem permissions. Source, tests and documentation remain in the workspace;
-the required commit is still outstanding.
+Branch: `codex/issue-825`. The runner committed the earlier implementations in
+`237d676`, `bd1987d`, `cdcbf48`, `169b9da` and `724c676`; their combined diff
+touches four task files. Earlier direct staging failures describe those runs,
+not the publication state of that now-committed implementation.
 
 The connector rejected the live PR-body reconciliation, `needs-human` label
 and blocker comment: `MCP tool call requires approval, but approval policy is never`.
 The verified checkboxes above reconcile the duplicated work-order entries
 locally; the live PR body still needs publication.
+
+At source `724c676`, the existing focused regressions passed 8 tests in 7.38 s.
+The follow-up clarifies the API's top-level evidence fields and corrects the
+export spec description: evidence nested inside `spec` returns HTTP 400 rather
+than being ignored. Four new endpoint cases verify refusal before selection or
+export writes. The expanded focused command passed 12 tests in 7.41 s; its
+exact command and the completed broad run are recorded in the audit.
+
+The current follow-up remains uncommitted: after all checks passed, staging
+these four files failed with exit 128 because `.git/index.lock` cannot be
+created on a read-only filesystem. No current-run commit or push occurred.
+Read-only verification confirmed PR #870 is open with `draft=false` at
+`724c676`.

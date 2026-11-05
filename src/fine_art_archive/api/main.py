@@ -637,7 +637,8 @@ class PlaylistIn(BaseModel):
     spec: dict = Field(
         default_factory=dict,
         description="Selection spec. Caller quality_scores/embeddings apply only to this "
-        "preview in preference-diverse mode; ordered mode ignores them. Saved/served "
+        "preview in preference-diverse mode; ordered mode ignores them. Supply evidence "
+        "as top-level request fields; putting either mapping inside spec returns HTTP 400. Saved/served "
         "and exported selections use server-owned evidence, so matching their "
         "selection is not guaranteed.",
     )
@@ -726,7 +727,8 @@ class ExportIn(BaseModel):
         description="Inline selection spec, ignored when playlist_id is supplied. "
         "Preference-diverse selection derives quality scores from current server-owned "
         "ratings and embeddings from local masters. Caller quality_scores/embeddings "
-        "are preview-only and are ignored if supplied here, including empty mappings; "
+        "are preview-only and are ignored as top-level export fields, including empty mappings. "
+        "Putting either mapping inside spec returns HTTP 400; "
         "matching an overridden preview's selection is not guaranteed.",
     )
     target: str = "gooddisplay-315-diy"

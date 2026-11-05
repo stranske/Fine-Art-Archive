@@ -434,6 +434,60 @@ The connector rejected the requested `needs-human` label and blocker comment
 with the same approval-policy error as the PR-body update. All work stayed in
 this agent; no work was delegated.
 
+### Evidence placement clarification (2026-11-05, source `724c676`)
+
+Reviewed the five implementation commits since bootstrap; their combined diff
+touches four files. The required guide, audit, request models and four selection
+functions were re-read. The caller forwarding boundary remains unchanged.
+The prior implementation already satisfies the repeated task and acceptance
+entries; `agents/codex-825.md` reconciles them locally. The connector rejected
+the live PR-body update, blocker comment and `needs-human` label because tool
+approval is required but the run's approval policy is `never`.
+
+One remaining ambiguity in the descriptions was corrected: caller evidence
+belongs in top-level preview request fields. Top-level export evidence is
+ignored; placing either map inside an inline `spec` returns HTTP 400. The old
+export spec description's "ignored if supplied here" could imply the opposite.
+This clarification preserves the preview-only contract selected in
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825) following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805). Four endpoint
+regressions verify nested-map refusal before the builder runs or output is
+written; generated OpenAPI descriptions now state that boundary too.
+
+Using Python **3.14.9** at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python` and the existing opt-in
+sandbox scheduling harness, the pre-change focused baseline passed **8 tests**
+in **7.38 s**. The expanded focused command is:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or caller_evidence_inside_spec or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+Result: **12 passed**, 94 deselected, 15 existing warnings, **7.41 s**. The
+first run caught a case mismatch in the new OpenAPI assertion; after correcting
+the assertion, the same command passed. A prematurely started broad run was
+cancelled before restarting against the corrected test.
+
+The broad acceptance command and mandatory formatting gate were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The broad run passed **314 tests**, 2259 deselected, 15 existing warnings, in
+**77.92 s**. Black passed with **377 files unchanged**; Ruff and whitespace
+checks passed. Read-only PR verification confirmed #870 is open with
+`draft=false` at source `724c676`.
+
+After validation, staging the four follow-up files failed with exit 128:
+`.git/index.lock: Read-only file system`. No current-run commit or push was
+possible. This failure applies to this follow-up; the earlier implementations
+are already present in the five reviewed runner commits.
+
 ## Executed evidence and test layers
 
 Local runtime: `/opt/anaconda3/bin/python3`, Python 3.12, pytest 9.1.1,
