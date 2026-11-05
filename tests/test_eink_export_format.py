@@ -171,8 +171,12 @@ _COUNT_SPEC = {"sort": "title"}
 _EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
 
 
-def _export_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, masters: tuple[bool, bool]):
-    """Isolated two-work archive wired to the production export route."""
+def _export_client_rows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    rows: list[tuple[str, str, bool]],
+):
+    """Isolated archive wired to the production export route."""
     works = tmp_path / "works"
     works.mkdir()
     monkeypatch.setattr(api_store, "WORKS", works)
@@ -187,10 +191,7 @@ def _export_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, masters: tup
         "count-contract",
         RenderTarget("count-contract", "Count contract", 8, 6, "mono1bit"),
     )
-    for work_id, title, master in (
-        (_COUNT_FIRST, "First", masters[0]),
-        (_COUNT_SECOND, "Second", masters[1]),
-    ):
+    for work_id, title, master in rows:
         directory = works / work_id
         directory.mkdir()
         (directory / "meta.json").write_text(
@@ -209,6 +210,15 @@ def _export_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, masters: tup
             Image.new("RGB", (8, 6), (30, 60, 90)).save(directory / "master.jpeg", "JPEG")
     api_main._sidecars_cache = None
     return TestClient(app)
+
+
+def _export_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, masters: tuple[bool, bool]):
+    """Isolated two-work archive wired to the production export route."""
+    return _export_client_rows(
+        tmp_path,
+        monkeypatch,
+        [(_COUNT_FIRST, "First", masters[0]), (_COUNT_SECOND, "Second", masters[1])],
+    )
 
 
 def _write_card(client: TestClient, tmp_path: Path, spec: dict, name: str) -> tuple[Path, dict]:
@@ -304,3 +314,39 @@ def test_render_failure_is_not_a_missing_master_or_a_successful_write(tmp_path, 
     manifest = json.loads((card / "playlist.json").read_text(encoding="utf-8"))
     assert manifest["count"] == 1
     assert [row["work_id"] for row in manifest["items"]] == [_COUNT_FIRST]
+
+
+def test_missing_master_omissions_count_past_the_skipped_detail_cap(tmp_path, monkeypatch):
+    """Omissions count the full writer record, not the capped detail list.
+
+    Twenty-one works have no master and one has a corrupt master file. Title
+    order puts the corrupt file first, so ``skipped_detail`` holds that render
+    failure plus nineteen missing-master rows and drops the last two skips.
+    ``missing_master_omissions`` still counts all twenty-one missing masters
+    and leaves the render failure out.
+    """
+    corrupt_id = "ccc0000-corrupt-master"
+    rows = [(corrupt_id, "A Corrupt", True)]
+    rows.extend(
+        (f"mmm{index:02d}-missing-master", f"Missing {index:02d}", False) for index in range(21)
+    )
+    client = _export_client_rows(tmp_path, monkeypatch, rows)
+    corrupt_master = tmp_path / "works" / corrupt_id / "master.jpeg"
+    corrupt_master.write_bytes(b"not a jpeg")
+    assert corrupt_master.is_file()
+
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "detail-cap")
+
+    assert body["selected"] == 22
+    assert body["written"] == 0
+    assert body["dry_run"] is False
+    assert body["skipped"] == 22
+    assert body["missing_master_omissions"] == 21
+    assert len(body["skipped_detail"]) == 20
+    reasons = [reason for _work_id, reason in body["skipped_detail"]]
+    assert reasons[0].startswith("render failed:")
+    assert reasons[1:] == ["no local master image"] * 19
+    assert body["skipped_detail"][0][0] == corrupt_id
+    assert body["bytes_written"] == 0
+    assert list(card.glob("*.png")) == []
+    assert not (card / "playlist.json").exists()
