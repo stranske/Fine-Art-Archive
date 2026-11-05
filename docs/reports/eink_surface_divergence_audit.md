@@ -1163,3 +1163,51 @@ clone at `/tmp/faa-issue827-production-ui-counts` preserves the verified change
 as a local commit and patch without advancing the shared or remote branch.
 Automatic approval review also rejected the blocker comment and `needs-human`
 label: GitHub writes require approval and this run's approval policy is `never`.
+
+### Production preview response in the UI, 2026-11-05
+
+At `49abf18`, all supplied tasks were already checked, and PR #874 was open
+with `draft=false`. Before editing, the five same-archive preview/feed/export
+cases passed in 3.47 seconds; the existing preview-count and UI tests passed
+eight cases in 1.11 seconds. No checkbox changes were needed.
+
+`test_ui_preview_counts_match_the_production_mixed_master_response` now feeds
+actual production preview responses into the production `einkPreview` function
+using the existing Node mechanism. Its six cases cover sample sizes 0, 1 and
+24 with the missing master in either playlist position. Every response and
+rendered summary retains selected=2 and available-for-delivery=1, regardless
+of sampled rows. It also checks the rendered row count and missing-image
+notice. This connects the API response to the UI's count contract; selection,
+feed guards and production code are unchanged.
+
+Using CPython 3.14.9 at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`, these commands exited zero:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py::test_ui_preview_counts_match_the_production_mixed_master_response -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+BLACK_NUM_WORKERS=1 black --line-length 100 tests/test_eink_pipeline.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_pipeline.py
+git diff --check
+```
+
+Temporarily rendering `d.items.filter(i => i.has_master).length` as available
+for delivery made the identical UI command fail: **3 failed, 3 passed**, exit
+1, 1.11 seconds. Byte-identical UI restoration passed **6 tests**, exit 0,
+0.94 seconds. Receipts remain at `/tmp/eink-production-preview-counts-red.txt`
+and `/tmp/eink-production-preview-counts-green.txt`. The required suites passed
+**297 tests**, 15 warnings, exit 0, 89.95 seconds; their output remains at
+`/tmp/eink-production-preview-counts-suites.txt`. Black checked 377 files and
+Ruff passed. The Black check without the documented scheduling harness stalled
+and was interrupted; the harness-enabled command above passed.
+
+The shared checkout cannot stage changes because `.git/index.lock` is
+read-only. The test and audit changes are preserved for a local commit and
+patch in `/tmp/faa-issue827-production-preview-counts`; this does not advance
+the shared branch or remote PR head.
+
+The local commit succeeded; its apply-ready patch is
+`/tmp/eink-production-preview-counts.patch`. Automatic approval review rejected
+the blocker comment and `needs-human` label because GitHub writes require
+approval and this run's approval policy is `never`.

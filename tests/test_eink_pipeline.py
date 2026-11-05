@@ -1922,6 +1922,76 @@ def test_playlist_preview_counts_selected_and_available_for_delivery(
         assert short["available_for_delivery"] == 1
 
 
+@pytest.mark.parametrize("sample", [0, 1, 24], ids=["no-rows", "one-row", "full-sample"])
+@pytest.mark.parametrize(
+    "masters", [(True, False), (False, True)], ids=["missing-last", "missing-first"]
+)
+def test_ui_preview_counts_match_the_production_mixed_master_response(
+    tmp_path, monkeypatch, sample, masters
+):
+    """Real preview responses keep full totals across empty and truncated samples."""
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    client = _count_client(tmp_path, monkeypatch, masters)
+    response = client.post("/eink/playlist/preview", json={"spec": _COUNT_SPEC, "sample": sample})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == 2
+    assert body["available_for_delivery"] == 1
+    assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+    assert [item["has_master"] for item in body["items"]] == list(masters[:sample])
+
+    ui = UI_FILE.read_text()
+    start = ui.index("    async function einkPreview() {")
+    preview_function = ui[start : ui.index("    async function einkExport(write)", start)]
+    runner = tmp_path / "production-preview-counts.cjs"
+    runner.write_text(
+        """
+const response = JSON.parse(process.argv[2]);
+const controls = {
+  'ek-target': {value: response.target},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-out': {innerHTML: ''},
+};
+const document = {getElementById: id => controls[id] || null};
+let einkLastPreview;
+const einkSpec = () => ({sort: 'title'});
+const einkEsc = value => String(value);
+const fetch = async () => ({ok: true, json: async () => response});
+"""
+        + preview_function
+        + """
+einkPreview().then(() => {
+  console.log(JSON.stringify({html: controls['ek-out'].innerHTML, last: einkLastPreview}));
+}).catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(runner), json.dumps(body)],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    assert observed["last"] == body
+    html = observed["html"]
+    assert "<strong>2</strong> selected" in html
+    assert "<strong>1</strong> available for delivery" in html
+    assert "<strong>2</strong> available for delivery" not in html
+    assert "<strong>0</strong> available for delivery" not in html
+    assert html.count('<img loading="lazy"') == min(sample, 2)
+    missing_shown = sum(not item["has_master"] for item in body["items"])
+    if missing_shown:
+        assert f"{missing_shown} shown have no local image" in html
+    else:
+        assert "shown have no local image" not in html
+
+
 @pytest.mark.parametrize(
     ("selected", "available"),
     [(2, 1), (2, 2), (2, 0), (0, 0)],
