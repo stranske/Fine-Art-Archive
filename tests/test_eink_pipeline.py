@@ -2316,3 +2316,76 @@ def test_helper_edge_feed_manifest_consumes_saved_playlist_inputs():
     assert palette_fingerprint(base) == palette_fingerprint(renamed)
     assert palette_fingerprint(base) != palette_fingerprint(recoloured)
     assert palette_fingerprint(base) != palette_fingerprint(measured)
+
+
+def test_enumerated_api_only_spec_fields_filter_preview_selection(tmp_path, monkeypatch):
+    """API-only ``PlaylistSpec`` fields must filter the preview selection.
+
+    The audit enumeration lists ``genres``, ``year_from``/``year_to``,
+    ``any_tags``, ``not_tags`` and ``min_quality`` as API-only: the operator
+    UI's ``einkSpec()`` never emits them, so no UI-forwarding test can lock
+    them, yet the audit marks them already-correct because every backend
+    surface consumes them through the one shared builder
+    (``_build_eink_playlist``). Until now only their existence and defaults
+    were locked (signature/default tests above); their filtering behaviour
+    was not. Each spec below must select the same works through the
+    companion preview endpoint as through ``build`` directly, in input
+    order (``sort="as-filtered"``), so a dropped filter branch in
+    ``eink/playlist.py`` — e.g. removing the ``min_quality`` block — fails
+    here rather than silently previewing works delivery would exclude.
+    """
+    from fine_art_archive.api import main as api_main
+
+    rows = [
+        sidecar(
+            "landscape-1650",
+            genre="painting/landscape",
+            year=1650,
+            tags=("setting:outdoor", "shape:round"),
+        ),
+        sidecar(
+            "portrait-1800",
+            genre="painting/portrait",
+            year=1800,
+            tags=("setting:indoor",),
+        ),
+        sidecar(
+            "landscape-1900",
+            genre="painting/landscape",
+            year=1900,
+            tags=("setting:outdoor", "theme:sea"),
+        ),
+    ]
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text(
+        "\n".join(
+            json.dumps({"work_id": wid, "fit": 9, "quality": quality})
+            for wid, quality in (
+                ("landscape-1650", 9),
+                ("portrait-1800", 4),
+                ("landscape-1900", 7),
+            )
+        )
+    )
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+
+    cases = [
+        ({"genres": ["painting/landscape"]}, ["landscape-1650", "landscape-1900"]),
+        ({"year_from": 1700, "year_to": 1850}, ["portrait-1800"]),
+        ({"any_tags": ["theme:sea", "setting:indoor"]}, ["portrait-1800", "landscape-1900"]),
+        ({"not_tags": ["setting:outdoor"]}, ["portrait-1800"]),
+        ({"min_quality": 7}, ["landscape-1650", "landscape-1900"]),
+    ]
+    for spec_dict, expected in cases:
+        spec = {**spec_dict, "sort": "as-filtered"}
+        direct = build(
+            rows, PlaylistSpec.from_dict(spec), ratings=api_main._eink.load_ratings(ratings)
+        )
+        assert direct.work_ids == expected, f"direct build disagrees for {spec_dict}"
+        response = api_main.eink_playlist_preview(api_main.PlaylistIn(spec=spec))
+        assert response["work_ids"] == expected, (
+            f"preview does not consume {sorted(spec_dict)} — previewed works "
+            "would diverge from the saved feed and SD export selection"
+        )

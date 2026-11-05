@@ -57,8 +57,12 @@
   `exclude_filters`, `require_dossier`, `selection_mode`); `genres`,
   `year_from`/`year_to`, `any_tags`, `not_tags`, `min_quality` and `seed`
   are API-only and still consumed identically by every backend surface,
-  so they are already-correct, not a UI divergence. This enumeration is
-  now locked by
+  so they are already-correct, not a UI divergence. Their filtering
+  behaviour (not only existence/defaults) is now locked by
+  `test_enumerated_api_only_spec_fields_filter_preview_selection`,
+  which runs each of those fields through both `build` directly and the
+  companion preview endpoint and requires identical selections. This
+  enumeration is now locked by
   `test_enumerated_eink_surface_inputs_match_backend_signatures` and
   `test_operator_ui_renders_preview_item_identity_in_selection_order`
   in `tests/test_eink_pipeline.py`: adding an input to any enumerated
@@ -158,6 +162,30 @@ plus `black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)'
 before marking the enumeration/helper-trace tasks complete. No new
 issue filed: both lock already-correct rows, and the change touches no
 file under `src/`.
+
+Follow-on lock (this change): the API-only spec row is now locked
+behaviourally, not only by signature/default.
+`test_enumerated_api_only_spec_fields_filter_preview_selection` in
+`tests/test_eink_pipeline.py` feeds three works differing in genre,
+year, tags and rated quality through `genres`,
+`year_from`/`year_to`, `any_tags`, `not_tags` and `min_quality`, and
+requires the companion preview (`eink_playlist_preview`, via the shared
+`_build_eink_playlist`) to select exactly the works `build` selects
+directly, in `as-filtered` order. A search over `tests/` before this
+change found those fields only in the signature/default locks, never
+as filtering inputs. Inspected, not executed, in this session: every
+shell command still fails before starting with
+`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, so no
+pass, Black check, `git` commit or `gh` listing is claimed here. Rerun
+`pytest tests/test_eink_pipeline.py::test_enumerated_api_only_spec_fields_filter_preview_selection -m "not slow" --no-cov`
+plus the deliberate-break probe for it (temporarily remove the
+`min_quality` filter block in `src/fine_art_archive/eink/playlist.py`,
+rerun — it must fail on the `min_quality` case — then restore and
+rerun to pass) and
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+before marking the enumeration task complete. No new issue filed:
+this locks an already-correct row, and the change touches no file
+under `src/`.
 
 ## Per-instance dispositions
 
