@@ -1,0 +1,16 @@
+Command:
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+
+Mutation in src/fine_art_archive/ui/index.html:
+replaced `${d.available_for_delivery}` with `${d.selected}` in the preview
+"available for delivery" label, then ran the command above.
+
+Exit: 1
+1 failed in 0.64s
+
+Rendered preview header:
+<strong>2</strong> selected · <strong>2</strong> available for delivery
+
+Failed assertion:
+assert '<strong>1</strong> available for delivery' in preview
+tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered
