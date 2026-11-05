@@ -12,6 +12,7 @@
 - [x] Add deterministic quality-only, embeddings-only and combined preview regressions,
   verifying later previews without overrides derive server evidence again and
   checking real saved/served and inline/saved export paths (dry run and writes).
+  Empty caller maps fail preview but are ignored by save and both export forms.
 - [x] Run focused and broad e-ink tests with the active interpreter; exact
   commands and results are recorded in the audit.
 
@@ -21,8 +22,9 @@
   selection parity with saved/served or exported playlists is not guaranteed.
 - [x] Deterministic tests change preview IDs while delivery derives server-owned
   evidence through `_build_eink_playlist`; deliberate forwarding removal fails.
-- [x] Broad e-ink suite: 310 passed in 92.57 s. Narrow regression: 8 passed in
-  8.94 s. Both use `-m 'not slow'` and the existing sandbox scheduling harness.
+- [x] Broad e-ink suite: 310 passed in 91.89 s. Narrow regression: 8 passed in
+  8.79 s on Python 3.14.9. Both use `-m 'not slow'` and the existing sandbox
+  scheduling harness; exact commands are recorded in the audit.
 - [x] Audit records the chosen contract and links #805 and #825.
 
 The repeated task/acceptance entries in the supplied work order correspond to
@@ -36,3 +38,8 @@ unchanged), `git add` of the four task files failed with
 No files were staged and no commit or push was possible under the current
 filesystem permissions. Source, tests and documentation remain in the workspace;
 the required commit is still outstanding.
+
+The connector rejected the live PR-body reconciliation, `needs-human` label
+and blocker comment: `MCP tool call requires approval, but approval policy is never`.
+The verified checkboxes above reconcile the duplicated work-order entries
+locally; the live PR body still needs publication.

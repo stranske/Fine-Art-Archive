@@ -990,8 +990,14 @@ def test_preference_diverse_caller_evidence_is_preview_only(
     derive.assert_called_once()
     assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
 
-    # Only the spec is persisted, even when a caller repeats preview evidence.
-    saved = _save(client, spec=diverse_archive, target=target.key, **supplied)
+    # Save/export ignore undeclared maps, even empty ones that invalidate preview.
+    delivery_evidence = supplied if write else {field: {} for field in fields}
+    if not write:
+        refused = client.post(
+            "/eink/playlist/preview", json={"spec": diverse_archive, **delivery_evidence}
+        )
+        assert refused.status_code == 400, refused.text
+    saved = _save(client, spec=diverse_archive, target=target.key, **delivery_evidence)
     playlist = api_main._playlists.get(saved["id"])
     assert playlist.spec == diverse_archive
     stored = json.loads(api_main._playlists.path.read_text())
@@ -1028,7 +1034,7 @@ def test_preference_diverse_caller_evidence_is_preview_only(
             "/eink/playlist/export",
             json={
                 **request,
-                **supplied,
+                **delivery_evidence,
                 "target": target.key,
                 "path": str(card),
                 "write": write,
@@ -1091,11 +1097,18 @@ def test_eink_openapi_describes_preview_only_evidence(client):
     export = schema["paths"]["/eink/playlist/export"]["post"]["description"]
     assert "server-owned evidence" in export
     assert "preview-only" in export
+    for description in [export, models["export"]["description"]]:
+        assert "Undeclared quality_scores/embeddings fields are ignored" in description
+        assert "including empty mappings" in description
     assert "Selection is resolved live" in export
     assert "even when the preview did not supply caller evidence" in export
     export_fields = models["export"]["properties"]
     assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
     assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]
+    assert (
+        "are ignored if supplied here, including empty mappings"
+        in export_fields["spec"]["description"]
+    )
     saved_export = export_fields["playlist_id"]["description"]
     assert "current server-owned evidence" in saved_export
     assert "preview-only caller quality_scores/embeddings" in saved_export

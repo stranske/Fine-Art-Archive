@@ -711,6 +711,7 @@ class ExportIn(BaseModel):
 
     Caller quality_scores/embeddings are preview-only inputs to PlaylistIn.
     They are not export inputs; matching an overridden preview's selection is not guaranteed.
+    Undeclared quality_scores/embeddings fields are ignored, including empty mappings.
     """
 
     playlist_id: str | None = Field(
@@ -725,7 +726,8 @@ class ExportIn(BaseModel):
         description="Inline selection spec, ignored when playlist_id is supplied. "
         "Preference-diverse selection derives quality scores from current server-owned "
         "ratings and embeddings from local masters. Caller quality_scores/embeddings "
-        "are preview-only; matching an overridden preview's selection is not guaranteed.",
+        "are preview-only and are ignored if supplied here, including empty mappings; "
+        "matching an overridden preview's selection is not guaranteed.",
     )
     target: str = "gooddisplay-315-diy"
     path: str
@@ -910,6 +912,7 @@ def eink_playlist_export(body: ExportIn) -> dict:
     embeddings from local masters through _build_eink_playlist, as saved/served
     resolution does. Caller quality_scores/embeddings are preview-only and do
     not apply here; matching an overridden preview's selection is not guaranteed.
+    Undeclared quality_scores/embeddings fields are ignored, including empty mappings.
     Selection is resolved live, so later changes to the archive, ratings or masters
     can change membership even when the preview did not supply caller evidence.
     A saved playlist_id supplies its stored spec and rendering settings.

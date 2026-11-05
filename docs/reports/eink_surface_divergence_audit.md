@@ -385,6 +385,55 @@ the connector: tool approval is required, but this run's approval policy is
 `never`. Read-only verification confirmed PR #870 remains open and ready for
 review (`draft=false`). All work stayed in this agent.
 
+### Ignored export fields and task reconciliation (2026-11-05, source `169b9da`)
+
+Reviewed the four implementation commits since bootstrap: their combined
+changes touch four files, not the reported 36. Re-read the required guidance,
+request models and four selection functions; the forwarding boundary is
+unchanged. The baseline focused command below passed **8 tests**, 94 deselected,
+in **8.94 s** using Python **3.14.9** at
+`/opt/hostedtoolcache/Python/3.14.9/x64/bin/python`.
+
+The remaining documentation clarification is that undeclared caller evidence
+sent to export is ignored, including empty mappings. The observable regression
+must keep saved/served and both export selections on server-owned evidence even
+when those fields would make a preview invalid. This preserves the selected
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825) contract from
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+The live PR-body reconciliation was rejected by the connector with
+`MCP tool call requires approval, but approval policy is never`. Existing
+implementation tasks and their duplicated entries are verified locally;
+publication of the checklist remains blocked.
+
+After the clarification, the focused command passed **8 tests**, 94 deselected,
+in **8.79 s**. The same interpreter and optional scheduling harness ran:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --line-length 100 src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+git diff --check
+```
+
+The broad run passed **310 tests**, 2259 deselected, in **91.89 s**. Both
+pytest runs reported the same 15 existing warnings. Black's repository-wide
+check passed with **377 files unchanged**; Ruff and whitespace checks passed.
+The focused command remains below two minutes. All five implementation tasks
+and four acceptance criteria, including their duplicated entries, are verified
+in the local checklist at `agents/codex-825.md`.
+
+Staging the source, test and audit files failed with exit 128:
+`.git/index.lock: Read-only file system`. No commit or push was possible.
+The connector rejected the requested `needs-human` label and blocker comment
+with the same approval-policy error as the PR-body update. All work stayed in
+this agent; no work was delegated.
+
 ## Executed evidence and test layers
 
 Local runtime: `/opt/anaconda3/bin/python3`, Python 3.12, pytest 9.1.1,
