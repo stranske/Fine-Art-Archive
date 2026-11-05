@@ -286,6 +286,52 @@ def test_export_counts_follow_files_written_not_master_availability(
         assert body["skipped"] == 1
 
 
+@pytest.mark.parametrize("write", [None, False], ids=["default-dry-run", "explicit-dry-run"])
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected", "planned_ids", "missing_ids"),
+    [
+        ((True, False), _COUNT_SPEC, 2, [_COUNT_FIRST], [_COUNT_SECOND]),
+        ((True, True), _COUNT_SPEC, 2, [_COUNT_FIRST, _COUNT_SECOND], []),
+        ((False, False), _COUNT_SPEC, 2, [], [_COUNT_FIRST, _COUNT_SECOND]),
+        ((True, False), _EMPTY_SPEC, 0, [], []),
+    ],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_export_dry_run_reports_planned_counts_without_writing(
+    tmp_path, monkeypatch, write, masters, spec, selected, planned_ids, missing_ids
+):
+    """The production dry-run response describes a plan, with no files written.
+
+    Exercise both an omitted write flag and an explicit false value. The UI
+    relies on ``dry_run`` to display zero actually written even when the
+    writer reports a nonzero planned ``written`` count.
+    """
+    client = _export_client(tmp_path, monkeypatch, masters)
+    card = tmp_path / "dry-run-card"
+    request = {
+        "spec": spec,
+        "target": "count-contract",
+        "dither": "none",
+        "path": str(card),
+    }
+    if write is not None:
+        request["write"] = write
+    response = client.post("/eink/playlist/export", json=request)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == selected
+    assert body["dry_run"] is True
+    assert body["written"] == len(planned_ids)
+    assert body["missing_master_omissions"] == len(missing_ids)
+    assert body["skipped"] == len(missing_ids)
+    assert body["skipped_detail"] == [[wid, "no local master image"] for wid in missing_ids]
+    assert [row["work_id"] for row in body["render_evidence"]] == planned_ids
+    assert body["bytes_written"] == 0
+    assert body["removed"] == 0
+    assert not card.exists(), "a dry run must not create card images or manifests"
+
+
 def test_render_failure_is_not_a_missing_master_or_a_successful_write(tmp_path, monkeypatch):
     """A master file that cannot be rendered is not delivered and not 'missing'.
 

@@ -892,3 +892,37 @@ before the edit and after the restore). The same command then exited **0**,
 
 Black check, line length 100, excluding `.workflows-lib` and `node_modules`:
 **377 files would be left unchanged**.
+
+### Dry-run count follow-up, 2026-11-05
+
+`test_export_dry_run_reports_planned_counts_without_writing` now exercises the
+production export route for mixed-master, all-master, all-missing-master and
+empty selections. Each runs with `write` omitted and explicitly false. The
+eight cases verify selected and planned-written totals, full missing-master
+omissions, proposed render-evidence IDs, zero bytes written, zero removals and
+an absent output directory. This checks the real response that the UI uses to
+distinguish planned files from actually written files; the existing UI test
+continues to check the displayed distinction.
+
+On this sandbox, the plain pytest command stalled on the documented asyncio
+wakeup restriction and was interrupted. Black's default worker pool failed
+with `PermissionError` on socket binding. Using the existing opt-in scheduling
+harness and one Black worker, the exact successful commands were:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python3 -m pytest tests/test_eink_export_format.py::test_export_dry_run_reports_planned_counts_without_writing tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+ruff check tests/test_eink_export_format.py
+```
+
+Interpreter: `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`.
+The three-suite run passed **279 tests**, 15 warnings, exit 0, in 84.34 seconds.
+The new cases plus the UI regression passed **9 tests**, 14 warnings, exit 0,
+in 1.15 seconds. Black left **377 files unchanged** and Ruff passed.
+
+The commit attempt failed at `git add`: `.git/index.lock` could not be created
+because `.git` is mounted read-only. The requested blocker comment and
+`needs-human` label on #827 were also rejected by the GitHub connector:
+`MCP tool call requires approval, but approval policy is never`. These changes
+remain in the workspace without a commit or a remote status update.
