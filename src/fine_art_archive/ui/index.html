@@ -3311,6 +3311,7 @@
           + Object.entries(cov).map(([k, n]) => `${k} ${n}`).join(", ") + `</div>` : "";
       const noMaster = d.items.filter(i => !i.has_master).length;
       // Full-selection total. Counting `items` would follow the sample cap.
+      const targetEvidence = `<div class="sub" id="ek-target-evidence" style="margin-top:2px">Resolved target ${einkEsc(d.target)}. Strategy and gamut evidence use ${einkEsc(d.evidence_calibration)} policy (${einkEsc(d.evidence_scope)}), rather than a measurement for the selected panel.</div>`;
       const fitMode = (document.getElementById("ek-fitmode") || {}).value || "";
       const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";
 
@@ -3344,6 +3345,7 @@
         <div><strong>${d.selected}</strong> selected · <strong>${d.available_for_delivery}</strong> available for delivery
           of ${d.matched} matching
           (${d.total_candidates} in archive)${noMaster ? ` — ${noMaster} shown have no local image` : ""}</div>
+        ${targetEvidence}
         ${covTxt}
         ${diagTxt}
         <div class="sub" style="margin-top:10px">Rendered as the panel would show it —

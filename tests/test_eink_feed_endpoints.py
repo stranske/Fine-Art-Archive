@@ -23,6 +23,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -924,11 +925,219 @@ def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, div
     assert response.status_code == 200, response.text
     assert response.json()["work_ids"][0] == "bbb2222-near-red"
     for field in ["quality_scores", "embeddings"]:
+        # Deriving an omitted sibling must not replace the explicitly empty mapping.
+        for evidence in [{**supplied, field: {}}, {field: {}}]:
+            refused = client.post(
+                "/eink/playlist/preview", json={"spec": diverse_archive, **evidence}
+            )
+            assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
+            assert "evidence" in refused.json()["detail"]
+
+
+@pytest.mark.parametrize("write", [False, True])
+@pytest.mark.parametrize(
+    "fields",
+    [("quality_scores",), ("embeddings",), ("quality_scores", "embeddings")],
+    ids=["quality_scores", "embeddings", "both"],
+)
+def test_preference_diverse_caller_evidence_is_preview_only(
+    client, archive, diverse_archive, tmp_path, monkeypatch, fields, write
+):
+    ids = ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+    evidence = {
+        "quality_scores": dict(zip(ids, [1, 10, 1], strict=True)),
+        "embeddings": dict(zip(ids, [[1, 0], [0, 1], [1, 0]], strict=True)),
+    }
+    supplied = {field: evidence[field] for field in fields}
+    target = RenderTarget("preview-contract", "Preview contract", 40, 20, "spectra6")
+    monkeypatch.setitem(TARGETS, target.key, target)
+    builder = Mock(wraps=api_main._build_eink_playlist)
+    derive = Mock(wraps=api_main._derived_preference_evidence)
+    monkeypatch.setattr(api_main, "_build_eink_playlist", builder)
+    monkeypatch.setattr(api_main, "_derived_preference_evidence", derive)
+
+    baseline = client.post("/eink/playlist/preview", json={"spec": diverse_archive})
+    assert baseline.status_code == 200, baseline.text
+    server_ids = baseline.json()["work_ids"]
+    assert server_ids == [ids[0], ids[2]]
+
+    derive.reset_mock()
+    preview = client.post("/eink/playlist/preview", json={"spec": diverse_archive, **supplied})
+    assert preview.status_code == 200, preview.text
+    expected = [ids[1], ids[2]] if "quality_scores" in fields else [ids[0], ids[1]]
+    assert preview.json()["work_ids"] == expected
+    assert expected != server_ids
+    for field in fields:
+        assert builder.call_args.kwargs[field] == supplied[field]
+    if len(fields) == 2:
+        derive.assert_not_called()
+    else:
+        derive.assert_called_once()
+        assert derive.call_args.kwargs == {
+            "include_quality": "quality_scores" not in fields,
+            "include_embeddings": "embeddings" not in fields,
+        }
+
+    # Overrides belong to one request; a later preview must derive fresh evidence.
+    builder.reset_mock()
+    derive.reset_mock()
+    following = client.post("/eink/playlist/preview", json={"spec": diverse_archive})
+    assert following.status_code == 200, following.text
+    assert following.json()["work_ids"] == server_ids
+    builder.assert_called_once()
+    assert builder.call_args.kwargs["quality_scores"] is None
+    assert builder.call_args.kwargs["embeddings"] is None
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    # Save/export ignore undeclared maps, even empty ones that invalidate preview.
+    delivery_evidence = supplied if write else {field: {} for field in fields}
+    if not write:
         refused = client.post(
-            "/eink/playlist/preview", json={"spec": diverse_archive, **supplied, field: {}}
+            "/eink/playlist/preview", json={"spec": diverse_archive, **delivery_evidence}
         )
-        assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
-        assert "evidence" in refused.json()["detail"]
+        assert refused.status_code == 400, refused.text
+    saved = _save(client, spec=diverse_archive, target=target.key, **delivery_evidence)
+    playlist = api_main._playlists.get(saved["id"])
+    assert playlist.spec == diverse_archive
+    stored = json.loads(api_main._playlists.path.read_text())
+    assert "quality_scores" not in stored["playlists"][playlist.id]
+    assert "embeddings" not in stored["playlists"][playlist.id]
+
+    builder.reset_mock()
+    derive.reset_mock()
+    resolved = api_main._resolve_playlist(playlist)
+    assert [row["work_id"] for row in resolved] == server_ids
+    builder.assert_called_once()
+    assert "quality_scores" not in builder.call_args.kwargs
+    assert "embeddings" not in builder.call_args.kwargs
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    # Served membership also remains on the server-owned path after the override.
+    builder.reset_mock()
+    derive.reset_mock()
+    manifest = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == server_ids
+    builder.assert_called_once()
+    assert "quality_scores" not in builder.call_args.kwargs
+    assert "embeddings" not in builder.call_args.kwargs
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    for index, request in enumerate([{"spec": diverse_archive}, {"playlist_id": saved["id"]}]):
+        builder.reset_mock()
+        derive.reset_mock()
+        card = tmp_path / f"preview-contract-{index}"
+        exported = client.post(
+            "/eink/playlist/export",
+            json={
+                **request,
+                **delivery_evidence,
+                "target": target.key,
+                "path": str(card),
+                "write": write,
+            },
+        )
+        assert exported.status_code == 200, exported.text
+        assert [row["work_id"] for row in exported.json()["render_evidence"]] == server_ids
+        builder.assert_called_once()
+        assert "quality_scores" not in builder.call_args.kwargs
+        assert "embeddings" not in builder.call_args.kwargs
+        derive.assert_called_once()
+        assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+        if write:
+            written = json.loads((card / "playlist.json").read_text())
+            assert [row["work_id"] for row in written["items"]] == server_ids
+        else:
+            assert not card.exists()
+
+
+@pytest.mark.parametrize("field", ["quality_scores", "embeddings"])
+@pytest.mark.parametrize("endpoint", ["preview", "export"])
+def test_eink_caller_evidence_inside_spec_is_rejected(
+    client, archive, diverse_archive, tmp_path, monkeypatch, field, endpoint
+):
+    # Evidence is a preview request input, never part of the reusable selection spec.
+    builder = Mock(wraps=api_main._build_eink_playlist)
+    monkeypatch.setattr(api_main, "_build_eink_playlist", builder)
+    card = tmp_path / "invalid-evidence-spec"
+    response = client.post(
+        f"/eink/playlist/{endpoint}",
+        json={"spec": {**diverse_archive, field: {}}, "path": str(card), "write": True},
+    )
+    assert response.status_code == 400, response.text
+    assert "unknown playlist field(s)" in response.json()["detail"]
+    assert field in response.json()["detail"]
+    builder.assert_not_called()
+    assert not card.exists()
+
+
+def test_eink_openapi_describes_preview_only_evidence(client):
+    response = client.get("/openapi.json")
+    assert response.status_code == 200, response.text
+    schema = response.json()
+    models = {}
+    for endpoint, model_name in [("preview", "PlaylistIn"), ("export", "ExportIn")]:
+        operation = schema["paths"][f"/eink/playlist/{endpoint}"]["post"]
+        request_schema = operation["requestBody"]["content"]["application/json"]["schema"]
+        assert request_schema["$ref"] == f"#/components/schemas/{model_name}"
+        model = schema["components"]["schemas"][model_name]
+        models[endpoint] = model
+        assert "server-owned" in model["description"]
+        assert "preview-only" in model["description"]
+        assert "not guaranteed" in model["description"]
+        for field in ["quality_scores", "embeddings"]:
+            assert field in model["description"]
+            assert field in model["properties"]["spec"]["description"]
+        assert "not guaranteed" in model["properties"]["spec"]["description"]
+        assert "top-level" in model["properties"]["spec"]["description"]
+        assert (
+            "putting either mapping inside spec returns http 400"
+            in model["properties"]["spec"]["description"].lower()
+        )
+    preview = schema["paths"]["/eink/playlist/preview"]["post"]["description"]
+    assert "preview-only" in preview
+    assert "applies to this request only" in preview
+    assert "later previews without mappings derive server-owned evidence again" in preview
+    assert "not saved or reused by" in models["preview"]["description"]
+    assert "server-owned evidence" in preview
+    assert "matching their selection is not guaranteed" in preview
+    assert "Ordered mode ignores caller quality_scores/embeddings" in preview
+    assert "ordered mode ignores them" in models["preview"]["properties"]["spec"]["description"]
+    for field in ["quality_scores", "embeddings"]:
+        description = schema["components"]["schemas"]["PlaylistIn"]["properties"][field][
+            "description"
+        ]
+        assert "Preview-only" in description
+        assert "Omission derives server-owned" in description
+        sibling = "embeddings" if field == "quality_scores" else "quality_scores"
+        assert f"independently of {sibling}" in description
+        assert "empty mapping is invalid and returns HTTP 400" in description
+        assert "ordered mode ignores this mapping" in description
+        assert "Saved/served and exported selections use server-owned" in description
+        assert "not guaranteed" in description
+        assert field not in schema["components"]["schemas"]["ExportIn"]["properties"]
+    export = schema["paths"]["/eink/playlist/export"]["post"]["description"]
+    assert "server-owned evidence" in export
+    assert "preview-only" in export
+    for description in [export, models["export"]["description"]]:
+        assert "Undeclared quality_scores/embeddings fields are ignored" in description
+        assert "including empty mappings" in description
+    assert "Selection is resolved live" in export
+    assert "even when the preview did not supply caller evidence" in export
+    export_fields = models["export"]["properties"]
+    assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
+    assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]
+    assert (
+        "are ignored as top-level export fields, including empty mappings"
+        in export_fields["spec"]["description"]
+    )
+    saved_export = export_fields["playlist_id"]["description"]
+    assert "current server-owned evidence" in saved_export
+    assert "preview-only caller quality_scores/embeddings" in saved_export
+    assert "matching an overridden preview's selection is not guaranteed" in saved_export
 
 
 def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
