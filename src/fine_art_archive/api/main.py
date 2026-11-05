@@ -627,16 +627,41 @@ def _derived_preference_evidence(
 
 
 class PlaylistIn(BaseModel):
-    """Inline selection preview.
+    """Inline selection preview with preview-only caller quality_scores/embeddings.
 
     ``target`` names a registered destination panel. Preview resolves that key
     before selection and reports it. Per-item strategy and gamut evidence stay
     master-derived Spectra-6 policy and do not change with the panel.
+
+    Caller evidence applies to this request only; it is not saved or reused by
+    later previews. Saved/served and exported selections use server-owned
+    evidence, so matching their selection is not guaranteed.
     """
 
-    spec: dict = Field(default_factory=dict)
-    quality_scores: dict[str, float] = Field(default_factory=dict)
-    embeddings: dict[str, list[float]] = Field(default_factory=dict)
+    spec: dict = Field(
+        default_factory=dict,
+        description="Selection spec. Caller quality_scores/embeddings apply only to this "
+        "preview in preference-diverse mode; ordered mode ignores them. Supply evidence "
+        "as top-level request fields; putting either mapping inside spec returns HTTP 400. Saved/served "
+        "and exported selections use server-owned evidence, so matching their "
+        "selection is not guaranteed.",
+    )
+    quality_scores: dict[str, float] = Field(
+        default_factory=dict,
+        description="Preview-only quality evidence for preference-diverse selection. "
+        "Omission derives server-owned ratings independently of embeddings. An explicit "
+        "empty mapping is invalid and returns HTTP 400; ordered mode ignores this mapping. "
+        "Saved/served and exported selections use server-owned evidence, so matching "
+        "their selection is not guaranteed.",
+    )
+    embeddings: dict[str, list[float]] = Field(
+        default_factory=dict,
+        description="Preview-only embeddings for preference-diverse selection. "
+        "Omission derives server-owned local-master descriptors independently of quality_scores. "
+        "An explicit empty mapping is invalid and returns HTTP 400; ordered mode ignores "
+        "this mapping. Saved/served and exported selections use server-owned "
+        "evidence, so matching their selection is not guaranteed.",
+    )
     target: str = Field(
         default="gooddisplay-315-diy",
         description=(
@@ -697,10 +722,29 @@ def _build_eink_playlist(
 
 
 class ExportIn(BaseModel):
-    # Either give a spec inline, or name a saved playlist — same selection code
-    # either way, so a card and that playlist's feed cannot diverge.
-    playlist_id: str | None = None
-    spec: dict = Field(default_factory=dict)
+    """Export an inline or saved spec using current server-owned selection evidence.
+
+    Caller quality_scores/embeddings are preview-only inputs to PlaylistIn.
+    They are not export inputs; matching an overridden preview's selection is not guaranteed.
+    Undeclared quality_scores/embeddings fields are ignored, including empty mappings.
+    """
+
+    playlist_id: str | None = Field(
+        default=None,
+        description="Saved playlist to export. When supplied, its stored spec, target, "
+        "dither and fit override the corresponding request fields. Selection uses "
+        "current server-owned evidence, not preview-only caller quality_scores/embeddings; "
+        "matching an overridden preview's selection is not guaranteed.",
+    )
+    spec: dict = Field(
+        default_factory=dict,
+        description="Inline selection spec, ignored when playlist_id is supplied. "
+        "Preference-diverse selection derives quality scores from current server-owned "
+        "ratings and embeddings from local masters. Caller quality_scores/embeddings "
+        "are preview-only and are ignored as top-level export fields, including empty mappings. "
+        "Putting either mapping inside spec returns HTTP 400; "
+        "matching an overridden preview's selection is not guaranteed.",
+    )
     target: str = "gooddisplay-315-diy"
     path: str
     dither: str = "floyd-steinberg"
@@ -754,6 +798,16 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     evidence calibration ``Spectra-6``, and evidence scope ``master-derived
     and target-independent``. Per-item strategy and gamut evidence are still
     taken from ``render_evidence`` on the master and do not vary by panel.
+
+    In preference-diverse mode, optional preview-only caller quality_scores and
+    embeddings work as follows: each omitted evidence mapping is derived from
+    server-owned ratings or local masters; explicit mappings, including empty
+    ones, are used as supplied. Caller evidence applies to this request only;
+    later previews without mappings derive server-owned evidence again.
+    Caller evidence is not persisted. Saved/served playlists and exports use current
+    server-owned evidence through
+    _build_eink_playlist, so matching their selection is not guaranteed.
+    Ordered mode ignores caller quality_scores/embeddings.
     """
     try:
         tgt = _eink.get_target(body.target)
@@ -884,6 +938,17 @@ def eink_preview(
 
 @app.post("/eink/playlist/export")
 def eink_playlist_export(body: ExportIn) -> dict:
+    """Export an inline spec or saved playlist using current server-owned evidence.
+
+    Both forms derive preference-diverse quality scores from ratings and
+    embeddings from local masters through _build_eink_playlist, as saved/served
+    resolution does. Caller quality_scores/embeddings are preview-only and do
+    not apply here; matching an overridden preview's selection is not guaranteed.
+    Undeclared quality_scores/embeddings fields are ignored, including empty mappings.
+    Selection is resolved live, so later changes to the archive, ratings or masters
+    can change membership even when the preview did not supply caller evidence.
+    A saved playlist_id supplies its stored spec and rendering settings.
+    """
     dest = _checked_export_dir(body.path)
     body_spec, target, dither, fit = body.spec, body.target, body.dither, body.fit
     if body.playlist_id:
