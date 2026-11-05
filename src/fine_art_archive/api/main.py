@@ -627,9 +627,23 @@ def _derived_preference_evidence(
 
 
 class PlaylistIn(BaseModel):
+    """Selection preview inputs; caller evidence is preview-only and is not saved."""
+
     spec: dict = Field(default_factory=dict)
-    quality_scores: dict[str, float] = Field(default_factory=dict)
-    embeddings: dict[str, list[float]] = Field(default_factory=dict)
+    quality_scores: dict[str, float] = Field(
+        default_factory=dict,
+        description="Preview-only quality evidence for preference-diverse selection. "
+        "Omission derives server-owned ratings; an explicit empty mapping stays empty. "
+        "Saved/served and exported selections use server-owned evidence, so matching "
+        "their selection is not guaranteed.",
+    )
+    embeddings: dict[str, list[float]] = Field(
+        default_factory=dict,
+        description="Preview-only embeddings for preference-diverse selection. "
+        "Omission derives server-owned local-master descriptors; an explicit empty "
+        "mapping stays empty. Saved/served and exported selections use server-owned "
+        "evidence, so matching their selection is not guaranteed.",
+    )
     target: str = "gooddisplay-315-diy"
     sample: int = Field(default=24, ge=0, le=200)
 
@@ -680,8 +694,12 @@ def _build_eink_playlist(
 
 
 class ExportIn(BaseModel):
-    # Either give a spec inline, or name a saved playlist — same selection code
-    # either way, so a card and that playlist's feed cannot diverge.
+    """Export an inline or saved spec using current server-owned selection evidence.
+
+    Caller quality_scores/embeddings apply only to PlaylistIn previews. They are
+    not export inputs; matching an overridden preview's selection is not guaranteed.
+    """
+
     playlist_id: str | None = None
     spec: dict = Field(default_factory=dict)
     target: str = "gooddisplay-315-diy"
@@ -728,6 +746,14 @@ def eink_facets() -> dict:
 
 @app.post("/eink/playlist/preview")
 def eink_playlist_preview(body: PlaylistIn) -> dict:
+    """Preview selection with optional preview-only caller quality_scores/embeddings.
+
+    In preference-diverse mode, each omitted evidence mapping is derived from
+    server-owned ratings or local masters; explicit mappings, including empty
+    ones, are used as supplied. Caller evidence is not persisted. Saved/served
+    playlists and exports use current server-owned evidence through
+    _build_eink_playlist, so matching their selection is not guaranteed.
+    """
     try:
         spec = _eink.PlaylistSpec.from_dict(body.spec)
     except (ValueError, TypeError) as exc:
@@ -850,6 +876,14 @@ def eink_preview(
 
 @app.post("/eink/playlist/export")
 def eink_playlist_export(body: ExportIn) -> dict:
+    """Export an inline spec or saved playlist using current server-owned evidence.
+
+    Both forms derive preference-diverse quality scores from ratings and
+    embeddings from local masters through _build_eink_playlist, as saved/served
+    resolution does. Caller quality_scores/embeddings are preview-only and do
+    not apply here; matching an overridden preview's selection is not guaranteed.
+    A saved playlist_id supplies its stored spec and rendering settings.
+    """
     dest = _checked_export_dir(body.path)
     body_spec, target, dither, fit = body.spec, body.target, body.dither, body.fit
     if body.playlist_id:

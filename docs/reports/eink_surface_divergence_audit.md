@@ -2,9 +2,11 @@
 
 Inspected source: `3c23a10978e1c61151d6856576d56628c8737171`, 2026-10-17.
 Source owner: [#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
-This is a bounded input inventory and evidence report. It changes no production
-code, selector, image, palette, archive record or physical device. New proposals
-below remain report-only under #805's follow-up publication boundary.
+The original audit was a bounded input inventory and evidence report with no
+production changes. The #825 follow-up below documents the selected preview-only
+API contract and its regression tests; it changes no selector, image, palette,
+archive record or physical device. Other proposals remain report-only under
+#805's follow-up publication boundary.
 
 ## Contract and enumeration
 
@@ -80,8 +82,8 @@ R; “feed” includes F/H; “export” is E/D.
 | `seed` | C: B shuffle / Q tie rank | C: same S | C: R order | C: same S | B/Q; seeded selection is deterministic for identical evidence |
 | Ratings quality / fit log | C: P reads current log | C: cached by mtime-ns + size | C: R each request | C: same cache as R | `api/main.py:515–524`; snapshot/live distinction below |
 | Local master-derived embeddings | C: S derives for filtered candidates | C: same S | C: R each request | C: same S | Missing/unreadable/zero vectors refuse; [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) owns descriptor reuse |
-| Caller `quality_scores` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Probe confirms different IDs; P1 proposal below; never promise override persistence |
-| Caller `embeddings` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Explicit empty mappings refuse; P1 |
+| Caller `quality_scores` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Different IDs are allowed by the preview-only contract selected in #825; P1 below |
+| Caller `embeddings` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Explicit empty mappings refuse; preview-only contract in #825; P1 |
 | Missing master | C: P reports `has_master=false`; V 404 | C: ordered R omits; diverse validates | C: no advertised missing image | C: writer skips/reports missing image | Intended diagnostic vs playable-output distinction; no byte-parity claim |
 | Candidate corpus/metadata | C: current sidecars | C: current sidecars | C: re-resolves live | C: current sidecars | `api/main.py:489–511`; stable snapshot across later calls is I |
 | Target key | C: V validates; P only diagnostic target field | C: saved for F | C: target registry | C: inline or saved target | P alone does not validate/produce target pixels; V does |
@@ -129,17 +131,20 @@ and input semantics, because title-only divergence search misses older instances
 | Repeated unchanged descriptor computation | owned optimization, not a correctness fix in this report | #807 open; validation must stay intact |
 | Explicit zero year bounds | confirmed-bug shared by all selectors | #806 / PR820 already owns this; the audit branch preserves that writer |
 
-Additional observations are proposals for human review **within #805**, not newly
-approved repair tasks or published issues:
+Additional observations originated as proposals for human review **within #805**.
+P1 now has the documentation-and-regression scope selected in #825; P2 and P3
+remain proposals, not newly approved repair tasks or published issues:
 
 - **P1 — preview-only explicit evidence.** Direct API callers can preview different
   IDs with explicit quality/embedding maps, then save the same spec and get the
   server-derived IDs. Reproduced: default preview and saved feed select red+blue;
   explicit preview selects near-red+blue. Companion U sends no explicit maps, so
   the UI's normal path is already-correct. The API boundary is intentionally
-  unsupported for persistence. Decide whether documentation should promise only
-  server-derived parity or whether a separate evidence-persistence feature is
-  wanted. Do not add storage or accept fabricated evidence here.
+  unsupported for persistence. The follow-up
+  [#825](https://github.com/stranske/Fine-Art-Archive/issues/825) selects the
+  preview-only contract: document that caller evidence is transient and that
+  selection parity with saved/served playlists or exports is not guaranteed.
+  No evidence storage or forwarding change is part of this contract.
 - **P2 — broader representation identity (needs-investigation).** H binds target
   key, dither, float master mtime, effective fit, `a11-v1` and strategy. It does
   not bind target dimensions/rotation, palette identity or master content hash.
@@ -155,6 +160,77 @@ approved repair tasks or published issues:
   label; a browser interaction was not executed. Proposed gate: render a
   year-zero diagnostic card and assert its caption is `0`, with a missing-year
   control still `????`. No UI edit or new issue is bundled here.
+
+## Preview-only evidence contract (#825 follow-up, 2026-11-05)
+
+Re-read `docs/AGENT_ISSUE_FORMAT.md`, this audit, `PlaylistIn`, `ExportIn`,
+`eink_playlist_preview`, `_resolve_playlist`, `eink_playlist_export` and
+`_build_eink_playlist` at source commit
+`e1a189b` on `codex/issue-825`. **No forwarding-behavior difference** from
+the report was found. Before this follow-up, preview forwarding is at
+`api/main.py:742–745`, rather than the issue's historical `700–703`;
+`_build_eink_playlist` starts at 637, export at 852 and saved resolution at 2122.
+The #807 descriptor cache has landed, without changing this evidence boundary.
+
+The contract selected for
+[#825](https://github.com/stranske/Fine-Art-Archive/issues/825), following
+[#805](https://github.com/stranske/Fine-Art-Archive/issues/805), keeps caller
+`quality_scores` and `embeddings` **preview-only** in preference-diverse mode.
+Each omitted mapping derives server-owned evidence; an explicitly supplied
+mapping, including an empty mapping, is used as supplied and validated. Invalid
+empty evidence still returns HTTP 400. Ordered selection does not use these maps.
+Saved playlists persist the spec, not caller evidence. Saved/served resolution
+and both inline and saved-ID exports call `_build_eink_playlist` without caller
+maps, deriving quality from current ratings and embeddings from local masters.
+Undeclared evidence fields sent to save or export do not override that path.
+
+Consequently, matching a preview that supplies caller evidence to a saved/served
+or exported selection is **not guaranteed**. Without overrides, the same spec
+and same server evidence snapshot share selection behavior; later archive,
+ratings or master changes can still change a live selection. This is a
+documentation contract, not evidence persistence or frozen membership.
+`PlaylistIn` field descriptions and both endpoint docstrings expose the
+contract in generated OpenAPI documentation; `ExportIn` describes its
+server-owned evidence boundary.
+
+`tests/test_eink_feed_endpoints.py::test_preference_diverse_caller_evidence_is_preview_only`
+varies quality and embeddings independently against three temporary works.
+Server evidence selects red+blue; caller quality selects near-red+blue; caller
+embeddings select red+near-red. It checks direct `_resolve_playlist`, served
+manifest membership, and inline/saved-ID exports with both dry runs and actual
+temporary card writes. Spies wrap the real builder and derivation functions to
+verify delivery still derives both server-owned mappings. The existing explicit
+empty-evidence regression remains intact. `test_eink_openapi_describes_preview_only_evidence`
+checks the generated API documentation.
+
+Validation used the active repository automation interpreter, Python 3.14.10
+at `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python`; no `.venv`,
+`.faa-venv` or `/opt/anaconda3/bin/python3` is present here. Exact commands,
+using the existing sandbox scheduling harness described below:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" BLACK_NUM_WORKERS=1 black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .
+python -m ruff check src/fine_art_archive/api/main.py tests/test_eink_feed_endpoints.py
+```
+
+The broad e-ink command passed **308 tests**, with 2259 deselected, in **86.17 s**.
+The narrower regression command passed **6 tests**, with 94 deselected, in
+**4.83 s** after strengthening served-path assertions. Both runs reported
+15 warnings (dependency deprecations and an existing duplicate OpenAPI operation
+ID). `-o addopts=` suppresses repository-wide coverage reporting, as in the
+prior audit's focused runs. Black and Ruff passed.
+
+For a causal control, temporarily replaced both preview forwarding arguments
+with `None` and ran the narrower command with only
+`-k caller_evidence_is_preview_only`. It failed as expected in
+`test_preference_diverse_caller_evidence_is_preview_only[quality_scores-False]`
+at the selected-ID assertion: red+blue instead of near-red+blue (**1 failed**,
+96 deselected, **1.12 s**, exit 1). A `finally` block restored the source bytes;
+restored SHA-256 was
+`1db8397d254c884da3b063378c93ef8687697980c152ac54aad2dc77647a3775`.
+The six-test green run above then passed on the restored source.
 
 ## Executed evidence and test layers
 
