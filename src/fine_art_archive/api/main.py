@@ -627,7 +627,11 @@ def _derived_preference_evidence(
 
 
 class PlaylistIn(BaseModel):
-    """Selection preview inputs with preview-only caller quality_scores/embeddings.
+    """Inline selection preview with preview-only caller quality_scores/embeddings.
+
+    ``target`` names a registered destination panel. Preview resolves that key
+    before selection and reports it. Per-item strategy and gamut evidence stay
+    master-derived Spectra-6 policy and do not change with the panel.
 
     Caller evidence applies to this request only; it is not saved or reused by
     later previews. Saved/served and exported selections use server-owned
@@ -658,7 +662,17 @@ class PlaylistIn(BaseModel):
         "this mapping. Saved/served and exported selections use server-owned "
         "evidence, so matching their selection is not guaranteed.",
     )
-    target: str = "gooddisplay-315-diy"
+    target: str = Field(
+        default="gooddisplay-315-diy",
+        description=(
+            "Destination panel key from the render-target registry. Resolved "
+            "before selection; an unknown key is HTTP 400, including when "
+            "sample is 0. Omitted, it resolves to gooddisplay-315-diy. "
+            "Selection and per-item strategy/gamut evidence do not depend on "
+            "it: that evidence is master-derived Spectra-6 policy and is "
+            "target-independent."
+        ),
+    )
     sample: int = Field(default=24, ge=0, le=200)
 
 
@@ -775,9 +789,18 @@ def eink_facets() -> dict:
 
 @app.post("/eink/playlist/preview")
 def eink_playlist_preview(body: PlaylistIn) -> dict:
-    """Preview selection with optional preview-only caller quality_scores/embeddings.
+    """Select a playlist and report master-derived Spectra-6 evidence.
 
-    In preference-diverse mode, each omitted evidence mapping is derived from
+    ``body.target`` is resolved through the render-target registry before
+    selection. An unknown key returns HTTP 400 even when ``sample`` is 0, so
+    an empty item list is not a silent acceptance of a bad panel. The response
+    keeps the existing selection fields and adds the resolved target key,
+    evidence calibration ``Spectra-6``, and evidence scope ``master-derived
+    and target-independent``. Per-item strategy and gamut evidence are still
+    taken from ``render_evidence`` on the master and do not vary by panel.
+
+    In preference-diverse mode, optional preview-only caller quality_scores and
+    embeddings work as follows: each omitted evidence mapping is derived from
     server-owned ratings or local masters; explicit mappings, including empty
     ones, are used as supplied. Caller evidence applies to this request only;
     later previews without mappings derive server-owned evidence again.
@@ -786,6 +809,10 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     _build_eink_playlist, so matching their selection is not guaranteed.
     Ordered mode ignores caller quality_scores/embeddings.
     """
+    try:
+        tgt = _eink.get_target(body.target)
+    except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
     try:
         spec = _eink.PlaylistSpec.from_dict(body.spec)
     except (ValueError, TypeError) as exc:
@@ -837,6 +864,9 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         "selection_diagnostics": res.selection_diagnostics,
         "items": items,
         "work_ids": res.work_ids,
+        "target": tgt.key,
+        "evidence_calibration": "Spectra-6",
+        "evidence_scope": "master-derived and target-independent",
     }
 
 

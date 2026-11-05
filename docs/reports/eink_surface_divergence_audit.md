@@ -709,3 +709,70 @@ This iteration therefore leaves reviewable workspace changes, not a new commit.
 6. Compare full-size output only with the same master snapshot, target, fit,
    strategy and dither. Thumbnail byte equality, freeze-at-preview membership,
    and physical panel acceptance have not been established by this report.
+
+## Playlist preview target contract (2026-11-05)
+
+Checked on 2026-11-05 while implementing #826. The sections above stay the
+historical inventory of inspected commit `3c23a10978e1c61151d6856576d56628c8737171`
+and the 2026-10-17 UI gate. In that inventory, the Target key row says preview
+only carried a diagnostic target field. That sentence describes the inspected
+commit. The current preview contract is the one below.
+
+`PlaylistIn.target` is still accepted, default `gooddisplay-315-diy`.
+`eink_playlist_preview` resolves it with `get_target` before selection. An
+unknown key returns HTTP 400, including when `sample` is 0. The response keeps
+the existing selection fields and adds:
+
+- `target`: the resolved registry key
+- `evidence_calibration`: `Spectra-6`
+- `evidence_scope`: `master-derived and target-independent`
+
+Per-item `render_strategy`, `render_strategy_reason` and `gamut_verdict` still
+come from `render_evidence` on the master. That policy is intentionally
+independent of the destination panel (`eink/targets.py` `render_evidence`).
+Omitting `target` resolves `gooddisplay-315-diy`. A work with no master stays
+`has_master=false` and does not gain fabricated render evidence. `einkPreview`
+prints the resolved target and states that strategy/gamut evidence uses
+Spectra-6 policy rather than a measurement for the selected panel.
+
+This does not close #805, recalibrate A11, or change selection or rendered
+bytes. #806 remains year-zero date filtering, #807 descriptor-cache reuse, and
+#808 feed palette validators. None of those owns this preview field.
+
+Interpreter: `/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`. This host
+has no repository virtualenv, and `/opt/anaconda3/bin/python3` is absent.
+
+```sh
+python3 -m pytest tests/test_eink_pipeline.py::test_playlist_preview_reports_resolved_target_and_stable_spectra6_evidence -q -o addopts= -m "not slow"
+python3 -m pytest tests/test_eink_pipeline.py -q -o addopts= -m "not slow"
+```
+
+Outcome 1 focused command: **1 passed**, 14 warnings, 0.83 seconds. The same
+temporary-master POST with `gooddisplay-315-diy` and `generic-mono-1bit`
+reported each resolved key, `evidence_calibration=Spectra-6`, and
+`evidence_scope=master-derived and target-independent`. Selected work IDs and
+per-item strategy/gamut evidence were equal. The same test also covers an
+omitted target, `sample=0`, and a missing master.
+
+Full file: **136 passed**, 14 warnings, 19.13 seconds. That run includes
+`test_playlist_preview_unknown_target_returns_400_including_sample_zero` and
+`test_ui_preview_save_and_export_carry_the_same_inputs`, which asserts the
+rendered `ek-target-evidence` disclosure.
+
+Validation bypass, then restore. The unknown-target handler was temporarily
+changed so a `KeyError` resolved `gooddisplay-315-diy` instead of raising
+HTTP 400. The identical command was:
+
+```sh
+python3 -m pytest tests/test_eink_pipeline.py::test_playlist_preview_unknown_target_returns_400_including_sample_zero -q -o addopts= -m "not slow" --tb=short
+```
+
+Bypassed source SHA-256 `5406cdc604f09e17fb491a4d878dd26a88db982f5942787fdef18945ad541968`:
+**1 failed**, exit 1, 0.50 seconds, `assert 200 == 400`. Receipt:
+[preview-target-validation-red.txt](eink_surface_audit/preview-target-validation-red.txt).
+Restored source SHA-256 `850ce2415ee066ff40ba31c85d2ed45ff50169aae430bf0f119237cccabd8fa9`
+matches the pre-bypass file: **1 passed**, exit 0, 0.38 seconds. Receipt:
+[preview-target-validation-green.txt](eink_surface_audit/preview-target-validation-green.txt).
+
+`black --check --line-length 100 --exclude '(\.workflows-lib|node_modules)' .`
+left **377 files unchanged**. Physical panel output was not measured.

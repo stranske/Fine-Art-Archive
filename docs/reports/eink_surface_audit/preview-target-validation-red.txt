@@ -1,0 +1,32 @@
+command: python3 -m pytest tests/test_eink_pipeline.py::test_playlist_preview_unknown_target_returns_400_including_sample_zero -q -o addopts= -m not slow --tb=short
+exit: 1
+sha256_mutated: 5406cdc604f09e17fb491a4d878dd26a88db982f5942787fdef18945ad541968
+sha256_original: 850ce2415ee066ff40ba31c85d2ed45ff50169aae430bf0f119237cccabd8fa9
+
+--- stdout ---
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_playlist_preview_unknown_target_returns_400_including_sample_zero ____
+tests/test_eink_pipeline.py:517: in test_playlist_preview_unknown_target_returns_400_including_sample_zero
+    assert response.status_code == 400, response.text
+E   AssertionError: {"total_candidates":2,"matched":2,"selected":2,"coverage":{"excluded_for_missing_metadata":{},"note":"Tag filters can only select from tagged works; these counts say how many were dropped for having no value on a filtered field, so a small result is legible."},"facets":{"artist":[["Included",2]],"genre":[],"mood":[]},"selection_diagnostics":[],"items":[{"work_id":"held-master","title":"Held","artist":"Included","year":1650,"has_master":true,"render_strategy":"color","render_strategy_reason":"gamut verdict well-served","gamut_verdict":"well-served"},{"work_id":"missing-master","title":"Missing","artist":"Included","year":1660,"has_master":false}],"work_ids":["held-master","missing-master"],"target":"gooddisplay-315-diy","evidence_calibration":"Spectra-6","evidence_scope":"master-derived and target-independent"}
+E   assert 200 == 400
+E    +  where 200 = <Response [200 OK]>.status_code
+=============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/langsmith/_internal/_beta_decorator.py:92: 13 warnings
+  /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/langsmith/_internal/_beta_decorator.py:92: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    if asyncio.iscoroutinefunction(func):
+
+tests/test_eink_pipeline.py::test_playlist_preview_unknown_target_returns_400_including_sample_zero
+  /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/starlette/testclient.py:59: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_eink_pipeline.py::test_playlist_preview_unknown_target_returns_400_including_sample_zero - AssertionError: {"total_candidates":2,"matched":2,"selected":2,"coverage":{"excluded_for_missing_metadata":{},"note":"Tag filters can only select from tagged works; these counts say how many were dropped for having no value on a filtered field, so a small result is legible."},"facets":{"artist":[["Included",2]],"genre":[],"mood":[]},"selection_diagnostics":[],"items":[{"work_id":"held-master","title":"Held","artist":"Included","year":1650,"has_master":true,"render_strategy":"color","render_strategy_reason":"gamut verdict well-served","gamut_verdict":"well-served"},{"work_id":"missing-master","title":"Missing","artist":"Included","year":1660,"has_master":false}],"work_ids":["held-master","missing-master"],"target":"gooddisplay-315-diy","evidence_calibration":"Spectra-6","evidence_scope":"master-derived and target-independent"}
+assert 200 == 400
+ +  where 200 = <Response [200 OK]>.status_code
+1 failed, 14 warnings in 0.50s
+
+--- stderr ---
+
