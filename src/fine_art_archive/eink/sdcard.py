@@ -102,12 +102,18 @@ class ExportReport:
     render_evidence: list[dict[str, str]] = field(default_factory=list)
 
     def as_dict(self) -> dict:
+        # `skipped_detail` is capped, and `skipped` mixes missing masters with
+        # render failures. The omission total is the full writer record.
+        missing_master_omissions = sum(
+            1 for _work_id, reason in self.skipped if reason == "no local master image"
+        )
         return {
             "written": len(self.written),
             "skipped": len(self.skipped),
             "removed": len(self.removed),
             "bytes_written": self.bytes_written,
             "dry_run": self.dry_run,
+            "missing_master_omissions": missing_master_omissions,
             "skipped_detail": self.skipped[:20],
             "render_evidence": self.render_evidence,
         }

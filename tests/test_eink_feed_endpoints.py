@@ -1017,6 +1017,95 @@ def test_warm_descriptor_cache_preserves_http_evidence_failure(
         assert "evidence" in failed.json()["detail"]
 
 
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _two_selected(archive: Path, masters: tuple[bool, bool]) -> None:
+    _work(archive, _COUNT_FIRST, title="First", master=masters[0])
+    _work(archive, _COUNT_SECOND, title="Second", master=masters[1])
+
+
+def _count_target(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        TARGETS,
+        "count-contract",
+        RenderTarget("count-contract", "Count contract", 8, 6, "mono1bit"),
+    )
+
+
+def _save_count(client: TestClient, spec: dict) -> dict:
+    return _save(client, spec=spec, target="count-contract", dither="none")
+
+
+def _assert_empty_feed(client: TestClient, playlist_id: str) -> None:
+    for path in ("current", "next", "image/0"):
+        response = client.get(f"/feed/{playlist_id}/{path}")
+        assert response.status_code == 404, path
+        assert "no works with local images" in response.json()["detail"]
+
+
+def test_mixed_master_feed_advertises_only_the_servable_image(client, archive, monkeypatch):
+    """The saved feed drops the work with no master and serves the other one."""
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, False))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 1
+    manifest = client.get(f"/feed/{playlist['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == [_COUNT_FIRST]
+    nxt = client.get(f"/feed/{playlist['id']}/next")
+    assert nxt.status_code == 200, nxt.text
+    body = nxt.json()
+    assert body["count"] == 1
+    assert body["work_id"] == _COUNT_FIRST
+    image = client.get(body["image_url"].replace("http://testserver", ""))
+    assert image.status_code == 200, image.text
+    assert image.headers["X-Work-Id"] == _COUNT_FIRST
+
+
+def test_all_master_feed_serves_both_selected_images(client, archive, monkeypatch):
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, True))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 2
+    seen = []
+    after = None
+    for _ in range(2):
+        params = {"after": after} if after else None
+        nxt = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert nxt.status_code == 200, nxt.text
+        body = nxt.json()
+        image = client.get(body["image_url"].replace("http://testserver", ""))
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == body["work_id"]
+        seen.append(body["work_id"])
+        after = body["work_id"]
+    assert seen == [_COUNT_FIRST, _COUNT_SECOND]
+    assert nxt.json()["count"] == 2
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec"),
+    [((False, False), _COUNT_SPEC), ((True, False), _EMPTY_SPEC)],
+    ids=["all-missing", "empty"],
+)
+def test_unservable_selections_keep_the_empty_feed_response(
+    client, archive, monkeypatch, masters, spec
+):
+    """A selection with nothing to serve stays the existing empty-feed 404."""
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    playlist = _save_count(client, spec)
+
+    assert playlist["resolved_count"] == 0
+    _assert_empty_feed(client, playlist["id"])
+
+
 @pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])
 def test_preference_diverse_builder_names_missing_evidence(missing):
     supplied = {"quality_scores": {}, "embeddings": {}}

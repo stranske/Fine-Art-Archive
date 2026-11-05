@@ -1693,3 +1693,189 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
         "diagnostics rendering must come from the preview response's "
         "selection_diagnostics exactly once"
     )
+
+
+# ---------------------------------------------------------------- counts ----
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _count_client(tmp_path, monkeypatch, masters: tuple[bool, bool]):
+    """Two selected works on an isolated archive. ``masters`` is (first, second)."""
+    from fastapi.testclient import TestClient
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.api import store as api_store
+    from fine_art_archive.api.main import app
+
+    works = tmp_path / "works"
+    works.mkdir()
+    monkeypatch.setattr(api_store, "WORKS", works)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", tmp_path / "image_cache")
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_sidecars_cache", None)
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    for work_id, title, master in (
+        (_COUNT_FIRST, "First", masters[0]),
+        (_COUNT_SECOND, "Second", masters[1]),
+    ):
+        directory = works / work_id
+        directory.mkdir()
+        (directory / "meta.json").write_text(
+            json.dumps(
+                {
+                    "work_id": work_id,
+                    "title": title,
+                    "artist": {"name": "A Painter"},
+                    "year": "1650",
+                    "subject": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        if master:
+            Image.new("RGB", (8, 6), (30, 60, 90)).save(directory / "master.jpeg", "JPEG")
+    api_main._sidecars_cache = None
+    return TestClient(app)
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected", "available"),
+    [
+        ((True, False), _COUNT_SPEC, 2, 1),
+        ((True, True), _COUNT_SPEC, 2, 2),
+        ((False, False), _COUNT_SPEC, 2, 0),
+        ((True, False), _EMPTY_SPEC, 0, 0),
+    ],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_playlist_preview_counts_selected_and_available_for_delivery(
+    tmp_path, monkeypatch, masters, spec, selected, available
+):
+    """Selection counts include missing masters; delivery counts do not.
+
+    The mixed case keeps both works and flags the one without a master.
+    ``available_for_delivery`` is computed over the full selection, so a
+    ``sample=0`` response still reports it when ``items`` is empty.
+    """
+    client = _count_client(tmp_path, monkeypatch, masters)
+    response = client.post("/eink/playlist/preview", json={"spec": spec})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == selected
+    assert body["available_for_delivery"] == available
+    assert len(body["work_ids"]) == selected
+    if masters == (True, False) and spec == _COUNT_SPEC:
+        assert body["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+        flagged = {item["work_id"]: item["has_master"] for item in body["items"]}
+        assert flagged == {_COUNT_FIRST: True, _COUNT_SECOND: False}
+        truncated = client.post("/eink/playlist/preview", json={"spec": spec, "sample": 0})
+        assert truncated.status_code == 200, truncated.text
+        short = truncated.json()
+        assert short["items"] == []
+        assert short["work_ids"] == [_COUNT_FIRST, _COUNT_SECOND]
+        assert short["selected"] == 2
+        assert short["available_for_delivery"] == 1
+
+
+def test_ui_count_consumers_do_not_treat_the_sample_as_delivered(tmp_path):
+    """Selected, deliverable and written counts stay distinct for a mixed pair.
+
+    The preview sample marks both rows ``has_master: true`` and the export
+    payload carries ``available_for_delivery: 2``. Those are traps: the
+    rendered totals must follow ``available_for_delivery`` and the writer's
+    ``written`` / ``dry_run`` / ``missing_master_omissions`` fields. A dry
+    run whose plan ``written`` is 1 must still display 0 actually written.
+    """
+    from fine_art_archive.api.main import UI_FILE
+
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    ui = UI_FILE.read_text()
+    functions = []
+    for start, end in (
+        ("    async function einkPreview() {", "    async function einkExport(write)"),
+        ("    async function einkExport(write) {", "    function toggleGallery()"),
+    ):
+        functions.append(ui[ui.index(start) : ui.index(end, ui.index(start))])
+
+    runner = tmp_path / "count-consumers.cjs"
+    runner.write_text(
+        """
+const controls = {
+  'ek-target': {value: 'count-contract'},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-path': {value: '/fixture/card'},
+  'ek-out': {innerHTML: '', insertAdjacentHTML() {}},
+  'ek-status': {innerHTML: ''},
+};
+const document = {getElementById: id => controls[id] || null};
+let einkLastPreview, einkCardPlaylistId = null;
+const einkSpec = () => ({sort: 'title'});
+const einkEsc = value => String(value);
+const confirm = () => true;
+const toast = () => {};
+const fetch = async (url, options) => {
+  const body = JSON.parse(options.body);
+  if (url === '/eink/playlist/preview') {
+    return {ok: true, json: async () => ({
+      coverage: {},
+      items: [
+        {work_id: 'aaa1111-first-work', has_master: true, year: 1650, artist: 'A', title: 'First'},
+        {work_id: 'bbb2222-second-work', has_master: true, year: 1650, artist: 'A', title: 'Second'},
+      ],
+      selected: 2,
+      available_for_delivery: 1,
+      matched: 2,
+      total_candidates: 2,
+      selection_diagnostics: [],
+    })};
+  }
+  return {ok: true, json: async () => ({
+    selected: 2,
+    written: 1,
+    dry_run: !body.write,
+    bytes_written: body.write ? 2048 : 0,
+    path: '/fixture/card',
+    skipped: 1,
+    missing_master_omissions: 1,
+    available_for_delivery: 2,
+    palette_measured: true,
+  })};
+};
+"""
+        + "\n".join(functions)
+        + """
+(async () => {
+  await einkPreview();
+  const previewHTML = controls['ek-out'].innerHTML;
+  await einkExport(true);
+  const writeHTML = controls['ek-status'].innerHTML;
+  await einkExport(false);
+  const dryHTML = controls['ek-status'].innerHTML;
+  console.log(JSON.stringify({previewHTML, writeHTML, dryHTML}));
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run([node, str(runner)], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    preview, written, dry = observed["previewHTML"], observed["writeHTML"], observed["dryHTML"]
+    assert "<strong>2</strong> selected" in preview
+    assert "<strong>1</strong> available for delivery" in preview
+    assert "<strong>2</strong> available for delivery" not in preview
+    assert "<strong>2</strong> selected" in written
+    assert "<strong>1</strong> actually written" in written
+    assert "<strong>2</strong> actually written" not in written
+    assert "<strong>0</strong> actually written" not in written
+    assert "1 missing-master omission" in written
+    assert "<strong>2</strong> selected" in dry
+    assert "<strong>0</strong> actually written" in dry
+    assert "<strong>1</strong> actually written" not in dry
+    assert "would write 1 file(s)" in dry
+    assert "1 missing-master omission" in dry

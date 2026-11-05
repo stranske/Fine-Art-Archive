@@ -377,3 +377,108 @@ This iteration therefore leaves reviewable workspace changes, not a new commit.
 6. Compare full-size output only with the same master snapshot, target, fit,
    strategy and dither. Thumbnail byte equality, freeze-at-preview membership,
    and physical panel acceptance have not been established by this report.
+
+## Count contract (#827), checked 2026-11-05
+
+This section labels the missing-master counts already described in the matrix
+row "Missing master". It does not change who is selected, which works a feed
+may advertise, or which files the writer skips. [#805](https://github.com/stranske/Fine-Art-Archive/issues/805)
+remains the audit owner. The earlier deduplication still stands:
+[#806](https://github.com/stranske/Fine-Art-Archive/issues/806) is the shared
+year-bound filter, [#807](https://github.com/stranske/Fine-Art-Archive/issues/807)
+is repeated descriptor work, and
+[#808](https://github.com/stranske/Fine-Art-Archive/issues/808) is palette and
+measurement identity in the image validator. None of those owns this count
+labeling. The original divergence search found no separate covering issue.
+
+### Historical line references are not current locations
+
+The issue text cites the feed exclusion as `api/main.py:2101-2104` and the
+writer skip as `eink/sdcard.py:185`, from the audit that opened this follow-up.
+The anchors earlier in this report belong to inspected commit `3c23a109`:
+preview `687–740`, `_resolve_playlist` `2080–2113`, export `809–901`, and
+`eink/sdcard.py` `127–296`. Those numbers are historical. The symbols below
+are the current producers. Line numbers were read on 2026-11-05 and will drift.
+
+| Symbol | Where read on 2026-11-05 | Count fields | Missing-master behavior |
+|---|---|---|---|
+| `eink_playlist_preview` | `api/main.py:730` | `selected` at `:780` is `len(work_ids)`, including works with no master. Sampled `items[].has_master`. `work_ids` is the full selection. `items` stops at `sample` (default 24). | A missing master stays selected and is flagged on a sampled row. It is not removed. |
+| `_resolve_playlist` | `api/main.py:2127` | Callers publish `resolved_count` and feed `count` as `len` of the returned list. | `:2150` `if _eink_master(wid) is None: continue`. The feed never advertises the missing master. An empty result still 404s with "no works with local images". |
+| `eink_playlist_export` | `api/main.py:857` | Passes every selected id to the writer. Adds `selected` = `len(items)` at `:935` on top of `ExportReport.as_dict()`. | Does not drop missing masters before the writer. Dry-run render evidence still skips a missing master. |
+| `sdcard.export` | `eink/sdcard.py:133` | `written` is accepted names: the plan on a dry run, and files after a successful save on a real write. `skipped` is every skip. `skipped_detail` is the first 20 `(work_id, reason)` pairs. | `:191` missing or absent master: `skipped.append((work_id, "no local master image"))` and no file. Render failures are a different skip reason. |
+
+`selected` therefore means "chosen", on both preview and export. It does not
+mean "can be served" and it does not mean "was written".
+
+### Chosen contract
+
+Two totals were not recoverable from the existing payloads:
+
+- Preview can flag `has_master` only on sampled rows. `sample=0`, or a sample
+  that happens to contain only works with masters, cannot produce the
+  delivery total for the whole selection. Preview now adds
+  `available_for_delivery`, the count of `_eink_master(wid) is not None`
+  over every selected id. `selected`, `items`, and `has_master` keep their
+  meanings.
+- Export `skipped` mixes missing masters with render failures, and
+  `skipped_detail` stops at 20. Neither is a complete missing-master total.
+  `ExportReport.as_dict()` now adds `missing_master_omissions`, the count of
+  writer skips whose reason is `no local master image`. `written`, `skipped`,
+  `dry_run`, and `selected` keep their meanings.
+
+No further field was added. A feed list is already only the servable works, so
+`resolved_count` / `count` are the delivery total and the missing master is
+absent from the advertised URLs. Actually written is `0` when `dry_run` is
+true and `written` when it is false: a dry run's `written` value is the plan,
+including every master the writer would open, and is not a file on disk.
+
+The companion labels those totals directly:
+
+- Preview: `{selected} selected · {available_for_delivery} available for delivery`.
+  The older "N shown have no local image" note still describes the sample only.
+- Export: `{selected} selected · {actually written} actually written`, plus
+  `{n} missing-master omission(s)` from `missing_master_omissions`. A dry run
+  also says `would write {written} file(s)`. The existing skipped count and
+  estimated-palette note stay.
+
+The UI does not count sampled rows for either total, and it does not treat
+`available_for_delivery` or `selected` as proof that a file was written.
+
+### Verification, 2026-11-05
+
+`/opt/anaconda3/bin/python3` is not installed on this host. The interpreter
+used is CPython 3.14.10 at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3`.
+
+```sh
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py tests/test_eink_export_format.py -q -o addopts= -m 'not slow'
+```
+
+Observed: **256 passed**, 14 warnings, exit 0, 35.93 seconds.
+
+UI regression, same interpreter:
+
+```sh
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+```
+
+The fixture response says `selected=2` and `available_for_delivery=1` while
+both sampled rows claim `has_master: true`. The export response says
+`written=1`, `dry_run` follows the button, and `missing_master_omissions=1`,
+while also carrying a trap `available_for_delivery=2`.
+
+Ambiguous rendering: the preview label was temporarily changed from
+`${d.available_for_delivery}` to `${d.selected}`, so the screen read
+`<strong>2</strong> selected · <strong>2</strong> available for delivery`.
+The command above exited **1**. The assertion that failed was
+`'<strong>1</strong> available for delivery' in preview`. Captured in
+[count-contract-red.txt](eink_surface_audit/count-contract-red.txt).
+
+The original `index.html` bytes were restored (SHA-256
+`2ce6f914be772753e9b46198b757a47773b40a8f20412d7f1a9074d153678484`
+before the edit and after the restore). The same command then exited **0**,
+**1 passed**, 0.41 seconds. Captured in
+[count-contract-green.txt](eink_surface_audit/count-contract-green.txt).
+
+Black check, line length 100, excluding `.workflows-lib` and `node_modules`:
+**377 files would be left unchanged**.
