@@ -1357,14 +1357,12 @@ def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_expor
     )
     # Saved feed and SD export consume the same controls, so all three
     # surfaces agree on panel and dither for one operator action.
-    assert ui.count('document.getElementById("ek-target").value') >= 3, (
-        "target must be read for preview images, saving a playlist (feed) "
-        "and export (SD card)"
-    )
-    assert ui.count('document.getElementById("ek-dither").value') >= 3, (
-        "dither must be read for preview images, saving a playlist (feed) "
-        "and export (SD card)"
-    )
+    assert (
+        ui.count('document.getElementById("ek-target").value') >= 3
+    ), "target must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    assert (
+        ui.count('document.getElementById("ek-dither").value') >= 3
+    ), "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
 
 
 def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
@@ -1645,11 +1643,11 @@ def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     ui = UI_FILE.read_text()
     import re
 
-    assert re.search(
-        r'<button\b[^>]*onclick="einkExport\(false\)"[^>]*>\s*Dry run\s*</button>', ui
+    assert (
+        re.search(r'<button\b[^>]*onclick="einkExport\(false\)"[^>]*>\s*Dry run\s*</button>', ui)
     ), "Dry run must bind the non-writing action"
-    assert re.search(
-        r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui
+    assert (
+        re.search(r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui)
     ), "Write card must bind the writing action"
     assert (
         'if (!path) { toast("enter a card path first"); return; }' in ui
@@ -1714,10 +1712,9 @@ def test_operator_ui_discloses_no_master_works_in_preview():
         "preview header does not disclose no-master works — preview count "
         "would read as deliverable works the feed/card cannot show"
     )
-    assert ui.count("shown have no local image") == 1, (
-        "no-master disclosure must come from the preview response's "
-        "has_master flags exactly once"
-    )
+    assert (
+        ui.count("shown have no local image") == 1
+    ), "no-master disclosure must come from the preview response's " "has_master flags exactly once"
 
 
 def test_operator_ui_discloses_skipped_works_on_export():
@@ -1740,10 +1737,9 @@ def test_operator_ui_discloses_skipped_works_on_export():
         "export result does not disclose skipped works — 'Wrote N file(s)' "
         "would read as the full selection the card cannot show"
     )
-    assert ui.count("${d.skipped} skipped") == 1, (
-        "skipped disclosure must come from the export response's skipped "
-        "count exactly once"
-    )
+    assert (
+        ui.count("${d.skipped} skipped") == 1
+    ), "skipped disclosure must come from the export response's skipped " "count exactly once"
 
 
 def test_operator_ui_discloses_missing_metadata_drops_in_preview():
@@ -1771,10 +1767,9 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
         "'selected of matched' would read as fully eligible for feed/card"
     )
     assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
-    assert ui.count("Dropped for missing metadata") == 1, (
-        "missing-metadata disclosure must come from the preview response's "
-        "coverage exactly once"
-    )
+    assert (
+        ui.count("Dropped for missing metadata") == 1
+    ), "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
 
 
 def test_operator_ui_renders_selection_diagnostics_in_preview():
@@ -2513,10 +2508,9 @@ def test_operator_ui_discloses_saved_feed_overrides_filters_on_export():
     assert (
         "Card uses saved feed <strong>${einkEsc(id)}</strong>" in ui
     ), "banner does not name the saved feed the card will deliver"
-    assert "filters above are ignored." in ui, (
-        "banner does not disclose that the filter spec is overridden "
-        "by the saved feed on export"
-    )
+    assert (
+        "filters above are ignored." in ui
+    ), "banner does not disclose that the filter spec is overridden " "by the saved feed on export"
     assert (
         '<a href="#" id="ek-clear">use filters instead</a>' in ui
     ), "no way back from the saved-feed override to the filter spec"
