@@ -627,10 +627,27 @@ def _derived_preference_evidence(
 
 
 class PlaylistIn(BaseModel):
+    """Inline selection preview.
+
+    ``target`` names a registered destination panel. Preview resolves that key
+    before selection and reports it. Per-item strategy and gamut evidence stay
+    master-derived Spectra-6 policy and do not change with the panel.
+    """
+
     spec: dict = Field(default_factory=dict)
     quality_scores: dict[str, float] = Field(default_factory=dict)
     embeddings: dict[str, list[float]] = Field(default_factory=dict)
-    target: str = "gooddisplay-315-diy"
+    target: str = Field(
+        default="gooddisplay-315-diy",
+        description=(
+            "Destination panel key from the render-target registry. Resolved "
+            "before selection; an unknown key is HTTP 400, including when "
+            "sample is 0. Omitted, it resolves to gooddisplay-315-diy. "
+            "Selection and per-item strategy/gamut evidence do not depend on "
+            "it: that evidence is master-derived Spectra-6 policy and is "
+            "target-independent."
+        ),
+    )
     sample: int = Field(default=24, ge=0, le=200)
 
 
@@ -728,6 +745,20 @@ def eink_facets() -> dict:
 
 @app.post("/eink/playlist/preview")
 def eink_playlist_preview(body: PlaylistIn) -> dict:
+    """Select a playlist and report master-derived Spectra-6 evidence.
+
+    ``body.target`` is resolved through the render-target registry before
+    selection. An unknown key returns HTTP 400 even when ``sample`` is 0, so
+    an empty item list is not a silent acceptance of a bad panel. The response
+    keeps the existing selection fields and adds the resolved target key,
+    evidence calibration ``Spectra-6``, and evidence scope ``master-derived
+    and target-independent``. Per-item strategy and gamut evidence are still
+    taken from ``render_evidence`` on the master and do not vary by panel.
+    """
+    try:
+        tgt = _eink.get_target(body.target)
+    except KeyError as exc:
+        raise HTTPException(400, str(exc)) from exc
     try:
         spec = _eink.PlaylistSpec.from_dict(body.spec)
     except (ValueError, TypeError) as exc:
@@ -779,6 +810,9 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
         "selection_diagnostics": res.selection_diagnostics,
         "items": items,
         "work_ids": res.work_ids,
+        "target": tgt.key,
+        "evidence_calibration": "Spectra-6",
+        "evidence_scope": "master-derived and target-independent",
     }
 
 

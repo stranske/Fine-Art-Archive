@@ -388,6 +388,138 @@ def test_playlist_preview_matches_direct_diverse_selection(tmp_path, monkeypatch
     assert [item["work_id"] for item in response["selection_diagnostics"]] == direct.selected_ids
 
 
+_PREVIEW_EVIDENCE_FIELDS = ("render_strategy", "render_strategy_reason", "gamut_verdict")
+
+
+def _temporary_preview_archive(tmp_path, monkeypatch):
+    """Two sidecars and one temporary master. The second work has no image."""
+    from fine_art_archive.api import main as api_main
+
+    masters = tmp_path / "works"
+    held = masters / "held-master"
+    held.mkdir(parents=True)
+    Image.new("RGB", (48, 32), (180, 40, 40)).save(held / "master.png")
+    (masters / "missing-master").mkdir()
+    rows = [
+        sidecar("held-master", artist="Included", title="Held", year=1650),
+        sidecar("missing-master", artist="Included", title="Missing", year=1660),
+    ]
+    ratings = tmp_path / "ratings.jsonl"
+    ratings.write_text("")
+    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
+    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
+    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", masters)
+    return api_main
+
+
+def _preview_evidence(payload: dict) -> list[dict]:
+    return [
+        {
+            "work_id": item["work_id"],
+            "has_master": item["has_master"],
+            **{key: item.get(key) for key in _PREVIEW_EVIDENCE_FIELDS},
+        }
+        for item in payload["items"]
+    ]
+
+
+def test_playlist_preview_reports_resolved_target_and_stable_spectra6_evidence(
+    tmp_path, monkeypatch
+):
+    """Outcome 1: valid panels share selection and master-derived evidence."""
+    from fastapi.testclient import TestClient
+
+    api_main = _temporary_preview_archive(tmp_path, monkeypatch)
+    client = TestClient(api_main.app)
+    spec = {"sort": "year"}
+    bodies = []
+    for target in ("gooddisplay-315-diy", "generic-mono-1bit"):
+        response = client.post(
+            "/eink/playlist/preview",
+            json={"spec": spec, "target": target, "sample": 24},
+        )
+        assert response.status_code == 200, response.text
+        bodies.append(response.json())
+
+    color, mono = bodies
+    assert color["target"] == "gooddisplay-315-diy"
+    assert mono["target"] == "generic-mono-1bit"
+    for body in bodies:
+        assert body["evidence_calibration"] == "Spectra-6"
+        assert body["evidence_scope"] == "master-derived and target-independent"
+        for key in (
+            "total_candidates",
+            "matched",
+            "selected",
+            "coverage",
+            "facets",
+            "selection_diagnostics",
+            "items",
+            "work_ids",
+        ):
+            assert key in body
+    assert color["work_ids"] == mono["work_ids"] == ["held-master", "missing-master"]
+    assert _preview_evidence(color) == _preview_evidence(mono)
+    held = color["items"][0]
+    assert held["has_master"] is True
+    assert held["render_strategy"]
+    assert held["gamut_verdict"]
+    assert held["render_strategy_reason"]
+    missing = color["items"][1]
+    assert missing == {
+        "work_id": "missing-master",
+        "title": "Missing",
+        "artist": "Included",
+        "year": 1660,
+        "has_master": False,
+    }
+
+    omitted = client.post("/eink/playlist/preview", json={"spec": spec, "sample": 24})
+    assert omitted.status_code == 200, omitted.text
+    assert omitted.json()["target"] == "gooddisplay-315-diy"
+    assert omitted.json()["work_ids"] == color["work_ids"]
+    assert _preview_evidence(omitted.json()) == _preview_evidence(color)
+
+    zero = client.post(
+        "/eink/playlist/preview",
+        json={"spec": spec, "target": "generic-mono-1bit", "sample": 0},
+    )
+    assert zero.status_code == 200, zero.text
+    zero_body = zero.json()
+    assert zero_body["target"] == "generic-mono-1bit"
+    assert zero_body["evidence_calibration"] == "Spectra-6"
+    assert zero_body["evidence_scope"] == "master-derived and target-independent"
+    assert zero_body["items"] == []
+    assert zero_body["work_ids"] == color["work_ids"]
+    assert zero_body["selected"] == color["selected"]
+
+
+def test_playlist_preview_unknown_target_returns_400_including_sample_zero(tmp_path, monkeypatch):
+    """Unknown panels are rejected before selection, including an empty sample."""
+    from fastapi.testclient import TestClient
+
+    api_main = _temporary_preview_archive(tmp_path, monkeypatch)
+    calls = []
+    real_build = api_main._build_eink_playlist
+
+    def counting_build(*args, **kwargs):
+        calls.append(args)
+        return real_build(*args, **kwargs)
+
+    monkeypatch.setattr(api_main, "_build_eink_playlist", counting_build)
+    client = TestClient(api_main.app)
+    for sample in (24, 0):
+        response = client.post(
+            "/eink/playlist/preview",
+            json={"spec": {"sort": "year"}, "target": "not-a-panel", "sample": sample},
+        )
+        assert response.status_code == 400, response.text
+        assert "unknown render target" in response.json()["detail"]
+        assert "not-a-panel" in response.json()["detail"]
+    assert calls == []
+
+
 def test_random_sort_is_seeded_so_a_card_is_reproducible():
     rows = [sidecar(f"w{i}") for i in range(30)]
     a = build(rows, PlaylistSpec(sort="random", seed=7)).work_ids
@@ -1350,6 +1482,9 @@ const fetch = async (url, options) => {
   return {ok: true, json: async () => ({
     coverage: {}, items: [{work_id: 'fixture/work', has_master: true}],
     selected: 1, matched: 1, total_candidates: 1, selection_diagnostics: [],
+    target: 'gooddisplay-315-diy',
+    evidence_calibration: 'Spectra-6',
+    evidence_scope: 'master-derived and target-independent',
     name: 'Input parity', resolved_count: 1, written: 1, palette_measured: true,
   })};
 };
@@ -1410,6 +1545,12 @@ const fetch = async (url, options) => {
         "max_px": ["380"],
         **({"fit": [fit]} if fit else {}),
     }
+    assert 'id="ek-target-evidence"' in html
+    assert (
+        "Resolved target gooddisplay-315-diy. Strategy and gamut evidence use "
+        "Spectra-6 policy (master-derived and target-independent), rather than "
+        "a measurement for the selected panel."
+    ) in html
 
 
 def test_operator_ui_einkspec_forwards_each_spec_control():
