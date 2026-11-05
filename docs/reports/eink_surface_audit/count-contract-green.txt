@@ -1,0 +1,9 @@
+Command (identical to the red run):
+/opt/hostedtoolcache/Python/3.14.10/x64/bin/python3 -m pytest tests/test_eink_pipeline.py::test_ui_count_consumers_do_not_treat_the_sample_as_delivered -q -o addopts= -m 'not slow'
+
+Restored src/fine_art_archive/ui/index.html to the implementation bytes.
+SHA-256 before the ambiguous edit and after restore:
+2ce6f914be772753e9b46198b757a47773b40a8f20412d7f1a9074d153678484
+
+Exit: 0
+1 passed, 13 warnings in 0.41s
