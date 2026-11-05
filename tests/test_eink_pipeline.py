@@ -2429,13 +2429,13 @@ def test_operator_ui_renders_saved_feed_delivery_identity():
     assert "'<span style=\"color:#a00\">error</span>'" in ui, "resolve error is not marked"
     assert ": p.resolved_count}" in ui, "resolved work count is not rendered for a healthy feed"
     assert 'host.querySelectorAll("[data-eink-use]")' in ui, "to-card action is unwired"
-    assert 'einkUseForCard(a.getAttribute("data-eink-use"));' in ui, (
-        "to-card action does not choose that saved feed for export"
-    )
+    assert (
+        'einkUseForCard(a.getAttribute("data-eink-use"));' in ui
+    ), "to-card action does not choose that saved feed for export"
     assert 'host.querySelectorAll("[data-eink-del]")' in ui, "delete action is unwired"
-    assert 'einkDeletePlaylist(a.getAttribute("data-eink-del")' in ui, (
-        "delete action does not delete that saved feed"
-    )
+    assert (
+        'einkDeletePlaylist(a.getAttribute("data-eink-del")' in ui
+    ), "delete action does not delete that saved feed"
     assert 'a.getAttribute("data-eink-name")' in ui, "delete loses the feed name"
 
 
@@ -2462,17 +2462,17 @@ def test_operator_ui_discloses_saved_feed_overrides_filters_on_export():
     assert "function einkUseForCard(id) {" in ui, "no saved-feed card choice exists"
     assert "einkCardPlaylistId = id;" in ui, "to-card choice is not recorded"
     assert "card will use that saved feed" in ui, "choice does not say the feed is used"
-    assert "Card uses saved feed <strong>${einkEsc(id)}</strong>" in ui, (
-        "banner does not name the saved feed the card will deliver"
-    )
+    assert (
+        "Card uses saved feed <strong>${einkEsc(id)}</strong>" in ui
+    ), "banner does not name the saved feed the card will deliver"
     assert "filters above are ignored." in ui, (
         "banner does not disclose that the filter spec is overridden "
         "by the saved feed on export"
     )
-    assert '<a href="#" id="ek-clear">use filters instead</a>' in ui, (
-        "no way back from the saved-feed override to the filter spec"
-    )
-    assert 'document.getElementById("ek-clear")?.addEventListener("click"' in ui, (
-        "the clear link in the override banner is unwired"
-    )
+    assert (
+        '<a href="#" id="ek-clear">use filters instead</a>' in ui
+    ), "no way back from the saved-feed override to the filter spec"
+    assert (
+        'document.getElementById("ek-clear")?.addEventListener("click"' in ui
+    ), "the clear link in the override banner is unwired"
     assert 'banner.textContent = "";' in ui, "clearing the choice leaves the banner up"
