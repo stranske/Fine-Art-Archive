@@ -1027,11 +1027,29 @@ def test_preference_diverse_caller_evidence_is_preview_only(
 
 
 def test_eink_openapi_describes_preview_only_evidence(client):
-    schema = client.get("/openapi.json").json()
+    response = client.get("/openapi.json")
+    assert response.status_code == 200, response.text
+    schema = response.json()
+    models = {}
+    for endpoint, model_name in [("preview", "PlaylistIn"), ("export", "ExportIn")]:
+        operation = schema["paths"][f"/eink/playlist/{endpoint}"]["post"]
+        request_schema = operation["requestBody"]["content"]["application/json"]["schema"]
+        assert request_schema["$ref"] == f"#/components/schemas/{model_name}"
+        model = schema["components"]["schemas"][model_name]
+        models[endpoint] = model
+        assert "server-owned" in model["description"]
+        assert "preview-only" in model["description"]
+        assert "not guaranteed" in model["description"]
+        for field in ["quality_scores", "embeddings"]:
+            assert field in model["description"]
+            assert field in model["properties"]["spec"]["description"]
+        assert "not guaranteed" in model["properties"]["spec"]["description"]
     preview = schema["paths"]["/eink/playlist/preview"]["post"]["description"]
     assert "preview-only" in preview
     assert "server-owned evidence" in preview
     assert "matching their selection is not guaranteed" in preview
+    assert "Ordered mode ignores caller quality_scores/embeddings" in preview
+    assert "ordered mode ignores them" in models["preview"]["properties"]["spec"]["description"]
     for field in ["quality_scores", "embeddings"]:
         description = schema["components"]["schemas"]["PlaylistIn"]["properties"][field][
             "description"
@@ -1043,6 +1061,12 @@ def test_eink_openapi_describes_preview_only_evidence(client):
     export = schema["paths"]["/eink/playlist/export"]["post"]["description"]
     assert "server-owned evidence" in export
     assert "preview-only" in export
+    export_fields = models["export"]["properties"]
+    assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
+    assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]
+    saved_export = export_fields["playlist_id"]["description"]
+    assert "current server-owned evidence" in saved_export
+    assert "preview-only caller quality_scores/embeddings" in saved_export
 
 
 def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(

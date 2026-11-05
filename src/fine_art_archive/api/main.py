@@ -627,9 +627,19 @@ def _derived_preference_evidence(
 
 
 class PlaylistIn(BaseModel):
-    """Selection preview inputs; caller evidence is preview-only and is not saved."""
+    """Selection preview inputs with preview-only caller quality_scores/embeddings.
 
-    spec: dict = Field(default_factory=dict)
+    Caller evidence is not saved. Saved/served and exported selections use
+    server-owned evidence, so matching their selection is not guaranteed.
+    """
+
+    spec: dict = Field(
+        default_factory=dict,
+        description="Selection spec. Caller quality_scores/embeddings apply only to this "
+        "preview in preference-diverse mode; ordered mode ignores them. Saved/served "
+        "and exported selections use server-owned evidence, so matching their "
+        "selection is not guaranteed.",
+    )
     quality_scores: dict[str, float] = Field(
         default_factory=dict,
         description="Preview-only quality evidence for preference-diverse selection. "
@@ -696,12 +706,23 @@ def _build_eink_playlist(
 class ExportIn(BaseModel):
     """Export an inline or saved spec using current server-owned selection evidence.
 
-    Caller quality_scores/embeddings apply only to PlaylistIn previews. They are
-    not export inputs; matching an overridden preview's selection is not guaranteed.
+    Caller quality_scores/embeddings are preview-only inputs to PlaylistIn.
+    They are not export inputs; matching an overridden preview's selection is not guaranteed.
     """
 
-    playlist_id: str | None = None
-    spec: dict = Field(default_factory=dict)
+    playlist_id: str | None = Field(
+        default=None,
+        description="Saved playlist to export. When supplied, its stored spec, target, "
+        "dither and fit override the corresponding request fields. Selection uses "
+        "current server-owned evidence, not preview-only caller quality_scores/embeddings.",
+    )
+    spec: dict = Field(
+        default_factory=dict,
+        description="Inline selection spec, ignored when playlist_id is supplied. "
+        "Preference-diverse selection derives quality scores from current server-owned "
+        "ratings and embeddings from local masters. Caller quality_scores/embeddings "
+        "are preview-only; matching an overridden preview's selection is not guaranteed.",
+    )
     target: str = "gooddisplay-315-diy"
     path: str
     dither: str = "floyd-steinberg"
@@ -753,6 +774,7 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     ones, are used as supplied. Caller evidence is not persisted. Saved/served
     playlists and exports use current server-owned evidence through
     _build_eink_playlist, so matching their selection is not guaranteed.
+    Ordered mode ignores caller quality_scores/embeddings.
     """
     try:
         spec = _eink.PlaylistSpec.from_dict(body.spec)
