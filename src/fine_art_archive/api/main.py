@@ -632,6 +632,8 @@ class PlaylistIn(BaseModel):
     Caller evidence applies to this request only; it is not saved or reused by
     later previews. Saved/served and exported selections use server-owned
     evidence, so matching their selection is not guaranteed.
+    Selection is resolved live; later archive, ratings or master changes can
+    change membership even when the preview did not supply caller evidence.
     """
 
     spec: dict = Field(
@@ -713,6 +715,8 @@ class ExportIn(BaseModel):
     Caller quality_scores/embeddings are preview-only inputs to PlaylistIn.
     They are not export inputs; matching an overridden preview's selection is not guaranteed.
     Undeclared quality_scores/embeddings fields are ignored, including empty mappings.
+    Selection is resolved live; later archive, ratings or master changes can
+    change membership even when the preview did not supply caller evidence.
     """
 
     playlist_id: str | None = Field(
@@ -785,6 +789,8 @@ def eink_playlist_preview(body: PlaylistIn) -> dict:
     server-owned evidence through
     _build_eink_playlist, so matching their selection is not guaranteed.
     Ordered mode ignores caller quality_scores/embeddings.
+    Selection is resolved live; later archive, ratings or master changes can
+    change membership even when the preview did not supply caller evidence.
     """
     try:
         spec = _eink.PlaylistSpec.from_dict(body.spec)

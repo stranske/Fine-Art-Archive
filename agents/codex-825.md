@@ -22,8 +22,8 @@
   selection parity with saved/served or exported playlists is not guaranteed.
 - [x] Deterministic tests change preview IDs while delivery derives server-owned
   evidence through `_build_eink_playlist`; deliberate forwarding removal fails.
-- [x] Broad e-ink suite: 314 passed in 77.92 s. Narrow regression: 12 passed in
-  7.41 s on Python 3.14.9. Both use `-m 'not slow'` and the existing sandbox
+- [x] Broad e-ink suite: 314 passed in 81.90 s. Narrow regression: 12 passed in
+  7.15 s on Python 3.14.10. Both use `-m 'not slow'` and the existing sandbox
   scheduling harness; exact commands are recorded in the audit.
 - [x] Audit records the chosen contract and links #805 and #825.
 
@@ -32,25 +32,19 @@ the verified items above. All work remained in this agent; nothing was delegated
 
 ## Publication status
 
-Branch: `codex/issue-825`. The runner committed the earlier implementations in
-`237d676`, `bd1987d`, `cdcbf48`, `169b9da` and `724c676`; their combined diff
-touches four task files. Earlier direct staging failures describe those runs,
-not the publication state of that now-committed implementation.
+Branch: `codex/issue-825`, source `2ae6f1b`. Read-only GitHub verification now
+confirms PR #870 is **merged**, with `draft=false` and keepalive off. Earlier
+open-PR observations and staging failures remain historical evidence in the
+audit. The old unchecked work order is stale; this run does not reopen or
+change the merged PR.
 
-The connector rejected the live PR-body reconciliation, `needs-human` label
-and blocker comment: `MCP tool call requires approval, but approval policy is never`.
-The verified checkboxes above reconcile the duplicated work-order entries
-locally; the live PR body still needs publication.
+The current follow-up clarifies live selection in both request-model
+descriptions and the preview endpoint: later archive, ratings or master changes
+can alter membership even without caller overrides. The generated OpenAPI
+regression now verifies that caveat for both request models and endpoints.
+Exact test commands and results are recorded in the audit's live-selection
+documentation check. Black, Ruff and whitespace checks passed.
 
-At source `724c676`, the existing focused regressions passed 8 tests in 7.38 s.
-The follow-up clarifies the API's top-level evidence fields and corrects the
-export spec description: evidence nested inside `spec` returns HTTP 400 rather
-than being ignored. Four new endpoint cases verify refusal before selection or
-export writes. The expanded focused command passed 12 tests in 7.41 s; its
-exact command and the completed broad run are recorded in the audit.
-
-The current follow-up remains uncommitted: after all checks passed, staging
-these four files failed with exit 128 because `.git/index.lock` cannot be
-created on a read-only filesystem. No current-run commit or push occurred.
-Read-only verification confirmed PR #870 is open with `draft=false` at
-`724c676`.
+The required staging/commit attempt failed at `git add` with exit 128 because
+`.git/index.lock` cannot be created on the read-only filesystem. These four
+follow-up files remain changed in the workspace; no new commit or push occurred.

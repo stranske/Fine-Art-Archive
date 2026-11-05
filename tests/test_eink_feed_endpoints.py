@@ -1088,6 +1088,10 @@ def test_eink_openapi_describes_preview_only_evidence(client):
         assert "server-owned" in model["description"]
         assert "preview-only" in model["description"]
         assert "not guaranteed" in model["description"]
+        for description in [model["description"], operation["description"]]:
+            assert "Selection is resolved live" in description
+            assert "archive, ratings or master" in description
+            assert "even when the preview did not supply caller evidence" in description
         for field in ["quality_scores", "embeddings"]:
             assert field in model["description"]
             assert field in model["properties"]["spec"]["description"]

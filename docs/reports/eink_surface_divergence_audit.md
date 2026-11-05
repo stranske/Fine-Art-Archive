@@ -488,6 +488,43 @@ After validation, staging the four follow-up files failed with exit 128:
 possible. This failure applies to this follow-up; the earlier implementations
 are already present in the five reviewed runner commits.
 
+### Live-selection documentation check (2026-11-05, source `2ae6f1b`)
+
+Re-read the issue-format guide, this audit, both request models and all four
+selection functions. The forwarding behavior still matches the report: only
+preview forwards caller maps; saved/served resolution and both export forms
+derive server-owned evidence through `_build_eink_playlist`. The preview-only
+contract selected in [#825](https://github.com/stranske/Fine-Art-Archive/issues/825)
+after [#805](https://github.com/stranske/Fine-Art-Archive/issues/805) was already
+implemented. The remaining documentation clarification explains that later
+archive, ratings or master changes can change membership even without caller
+overrides. `PlaylistIn`, `ExportIn` and the preview endpoint now expose that
+caveat; the existing OpenAPI regression checks both model and operation descriptions.
+
+Validation uses the active interpreter, Python **3.14.10** at
+`/opt/hostedtoolcache/Python/3.14.10/x64/bin/python`, with the existing sandbox
+scheduling harness. Exact regression commands:
+
+```sh
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest tests/test_eink_feed_endpoints.py -k 'caller_evidence_is_preview_only or caller_evidence_inside_spec or preview_keeps_explicit_evidence or openapi_describes_preview_only' --maxfail=1 -m 'not slow' -o addopts= -q
+PYTHONPATH="$PWD/docs/reports/eink_surface_audit/sandbox:$PWD/src" python -m pytest -k eink --maxfail=1 -m 'not slow' -o addopts= -q
+```
+
+The focused baseline passed **12 tests** in **7.43 s**; after the clarification,
+the same command passed **12 tests**, 94 deselected, in **7.15 s**. The mandatory
+repository-wide Black command documented above passed with **377 files unchanged**;
+Black formatting of both edited Python files, Ruff and whitespace checks passed.
+The broad e-ink command passed **314 tests**, 2259 deselected, in **81.90 s**.
+Both pytest runs reported the same 15 existing warnings. The narrower command
+completes well within the required two minutes.
+
+Read-only GitHub verification found PR **#870 already merged**, with
+`draft=false` and keepalive off. Its old unchecked work-order entries do not
+reflect missing implementation. This run does not reopen or change that PR.
+After validation, `git add` of the four scoped files failed with exit 128:
+`.git/index.lock: Read-only file system`. The required commit could not be
+created; the reviewed changes remain in the workspace, with no push performed.
+
 ## Executed evidence and test layers
 
 Local runtime: `/opt/anaconda3/bin/python3`, Python 3.12, pytest 9.1.1,
