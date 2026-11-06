@@ -41,7 +41,9 @@ def test_allowed_p31_includes_drawing_and_excludes_junk() -> None:
 
 
 def test_wikidata_audit_user_agent_includes_contact() -> None:
-    assert "tim@stranskemo.com" in USER_AGENT
+    # Wikimedia throttles clients without contact information; a project URL counts.
+    assert "https://github.com/stranske/Fine-Art-Archive" in USER_AGENT
+    assert "@" not in USER_AGENT
 
 
 def test_sparql_values_and_known_works_query_use_shared_allowlist() -> None:

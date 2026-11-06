@@ -24,7 +24,7 @@ from dataclasses import asdict, dataclass, field
 from fine_art_archive.known_works.artwork_classes import allowed_p31_sparql_values
 
 LOG = logging.getLogger(__name__)
-USER_AGENT = "FineArtArchive/0.3 (tim@stranskemo.com)"
+USER_AGENT = "FineArtArchive/0.3 (+https://github.com/stranske/Fine-Art-Archive)"
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 MEDIAWIKI_API = "https://en.wikipedia.org/w/api.php"
 MET_SEARCH = "https://collectionapi.metmuseum.org/public/collection/v1/search"

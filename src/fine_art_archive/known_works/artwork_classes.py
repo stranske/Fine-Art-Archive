@@ -100,7 +100,7 @@ FORBIDDEN_P31: frozenset[str] = frozenset(
     }
 )
 
-USER_AGENT = "FineArtArchive/0.3 (tim@stranskemo.com)"
+USER_AGENT = "FineArtArchive/0.3 (+https://github.com/stranske/Fine-Art-Archive)"
 
 
 def allowed_p31_sparql_values() -> str:
