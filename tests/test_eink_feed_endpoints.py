@@ -816,7 +816,12 @@ def test_export_inline_spec_target_dither_fit_without_playlist_id(
     monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
     wid = "exp-inline-wid"
     _work(archive, wid, title="Inline precedence")
-    spec = {"sort": "fit", "limit": 1}
+    _work(archive, "exp-inline-excluded", title="Excluded")
+    spec = {"not_tags": ["exclude:inline"], "sort": "as-filtered"}
+    metadata = archive / "exp-inline-excluded" / "meta.json"
+    row = json.loads(metadata.read_text())
+    row["tags"] = ["exclude:inline"]
+    metadata.write_text(json.dumps(row))
 
     card = tmp_path / "card-inline"
     exported = client.post(
@@ -826,16 +831,17 @@ def test_export_inline_spec_target_dither_fit_without_playlist_id(
             "path": str(card),
             "write": True,
             "overwrite": True,
-            "target": "gooddisplay-315-diy",
+            "target": "generic-mono-1bit",
             "dither": "atkinson",
             "fit": "cover",
         },
     )
     assert exported.status_code == 200, exported.text
+    assert exported.json()["target"] == "generic-mono-1bit"
     manifest = json.loads((card / "playlist.json").read_text())
     assert manifest["render"]["dither"] == "atkinson"
     assert manifest["render"]["fit"] == "cover"
-    assert manifest["items"][0]["work_id"] == wid
+    assert [item["work_id"] for item in manifest["items"]] == [wid]
 
 
 def test_export_saved_playlist_overrides_inline_target_dither_fit(
@@ -850,7 +856,14 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
     monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
     wid = "exp-saved-wid"
     _work(archive, wid, title="Saved precedence")
-    spec = {"sort": "fit", "limit": 1}
+    inline_wid = "exp-inline-only"
+    _work(archive, inline_wid, title="Inline only")
+    for work_id, tag in ((wid, "selection:saved"), (inline_wid, "selection:inline")):
+        metadata = archive / work_id / "meta.json"
+        row = json.loads(metadata.read_text())
+        row["tags"] = [tag]
+        metadata.write_text(json.dumps(row))
+    spec = {"all_tags": ["selection:saved"], "sort": "as-filtered"}
 
     saved = _save(
         client,
@@ -864,7 +877,7 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
         "/eink/playlist/export",
         json={
             "playlist_id": saved["id"],
-            "spec": {"sort": "fit", "limit": 99},
+            "spec": {"all_tags": ["selection:inline"], "sort": "as-filtered"},
             "path": str(card),
             "write": True,
             "overwrite": True,
@@ -878,7 +891,7 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
     manifest = json.loads((card / "playlist.json").read_text())
     assert manifest["render"]["dither"] == "floyd-steinberg"
     assert manifest["render"]["fit"] == "contain"
-    assert manifest["items"][0]["work_id"] == wid
+    assert [item["work_id"] for item in manifest["items"]] == [wid]
 
 
 def test_year_zero_lower_bound_agrees_across_preview_saved_feed_and_export(

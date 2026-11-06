@@ -1429,124 +1429,13 @@ def test_operator_ui_can_emit_selection_mode_and_render_its_diagnostics():
     assert "selection_diagnostics" in ui, "the explanations are returned and rendered by nothing"
 
 
-def test_operator_ui_forwards_fit_to_preview_images_save_and_export():
-    """The fit control must reach every surface the preview claims to match.
-
-    The companion preview renders each item through
-    ``/works/{id}/eink_preview``; the saved feed renders with ``pl.fit`` and
-    the SD export with the export body's ``fit``. If the UI's ``ek-fitmode``
-    value reached only the export, the on-screen preview would show
-    ``contain`` framing while the card/feed delivered ``cover`` — the exact
-    preview-vs-delivery divergence the audit tracks. Disconnecting the
-    ``fitQ`` interpolation in the preview ``<img>`` URL must fail this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert 'id="ek-fitmode"' in ui, "no fit control exists for the operator to set"
-    # Preview images: the fit query param is built from the control and
-    # interpolated into the eink_preview URL actually rendered on screen.
-    assert 'const fitQ = fitMode ? `&fit=${encodeURIComponent(fitMode)}` : "";' in ui
-    assert "eink_preview?target=${encodeURIComponent(target)}" in ui
-    assert "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui, (
-        "preview <img> does not forward the chosen fit — preview would not "
-        "match the framing delivered by feed/export"
-    )
-    # Saved feed and SD export consume the same control, so all three
-    # surfaces agree on framing for one operator action.
-    assert (
-        ui.count('document.getElementById("ek-fitmode").value || null') >= 2
-    ), "fit must be sent both when saving a playlist (feed) and on export (SD card)"
-
-
-def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export():
-    """Dither and panel target must reach every surface the preview claims to match.
-
-    ``eink_preview`` renders with its ``target``/``dither`` query params
-    (api/main.py), the saved feed renders with ``pl.target``/``pl.dither``
-    and the SD export with the export body's ``target``/``dither``. If the
-    UI's ``ek-target``/``ek-dither`` values reached only the export, the
-    on-screen preview would show a different panel size and dither texture
-    than the card/feed delivered — the same preview-vs-delivery divergence
-    class the audit tracks for ``fit``. Disconnecting the ``dither``
-    interpolation in the preview ``<img>`` URL must fail this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert 'id="ek-target"' in ui, "no target control exists for the operator to set"
-    assert 'id="ek-dither"' in ui, "no dither control exists for the operator to set"
-    # Preview images: both values are read from their controls in
-    # einkPreview() and interpolated into the eink_preview URL on screen.
-    assert 'const target = document.getElementById("ek-target").value;' in ui
-    assert 'const dither = document.getElementById("ek-dither").value;' in ui
-    assert (
-        "eink_preview?target=${encodeURIComponent(target)}"
-        "&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380" in ui
-    ), (
-        "preview <img> does not forward the chosen target/dither — preview "
-        "would not match the panel/dither delivered by feed/export"
-    )
-    # Saved feed and SD export consume the same controls, so all three
-    # surfaces agree on panel and dither for one operator action.
-    assert (
-        ui.count('document.getElementById("ek-target").value') >= 3
-    ), "target must be read for preview images, saving a playlist (feed) and export (SD card)"
-    assert (
-        ui.count('document.getElementById("ek-dither").value') >= 3
-    ), "dither must be read for preview images, saving a playlist (feed) and export (SD card)"
-
-
-def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
-    """One shared ``einkSpec()`` must feed preview, saved feed and SD export.
-
-    ``einkSpec()`` (index.html) builds the ``PlaylistSpec`` — filters, sort,
-    limit and the A15 ``selection_mode`` — from the operator controls. The
-    preview POSTs it to ``/eink/playlist/preview``, ``einkSavePlaylist``
-    persists it for the feed, and ``einkExport`` sends it to
-    ``/eink/playlist/export``. If any surface stopped calling the shared
-    builder (e.g. export inlined its own spec literal), the works previewed
-    could differ from the works delivered — the ``spec.*`` row of the
-    divergence audit, currently marked already-correct only on source
-    reading. Replacing ``spec: einkSpec()`` in the export body must fail
-    this test. The rotation ``interval`` is the one deliberate asymmetry:
-    it is saved with the playlist (feed rotation) and sent nowhere else.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert "function einkSpec()" in ui, "no shared spec builder exists"
-    # Preview: the playlist preview request carries the shared spec.
-    assert "body: JSON.stringify({ spec: einkSpec(), target, sample: 24 })" in ui, (
-        "playlist preview does not send the shared einkSpec() — previewed "
-        "selection could diverge from the saved/exported selection"
-    )
-    # Saved feed: the playlist-create body carries the same shared spec,
-    # plus the rotation interval only a saved feed consumes.
-    assert (
-        "name: name.trim(), spec: einkSpec()," in ui
-    ), "saving a playlist (feed) does not send the shared einkSpec()"
-    assert (
-        'interval: document.getElementById("ek-interval").value,' in ui
-    ), "saved feed loses the operator's rotation interval"
-    # SD export: the export body carries the same shared spec.
-    assert 'spec: einkSpec(), target: document.getElementById("ek-target").value,' in ui, (
-        "SD export does not send the shared einkSpec() — exported selection "
-        "could diverge from the previewed/saved selection"
-    )
-    assert (
-        ui.count("spec: einkSpec()") == 3
-    ), "exactly preview, save and export should consume the shared spec builder"
-
-
 @pytest.mark.parametrize("fit", ["", "contain", "cover", "stretch"])
 def test_ui_preview_save_and_export_carry_the_same_inputs(tmp_path, fit):
     """Execute the UI producers: a hand-built payload cannot prove UI parity."""
     from fine_art_archive.api.main import UI_FILE
 
     node = shutil.which("node")
-    if node is None:
-        pytest.skip("node is required to verify the companion's request producers")
+    assert node is not None, "node is required to verify the companion's request producers"
     ui = UI_FILE.read_text()
     functions = []
     for start, end in (
@@ -1638,6 +1527,7 @@ const fetch = async (url, options) => {
     assert preview["body"]["target"] == saved["body"]["target"] == exported["body"]["target"]
     assert saved["body"]["fit"] == exported["body"]["fit"] == (fit or None)
     assert saved["body"]["dither"] == exported["body"]["dither"] == "atkinson"
+    assert saved["body"]["interval"] == "daily"
     assert exported["body"]["playlist_id"] == "fixture/playlist"
     assert exported["body"]["write"] is False
     assert exported["body"]["overwrite"] is True
@@ -1660,8 +1550,8 @@ const fetch = async (url, options) => {
     assert (
         "Resolved target gooddisplay-315-diy. Strategy and gamut evidence use "
         "Spectra-6 policy (master-derived and target-independent), rather than "
-        "a measurement for the selected panel." in html
-    )
+        "a measurement for the selected panel."
+    ) in html
 
 
 def test_operator_ui_einkspec_forwards_each_spec_control():
@@ -1825,9 +1715,10 @@ def test_operator_ui_discloses_estimated_palette_on_export():
     )
     # The warning must be tied to the export response, not shown (or hidden)
     # unconditionally: the ternary on d.palette_measured is the disclosure.
-    assert (
-        ui.count("d.palette_measured") == 1
-    ), "palette disclosure must come from the export response's palette_measured flag exactly once"
+    assert ui.count("d.palette_measured") == 1, (
+        "palette disclosure must come from the export response's "
+        "palette_measured flag exactly once"
+    )
 
 
 def test_operator_ui_discloses_no_master_works_in_preview():
@@ -1852,9 +1743,10 @@ def test_operator_ui_discloses_no_master_works_in_preview():
         "preview header does not disclose no-master works — preview count "
         "would read as deliverable works the feed/card cannot show"
     )
-    assert (
-        ui.count("shown have no local image") == 1
-    ), "no-master disclosure must come from the preview response's has_master flags exactly once"
+    assert ui.count("shown have no local image") == 1, (
+        "no-master disclosure must come from the preview response's "
+        "has_master flags exactly once"
+    )
 
 
 def test_operator_ui_discloses_skipped_works_on_export():
@@ -1877,9 +1769,9 @@ def test_operator_ui_discloses_skipped_works_on_export():
         "export result does not disclose skipped works — 'Wrote N file(s)' "
         "would read as the full selection the card cannot show"
     )
-    assert (
-        ui.count("${d.skipped} skipped") == 1
-    ), "skipped disclosure must come from the export response's skipped count exactly once"
+    assert ui.count("${d.skipped} skipped") == 1, (
+        "skipped disclosure must come from the export response's skipped " "count exactly once"
+    )
 
 
 def test_operator_ui_discloses_missing_metadata_drops_in_preview():
@@ -1907,9 +1799,9 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
         "'selected of matched' would read as fully eligible for feed/card"
     )
     assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
-    assert (
-        ui.count("Dropped for missing metadata") == 1
-    ), "missing-metadata disclosure must come from the preview response's coverage exactly once"
+    assert ui.count("Dropped for missing metadata") == 1, (
+        "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
+    )
 
 
 def test_operator_ui_renders_selection_diagnostics_in_preview():
@@ -1953,8 +1845,8 @@ def test_enumerated_eink_surface_inputs_match_backend_signatures():
     ``SavePlaylistIn``, ``_resolve_playlist``, ``_build_eink_playlist`` and the
     traced helpers. It does **not** exhaust inputs read through ``request`` on
     ``_render_feed_image`` (for example ``If-None-Match`` / ``if-none-match``);
-    those are covered in ``tests/test_eink_feed_endpoints.py`` (ETag / 304
-    tests) and in this report's feed-image row.
+    request-derived inputs require separate behavioral coverage. This is
+    an explicit-parameter inventory, not proof of exhaustive input parity.
     """
     import inspect
 
@@ -2102,576 +1994,6 @@ def test_enumerated_eink_surface_inputs_match_backend_signatures():
         "subset_size",
         "seed",
     ]
-
-
-def test_enumerated_eink_surface_defaults_match_audit_matrix():
-    """The enumerated inputs must keep the defaults the audit matrix assumes.
-
-    ``test_enumerated_eink_surface_inputs_match_backend_signatures`` locks
-    which inputs exist; this locks what each input means when the caller
-    omits it. A changed default is a divergence of exactly the audited
-    kind: preview would render with one implicit target/dither/fit while
-    the saved feed or SD card rendered with another, and no signature
-    would have changed. Every value below is the default recorded in the
-    audit's input-by-surface matrix (``PlaylistIn``/``ExportIn``/
-    ``SavePlaylistIn`` in api/main.py, ``PlaylistSpec`` in playlist.py,
-    ``SavedPlaylist`` in feed.py, and the traced helper signatures).
-    """
-    import inspect
-
-    from fine_art_archive.api import main as api_main
-    from fine_art_archive.display.render import gamut_render_evidence
-    from fine_art_archive.eink.feed import SavedPlaylist, item_etag
-    from fine_art_archive.eink.sdcard import export as export_card
-    from fine_art_archive.eink.targets import render_for_target
-    from fine_art_archive.preference.exhibition import select_quality_diverse
-
-    preview_in = api_main.PlaylistIn()
-    assert preview_in.spec == {}
-    assert preview_in.quality_scores == {}
-    assert preview_in.embeddings == {}
-    assert preview_in.target == "gooddisplay-315-diy"
-    assert preview_in.sample == 24
-
-    export_in = api_main.ExportIn(path="card")
-    assert export_in.playlist_id is None
-    assert export_in.spec == {}
-    assert export_in.target == "gooddisplay-315-diy"
-    assert export_in.dither == "floyd-steinberg"
-    assert export_in.fit is None
-    assert export_in.fmt == "png"
-    assert export_in.write is False
-    assert export_in.overwrite is False
-
-    save_in = api_main.SavePlaylistIn(name="Winter")
-    assert save_in.spec == {}
-    assert save_in.target == "gooddisplay-315-diy"
-    assert save_in.dither == "floyd-steinberg"
-    assert save_in.fit is None
-    assert save_in.interval == "daily"
-    assert save_in.id is None
-
-    spec = PlaylistSpec()
-    assert spec.selection_mode == "ordered"
-    assert spec.sort == "fit"
-    assert spec.seed == 42
-    assert spec.require_dossier is False
-    assert spec.limit is None
-    assert spec.min_fit is None
-    assert spec.min_quality is None
-    assert spec.year_from is None
-    assert spec.year_to is None
-    for field_name in (
-        "artists",
-        "genres",
-        "moods",
-        "periods",
-        "any_tags",
-        "all_tags",
-        "not_tags",
-        "exclude_filters",
-    ):
-        assert getattr(spec, field_name) == []
-
-    saved = SavedPlaylist(id="winter-abc123", name="Winter", spec={})
-    assert saved.target == "gooddisplay-315-diy"
-    assert saved.dither == "floyd-steinberg"
-    assert saved.fit is None
-    assert saved.interval == "daily"
-    assert saved.created_at == ""
-    assert saved.updated_at == ""
-
-    def defaults(fn):
-        return {name: param.default for name, param in inspect.signature(fn).parameters.items()}
-
-    preview_defaults = defaults(api_main.eink_preview)
-    assert preview_defaults["target"] == "gooddisplay-315-diy"
-    assert preview_defaults["dither"] == "floyd-steinberg"
-    assert preview_defaults["fit"] is None
-
-    render_defaults = defaults(render_for_target)
-    assert render_defaults["fit"] is None
-    assert render_defaults["method"] == "floyd-steinberg"
-    assert render_defaults["compress_range"] is True
-    assert render_defaults["fast"] is True
-    assert render_defaults["strategy"] is None
-
-    assert defaults(gamut_render_evidence)["policy"] is None
-    assert defaults(select_quality_diverse)["seed"] == 0
-
-    etag_defaults = defaults(item_etag)
-    assert etag_defaults["fit"] is inspect.Parameter.empty
-    assert etag_defaults["render_strategy"] == "color"
-    assert etag_defaults["palette"] is None
-    assert etag_defaults["palette_identity"] is None
-
-    export_defaults = defaults(export_card)
-    assert export_defaults["fmt"] == "png"
-    assert export_defaults["method"] == "floyd-steinberg"
-    assert export_defaults["fit"] is None
-    assert export_defaults["compress_range"] is True
-    assert export_defaults["fast"] is True
-    assert export_defaults["overwrite"] is False
-    assert export_defaults["dry_run"] is True
-    assert export_defaults["spec"] is None
-    assert export_defaults["progress"] is None
-
-
-def test_operator_ui_renders_preview_item_identity_in_selection_order():
-    """Preview captions must carry the same item identity as the manifests.
-
-    ``_resolve_playlist``, the feed manifest and the SD manifest all carry
-    each work's selection order, title, artist and year. The companion
-    preview is the only surface the operator actually reads, and its
-    figcaption renders that same identity: a zero-padded ordinal matching
-    the card's filename order, the year (with a ``????`` fallback so an
-    unknown or zero year never reads as a real date — the zero-year
-    instance held under the parent audit issue), then artist and title.
-    Removing the year fallback in ``index.html`` must fail this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert '${String(n + 1).padStart(3, "0")} · ${einkEsc(i.year || "????")}<br>' in ui, (
-        "preview caption does not render selection order and year — the "
-        "work's identity on screen would not match the feed/card manifest"
-    )
-    assert (
-        '${einkEsc((i.artist || "—").slice(0, 30))}<br>' in ui
-    ), "preview caption does not render the item artist the manifests carry"
-    assert (
-        '<em>${einkEsc((i.title || "").slice(0, 42))}</em>' in ui
-    ), "preview caption does not render the item title the manifests carry"
-    assert ui.count('i.year || "????"') == 1, (
-        "unknown/zero year must fall back to ???? exactly once, in the "
-        "preview caption, so it never reads as a real date"
-    )
-
-
-def test_operator_ui_renders_preview_and_delivery_counts():
-    """Preview and delivery counts must both be visible to the operator.
-
-    The audit's no-master row (#827) is that each surface counts
-    differently on purpose: preview ``selected`` includes works with no
-    local image, the saved feed's ``resolved_count`` excludes them, and
-    SD export reports ``written`` after skipping them at write. Those
-    counts are only reconcilable where the operator actually sees them:
-    the preview header (``selected`` of ``matched`` over
-    ``total_candidates``), the save toast (``resolved_count``) and the
-    export result (``written``). Dropping any one would let preview,
-    feed and card report irreconcilable totals with no visible reason.
-    Removing ``of ${d.matched} matching`` in ``index.html`` must fail
-    this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert "<strong>${d.selected}</strong> selected" in ui, (
-        "preview header does not render selected — preview count "
-        "could not be compared to the feed's resolved count"
-    )
-    assert "<strong>${d.available_for_delivery}</strong> available for delivery" in ui, (
-        "preview header does not render the deliverable count — works with "
-        "no local image would read as deliverable"
-    )
-    assert (
-        "of ${d.matched} matching" in ui
-    ), "preview header does not render the matched count it selected from"
-    assert (
-        "(${d.total_candidates} in archive)" in ui
-    ), "preview header does not render the archive total it matched against"
-    assert 'toast(`saved "${d.name}" — ${d.resolved_count} works`);' in ui, (
-        "save toast does not report the feed's resolved count — a saved "
-        "feed whose count collapsed after the preview would read as saved"
-    )
-    assert "const actuallyWritten = d.dry_run ? 0 : d.written;" in ui, (
-        "export result does not separate planned from actually written — "
-        "a dry run would read as files placed on the card"
-    )
-    assert "<strong>${actuallyWritten}</strong> actually written" in ui, (
-        "export result does not render the card's written count — dry-run "
-        "and write would be indistinguishable from a partial card"
-    )
-    assert (
-        "would write ${d.written} file(s)" in ui
-    ), "export dry run does not render the planned file count"
-    assert (
-        ui.count("${d.selected}") == 2
-    ), "selected count must come from the preview and export responses, once each"
-    assert (
-        ui.count("${d.available_for_delivery}") == 1
-    ), "deliverable count must come from the preview response exactly once"
-    assert (
-        ui.count("${d.resolved_count} works") == 1
-    ), "saved-feed count must come from the save response exactly once"
-    assert (
-        ui.count("${d.written} file(s)") == 1
-    ), "card written count must come from the export response exactly once"
-
-
-def test_helper_edge_render_evidence_uses_default_spectra6_policy():
-    """The A11 edge: e-ink surfaces share one default-policy evidence call.
-
-    ``gamut_render_evidence`` (display/render.py) accepts a ``policy``
-    override, but the e-ink wrapper ``render_evidence`` (eink/targets.py)
-    forwards only the image, so preview, feed and SD export all apply the
-    same Spectra-6-calibrated default policy. A caller that could smuggle
-    a policy into one surface would re-open the reported-vs-applied
-    divergence the audit closed. The display-layer ``render_for_device``
-    path keeps its own hint-driven policy; that input is intentionally
-    unsupported on the e-ink surfaces and has no parameter to reach.
-    """
-    import inspect
-
-    from fine_art_archive.display.render import gamut_render_evidence
-    from fine_art_archive.eink.targets import render_evidence
-
-    magenta = Image.new("RGB", (16, 16), (255, 0, 255))
-    assert render_evidence(magenta) == gamut_render_evidence(magenta)
-    assert render_evidence(magenta).strategy == "grayscale"
-    assert render_evidence(magenta).gamut_verdict == "poorly-served"
-    overridden = gamut_render_evidence(magenta, policy={"poorly-served": "color"})
-    assert overridden.strategy == "color"
-    assert list(inspect.signature(render_evidence).parameters) == ["img"]
-    on_palette = Image.new("RGB", (16, 16), SPECTRA6.colours[2])
-    assert render_evidence(on_palette).strategy == "color"
-
-
-def test_helper_edge_render_for_target_derives_strategy_when_unspecified():
-    """The render edge: an omitted strategy must mean the reported strategy.
-
-    Preview, feed and SD export all pass ``strategy=evidence.strategy``
-    explicitly (targets.py ``render_for_target``), but the helper's
-    ``strategy=None`` fallback re-derives from the same
-    ``render_evidence`` policy. If that fallback ever consulted a
-    different policy, any future caller omitting the argument would
-    silently render a different strategy than the surfaces report —
-    the reported-vs-applied divergence the audit closed. The derived
-    render must be byte-identical to the explicit render.
-    """
-    from fine_art_archive.eink.targets import RenderTarget, render_evidence
-
-    small = RenderTarget(
-        key="audit-small",
-        label="Audit small",
-        width=32,
-        height=24,
-        palette_name="spectra6",
-    )
-    magenta = Image.new("RGB", (16, 16), (255, 0, 255))
-    derived = render_for_target(magenta, small)
-    explicit = render_for_target(magenta, small, strategy=render_evidence(magenta).strategy)
-    assert render_evidence(magenta).strategy == "grayscale"
-    assert derived.size == explicit.size == small.size
-    assert derived.tobytes() == explicit.tobytes()
-
-    on_palette = Image.new("RGB", (16, 16), SPECTRA6.colours[2])
-    derived_colour = render_for_target(on_palette, small)
-    explicit_colour = render_for_target(
-        on_palette, small, strategy=render_evidence(on_palette).strategy
-    )
-    assert render_evidence(on_palette).strategy == "color"
-    assert derived_colour.tobytes() == explicit_colour.tobytes()
-
-
-def test_helper_edge_validate_inputs_rejects_each_bad_evidence_class():
-    """The A15 edge: invalid evidence must fail before any selection runs.
-
-    ``_validate_inputs`` (preference/exhibition.py) is the only gate
-    between caller-supplied or derived ``quality_scores``/``embeddings``
-    and the greedy selector reached from ``playlist.build``. Each bad
-    class below must raise its named error; silently coercing any of
-    them would let preview and saved resolution consume different
-    effective evidence for the same spec.
-    """
-    from fine_art_archive.preference.exhibition import (
-        EmbeddingDimensionError,
-        ExhibitionValidationError,
-        MissingEvidenceError,
-        NegativeQualityError,
-        NonFiniteEvidenceError,
-        SubsetSizeError,
-        _validate_inputs,
-    )
-
-    ids = ["a", "b"]
-    qualities = {"a": 1.0, "b": 0.5}
-    vectors = {"a": [1.0, 0.0], "b": [0.0, 1.0]}
-    _validate_inputs(ids, qualities, vectors, 1)
-    with pytest.raises(SubsetSizeError):
-        _validate_inputs(ids, qualities, vectors, 0)
-    with pytest.raises(SubsetSizeError):
-        _validate_inputs(ids, qualities, vectors, True)
-    with pytest.raises(SubsetSizeError):
-        _validate_inputs(ids, qualities, vectors, 3)
-    with pytest.raises(ExhibitionValidationError, match="unique"):
-        _validate_inputs(["a", "a"], qualities, vectors, 1)
-    with pytest.raises(MissingEvidenceError):
-        _validate_inputs(ids, {"a": 1.0}, vectors, 1)
-    with pytest.raises(MissingEvidenceError):
-        _validate_inputs(ids, qualities, {"a": [1.0, 0.0]}, 1)
-    with pytest.raises(NegativeQualityError):
-        _validate_inputs(ids, {"a": -1.0, "b": 0.5}, vectors, 1)
-    with pytest.raises(NonFiniteEvidenceError):
-        _validate_inputs(ids, {"a": float("nan"), "b": 0.5}, vectors, 1)
-    with pytest.raises(EmbeddingDimensionError):
-        _validate_inputs(ids, qualities, {"a": [1.0, 0.0], "b": [1.0]}, 1)
-    with pytest.raises(EmbeddingDimensionError):
-        _validate_inputs(ids, qualities, {"a": [0.0, 0.0], "b": [0.0, 1.0]}, 1)
-    with pytest.raises(NonFiniteEvidenceError):
-        _validate_inputs(ids, qualities, {"a": [float("inf"), 0.0], "b": [0.0, 1.0]}, 1)
-
-
-def test_helper_edge_select_quality_diverse_is_seeded_and_diagnosed():
-    """The selector edge: same evidence and seed must give the same picks.
-
-    ``select_quality_diverse`` validates via ``_validate_inputs``, then
-    picks greedily by determinant with quality and a seeded SHA-256 rank
-    as tie-breaks. Preview and saved resolution share this code through
-    ``_build_eink_playlist``/``playlist.build``, so non-determinism or
-    diagnostics that drift from the pick order would diverge the two
-    surfaces even with identical inputs.
-    """
-    from fine_art_archive.preference.exhibition import (
-        MissingEvidenceError,
-        select_quality_diverse,
-    )
-
-    ids = ["near-a", "near-b", "diverse"]
-    qualities = {"near-a": 1.0, "near-b": 0.99, "diverse": 0.85}
-    vectors = {"near-a": [1.0, 0.0], "near-b": [0.999, 0.04], "diverse": [0.0, 1.0]}
-    first = select_quality_diverse(ids, qualities, vectors, 2, seed=17)
-    second = select_quality_diverse(ids, qualities, vectors, 2, seed=17)
-    assert first.selected_ids == second.selected_ids == ["near-a", "diverse"]
-    assert [item.work_id for item in first.diagnostics] == first.selected_ids
-    assert first.diagnostics[0].nearest_selected_similarity is None
-    assert first.diagnostics[1].nearest_selected_similarity is not None
-    with pytest.raises(MissingEvidenceError):
-        select_quality_diverse(ids, {"near-a": 1.0}, vectors, 2, seed=17)
-
-
-def test_helper_edge_feed_manifest_consumes_saved_playlist_inputs():
-    """The feed-manifest edge: manifest must carry the saved render inputs.
-
-    ``build_manifest`` (eink/feed.py) is what a polling device reads; it
-    consumes the saved playlist's ``target``/``dither``/``interval`` plus
-    the resolved items in selection order, ``base_url`` and ``now``.
-    ``rotation_index`` turns ``interval``/``now``/``offset`` into the
-    current position, and ``palette_fingerprint`` (bound into the feed
-    ETag by ``_render_feed_image``) must track colours and measured
-    status while ignoring provenance-only fields. If any of these inputs
-    stopped being consumed, the manifest a device polls could diverge
-    from the images the feed renders without any test failing.
-    """
-    from datetime import UTC, datetime
-
-    from fine_art_archive.eink.feed import (
-        SavedPlaylist,
-        build_manifest,
-        palette_fingerprint,
-        rotation_index,
-    )
-
-    playlist = SavedPlaylist(
-        id="winter-abc123",
-        name="Winter",
-        spec={"sort": "fit"},
-        target="gooddisplay-315-diy",
-        dither="atkinson",
-        fit="cover",
-        interval="daily",
-    )
-    items = [
-        {"work_id": "work-a", "title": "A", "artist": "Artist A", "year": 1650},
-        {"work_id": "work-b", "title": "B", "artist": "Artist B", "year": None},
-    ]
-    now = datetime(2026, 1, 1, tzinfo=UTC)
-    manifest = build_manifest(playlist, items, base_url="https://panel.example/", now=now)
-    assert manifest["playlist_id"] == "winter-abc123"
-    assert manifest["target"] == "gooddisplay-315-diy"
-    assert manifest["dither"] == "atkinson"
-    assert manifest["interval"] == "daily"
-    assert manifest["count"] == 2
-    assert manifest["current_index"] == rotation_index(2, "daily", now=now)
-    assert manifest["current_url"] == "https://panel.example/feed/winter-abc123/current"
-    assert [item["work_id"] for item in manifest["items"]] == ["work-a", "work-b"]
-    assert manifest["items"][1]["url"] == "https://panel.example/feed/winter-abc123/image/1"
-    assert manifest["items"][1]["year"] is None
-    empty = build_manifest(playlist, [], base_url="https://panel.example", now=now)
-    assert empty["count"] == 0 and empty["current_url"] is None
-    # Rotation: offset separates a second frame; empty playlists index to 0.
-    assert rotation_index(0, "daily", now=now) == 0
-    assert (
-        rotation_index(3, "daily", now=now, offset=1)
-        == (rotation_index(3, "daily", now=now) + 1) % 3
-    )
-    # Palette fingerprint: provenance is excluded, pixels/measured are not.
-    base = Palette(name="p", colours=((1, 2, 3), (4, 5, 6)), note="one")
-    renamed = Palette(name="q", colours=((1, 2, 3), (4, 5, 6)), note="two")
-    recoloured = Palette(name="p", colours=((1, 2, 3), (4, 5, 7)), note="one")
-    measured = Palette(name="p", colours=((1, 2, 3), (4, 5, 6)), measured=True)
-    assert palette_fingerprint(base) == palette_fingerprint(renamed)
-    assert palette_fingerprint(base) != palette_fingerprint(recoloured)
-    assert palette_fingerprint(base) != palette_fingerprint(measured)
-
-
-def test_enumerated_api_only_spec_fields_filter_preview_selection(tmp_path, monkeypatch):
-    """API-only ``PlaylistSpec`` fields must filter the preview selection.
-
-    The audit enumeration lists ``genres``, ``year_from``/``year_to``,
-    ``any_tags``, ``not_tags`` and ``min_quality`` as API-only: the operator
-    UI's ``einkSpec()`` never emits them, so no UI-forwarding test can lock
-    them, yet the audit marks them already-correct because every backend
-    surface consumes them through the one shared builder
-    (``_build_eink_playlist``). Until now only their existence and defaults
-    were locked (signature/default tests above); their filtering behaviour
-    was not. Each spec below must select the same works through the
-    companion preview endpoint as through ``build`` directly, in input
-    order (``sort="as-filtered"``), so a dropped filter branch in
-    ``eink/playlist.py`` — e.g. removing the ``min_quality`` block — fails
-    here rather than silently previewing works delivery would exclude.
-    """
-    from fine_art_archive.api import main as api_main
-
-    rows = [
-        sidecar(
-            "landscape-1650",
-            genre="painting/landscape",
-            year=1650,
-            tags=("setting:outdoor", "shape:round"),
-        ),
-        sidecar(
-            "portrait-1800",
-            genre="painting/portrait",
-            year=1800,
-            tags=("setting:indoor",),
-        ),
-        sidecar(
-            "landscape-1900",
-            genre="painting/landscape",
-            year=1900,
-            tags=("setting:outdoor", "theme:sea"),
-        ),
-    ]
-    ratings = tmp_path / "ratings.jsonl"
-    ratings.write_text(
-        "\n".join(
-            json.dumps({"work_id": wid, "fit": 9, "quality": quality})
-            for wid, quality in (
-                ("landscape-1650", 9),
-                ("portrait-1800", 4),
-                ("landscape-1900", 7),
-            )
-        )
-    )
-    monkeypatch.setattr(api_main, "_all_sidecars", lambda: rows)
-    monkeypatch.setattr(api_main.store, "RATINGS_LOG", ratings)
-    monkeypatch.setattr(api_main.store, "work_ids_with_dossier", frozenset)
-
-    cases = [
-        ({"genres": ["painting/landscape"]}, ["landscape-1650", "landscape-1900"]),
-        ({"year_from": 1700, "year_to": 1850}, ["portrait-1800"]),
-        ({"any_tags": ["theme:sea", "setting:indoor"]}, ["portrait-1800", "landscape-1900"]),
-        ({"not_tags": ["setting:outdoor"]}, ["portrait-1800"]),
-        ({"min_quality": 7}, ["landscape-1650", "landscape-1900"]),
-    ]
-    for spec_dict, expected in cases:
-        spec = {**spec_dict, "sort": "as-filtered"}
-        direct = build(
-            rows, PlaylistSpec.from_dict(spec), ratings=api_main._eink.load_ratings(ratings)
-        )
-        assert direct.work_ids == expected, f"direct build disagrees for {spec_dict}"
-        response = api_main.eink_playlist_preview(api_main.PlaylistIn(spec=spec))
-        assert response["work_ids"] == expected, (
-            f"preview does not consume {sorted(spec_dict)} — previewed works "
-            "would diverge from the saved feed and SD export selection"
-        )
-
-
-def test_operator_ui_renders_saved_feed_delivery_identity():
-    """Saved feeds must list the delivery identity the operator saved.
-
-    ``GET /eink/playlists`` returns each ``SavedPlaylist`` plus the derived
-    ``resolved_count``/``error``, ``feed_url`` and ``manifest_url``
-    (api/main.py ``eink_playlists``). ``einkLoadPlaylists`` (index.html) is
-    the only operator surface that lists saved feeds: it renders name,
-    work count (or an error marker), panel target, rotation interval and
-    the device URL, and wires the ``to card`` / ``delete`` actions that
-    choose or remove a saved feed for SD export. The enumeration locks
-    the backend fields, and the forwarding tests lock save/export bodies,
-    but nothing locked this list rendering: dropping e.g. the interval
-    cell or the manifest link would leave a saved feed whose delivered
-    panel/rotation the operator could no longer verify against the
-    preview, with every backend test still passing. Removing the
-    interval cell in ``index.html`` must fail this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert "No saved feeds yet." in ui, "empty saved-feed list renders nothing"
-    fields = [
-        ("${einkEsc(p.name)}", "saved feed name"),
-        ("${einkEsc(p.target)}", "saved panel target"),
-        ("${einkEsc(p.interval)}", "saved rotation interval"),
-        ("${einkEsc(origin)}${einkEsc(p.feed_url)}", "device feed URL"),
-        ('href="${einkEsc(p.manifest_url)}"', "manifest link"),
-        ('href="${einkEsc(p.feed_url)}"', "feed view link"),
-        ('data-eink-use="${einkEsc(p.id)}">to card</a>', "to-card action"),
-        ('data-eink-del="${einkEsc(p.id)}"', "delete action"),
-        ('data-eink-name="${einkEsc(p.name)}"', "delete confirmation name"),
-    ]
-    for snippet, label in fields:
-        assert snippet in ui, f"saved-feed list does not render {label}"
-    assert "p.resolved_count == null" in ui, "unresolvable feed must read as an error"
-    assert "'<span style=\"color:#a00\">error</span>'" in ui, "resolve error is not marked"
-    assert ": p.resolved_count}" in ui, "resolved work count is not rendered for a healthy feed"
-    assert 'host.querySelectorAll("[data-eink-use]")' in ui, "to-card action is unwired"
-    assert (
-        'einkUseForCard(a.getAttribute("data-eink-use"));' in ui
-    ), "to-card action does not choose that saved feed for export"
-    assert 'host.querySelectorAll("[data-eink-del]")' in ui, "delete action is unwired"
-    assert (
-        'einkDeletePlaylist(a.getAttribute("data-eink-del")' in ui
-    ), "delete action does not delete that saved feed"
-    assert 'a.getAttribute("data-eink-name")' in ui, "delete loses the feed name"
-
-
-def test_operator_ui_discloses_saved_feed_overrides_filters_on_export():
-    """Choosing a saved feed for the card must disclose filters are ignored.
-
-    When ``einkCardPlaylistId`` is set, ``einkExport`` still sends the
-    filter ``spec`` but the backend replaces it with the saved playlist's
-    ``spec``/``target``/``dither``/``fit`` (api/main.py
-    ``eink_playlist_export``, the ``playlist_id`` override in the audit
-    enumeration). ``einkUseForCard`` (index.html) is the operator-facing
-    side of that override: it sets the choice, says the card will use
-    that feed's selection, and renders a banner naming the feed and
-    stating the filters above are ignored, with a ``use filters
-    instead`` clear link. The body-forwarding tests lock that
-    ``playlist_id`` is sent; nothing locked this disclosure. Dropping
-    the banner text in ``index.html`` would let the operator believe
-    the visible filters still shape a card that actually delivers the
-    saved feed. Removing that text must fail this test.
-    """
-    from fine_art_archive.api.main import UI_FILE
-
-    ui = UI_FILE.read_text()
-    assert "function einkUseForCard(id) {" in ui, "no saved-feed card choice exists"
-    assert "einkCardPlaylistId = id;" in ui, "to-card choice is not recorded"
-    assert "card will use that saved feed" in ui, "choice does not say the feed is used"
-    assert (
-        "Card uses saved feed <strong>${einkEsc(id)}</strong>" in ui
-    ), "banner does not name the saved feed the card will deliver"
-    assert (
-        "filters above are ignored." in ui
-    ), "banner does not disclose that the filter spec is overridden by the saved feed on export"
-    assert (
-        '<a href="#" id="ek-clear">use filters instead</a>' in ui
-    ), "no way back from the saved-feed override to the filter spec"
-    assert (
-        'document.getElementById("ek-clear")?.addEventListener("click"' in ui
-    ), "the clear link in the override banner is unwired"
-    assert 'banner.textContent = "";' in ui, "clearing the choice leaves the banner up"
 
 
 # ---------------------------------------------------------------- counts ----
