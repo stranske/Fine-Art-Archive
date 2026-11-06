@@ -804,7 +804,9 @@ def test_preference_diverse_preview_saved_feed_and_exports_agree(
             assert not card.exists(), "dry-run must not write a card"
 
 
-def test_export_inline_spec_target_dither_fit_without_playlist_id(client, archive, tmp_path, monkeypatch):
+def test_export_inline_spec_target_dither_fit_without_playlist_id(
+    client, archive, tmp_path, monkeypatch
+):
     """Inline export must consume conflicting body fields when playlist_id is absent.
 
     ``eink_playlist_export`` resolves ``spec`` from the body and uses the body's
@@ -836,7 +838,9 @@ def test_export_inline_spec_target_dither_fit_without_playlist_id(client, archiv
     assert manifest["items"][0]["work_id"] == wid
 
 
-def test_export_saved_playlist_overrides_inline_target_dither_fit(client, archive, tmp_path, monkeypatch):
+def test_export_saved_playlist_overrides_inline_target_dither_fit(
+    client, archive, tmp_path, monkeypatch
+):
     """When ``playlist_id`` is set, saved target/dither/fit override conflicting inline fields.
 
     The export endpoint replaces inline ``spec``, ``target``, ``dither`` and ``fit``
