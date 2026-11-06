@@ -820,7 +820,7 @@ def test_export_inline_spec_target_dither_fit_without_playlist_id(
     spec = {"not_tags": ["exclude:inline"], "sort": "as-filtered"}
     metadata = archive / "exp-inline-excluded" / "meta.json"
     row = json.loads(metadata.read_text())
-    row["tags"] = ["exclude:inline"]
+    row["subject"] = {"content_tags": [{"id": "exclude:inline"}]}
     metadata.write_text(json.dumps(row))
 
     card = tmp_path / "card-inline"
@@ -861,7 +861,7 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
     for work_id, tag in ((wid, "selection:saved"), (inline_wid, "selection:inline")):
         metadata = archive / work_id / "meta.json"
         row = json.loads(metadata.read_text())
-        row["tags"] = [tag]
+        row["subject"] = {"content_tags": [{"id": tag}]}
         metadata.write_text(json.dumps(row))
     spec = {"all_tags": ["selection:saved"], "sort": "as-filtered"}
 
