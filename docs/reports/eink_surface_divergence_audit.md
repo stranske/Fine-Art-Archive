@@ -4,7 +4,7 @@
 
 ## Provenance
 
-Pinned revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` (2026-11-06, this
+Pinned revision: `d50787e3e9a3083c167d1b640a141c19fa9f8b89` (2026-11-06, this
 PR branch). **Source anchors** in this report use the line numbers in
 `src/fine_art_archive/api/main.py` and related modules at the commit recorded
 under **Current execution evidence** below (single inspected revision for
@@ -807,21 +807,22 @@ with an authenticated shell, apply exactly that diff, and re-run
 | [test_eink_export_format.py](tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
 | [test_render_strategy.py](tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
 
-## Current execution evidence (bound to revision `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6`)
+## Current execution evidence (bound to revision `d50787e3e9a3083c167d1b640a141c19fa9f8b89`)
 
 The following evidence is bound to the pinned revision and is reproducible at that commit.
 
 ### Full pytest execution
 
-- Command: `/opt/anaconda3/bin/python3 -m pytest -o addopts= tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py`
+- Command: `/opt/anaconda3/bin/python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py`
 - Repository-selected interpreter: `/opt/anaconda3/bin/python3`
-- Revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` on branch `muse/issue-805`
+- Revision: `d50787e3e9a3083c167d1b640a141c19fa9f8b89` on branch `muse/issue-805`
 - Exit status: 0
-- Duration: 96.23s
-- Result: **282 passed, 2 warnings**
+- Duration: 130.13s
+- Result: **282 passed, 2 warnings**; coverage gate reports **15.39%** (below the
+  repository **25%** required line in `pyproject.toml`, same as prior runs on this subset)
 - Skips: 0
-- Harness note: `-o addopts=` clears `pyproject.toml` coverage addopts so this
-  invocation is exactly the two files named above without a bundled coverage phase.
+- Harness: default `pyproject.toml` addopts (includes `--cov`); the run still
+  exits **0** because every selected test passed.
 
 ### UI deliberate-break/restoration gate for `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
 
@@ -848,7 +849,7 @@ The following evidence is bound to the pinned revision and is reproducible at th
 
 - Command:
   `/opt/anaconda3/bin/python3 -m pytest -o addopts= tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover] -v`
-- Revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` (same as **Full pytest execution**)
+- Revision: `d50787e3e9a3083c167d1b640a141c19fa9f8b89` (same as **Full pytest execution**)
 - **RED:** temporarily removed ``${fitQ}`` from the preview ``<img>`` ``src`` line in
   `src/fine_art_archive/ui/index.html` (line ~3356), then ran the command above
   → **1 failed**, exit **1** (`AssertionError` on preview `<img>` query `params` vs
