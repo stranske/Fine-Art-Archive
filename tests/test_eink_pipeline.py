@@ -1527,6 +1527,7 @@ const fetch = async (url, options) => {
     assert preview["body"]["target"] == saved["body"]["target"] == exported["body"]["target"]
     assert saved["body"]["fit"] == exported["body"]["fit"] == (fit or None)
     assert saved["body"]["dither"] == exported["body"]["dither"] == "atkinson"
+    assert saved["body"]["interval"] == "daily"
     assert exported["body"]["playlist_id"] == "fixture/playlist"
     assert exported["body"]["write"] is False
     assert exported["body"]["overwrite"] is True
@@ -1834,6 +1835,165 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
         "diagnostics rendering must come from the preview response's "
         "selection_diagnostics exactly once"
     )
+
+
+def test_enumerated_eink_surface_inputs_match_backend_signatures():
+    """Lock enumerated surfaces and helpers to their explicit parameter names.
+
+    This asserts the **declared** parameters and model fields the audit lists
+    for ``eink_playlist_preview``, ``eink_preview``, ``eink_playlist_export``,
+    ``SavePlaylistIn``, ``_resolve_playlist``, ``_build_eink_playlist`` and the
+    traced helpers. It does **not** exhaust inputs read through ``request`` on
+    ``_render_feed_image`` (for example ``If-None-Match`` / ``if-none-match``);
+    request-derived inputs require separate behavioral coverage. This is
+    an explicit-parameter inventory, not proof of exhaustive input parity.
+    """
+    import inspect
+
+    from fine_art_archive.api import main as api_main
+    from fine_art_archive.display.render import gamut_render_evidence
+    from fine_art_archive.eink.feed import (
+        SavedPlaylist,
+        build_manifest,
+        item_etag,
+        palette_fingerprint,
+        rotation_index,
+    )
+    from fine_art_archive.eink.sdcard import export as export_card
+    from fine_art_archive.eink.targets import render_evidence, render_for_target
+    from fine_art_archive.preference.exhibition import _validate_inputs, select_quality_diverse
+
+    def params(fn):
+        return list(inspect.signature(fn).parameters)
+
+    # The four named surfaces (api/main.py).
+    assert params(api_main.eink_playlist_preview) == ["body"]
+    assert set(api_main.PlaylistIn.model_fields) == {
+        "spec",
+        "quality_scores",
+        "embeddings",
+        "target",
+        "sample",
+    }
+    assert params(api_main.eink_preview) == ["work_id", "target", "dither", "fit", "max_px"]
+    assert params(api_main.eink_playlist_export) == ["body"]
+    assert set(api_main.ExportIn.model_fields) == {
+        "playlist_id",
+        "spec",
+        "target",
+        "path",
+        "dither",
+        "fit",
+        "fmt",
+        "write",
+        "overwrite",
+    }
+    assert set(api_main.SavePlaylistIn.model_fields) == {
+        "name",
+        "spec",
+        "target",
+        "dither",
+        "fit",
+        "interval",
+        "id",
+    }
+    assert params(api_main._resolve_playlist) == ["pl", "sidecars"]
+    assert params(api_main._render_feed_image) == ["pl", "work_id", "request"]
+    assert params(api_main._build_eink_playlist) == [
+        "sidecars",
+        "spec",
+        "ratings",
+        "quality_scores",
+        "embeddings",
+    ]
+    # Selection inputs shared by every surface via the one builder.
+    assert set(PlaylistSpec.__dataclass_fields__) == {
+        "artists",
+        "genres",
+        "moods",
+        "periods",
+        "year_from",
+        "year_to",
+        "any_tags",
+        "all_tags",
+        "not_tags",
+        "exclude_filters",
+        "min_fit",
+        "min_quality",
+        "require_dossier",
+        "selection_mode",
+        "limit",
+        "sort",
+        "seed",
+    }
+    assert set(SavedPlaylist.__dataclass_fields__) == {
+        "id",
+        "name",
+        "spec",
+        "target",
+        "dither",
+        "fit",
+        "interval",
+        "created_at",
+        "updated_at",
+    }
+    # Render/validator helpers traced for the audit (render.py, targets.py,
+    # feed.py, sdcard.py, exhibition.py).
+    assert params(render_evidence) == ["img"]
+    assert params(gamut_render_evidence) == ["image", "policy"]
+    assert params(render_for_target) == [
+        "img",
+        "target",
+        "fit",
+        "method",
+        "compress_range",
+        "fast",
+        "strategy",
+    ]
+    assert params(export_card) == [
+        "items",
+        "root",
+        "target",
+        "master_for",
+        "fmt",
+        "method",
+        "fit",
+        "compress_range",
+        "fast",
+        "overwrite",
+        "dry_run",
+        "spec",
+        "progress",
+    ]
+    assert params(item_etag) == [
+        "work_id",
+        "target_key",
+        "dither",
+        "mtime",
+        "fit",
+        "render_strategy",
+        "palette",
+        "palette_identity",
+    ]
+    # Feed-manifest helpers enumerated in the audit (feed.py) but not
+    # previously locked: a new input here (e.g. a fit or strategy field on
+    # the manifest) must update the audit matrix, not slip in silently.
+    assert params(rotation_index) == ["n_items", "interval", "now", "offset"]
+    assert params(palette_fingerprint) == ["palette"]
+    assert params(build_manifest) == ["playlist", "items", "base_url", "now"]
+    assert params(_validate_inputs) == [
+        "work_ids",
+        "quality_scores",
+        "embeddings",
+        "subset_size",
+    ]
+    assert params(select_quality_diverse) == [
+        "work_ids",
+        "quality_scores",
+        "embeddings",
+        "subset_size",
+        "seed",
+    ]
 
 
 # ---------------------------------------------------------------- counts ----
