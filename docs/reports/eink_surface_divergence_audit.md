@@ -4,11 +4,11 @@
 
 ## Provenance
 
-Pinned revision: `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22` (2026-11-06, prior
-automation commit on `muse/issue-805`). **Source anchors** in this report use the
-line numbers in `src/fine_art_archive/api/main.py` and related modules at the
-commit recorded under **Current execution evidence** below (single inspected
-revision for anchors + verification).
+Pinned revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` (2026-11-06, this
+PR branch). **Source anchors** in this report use the line numbers in
+`src/fine_art_archive/api/main.py` and related modules at the commit recorded
+under **Current execution evidence** below (single inspected revision for
+anchors + verification).
 Source owner: [#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
 The original audit was a bounded input inventory and evidence report with no
 production changes. The #825 follow-up below documents the selected preview-only
@@ -807,19 +807,21 @@ with an authenticated shell, apply exactly that diff, and re-run
 | [test_eink_export_format.py](tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
 | [test_render_strategy.py](tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
 
-## Current execution evidence (bound to revision `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22`)
+## Current execution evidence (bound to revision `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6`)
 
 The following evidence is bound to the pinned revision and is reproducible at that commit.
 
 ### Full pytest execution
 
-- Command: `python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -v`
+- Command: `/opt/anaconda3/bin/python3 -m pytest -o addopts= tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py`
 - Repository-selected interpreter: `/opt/anaconda3/bin/python3`
-- Revision: `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22` (2026-11-06, HEAD of `muse/issue-805`)
+- Revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` on branch `muse/issue-805`
 - Exit status: 0
-- Duration: 63.91s
-- Result: **280 passed, 2 warnings** (coverage check failed at 15.39%, but all 280 tests passed)
+- Duration: 96.23s
+- Result: **282 passed, 2 warnings**
 - Skips: 0
+- Harness note: `-o addopts=` clears `pyproject.toml` coverage addopts so this
+  invocation is exactly the two files named above without a bundled coverage phase.
 
 ### UI deliberate-break/restoration gate for `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
 
@@ -846,10 +848,11 @@ The following evidence is bound to the pinned revision and is reproducible at th
 
 - Command:
   `/opt/anaconda3/bin/python3 -m pytest -o addopts= tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover] -v`
-- Revision: (filled in after commit — same as **Full pytest execution** above)
+- Revision: `494d3ed6fa44f0fbd8f1bf1c138a6a475d2126e6` (same as **Full pytest execution**)
 - **RED:** temporarily removed ``${fitQ}`` from the preview ``<img>`` ``src`` line in
   `src/fine_art_archive/ui/index.html` (line ~3356), then ran the command above
-  → **1 failed**, exit **1** (`params` missing ``fit`` key `cover` / preview URL parity).
+  → **1 failed**, exit **1** (`AssertionError` on preview `<img>` query `params` vs
+  expected `fit=cover` parity).
 - **GREEN:** restored the UI file to committed bytes (exact source restore), rerun
   → **1 passed**, exit **0**.
 - Harness: default `pyproject.toml` addopts were disabled with `-o addopts=` so the
