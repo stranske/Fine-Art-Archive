@@ -465,3 +465,12 @@ def test_the_rendition_is_cacheable_by_the_browser(client, cache_dir, transport,
 
     assert response.headers["content-type"] == "image/jpeg"
     assert "max-age=86400" in response.headers["cache-control"]
+
+
+def test_candidate_user_agent_default_names_the_repository_not_an_email():
+    # The proxy test compares against CANDIDATE_UA, which would also pass if the
+    # default regained a personal address. Pin the default itself.
+    default = api_main.CANDIDATE_UA_DEFAULT
+    assert default.startswith("FineArtArchive/")
+    assert "https://github.com/stranske/Fine-Art-Archive" in default
+    assert "@" not in default

@@ -175,6 +175,9 @@ def test_fetch_wikidata_sparql_success(monkeypatch):
     called_urls = []
 
     def mock_urlopen(req, timeout=None):
+        user_agent = req.get_header("User-agent", "")
+        assert "https://github.com/stranske/Fine-Art-Archive" in user_agent
+        assert "@" not in user_agent
         url = req.full_url if hasattr(req, "full_url") else req
         called_urls.append(url)
         return MockResponse(json.dumps(mock_data).encode("utf-8"))
@@ -268,6 +271,9 @@ def test_fetch_wikipedia_list_success(monkeypatch):
     called_urls = []
 
     def mock_urlopen(req, timeout=None):
+        user_agent = req.get_header("User-agent", "")
+        assert "https://github.com/stranske/Fine-Art-Archive" in user_agent
+        assert "@" not in user_agent
         url = req.full_url if hasattr(req, "full_url") else req
         called_urls.append(url)
         if "action=query" in url:
@@ -330,6 +336,9 @@ def test_fetch_wikipedia_list_no_article_found(monkeypatch):
 
 def test_fetch_wikipedia_list_parse_failure(monkeypatch):
     def mock_urlopen(req, timeout=None):
+        user_agent = req.get_header("User-agent", "")
+        assert "https://github.com/stranske/Fine-Art-Archive" in user_agent
+        assert "@" not in user_agent
         url = req.full_url if hasattr(req, "full_url") else req
         if "action=query" in url:
             resp = {"query": {"search": [{"title": "List of paintings by Leonardo da Vinci"}]}}
@@ -343,6 +352,9 @@ def test_fetch_wikipedia_list_parse_failure(monkeypatch):
 
 def test_fetch_wikipedia_list_empty_wikitext(monkeypatch):
     def mock_urlopen(req, timeout=None):
+        user_agent = req.get_header("User-agent", "")
+        assert "https://github.com/stranske/Fine-Art-Archive" in user_agent
+        assert "@" not in user_agent
         url = req.full_url if hasattr(req, "full_url") else req
         if "action=query" in url:
             resp = {"query": {"search": [{"title": "List of paintings by Leonardo da Vinci"}]}}
@@ -367,6 +379,9 @@ def test_fetch_met(monkeypatch):
     monkeypatch.setattr(time, "sleep", mock_sleep)
 
     def mock_urlopen(req, timeout=None):
+        user_agent = req.get_header("User-agent", "")
+        assert "https://github.com/stranske/Fine-Art-Archive" in user_agent
+        assert "@" not in user_agent
         url = req.full_url if hasattr(req, "full_url") else req
 
         if "public/collection/v1/search" in url:

@@ -1767,11 +1767,12 @@ CANDIDATE_IMAGE_MAX = 1400
 # got HTTP 429 on roughly half the cards -- which the UI could only render as a
 # broken image. A contact fixes that; Wikimedia's User-Agent policy accepts a
 # project URL as the contact, so the default names the repository rather than a
-# personal address. Set FAA_CONTACT_UA to send an email contact instead.
-CANDIDATE_UA = os.environ.get(
-    "FAA_CONTACT_UA",
-    "FineArtArchive/0.3 (companion-app; +https://github.com/stranske/Fine-Art-Archive)",
+# personal address. To use an email contact, set FAA_CONTACT_UA to a complete
+# User-Agent containing the client name, version, and email address.
+CANDIDATE_UA_DEFAULT = (
+    "FineArtArchive/0.3 (companion-app; +https://github.com/stranske/Fine-Art-Archive)"
 )
+CANDIDATE_UA = os.environ.get("FAA_CONTACT_UA", CANDIDATE_UA_DEFAULT)
 
 # At most this many outbound image fetches at once. A card asks for seven
 # images the moment it renders, and paging through the queue multiplies that;
