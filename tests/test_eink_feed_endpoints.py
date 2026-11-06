@@ -23,6 +23,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -924,11 +925,219 @@ def test_preference_diverse_preview_keeps_explicit_evidence(client, archive, div
     assert response.status_code == 200, response.text
     assert response.json()["work_ids"][0] == "bbb2222-near-red"
     for field in ["quality_scores", "embeddings"]:
+        # Deriving an omitted sibling must not replace the explicitly empty mapping.
+        for evidence in [{**supplied, field: {}}, {field: {}}]:
+            refused = client.post(
+                "/eink/playlist/preview", json={"spec": diverse_archive, **evidence}
+            )
+            assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
+            assert "evidence" in refused.json()["detail"]
+
+
+@pytest.mark.parametrize("write", [False, True])
+@pytest.mark.parametrize(
+    "fields",
+    [("quality_scores",), ("embeddings",), ("quality_scores", "embeddings")],
+    ids=["quality_scores", "embeddings", "both"],
+)
+def test_preference_diverse_caller_evidence_is_preview_only(
+    client, archive, diverse_archive, tmp_path, monkeypatch, fields, write
+):
+    ids = ["aaa1111-red-work", "bbb2222-near-red", "ccc3333-blue-work"]
+    evidence = {
+        "quality_scores": dict(zip(ids, [1, 10, 1], strict=True)),
+        "embeddings": dict(zip(ids, [[1, 0], [0, 1], [1, 0]], strict=True)),
+    }
+    supplied = {field: evidence[field] for field in fields}
+    target = RenderTarget("preview-contract", "Preview contract", 40, 20, "spectra6")
+    monkeypatch.setitem(TARGETS, target.key, target)
+    builder = Mock(wraps=api_main._build_eink_playlist)
+    derive = Mock(wraps=api_main._derived_preference_evidence)
+    monkeypatch.setattr(api_main, "_build_eink_playlist", builder)
+    monkeypatch.setattr(api_main, "_derived_preference_evidence", derive)
+
+    baseline = client.post("/eink/playlist/preview", json={"spec": diverse_archive})
+    assert baseline.status_code == 200, baseline.text
+    server_ids = baseline.json()["work_ids"]
+    assert server_ids == [ids[0], ids[2]]
+
+    derive.reset_mock()
+    preview = client.post("/eink/playlist/preview", json={"spec": diverse_archive, **supplied})
+    assert preview.status_code == 200, preview.text
+    expected = [ids[1], ids[2]] if "quality_scores" in fields else [ids[0], ids[1]]
+    assert preview.json()["work_ids"] == expected
+    assert expected != server_ids
+    for field in fields:
+        assert builder.call_args.kwargs[field] == supplied[field]
+    if len(fields) == 2:
+        derive.assert_not_called()
+    else:
+        derive.assert_called_once()
+        assert derive.call_args.kwargs == {
+            "include_quality": "quality_scores" not in fields,
+            "include_embeddings": "embeddings" not in fields,
+        }
+
+    # Overrides belong to one request; a later preview must derive fresh evidence.
+    builder.reset_mock()
+    derive.reset_mock()
+    following = client.post("/eink/playlist/preview", json={"spec": diverse_archive})
+    assert following.status_code == 200, following.text
+    assert following.json()["work_ids"] == server_ids
+    builder.assert_called_once()
+    assert builder.call_args.kwargs["quality_scores"] is None
+    assert builder.call_args.kwargs["embeddings"] is None
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    # Save/export ignore undeclared maps, even empty ones that invalidate preview.
+    delivery_evidence = supplied if write else {field: {} for field in fields}
+    if not write:
         refused = client.post(
-            "/eink/playlist/preview", json={"spec": diverse_archive, **supplied, field: {}}
+            "/eink/playlist/preview", json={"spec": diverse_archive, **delivery_evidence}
         )
-        assert refused.status_code == 400, "explicit empty evidence must not be re-derived"
-        assert "evidence" in refused.json()["detail"]
+        assert refused.status_code == 400, refused.text
+    saved = _save(client, spec=diverse_archive, target=target.key, **delivery_evidence)
+    playlist = api_main._playlists.get(saved["id"])
+    assert playlist.spec == diverse_archive
+    stored = json.loads(api_main._playlists.path.read_text())
+    assert "quality_scores" not in stored["playlists"][playlist.id]
+    assert "embeddings" not in stored["playlists"][playlist.id]
+
+    builder.reset_mock()
+    derive.reset_mock()
+    resolved = api_main._resolve_playlist(playlist)
+    assert [row["work_id"] for row in resolved] == server_ids
+    builder.assert_called_once()
+    assert "quality_scores" not in builder.call_args.kwargs
+    assert "embeddings" not in builder.call_args.kwargs
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    # Served membership also remains on the server-owned path after the override.
+    builder.reset_mock()
+    derive.reset_mock()
+    manifest = client.get(f"/feed/{saved['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == server_ids
+    builder.assert_called_once()
+    assert "quality_scores" not in builder.call_args.kwargs
+    assert "embeddings" not in builder.call_args.kwargs
+    derive.assert_called_once()
+    assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+
+    for index, request in enumerate([{"spec": diverse_archive}, {"playlist_id": saved["id"]}]):
+        builder.reset_mock()
+        derive.reset_mock()
+        card = tmp_path / f"preview-contract-{index}"
+        exported = client.post(
+            "/eink/playlist/export",
+            json={
+                **request,
+                **delivery_evidence,
+                "target": target.key,
+                "path": str(card),
+                "write": write,
+            },
+        )
+        assert exported.status_code == 200, exported.text
+        assert [row["work_id"] for row in exported.json()["render_evidence"]] == server_ids
+        builder.assert_called_once()
+        assert "quality_scores" not in builder.call_args.kwargs
+        assert "embeddings" not in builder.call_args.kwargs
+        derive.assert_called_once()
+        assert derive.call_args.kwargs == {"include_quality": True, "include_embeddings": True}
+        if write:
+            written = json.loads((card / "playlist.json").read_text())
+            assert [row["work_id"] for row in written["items"]] == server_ids
+        else:
+            assert not card.exists()
+
+
+@pytest.mark.parametrize("field", ["quality_scores", "embeddings"])
+@pytest.mark.parametrize("endpoint", ["preview", "export"])
+def test_eink_caller_evidence_inside_spec_is_rejected(
+    client, archive, diverse_archive, tmp_path, monkeypatch, field, endpoint
+):
+    # Evidence is a preview request input, never part of the reusable selection spec.
+    builder = Mock(wraps=api_main._build_eink_playlist)
+    monkeypatch.setattr(api_main, "_build_eink_playlist", builder)
+    card = tmp_path / "invalid-evidence-spec"
+    response = client.post(
+        f"/eink/playlist/{endpoint}",
+        json={"spec": {**diverse_archive, field: {}}, "path": str(card), "write": True},
+    )
+    assert response.status_code == 400, response.text
+    assert "unknown playlist field(s)" in response.json()["detail"]
+    assert field in response.json()["detail"]
+    builder.assert_not_called()
+    assert not card.exists()
+
+
+def test_eink_openapi_describes_preview_only_evidence(client):
+    response = client.get("/openapi.json")
+    assert response.status_code == 200, response.text
+    schema = response.json()
+    models = {}
+    for endpoint, model_name in [("preview", "PlaylistIn"), ("export", "ExportIn")]:
+        operation = schema["paths"][f"/eink/playlist/{endpoint}"]["post"]
+        request_schema = operation["requestBody"]["content"]["application/json"]["schema"]
+        assert request_schema["$ref"] == f"#/components/schemas/{model_name}"
+        model = schema["components"]["schemas"][model_name]
+        models[endpoint] = model
+        assert "server-owned" in model["description"]
+        assert "preview-only" in model["description"]
+        assert "not guaranteed" in model["description"]
+        for field in ["quality_scores", "embeddings"]:
+            assert field in model["description"]
+            assert field in model["properties"]["spec"]["description"]
+        assert "not guaranteed" in model["properties"]["spec"]["description"]
+        assert "top-level" in model["properties"]["spec"]["description"]
+        assert (
+            "putting either mapping inside spec returns http 400"
+            in model["properties"]["spec"]["description"].lower()
+        )
+    preview = schema["paths"]["/eink/playlist/preview"]["post"]["description"]
+    assert "preview-only" in preview
+    assert "applies to this request only" in preview
+    assert "later previews without mappings derive server-owned evidence again" in preview
+    assert "not saved or reused by" in models["preview"]["description"]
+    assert "server-owned evidence" in preview
+    assert "matching their selection is not guaranteed" in preview
+    assert "Ordered mode ignores caller quality_scores/embeddings" in preview
+    assert "ordered mode ignores them" in models["preview"]["properties"]["spec"]["description"]
+    for field in ["quality_scores", "embeddings"]:
+        description = schema["components"]["schemas"]["PlaylistIn"]["properties"][field][
+            "description"
+        ]
+        assert "Preview-only" in description
+        assert "Omission derives server-owned" in description
+        sibling = "embeddings" if field == "quality_scores" else "quality_scores"
+        assert f"independently of {sibling}" in description
+        assert "empty mapping is invalid and returns HTTP 400" in description
+        assert "ordered mode ignores this mapping" in description
+        assert "Saved/served and exported selections use server-owned" in description
+        assert "not guaranteed" in description
+        assert field not in schema["components"]["schemas"]["ExportIn"]["properties"]
+    export = schema["paths"]["/eink/playlist/export"]["post"]["description"]
+    assert "server-owned evidence" in export
+    assert "preview-only" in export
+    for description in [export, models["export"]["description"]]:
+        assert "Undeclared quality_scores/embeddings fields are ignored" in description
+        assert "including empty mappings" in description
+    assert "Selection is resolved live" in export
+    assert "even when the preview did not supply caller evidence" in export
+    export_fields = models["export"]["properties"]
+    assert "ignored when playlist_id is supplied" in export_fields["spec"]["description"]
+    assert "ratings and embeddings from local masters" in export_fields["spec"]["description"]
+    assert (
+        "are ignored as top-level export fields, including empty mappings"
+        in export_fields["spec"]["description"]
+    )
+    saved_export = export_fields["playlist_id"]["description"]
+    assert "current server-owned evidence" in saved_export
+    assert "preview-only caller quality_scores/embeddings" in saved_export
+    assert "matching an overridden preview's selection is not guaranteed" in saved_export
 
 
 def test_repeated_manifest_reuses_descriptors_and_keeps_ratings_live(
@@ -1015,6 +1224,187 @@ def test_warm_descriptor_cache_preserves_http_evidence_failure(
         failed = client.get(f"/feed/{saved['id']}/{endpoint}")
         assert failed.status_code == 400, failed.text
         assert "evidence" in failed.json()["detail"]
+
+
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _two_selected(archive: Path, masters: tuple[bool, bool]) -> None:
+    _work(archive, _COUNT_FIRST, title="First", master=masters[0])
+    _work(archive, _COUNT_SECOND, title="Second", master=masters[1])
+
+
+def _count_target(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(
+        TARGETS,
+        "count-contract",
+        RenderTarget("count-contract", "Count contract", 8, 6, "mono1bit"),
+    )
+
+
+def _save_count(client: TestClient, spec: dict) -> dict:
+    return _save(client, spec=spec, target="count-contract", dither="none")
+
+
+def _assert_empty_feed(client: TestClient, playlist_id: str) -> None:
+    for path in ("current", "next", "image/0"):
+        response = client.get(f"/feed/{playlist_id}/{path}")
+        assert response.status_code == 404, path
+        assert "no works with local images" in response.json()["detail"]
+
+
+def test_mixed_master_feed_advertises_only_the_servable_image(client, archive, monkeypatch):
+    """The saved feed drops the work with no master and serves the other one."""
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, False))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 1
+    manifest = client.get(f"/feed/{playlist['id']}/manifest.json")
+    assert manifest.status_code == 200, manifest.text
+    assert [row["work_id"] for row in manifest.json()["items"]] == [_COUNT_FIRST]
+    nxt = client.get(f"/feed/{playlist['id']}/next")
+    assert nxt.status_code == 200, nxt.text
+    body = nxt.json()
+    assert body["count"] == 1
+    assert body["work_id"] == _COUNT_FIRST
+    image = client.get(body["image_url"].replace("http://testserver", ""))
+    assert image.status_code == 200, image.text
+    assert image.headers["X-Work-Id"] == _COUNT_FIRST
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected_ids", "available_ids"),
+    [
+        ((True, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST]),
+        ((False, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_SECOND]),
+        ((True, True), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], [_COUNT_FIRST, _COUNT_SECOND]),
+        ((False, False), _COUNT_SPEC, [_COUNT_FIRST, _COUNT_SECOND], []),
+        ((True, False), _EMPTY_SPEC, [], []),
+    ],
+    ids=["missing-last", "missing-first", "all-master", "all-missing", "empty"],
+)
+def test_counts_across_preview_feed_and_export(
+    client, archive, tmp_path, monkeypatch, masters, spec, selected_ids, available_ids
+):
+    """One unchanged archive and spec distinguish selection from delivery.
+
+    A one-row preview may show either the available or missing work. Neither
+    sample may change the full delivery total, feed membership or card output.
+    """
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+
+    def preview_counts():
+        response = client.post(
+            "/eink/playlist/preview",
+            json={"spec": spec, "target": "count-contract", "sample": 1},
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["work_ids"] == selected_ids
+        assert body["selected"] == len(selected_ids)
+        assert body["available_for_delivery"] == len(available_ids)
+        assert len(body["items"]) == min(1, len(selected_ids))
+        if selected_ids:
+            assert body["items"][0]["work_id"] == _COUNT_FIRST
+            assert body["items"][0]["has_master"] is masters[0]
+        return body
+
+    before = preview_counts()
+    playlist = _save_count(client, spec)
+    assert playlist["resolved_count"] == before["available_for_delivery"]
+    response = client.get(f"/feed/{playlist['id']}/manifest.json")
+    assert response.status_code == 200, response.text
+    assert [row["work_id"] for row in response.json()["items"]] == available_ids
+    after = None
+    for available_id in available_ids:
+        params = {"after": after} if after else None
+        response = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert response.status_code == 200, response.text
+        advertised = response.json()
+        assert advertised["count"] == len(available_ids)
+        assert advertised["work_id"] == available_id
+        image = client.get(advertised["image_url"])
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == available_id
+        after = available_id
+    if not available_ids:
+        _assert_empty_feed(client, playlist["id"])
+
+    card = tmp_path / "card"
+    response = client.post(
+        "/eink/playlist/export",
+        json={"playlist_id": playlist["id"], "path": str(card), "write": True},
+    )
+    assert response.status_code == 200, response.text
+    written = response.json()
+    assert written["selected"] == before["selected"]
+    assert written["dry_run"] is False
+    assert written["written"] == len(available_ids)
+    omissions = len(selected_ids) - len(available_ids)
+    assert written["missing_master_omissions"] == written["skipped"] == omissions
+    filenames = [f"{index:03d}_{wid}.png" for index, wid in enumerate(available_ids, 1)]
+    assert sorted(path.name for path in card.glob("*.png")) == filenames
+    assert written["bytes_written"] == sum((card / name).stat().st_size for name in filenames)
+    for filename in filenames:
+        with Image.open(card / filename) as delivered:
+            delivered.load()
+            assert delivered.format == "PNG"
+            assert delivered.size == (8, 6)
+    if available_ids:
+        assert written["bytes_written"] > 0
+        manifest = json.loads((card / "playlist.json").read_text())
+        assert manifest["count"] == len(available_ids)
+        assert [row["work_id"] for row in manifest["items"]] == available_ids
+    else:
+        assert not (card / "playlist.json").exists()
+    assert preview_counts() == before
+
+
+def test_all_master_feed_serves_both_selected_images(client, archive, monkeypatch):
+    _count_target(monkeypatch)
+    _two_selected(archive, (True, True))
+    playlist = _save_count(client, _COUNT_SPEC)
+
+    assert playlist["resolved_count"] == 2
+    seen = []
+    after = None
+    for _ in range(2):
+        params = {"after": after} if after else None
+        nxt = client.get(f"/feed/{playlist['id']}/next", params=params)
+        assert nxt.status_code == 200, nxt.text
+        body = nxt.json()
+        image = client.get(body["image_url"].replace("http://testserver", ""))
+        assert image.status_code == 200, image.text
+        assert image.headers["X-Work-Id"] == body["work_id"]
+        seen.append(body["work_id"])
+        after = body["work_id"]
+    assert seen == [_COUNT_FIRST, _COUNT_SECOND]
+    assert nxt.json()["count"] == 2
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec"),
+    [((False, False), _COUNT_SPEC), ((True, False), _EMPTY_SPEC)],
+    ids=["all-missing", "empty"],
+)
+def test_unservable_selections_keep_the_empty_feed_response(
+    client, archive, monkeypatch, masters, spec
+):
+    """A selection with nothing to serve stays the existing empty-feed 404."""
+    _count_target(monkeypatch)
+    _two_selected(archive, masters)
+    playlist = _save_count(client, spec)
+
+    assert playlist["resolved_count"] == 0
+    _assert_empty_feed(client, playlist["id"])
 
 
 @pytest.mark.parametrize("missing", ["quality_scores", "embeddings"])

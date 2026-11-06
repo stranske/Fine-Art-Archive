@@ -19,14 +19,22 @@ unconstrained `str` with a default, so `?fmt=jpeg` reached it.
 from __future__ import annotations
 
 import io
+import json
+import shutil
+import subprocess
+from pathlib import Path
 
 import numpy as np
 import pytest
+from fastapi.testclient import TestClient
 from PIL import Image
 
+from fine_art_archive.api import main as api_main
+from fine_art_archive.api import store as api_store
+from fine_art_archive.api.main import app
 from fine_art_archive.eink import sdcard
 from fine_art_archive.eink.palette import SPECTRA6, quantize
-from fine_art_archive.eink.targets import get_target
+from fine_art_archive.eink.targets import TARGETS, RenderTarget, get_target
 
 
 @pytest.mark.parametrize("strategy", ["color", "grayscale", "duotone"])
@@ -157,3 +165,328 @@ class TestPaletteConformanceAssertion:
         arr[0, 0] = (1, 2, 3)
         with pytest.raises(ValueError, match="not palette-conformant"):
             sdcard._assert_palette_conformant(Image.fromarray(arr, "RGB"), self._Target())
+
+
+_COUNT_FIRST = "aaa1111-first-work"
+_COUNT_SECOND = "bbb2222-second-work"
+_COUNT_SPEC = {"sort": "title"}
+_EMPTY_SPEC = {"sort": "title", "artists": ["No Such Artist"]}
+
+
+def _export_client_rows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    rows: list[tuple[str, str, bool]],
+):
+    """Isolated archive wired to the production export route."""
+    works = tmp_path / "works"
+    works.mkdir()
+    monkeypatch.setattr(api_store, "WORKS", works)
+    monkeypatch.setattr(api_main, "ART_WORKS_ROOT", works)
+    monkeypatch.setattr(api_main, "IMAGE_CACHE_DIR", tmp_path / "image_cache")
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+    monkeypatch.setattr(api_store, "RATINGS_LOG", tmp_path / "ratings.jsonl")
+    monkeypatch.setattr(api_main, "_sidecars_cache", None)
+    monkeypatch.setattr(api_main, "_ratings_cache", None)
+    monkeypatch.setitem(
+        TARGETS,
+        "count-contract",
+        RenderTarget("count-contract", "Count contract", 8, 6, "mono1bit"),
+    )
+    for work_id, title, master in rows:
+        directory = works / work_id
+        directory.mkdir()
+        (directory / "meta.json").write_text(
+            json.dumps(
+                {
+                    "work_id": work_id,
+                    "title": title,
+                    "artist": {"name": "A Painter"},
+                    "year": "1650",
+                    "subject": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        if master:
+            Image.new("RGB", (8, 6), (30, 60, 90)).save(directory / "master.jpeg", "JPEG")
+    api_main._sidecars_cache = None
+    return TestClient(app)
+
+
+def _export_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, masters: tuple[bool, bool]):
+    """Isolated two-work archive wired to the production export route."""
+    return _export_client_rows(
+        tmp_path,
+        monkeypatch,
+        [(_COUNT_FIRST, "First", masters[0]), (_COUNT_SECOND, "Second", masters[1])],
+    )
+
+
+def _write_card(client: TestClient, tmp_path: Path, spec: dict, name: str) -> tuple[Path, dict]:
+    card = tmp_path / name
+    response = client.post(
+        "/eink/playlist/export",
+        json={
+            "spec": spec,
+            "target": "count-contract",
+            "dither": "none",
+            "path": str(card),
+            "write": True,
+            "overwrite": True,
+        },
+    )
+    assert response.status_code == 200, response.text
+    return card, response.json()
+
+
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected", "written", "omissions", "files"),
+    [
+        ((True, False), _COUNT_SPEC, 2, 1, 1, ["001_aaa1111-first-work.png"]),
+        (
+            (True, True),
+            _COUNT_SPEC,
+            2,
+            2,
+            0,
+            ["001_aaa1111-first-work.png", "002_bbb2222-second-work.png"],
+        ),
+        ((False, False), _COUNT_SPEC, 2, 0, 2, []),
+        ((True, False), _EMPTY_SPEC, 0, 0, 0, []),
+    ],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_export_counts_follow_files_written_not_master_availability(
+    tmp_path, monkeypatch, masters, spec, selected, written, omissions, files
+):
+    """The card reports the writer's files and missing-master skips.
+
+    ``selected`` still counts every chosen work. ``written`` and the files on
+    disk are the observed write. These fixtures have no render failure, so
+    ``missing_master_omissions`` happens to equal ``selected - written``;
+    the render-failure test below is what separates those two numbers.
+    """
+    client = _export_client(tmp_path, monkeypatch, masters)
+    card, body = _write_card(client, tmp_path, spec, "card")
+
+    assert body["selected"] == selected
+    assert body["written"] == written
+    assert body["dry_run"] is False
+    assert body["missing_master_omissions"] == omissions
+    assert sorted(path.name for path in card.glob("*.png")) == files
+    if files:
+        manifest = json.loads((card / "playlist.json").read_text(encoding="utf-8"))
+        assert manifest["count"] == written
+        assert [row["file"] for row in manifest["items"]] == files
+        assert body["bytes_written"] > 0
+    else:
+        assert not (card / "playlist.json").exists()
+        assert body["bytes_written"] == 0
+    if masters == (True, False) and spec == _COUNT_SPEC:
+        assert body["skipped_detail"] == [[_COUNT_SECOND, "no local master image"]]
+        assert body["skipped"] == 1
+
+
+def test_ui_export_counts_match_the_production_mixed_master_response(tmp_path, monkeypatch):
+    """Render the real response so API/UI field drift cannot hide behind stubs."""
+    node = shutil.which("node")
+    assert node is not None, "node is required to verify the companion's count consumers"
+    client = _export_client(tmp_path, monkeypatch, (True, False))
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "ui-card")
+    files = list(card.glob("*.png"))
+    assert body["selected"] == 2
+    assert body["written"] == len(files) == 1
+    assert body["missing_master_omissions"] == 1
+
+    ui = api_main.UI_FILE.read_text()
+    start = ui.index("    async function einkExport(write) {")
+    export_function = ui[start : ui.index("    function toggleGallery()", start)]
+    runner = tmp_path / "production-export-counts.cjs"
+    runner.write_text(
+        """
+const response = JSON.parse(process.argv[2]);
+const status = {innerHTML: '', textContent: ''};
+const controls = {
+  'ek-path': {value: response.path},
+  'ek-target': {value: response.target},
+  'ek-dither': {value: 'none'},
+  'ek-fitmode': {value: ''},
+  'ek-out': {insertAdjacentHTML() {}},
+  'ek-status': status,
+};
+const document = {getElementById: id => controls[id] || null};
+const einkSpec = () => ({sort: 'title'});
+const einkCardPlaylistId = null;
+const einkEsc = value => String(value);
+const confirm = () => true;
+const toast = () => {};
+const fetch = async () => ({ok: true, json: async () => response});
+"""
+        + export_function
+        + """
+einkExport(true).then(() => {
+  console.log(JSON.stringify(status));
+}).catch(error => { console.error(error); process.exitCode = 1; });
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(runner), json.dumps(body)],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    status = json.loads(result.stdout)
+    assert status["textContent"] == "", status["textContent"]
+    html = status["innerHTML"]
+    assert "<strong>2</strong> selected" in html
+    assert "<strong>1</strong> actually written" in html
+    assert "<strong>2</strong> actually written" not in html
+    assert "1 missing-master omission" in html
+    assert "1 skipped" in html
+    assert "would write" not in html
+
+
+@pytest.mark.parametrize("write", [None, False], ids=["default-dry-run", "explicit-dry-run"])
+@pytest.mark.parametrize(
+    ("masters", "spec", "selected", "planned_ids", "missing_ids"),
+    [
+        ((True, False), _COUNT_SPEC, 2, [_COUNT_FIRST], [_COUNT_SECOND]),
+        ((True, True), _COUNT_SPEC, 2, [_COUNT_FIRST, _COUNT_SECOND], []),
+        ((False, False), _COUNT_SPEC, 2, [], [_COUNT_FIRST, _COUNT_SECOND]),
+        ((True, False), _EMPTY_SPEC, 0, [], []),
+    ],
+    ids=["mixed", "all-master", "all-missing", "empty"],
+)
+def test_export_dry_run_reports_planned_counts_without_writing(
+    tmp_path, monkeypatch, write, masters, spec, selected, planned_ids, missing_ids
+):
+    """The production dry-run response describes a plan, with no files written.
+
+    Exercise both an omitted write flag and an explicit false value. The UI
+    relies on ``dry_run`` to display zero actually written even when the
+    writer reports a nonzero planned ``written`` count.
+    """
+    client = _export_client(tmp_path, monkeypatch, masters)
+    card = tmp_path / "dry-run-card"
+    request = {
+        "spec": spec,
+        "target": "count-contract",
+        "dither": "none",
+        "path": str(card),
+    }
+    if write is not None:
+        request["write"] = write
+    response = client.post("/eink/playlist/export", json=request)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selected"] == selected
+    assert body["dry_run"] is True
+    assert body["written"] == len(planned_ids)
+    assert body["missing_master_omissions"] == len(missing_ids)
+    assert body["skipped"] == len(missing_ids)
+    assert body["skipped_detail"] == [[wid, "no local master image"] for wid in missing_ids]
+    assert [row["work_id"] for row in body["render_evidence"]] == planned_ids
+    assert body["bytes_written"] == 0
+    assert body["removed"] == 0
+    assert not card.exists(), "a dry run must not create card images or manifests"
+
+
+@pytest.mark.parametrize("failure", ["unreadable-master", "partial-save"])
+@pytest.mark.parametrize("failed_id", [_COUNT_FIRST, _COUNT_SECOND], ids=["first", "last"])
+def test_render_failure_is_not_a_missing_master_or_a_successful_write(
+    tmp_path, monkeypatch, failure, failed_id
+):
+    """An unreadable master or failed card save is not delivered or 'missing'.
+
+    Both master files exist, so master availability is 2. The writer saves
+    one image and records a failure for the other, even if the failed save
+    already wrote partial bytes. Only the successful file contributes to
+    ``written``, byte totals, manifests and render evidence. Failure in either
+    playlist position leaves no partial file or gap in the surviving filename.
+    ``missing_master_omissions`` stays 0 rather than ``selected - written``.
+    """
+    client = _export_client(tmp_path, monkeypatch, (True, True))
+    first_master = tmp_path / "works" / _COUNT_FIRST / "master.jpeg"
+    second_master = tmp_path / "works" / _COUNT_SECOND / "master.jpeg"
+    if failure == "unreadable-master":
+        (tmp_path / "works" / failed_id / "master.jpeg").write_bytes(b"not a jpeg")
+    else:
+        original_save = Image.Image.save
+
+        def fail_card_save(image, fp, *args, **kwargs):
+            path = Path(fp)
+            if path.name.endswith(f"_{failed_id}.png.partial"):
+                path.write_bytes(b"incomplete png")
+                raise OSError("fixture card write failed")
+            return original_save(image, fp, *args, **kwargs)
+
+        monkeypatch.setattr(Image.Image, "save", fail_card_save)
+    assert first_master.is_file()
+    assert second_master.is_file()
+
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "render-fail")
+
+    assert body["selected"] == 2
+    assert body["written"] == 1
+    assert body["dry_run"] is False
+    assert body["missing_master_omissions"] == 0
+    assert body["skipped"] == 1
+    assert body["skipped_detail"][0][0] == failed_id
+    assert str(body["skipped_detail"][0][1]).startswith("render failed:")
+    if failure == "partial-save":
+        assert "fixture card write failed" in body["skipped_detail"][0][1]
+    delivered_id = _COUNT_SECOND if failed_id == _COUNT_FIRST else _COUNT_FIRST
+    filename = f"001_{delivered_id}.png"
+    assert sorted(path.name for path in card.glob("*.png")) == [filename]
+    assert list(card.glob(".*.partial")) == []
+    assert body["bytes_written"] == (card / filename).stat().st_size > 0
+    with Image.open(card / filename) as delivered:
+        delivered.load()
+        assert delivered.format == "PNG"
+        assert delivered.size == (8, 6)
+    manifest = json.loads((card / "playlist.json").read_text(encoding="utf-8"))
+    assert manifest["count"] == 1
+    assert [row["work_id"] for row in manifest["items"]] == [delivered_id]
+    assert [row["file"] for row in manifest["items"]] == [filename]
+    assert (card / "playlist.m3u").read_text().splitlines() == [filename]
+    assert [row["work_id"] for row in body["render_evidence"]] == [delivered_id]
+
+
+def test_missing_master_omissions_count_past_the_skipped_detail_cap(tmp_path, monkeypatch):
+    """Omissions count the full writer record, not the capped detail list.
+
+    Twenty-one works have no master and one has a corrupt master file. Title
+    order puts the corrupt file first, so ``skipped_detail`` holds that render
+    failure plus nineteen missing-master rows and drops the last two skips.
+    ``missing_master_omissions`` still counts all twenty-one missing masters
+    and leaves the render failure out.
+    """
+    corrupt_id = "ccc0000-corrupt-master"
+    rows = [(corrupt_id, "A Corrupt", True)]
+    rows.extend(
+        (f"mmm{index:02d}-missing-master", f"Missing {index:02d}", False) for index in range(21)
+    )
+    client = _export_client_rows(tmp_path, monkeypatch, rows)
+    corrupt_master = tmp_path / "works" / corrupt_id / "master.jpeg"
+    corrupt_master.write_bytes(b"not a jpeg")
+    assert corrupt_master.is_file()
+
+    card, body = _write_card(client, tmp_path, _COUNT_SPEC, "detail-cap")
+
+    assert body["selected"] == 22
+    assert body["written"] == 0
+    assert body["dry_run"] is False
+    assert body["skipped"] == 22
+    assert body["missing_master_omissions"] == 21
+    assert len(body["skipped_detail"]) == 20
+    reasons = [reason for _work_id, reason in body["skipped_detail"]]
+    assert reasons[0].startswith("render failed:")
+    assert reasons[1:] == ["no local master image"] * 19
+    assert body["skipped_detail"][0][0] == corrupt_id
+    assert body["bytes_written"] == 0
+    assert list(card.glob("*.png")) == []
+    assert not (card / "playlist.json").exists()
