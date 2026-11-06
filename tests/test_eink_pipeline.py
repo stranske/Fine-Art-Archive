@@ -1491,10 +1491,10 @@ def test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_expor
     # surfaces agree on panel and dither for one operator action.
     assert (
         ui.count('document.getElementById("ek-target").value') >= 3
-    ), "target must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    ), "target must be read for preview images, saving a playlist (feed) and export (SD card)"
     assert (
         ui.count('document.getElementById("ek-dither").value') >= 3
-    ), "dither must be read for preview images, saving a playlist (feed) " "and export (SD card)"
+    ), "dither must be read for preview images, saving a playlist (feed) and export (SD card)"
 
 
 def test_operator_ui_forwards_same_spec_to_preview_save_and_export():
@@ -1855,7 +1855,7 @@ def test_operator_ui_discloses_no_master_works_in_preview():
     )
     assert (
         ui.count("shown have no local image") == 1
-    ), "no-master disclosure must come from the preview response's " "has_master flags exactly once"
+    ), "no-master disclosure must come from the preview response's has_master flags exactly once"
 
 
 def test_operator_ui_discloses_skipped_works_on_export():
@@ -1880,7 +1880,7 @@ def test_operator_ui_discloses_skipped_works_on_export():
     )
     assert (
         ui.count("${d.skipped} skipped") == 1
-    ), "skipped disclosure must come from the export response's skipped " "count exactly once"
+    ), "skipped disclosure must come from the export response's skipped count exactly once"
 
 
 def test_operator_ui_discloses_missing_metadata_drops_in_preview():
@@ -1910,7 +1910,7 @@ def test_operator_ui_discloses_missing_metadata_drops_in_preview():
     assert "${covTxt}" in ui, "missing-metadata disclosure is built but never rendered"
     assert (
         ui.count("Dropped for missing metadata") == 1
-    ), "missing-metadata disclosure must come from the preview response's " "coverage exactly once"
+    ), "missing-metadata disclosure must come from the preview response's coverage exactly once"
 
 
 def test_operator_ui_renders_selection_diagnostics_in_preview():
@@ -2264,16 +2264,23 @@ def test_operator_ui_renders_preview_and_delivery_counts():
     ``total_candidates``), the save toast (``resolved_count``) and the
     export result (``written``). Dropping any one would let preview,
     feed and card report irreconcilable totals with no visible reason.
-    Removing ``selected of ${d.matched}`` in ``index.html`` must fail
+    Removing ``of ${d.matched} matching`` in ``index.html`` must fail
     this test.
     """
     from fine_art_archive.api.main import UI_FILE
 
     ui = UI_FILE.read_text()
-    assert "<strong>${d.selected}</strong> selected of ${d.matched} matching" in ui, (
-        "preview header does not render selected/matched — preview count "
+    assert "<strong>${d.selected}</strong> selected" in ui, (
+        "preview header does not render selected — preview count "
         "could not be compared to the feed's resolved count"
     )
+    assert "<strong>${d.available_for_delivery}</strong> available for delivery" in ui, (
+        "preview header does not render the deliverable count — works with "
+        "no local image would read as deliverable"
+    )
+    assert (
+        "of ${d.matched} matching" in ui
+    ), "preview header does not render the matched count it selected from"
     assert (
         "(${d.total_candidates} in archive)" in ui
     ), "preview header does not render the archive total it matched against"
@@ -2281,13 +2288,23 @@ def test_operator_ui_renders_preview_and_delivery_counts():
         "save toast does not report the feed's resolved count — a saved "
         "feed whose count collapsed after the preview would read as saved"
     )
-    assert '${write ? "Wrote" : "Would write"} ${d.written} file(s)' in ui, (
+    assert "const actuallyWritten = d.dry_run ? 0 : d.written;" in ui, (
+        "export result does not separate planned from actually written — "
+        "a dry run would read as files placed on the card"
+    )
+    assert "<strong>${actuallyWritten}</strong> actually written" in ui, (
         "export result does not render the card's written count — dry-run "
         "and write would be indistinguishable from a partial card"
     )
+    assert "would write ${d.written} file(s)" in ui, (
+        "export dry run does not render the planned file count"
+    )
     assert (
-        ui.count("${d.selected}") == 1
-    ), "preview selected count must come from the preview response exactly once"
+        ui.count("${d.selected}") == 2
+    ), "selected count must come from the preview and export responses, once each"
+    assert (
+        ui.count("${d.available_for_delivery}") == 1
+    ), "deliverable count must come from the preview response exactly once"
     assert (
         ui.count("${d.resolved_count} works") == 1
     ), "saved-feed count must come from the save response exactly once"

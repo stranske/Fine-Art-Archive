@@ -649,10 +649,12 @@ Follow-on lock (this change):
 `test_operator_ui_renders_preview_and_delivery_counts` in
 `tests/test_eink_pipeline.py` locks the operator-visible counts
 that make the no-master row (#827) reconcilable across surfaces:
-the preview header must render ``selected`` of ``matched`` over
+the preview header must render ``selected`` and
+``available_for_delivery`` over ``matched`` over
 ``total_candidates`` (main.py:773-781 → index.html `einkPreview`),
 the save toast must report the feed's ``resolved_count``
-(main.py:2289-2291), and the export result must render ``written``
+(main.py:2289-2291), and the export result must render the
+dry-run-aware ``actuallyWritten`` count
 (sdcard.py reported count). Backend counts were already locked; a
 search over `tests/` before this change found none of these three
 renderings locked (the saved list's count is a separate rendering,
@@ -661,7 +663,7 @@ blocker above; no pass, Black check, `git` commit or `gh` listing
 claimed). Rerun
 `pytest tests/test_eink_pipeline.py::test_operator_ui_renders_preview_and_delivery_counts -m "not slow" --no-cov`
 plus its deliberate-break probe (temporarily remove
-`selected of ${d.matched}` from the preview header in
+`of ${d.matched} matching` from the preview header in
 `index.html`, rerun — it must fail on the preview count — then
 restore and rerun to pass) and the Black check above before
 marking the enumeration task complete. No new issue filed: this
@@ -673,7 +675,14 @@ break/restore probe were each invoked again and each returned
 before the command started, so no terminal pass or break-failure
 output was captured and no commit was made here; the rerun
 commands above remain the checklist to complete once the shell
-is available.
+is available. Autofix (Gate run 42217977915, PR #868): the test as
+first committed asserted the pre-count-contract header/export
+strings (`selected of ${d.matched}`, `Wrote/Would write
+${d.written}`) and a single `${d.selected}` occurrence; the shipped
+UI renders `selected · available_for_delivery … of matched` and a
+dry-run-aware `actuallyWritten` count, with `${d.selected}` in both
+preview and export. The test was updated to lock the shipped
+strings; no `src/` change was needed.
 
 ## Per-instance dispositions
 
