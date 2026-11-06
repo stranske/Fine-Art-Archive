@@ -1660,8 +1660,8 @@ const fetch = async (url, options) => {
     assert (
         "Resolved target gooddisplay-315-diy. Strategy and gamut evidence use "
         "Spectra-6 policy (master-derived and target-independent), rather than "
-        "a measurement for the selected panel."
-    ) in html
+        "a measurement for the selected panel." in html
+    )
 
 
 def test_operator_ui_einkspec_forwards_each_spec_control():

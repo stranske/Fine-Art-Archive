@@ -715,6 +715,29 @@ then `python3 -m black tests/test_eink_pipeline.py`, re-run
 the check to green, and run `python3 -m pytest
 tests/test_eink_pipeline.py -q --no-cov` before pushing.
 
+Autofix follow-up (Gate run 42224703956, PR #868, head
+`67e3417b`): same shell block in this session (`bwrap: loopback:
+Failed RTM_NEWADDR: Operation not permitted`), so Black still
+could not be executed locally and no local pass is claimed.
+Main CI at `6282d593` was re-verified green via the Actions API
+(run 42092761385, `success`), confirming the reformat target is
+scoped to this PR's one Python file. Comparing the added tests
+against Black-clean assert shapes in `tests/test_build_manifest.py`,
+`tests/test_sidecar_io.py`, `tests/test_companion_app_config.py`
+and `tests/test_eink_feed_endpoints.py` (operator-leading
+continuations and `in` inside the assert parens) isolated one
+deviation: in `test_ui_preview_save_and_export_carry_the_same_inputs`
+the membership test closed its string-concatenation parens before
+`in html` (`) in html`, unique in the repo), where Black wraps
+the whole comparison in the assert parens. That assert was
+reformatted to `"a measurement for the selected panel." in html`
+inside the parens. If the gate is still red after this change,
+the next attempt must capture the actual Black diff first (job
+logs need authentication) rather than guess: run
+`python3 -m black --check --diff tests/test_eink_pipeline.py`
+with an authenticated shell, apply exactly that diff, and re-run
+`python3 -m pytest tests/test_eink_pipeline.py -q --no-cov`.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
