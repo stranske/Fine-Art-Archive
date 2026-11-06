@@ -1784,11 +1784,11 @@ def test_operator_ui_export_write_flag_and_saved_feed_clearing():
     ui = UI_FILE.read_text()
     import re
 
-    assert (
-        re.search(r'<button\b[^>]*onclick="einkExport\(false\)"[^>]*>\s*Dry run\s*</button>', ui)
+    assert re.search(
+        r'<button\b[^>]*onclick="einkExport\(false\)"[^>]*>\s*Dry run\s*</button>', ui
     ), "Dry run must bind the non-writing action"
-    assert (
-        re.search(r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui)
+    assert re.search(
+        r'<button\b[^>]*onclick="einkExport\(true\)"[^>]*>\s*Write card\s*</button>', ui
     ), "Write card must bind the writing action"
     assert (
         'if (!path) { toast("enter a card path first"); return; }' in ui

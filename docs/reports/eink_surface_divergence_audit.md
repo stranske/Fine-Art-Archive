@@ -684,6 +684,37 @@ dry-run-aware `actuallyWritten` count, with `${d.selected}` in both
 preview and export. The test was updated to lock the shipped
 strings; no `src/` change was needed.
 
+Autofix breadcrumb (Gate run 42219501720, PR #868, head
+`8165014b`): the only failing job is `Python CI / lint-format`.
+Its `Black (format check)` step is masked as success
+(continue-on-error outcome) and `Finalize format check` failed
+in the same second it started, which is that workflow's
+enforcement step for a failed Black outcome; Ruff, mypy and the
+pytest jobs pass, and `gate-summary` fails only in consequence.
+Main CI at `6282d593` is green and this PR changes exactly one
+Python file, `tests/test_eink_pipeline.py` (the other changes
+are this report and `agents/muse-805.md`), so the files Black
+would reformat are scoped to that test file. The flagged-file
+list could not be captured in the autofix session: job logs
+require authentication (HTTP 403 unauthenticated) and the
+check-run annotations carry only `exit code 1`. Local execution
+was blocked before any command started — every shell call
+returned `bwrap: loopback: Failed RTM_NEWADDR: Operation not
+permitted`, the escalated retry was denied (approval prompts
+disabled at launch), and a delegated single-agent execution
+pass hit the same block — so no Black check, reformat or test
+run is claimed here. A line-by-line review of the added tests
+against Black-clean examples already in this repo (parenthesised
+assert splits, packed call interiors, exploded collections with
+magic trailing commas, operator-leading continuations) found no
+certain deviation, and no speculative reformat was applied: a
+guessed reformat can leave the gate just as red. Next attempt,
+run first: `python3 -m black --check --diff src tests scripts
+tools` (Black 26.10.1, line-length 100 per `pyproject.toml`),
+then `python3 -m black tests/test_eink_pipeline.py`, re-run
+the check to green, and run `python3 -m pytest
+tests/test_eink_pipeline.py -q --no-cov` before pushing.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15
