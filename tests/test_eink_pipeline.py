@@ -1946,18 +1946,15 @@ def test_operator_ui_renders_selection_diagnostics_in_preview():
 
 
 def test_enumerated_eink_surface_inputs_match_backend_signatures():
-    """The audit's input enumeration must stay complete as surfaces evolve.
+    """Lock enumerated surfaces and helpers to their explicit parameter names.
 
-    The divergence audit enumerates every input consumed by the companion
-    preview (``eink_playlist_preview`` + ``eink_preview``), saved-playlist
-    resolution (``_resolve_playlist``), the feed render
-    (``_render_feed_image``) and the SD export (``eink_playlist_export``),
-    plus the helpers they delegate to (``render_for_target``,
-    ``sdcard.export``, ``item_etag``, ``gamut_render_evidence`` and the
-    exhibition validator). This locks that enumeration to the real
-    signatures: adding an input to any surface without updating the audit
-    (and this test) fails here, which is the check that a fourth input
-    cannot silently diverge the way the three scope-named defects did.
+    This asserts the **declared** parameters and model fields the audit lists
+    for ``eink_playlist_preview``, ``eink_preview``, ``eink_playlist_export``,
+    ``SavePlaylistIn``, ``_resolve_playlist``, ``_build_eink_playlist`` and the
+    traced helpers. It does **not** exhaust inputs read through ``request`` on
+    ``_render_feed_image`` (for example ``If-None-Match`` / ``if-none-match``);
+    those are covered in ``tests/test_eink_feed_endpoints.py`` (ETag / 304
+    tests) and in this report's feed-image row.
     """
     import inspect
 

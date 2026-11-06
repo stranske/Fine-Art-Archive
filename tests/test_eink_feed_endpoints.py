@@ -804,6 +804,79 @@ def test_preference_diverse_preview_saved_feed_and_exports_agree(
             assert not card.exists(), "dry-run must not write a card"
 
 
+def test_export_inline_spec_target_dither_fit_without_playlist_id(client, archive, tmp_path, monkeypatch):
+    """Inline export must consume conflicting body fields when playlist_id is absent.
+
+    ``eink_playlist_export`` resolves ``spec`` from the body and uses the body's
+    ``target``, ``dither`` and ``fit`` when no saved playlist overrides them
+    (main.py). The SD manifest records the applied dither and effective fit.
+    """
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+    wid = "exp-inline-wid"
+    _work(archive, wid, title="Inline precedence")
+    spec = {"sort": "fit", "limit": 1}
+
+    card = tmp_path / "card-inline"
+    exported = client.post(
+        "/eink/playlist/export",
+        json={
+            "spec": spec,
+            "path": str(card),
+            "write": True,
+            "overwrite": True,
+            "target": "gooddisplay-315-diy",
+            "dither": "atkinson",
+            "fit": "cover",
+        },
+    )
+    assert exported.status_code == 200, exported.text
+    manifest = json.loads((card / "playlist.json").read_text())
+    assert manifest["render"]["dither"] == "atkinson"
+    assert manifest["render"]["fit"] == "cover"
+    assert manifest["items"][0]["work_id"] == wid
+
+
+def test_export_saved_playlist_overrides_inline_target_dither_fit(client, archive, tmp_path, monkeypatch):
+    """When ``playlist_id`` is set, saved target/dither/fit override conflicting inline fields.
+
+    The export endpoint replaces inline ``spec``, ``target``, ``dither`` and ``fit``
+    with the saved playlist's stored values (main.py). The returned ``target`` key
+    and SD manifest must reflect the saved settings, not the inline body.
+    """
+    monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
+    wid = "exp-saved-wid"
+    _work(archive, wid, title="Saved precedence")
+    spec = {"sort": "fit", "limit": 1}
+
+    saved = _save(
+        client,
+        spec=spec,
+        target="gooddisplay-315-diy",
+        dither="floyd-steinberg",
+        fit="contain",
+    )
+    card = tmp_path / "card-saved"
+    exported = client.post(
+        "/eink/playlist/export",
+        json={
+            "playlist_id": saved["id"],
+            "spec": {"sort": "fit", "limit": 99},
+            "path": str(card),
+            "write": True,
+            "overwrite": True,
+            "target": "samsung-em32dx",
+            "dither": "atkinson",
+            "fit": "cover",
+        },
+    )
+    assert exported.status_code == 200, exported.text
+    assert exported.json()["target"] == "gooddisplay-315-diy"
+    manifest = json.loads((card / "playlist.json").read_text())
+    assert manifest["render"]["dither"] == "floyd-steinberg"
+    assert manifest["render"]["fit"] == "contain"
+    assert manifest["items"][0]["work_id"] == wid
+
+
 def test_year_zero_lower_bound_agrees_across_preview_saved_feed_and_export(
     client, archive, tmp_path, monkeypatch
 ):
