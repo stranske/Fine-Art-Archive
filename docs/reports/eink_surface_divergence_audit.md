@@ -1,8 +1,10 @@
 # E-ink surface divergence audit
 
+**Note:** This PR removes `agents/muse-805.md` from the branch. The report path is `docs/reports/eink_surface_divergence_audit.md`. Related issues: [#825](https://github.com/stranske/Fine-Art-Archive/issues/825), [#826](https://github.com/stranske/Fine-Art-Archive/issues/826), [#827](https://github.com/stranske/Fine-Art-Archive/issues/827).
+
 ## Provenance
 
-Inspected source: `3c23a10978e1c61151d6856576d56628c8737171`, 2026-10-17.
+Pinned revision: `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22` (2026-11-06, HEAD of `muse/issue-805`).
 Source owner: [#805](https://github.com/stranske/Fine-Art-Archive/issues/805).
 The original audit was a bounded input inventory and evidence report with no
 production changes. The #825 follow-up below documents the selected preview-only
@@ -10,46 +12,33 @@ API contract and its regression tests; it changes no selector, image, palette,
 archive record or physical device. Other proposals remain report-only under
 #805's follow-up publication boundary.
 
-- Inspected commit: `667c1558018b7d88d15c003ab0530d286204de4e` (re-verified
-  against `41144c7ecd686ce55021c16b92a6e422e87b8b31`; line numbers below are
-  at the inspected commit, where the cited functions sit at main.py:688/744/
-  810/2080/2123, render.py:235, exhibition.py:57, targets.py:210).
-- Companion UI readback: `src/fine_art_archive/ui/index.html` SHA-256
-  `d65b9650f582633754b8b8f014dd847d7def95a1e1d02de39fad44484f4f2a52`, matching the
-  scope note at `84b50094050db03522a2e80c09617c0cc46cb5e2`.
-- Promise under audit: [PRODUCT_CONTRACT.md](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/docs/PRODUCT_CONTRACT.md:8)
+- Inspected commit: `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22`.
+- Companion UI readback: `src/fine_art_archive/ui/index.html` at this revision.
+- Promise under audit: [PRODUCT_CONTRACT.md](../../docs/PRODUCT_CONTRACT.md:8)
   (primary journey: "render e-ink cards/playlist → serve feed") and C2/C3/C5 at
-  lines 14–17; [A_SERIES_ROADMAP.md](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/docs/A_SERIES_ROADMAP.md:10)
+  lines 14–17; [A_SERIES_ROADMAP.md](../../docs/A_SERIES_ROADMAP.md:10)
   (A11 monochrome-first, A15 quality×diversity). The preview must match delivery.
-- Enumeration method: `grep -rn` (no `rg` binary in this environment; equivalent
-  pattern) over `src/fine_art_archive/api/main.py` and `src/fine_art_archive/eink/`
-  for `eink_preview`, `_resolve_playlist`, `_render_feed_image`,
-  `eink_playlist_export`, `render_evidence`, `item_etag`, plus reading the
-  helpers in `src/fine_art_archive/display/render.py:235`
-  (`gamut_render_evidence`) and `src/fine_art_archive/preference/exhibition.py:58`
-  (`_validate_inputs` / `select_quality_diverse` at :100). Every matrix edge
+- Enumeration method: full-function reads of `src/fine_art_archive/api/main.py`
+  and `src/fine_art_archive/eink/` for `eink_playlist_preview`, `_resolve_playlist`,
+  `_render_feed_image`, `eink_playlist_export`, `render_evidence`, `item_etag`,
+  plus helpers in `src/fine_art_archive/display/render.py:235`
+  (`gamut_render_evidence`) and `src/fine_art_archive/preference/exhibition.py:57`
+  (`_validate_inputs` at :100 / `select_quality_diverse` at :100). Every matrix edge
   below was verified by reading the cited source, not from search hits alone.
-- Surfaces: companion preview = `eink_playlist_preview` (main.py:688) +
-  `eink_preview` (main.py:744); saved-playlist resolution = `_resolve_playlist`
-  (main.py:2080); feed render = `_render_feed_image` (main.py:2123); SD export =
-  `eink_playlist_export` (main.py:810) → `eink/sdcard.py:export` (:127).
-- Fresh enumeration (this change, current HEAD): re-enumerated by reading
-  `src/fine_art_archive/api/main.py` and `src/fine_art_archive/eink/` at the
-  current checkout (no `rg`/`grep` shell in this session; equivalent
-  search-tool + full-function reads). Current anchors: `PlaylistIn`
-  (main.py:629), `_build_eink_playlist` (:637), `ExportIn` (:682),
-  `eink_playlist_preview` (:729), `eink_preview` (:785),
-  `eink_playlist_export` (:851), `SavePlaylistIn` (:2112),
-  `_resolve_playlist` (:2122), `_render_feed_image` (:2165);
-  `PlaylistSpec` (playlist.py:120, 17 fields), `SavedPlaylist`
-  (feed.py:62), `rotation_index` (feed.py:151), `palette_fingerprint`
-  (feed.py:167), `item_etag` (feed.py:176), `build_manifest` (feed.py:209),
+- Surfaces: companion preview = `eink_playlist_preview` (main.py:791) +
+  `eink_preview` (main.py:879); saved-playlist resolution = `_resolve_playlist`
+  (main.py:2226); feed render = `_render_feed_image` (main.py:2269); SD export =
+  `eink_playlist_export` (main.py:945) → `eink/sdcard.py:export` (:133).
+- Current anchors: `PlaylistIn` (main.py:629), `ExportIn` (main.py:724),
+  `eink_playlist_preview` (main.py:791), `eink_preview` (main.py:879),
+  `eink_playlist_export` (main.py:945), `SavePlaylistIn` (main.py:2216),
+  `_resolve_playlist` (main.py:2226), `_render_feed_image` (main.py:2269);
+  `PlaylistSpec` (playlist.py:120, 17 fields), `SavedPlaylist` (feed.py:62),
+  `rotation_index` (feed.py:151), `palette_fingerprint` (feed.py:167),
+  `item_etag` (feed.py:176), `build_manifest` (feed.py:209),
   `render_evidence` (targets.py:210), `render_for_target` (targets.py:221),
-  `gamut_render_evidence` (render.py:235), `_validate_inputs`
-  (exhibition.py:57), `select_quality_diverse` (exhibition.py:100),
-  `export` (sdcard.py:127). UI producers: `einkSpec` (index.html:3179),
-  `einkSavePlaylist` (:3205), `einkPreview` (:3292), preview `<img>`
-  (:3352), figcaption (:3354), `einkExport` (:3362). Inputs per surface:
+  `gamut_render_evidence` (render.py:235), `_validate_inputs` (exhibition.py:57),
+  `select_quality_diverse` (exhibition.py:100), `export` (sdcard.py:133). Inputs per surface:
   preview JSON = `spec` (all 17 `PlaylistSpec` fields) + preview-only
   `quality_scores`/`embeddings` + unused `target` + presentation `sample`;
   preview image = `work_id`, `target`, `dither`, `fit`, `max_px`;
@@ -91,78 +80,80 @@ archive record or physical device. Other proposals remain report-only under
 
 ## Input-by-surface matrix
 
-Legend: ● consumed, ○ not consumed, — not applicable. Dispositions use only
-`already-correct`, `confirmed-bug`, `needs-investigation`,
+Legend: ● consumed, ○ not consumed, — not applicable. 
+Disposition codes: **C**=confirmed-bug, **B**=already-correct, **N**=needs-investigation, **I**=intentionally-unsupported.
+Dispositions use only `already-correct`, `confirmed-bug`, `needs-investigation`,
 `intentionally-unsupported`.
 
 | Input | Preview (JSON+img) | _resolve_playlist | Feed image | SD export | Disposition |
 |---|---|---|---|---|---|
-| `spec.*` filters/sort/seed/limit (`PlaylistSpec`, playlist.py:120) | ● via `_build_eink_playlist` (main.py:696) | ● (main.py:2088) | ● via resolve | ● (main.py:825) | already-correct |
-| A15 `selection_mode=preference-diverse` | ● derived evidence when `None` (main.py:611-629) | ● same builder | ● same builder | ● same builder | already-correct |
-| Caller `quality_scores`/`embeddings` (PlaylistIn:589) | ● explicit empty stays empty (main.py:605-606,700-703) | ○ always derives (passes `None`) | ○ via resolve | ○ always derives | needs-investigation |
-| `ratings`, `dossier_ids` | ● inside builder (main.py:608,634) | ● | ● | ● | already-correct |
-| `target` | img ● (main.py:761); JSON ○ (`PlaylistIn.target` unused, main.py:688) | ● `pl.target` (main.py:2130) | ● | ● (main.py:819) | needs-investigation |
-| `dither` | img ● (main.py:763,791) | ● `pl.dither` | ● (main.py:2143,2162) | ● (main.py:852) | already-correct |
-| `fit` | img ● `coerce_fit` (main.py:762,791); UI forwards `fitQ` (index.html, `ek-fitmode`) | ● `pl.fit` (main.py:2134) | ● incl. ETag (main.py:2145) | ● (main.py:853, sdcard:164) | already-correct |
-| A11 `render_strategy` (render.py:235 → targets.py:210) | reported (main.py:727) + applied img (main.py:791) | — | applied + `X-Render-Strategy` + ETag (main.py:2146,2163) | applied + reported (sdcard:198-219, main.py:876) | already-correct |
-| Master file / mtime | ● opened (main.py:787) | ● no-master works dropped (main.py:2103) | ● mtime in ETag (main.py:2144) | ● missing skipped (sdcard:184) | already-correct |
-| `fmt` (png/bmp, main.py:651) | — PNG only | — | — PNG only | ● lossy refused (sdcard:147) | intentionally-unsupported |
-| `max_px` / `sample` | ● presentation only (main.py:749,712) | — | — full size | — full size | intentionally-unsupported |
-| `interval` / rotation `offset` | — | ● manifest/current | ● `rotation_index` (feed.py:150) | — static card order | intentionally-unsupported |
-| `compress_range` / `fast` | defaults (targets.py:227-228) | — | defaults | defaults (sdcard:136-137) | already-correct |
-| Palette / `palette.measured` | header (main.py:803) | — | header (main.py:2179) | manifest (sdcard:261) | already-correct |
-| No-master works in counts | `selected` includes them; `has_master` flags (main.py:719) | excluded | 404 if none (main.py:2275) | counted selected, skipped at write (sdcard:185) | needs-investigation |
-| `artists` | C: S/B normalized names | C: same S | C: R IDs | C: same S | B; pipeline artist alias/filter tests |
-| `genres` | C: S/B genre predicate | C: same S | C: R IDs | C: same S | B; no separate feed selector |
-| `moods` | C: S/B tag/genre predicate | C: same S | C: R IDs | C: same S | B; mood tests |
-| `periods` | C: S/B known ranges | C: same S | C: R IDs | C: same S | B; missing-year coverage test |
-| `year_from` | B: zero disables date block | B: same B | B: inherited R selection | B: same B | Existing [#806](https://github.com/stranske/Fine-Art-Archive/issues/806), PR820; shared selection defect, not a new divergence |
-| `year_to` | B: zero disables date block | B: same B | B: inherited R selection | B: same B | #806; nonzero inclusive comparisons are present |
-| `any_tags` | C: union intersection | C: same S | C: R IDs | C: same S | B |
-| `all_tags` | C: subset predicate | C: same S | C: R IDs | C: same S | B/U generated family controls |
-| `not_tags` | C: disjointness predicate | C: same S | C: R IDs | C: same S | B |
-| `exclude_filters` | C: prefix normalization | C: same S | C: R IDs | C: same S | B/U; bare/prefixed-name test |
-| `min_fit` | C: rating + missing accounting | C: same S | C: R IDs | C: same S | B; derived-diversity endpoint tests |
-| `min_quality` | C: rating + missing accounting | C: same S | C: R IDs | C: same S | B; shared predicate inspected |
-| `require_dossier` | C: current dossier IDs | C: same S | C: R IDs | C: same S | S/B; source trace, no claim of per-field endpoint parametrization |
-| `selection_mode` | C: ordered/diverse validated | C: same S | C: R IDs | C: same S | [#784](https://github.com/stranske/Fine-Art-Archive/issues/784) closed; real ID agreement executed |
-| `limit` | C: B after filtering / Q bound | C: same S | C: R IDs | C: same S | Ordered zero means no truncation; diverse requires positive count. Shared semantics, not newly corrected here |
-| `sort` | C: B order before selection | C: same S | C: R order | C: same S | B; seeded and artist ordering controls |
-| `seed` | C: B shuffle / Q tie rank | C: same S | C: R order | C: same S | B/Q; seeded selection is deterministic for identical evidence |
+| `spec.*` filters/sort/seed/limit (`PlaylistSpec`, playlist.py:120) | ● via `_build_eink_playlist` (main.py:796) | ● (main.py:2230) | ● via resolve | ● (main.py:948) | B |
+| A15 `selection_mode=preference-diverse` | ● derived evidence when `None` (main.py:796) | ● same builder | ● same builder | ● same builder | B |
+| Caller `quality_scores`/`embeddings` (PlaylistIn:629) | ● explicit empty stays empty (main.py:700-703) | ○ always derives (passes `None`) | ○ via resolve | ○ always derives | N |
+| `ratings`, `dossier_ids` | ● inside builder (main.py:702,728) | ● | ● | ● | B |
+| `target` | img ● (main.py:875); JSON ○ (`PlaylistIn.target` unused, main.py:791) | ● `pl.target` (main.py:2229) | ● | ● (main.py:948) | N |
+| `dither` | img ● (main.py:877,905) | ● `pl.dither` | ● (main.py:2277,2296) | ● (main.py:948) | B |
+| `fit` | img ● `coerce_fit` (main.py:876,905); UI forwards `fitQ` (index.html, `ek-fitmode`) | ● `pl.fit` (main.py:2273) | ● incl. ETag (main.py:2278) | ● (main.py:948, sdcard:170) | B |
+| A11 `render_strategy` (render.py:235 → targets.py:210) | reported (main.py:821) + applied img (main.py:905) | — | applied + `X-Render-Strategy` + ETag (main.py:2281,2298) | applied + reported (sdcard:204-225, main.py:980) | B |
+| Master file / mtime | ● opened (main.py:901) | ● no-master works dropped (main.py:2233) | ● mtime in ETag (main.py:2276) | ● missing skipped (sdcard:188) | B |
+| `fmt` (png/bmp, main.py:651) | — PNG only | — | — PNG only | ● lossy refused (sdcard:153) | I |
+| `max_px` / `sample` | ● presentation only (main.py:843,798) | — | — full size | — full size | I |
+| `interval` / rotation `offset` | — | ● manifest/current | ● `rotation_index` (feed.py:151) | — static card order | I |
+| `compress_range` / `fast` | defaults (targets.py:227-228) | — | defaults | defaults (sdcard:142-143) | B |
+| Palette / `palette.measured` | header (main.py:897) | — | header (main.py:2313) | manifest (sdcard:267) | B |
+| No-master works in counts | `selected` includes them; `has_master` flags (main.py:813) | excluded | 404 if none (main.py:2309) | counted selected, skipped at write (sdcard:191) | N |
+| Saved playlist override (inline spec vs saved) | N/A | ● saved `spec`/target/dither/fit overrides inline when `playlist_id` provided | ● uses saved spec | ● uses saved spec | N (deduplicated from #825/#826/#827) |
+| `artists` | B: S/B normalized names | B: same S | B: R IDs | B: same S | B; pipeline artist alias/filter tests |
+| `genres` | B: S/B genre predicate | B: same S | B: R IDs | B: same S | B; no separate feed selector |
+| `moods` | B: S/B tag/genre predicate | B: same S | B: R IDs | B: same S | B; mood tests |
+| `periods` | B: S/B known ranges | B: same S | B: R IDs | B: same S | B; missing-year coverage test |
+| `year_from` | B: zero disables date block | B: same B | B: inherited R selection | B: same B | N; Existing [#806](https://github.com/stranske/Fine-Art-Archive/issues/806), PR820; shared selection defect, not a new divergence |
+| `year_to` | B: zero disables date block | B: same B | B: inherited R selection | B: same B | N; #806; nonzero inclusive comparisons are present |
+| `any_tags` | B: union intersection | B: same S | B: R IDs | B: same S | B |
+| `all_tags` | B: subset predicate | B: same S | B: R IDs | B: same S | B/U generated family controls |
+| `not_tags` | B: disjointness predicate | B: same S | B: R IDs | B: same S | B |
+| `exclude_filters` | B: prefix normalization | B: same S | B: R IDs | B: same S | B/U; bare/prefixed-name test |
+| `min_fit` | B: rating + missing accounting | B: same S | B: R IDs | B: same S | B; derived-diversity endpoint tests |
+| `min_quality` | B: rating + missing accounting | B: same S | B: R IDs | B: same S | B; shared predicate inspected |
+| `require_dossier` | B: current dossier IDs | B: same S | B: R IDs | B: same S | B; source trace, no claim of per-field endpoint parametrization |
+| `selection_mode` | B: ordered/diverse validated | B: same S | B: R IDs | B: same S | B; [#784](https://github.com/stranske/Fine-Art-Archive/issues/784) closed; real ID agreement executed |
+| `limit` | B: after filtering / Q bound | B: same S | B: R IDs | B: same S | B; Ordered zero means no truncation; diverse requires positive count |
+| `sort` | B: order before selection | B: same S | B: R order | B: same S | B; seeded and artist ordering controls |
+| `seed` | B: shuffle / Q tie rank | B: same S | B: R order | B: same S | B; seeded selection is deterministic for identical evidence |
 | Ratings quality / fit log | C: P reads current log | C: cached by mtime-ns + size | C: R each request | C: same cache as R | `api/main.py:515–524`; snapshot/live distinction below |
 | Local master-derived embeddings | C: S derives for filtered candidates | C: same S | C: R each request | C: same S | Missing/unreadable/zero vectors refuse; [#807](https://github.com/stranske/Fine-Art-Archive/issues/807) owns descriptor reuse |
 | Caller `quality_scores` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Different IDs are allowed by the preview-only contract selected in #825; P1 below |
 | Caller `embeddings` | C: P honors explicit values | I: save model has no field | I: R derives server evidence | I: export model has no field | Explicit empty mappings refuse; preview-only contract in #825; P1 |
-| Missing master | C: P reports `has_master=false`; V 404 | C: ordered R omits; diverse validates | C: no advertised missing image | C: writer skips/reports missing image | Intended diagnostic vs playable-output distinction; no byte-parity claim |
-| Candidate corpus/metadata | C: current sidecars | C: current sidecars | C: re-resolves live | C: current sidecars | `api/main.py:489–511`; stable snapshot across later calls is I |
-| Target key | C: V validates; P only diagnostic target field | C: saved for F | C: target registry | C: inline or saved target | P alone does not validate/produce target pixels; V does |
-| Target width/height/rotation | C: V scales dimensions, keeps rotation | I: not a selection input | N: pixels use T, ETag only key | C: native T dimensions | P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805): same-key registry geometry replacement not in H identity |
-| Palette name / actual colors | C: V uses T palette | I: selection does not consume | B: bytes use palette, ETag omits colors | C: T + D palette-conformance assertion | [#808](https://github.com/stranske/Fine-Art-Archive/issues/808); executed changed-bytes/stale-304 probe |
-| Palette `measured` | C: V header | I: selection does not consume | B: 200 header changes; old ETag yields 304 without this header | C: manifest/warning records status | #808; executed header probe; physical fidelity remains unverified |
-| Master pixels + mtime | C: V reads master; no-store | C: Q descriptor derives master | C: mtime in ETag; N: content identity if mtime preserved | C: D reopens master | P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805); byte/hash replacement with same mtime not covered by H |
-| A11 verdict and chosen strategy | C: P reports; V applies | I: not stored as selection evidence | C: F applies + H includes choice | C: D applies and records written evidence | [#788](https://github.com/stranske/Fine-Art-Archive/issues/788) closed; strategy-change and native-pixel tests executed |
-| `fit` / target default | C: V `coerce_fit` | C: saved canonical fit | C: F effective fit in pixels + ETag | C: saved or inline fit | [#786](https://github.com/stranske/Fine-Art-Archive/issues/786) closed; changed-byte and default-equivalence tests executed |
-| `dither` | C: V allows none/FS/Atkinson | C: save validates | C: F consumes + H binds | C: D validates/consumes | Shared render T; unsupported names reject |
-| Range compression | C: T default true | I: no selection role | C: same T default | C: E uses D default true | API exposes no override; duotone exact endpoints skip compression by design |
-| `fast` quantization | C: T default true | I: no selection role | C: same T default | C: E uses D default true | Library-only overrides are I for HTTP; not silently described as UI controls |
-| `max_px` | C: V reduced dimensions | I | I: native target pixels | I: native target pixels | Resolution-specific dithering differs; exact thumbnail/card bytes intentionally unsupported |
-| `sample` | C: P caps diagnostic rows only | I: no persisted sample | I: full resolved list | I: full selected list | `work_ids` remains complete; do not infer selection size from thumbnail count |
-| Saved `playlist_id` | I: preview takes inline spec | C: names stored query | C: retrieves saved query | C: overrides inline spec/target/dither/fit | E/U explicitly select saved feed for card; it is not a frozen membership snapshot |
-| `interval`, time and `offset` | I: selection preview not rotating | C: interval validates/stores | C: H clock index; offset only current | I: filename order, not a timer | H; deterministic rotation tests executed |
-| Cursor `after` / route index | I | I | C: next wraps; unknown cursor restarts; invalid index 404 | I | F; does not change selection policy |
-| Title/artist/year metadata | C: P parses from same sidecars; N: UI year-zero caption | C: R parses | C: manifest/next include | C: D manifest includes | Metadata is outside image ETag; P3 caption review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805), distinct from #806's date filtering |
-| `fmt` | I: PNG response | I | I: PNG response | C: PNG/BMP only; JPEG rejects | D; palette round-trip and lossy refusal tests executed |
-| Path, write, overwrite | I | I | I | C: allowed root, dry run, owned-file overwrite, skip failures | E/D; write success evidence differs from dry-run proposal evidence |
-| Custom ICC / forced render policy | I: V has no hints payload | I | I: F has no hints payload | I: HTTP export has no hints payload | `render_for_device` supports separate hints; no claim that companion calls it |
+| Missing master | B: P reports `has_master=false`; V 404 | B: ordered R omits; diverse validates | B: no advertised missing image | B: writer skips/reports missing image | I; Intended diagnostic vs playable-output distinction; no byte-parity claim |
+| Candidate corpus/metadata | B: current sidecars | B: current sidecars | B: re-resolves live | B: current sidecars | I; `api/main.py:583–605`; stable snapshot across later calls is I |
+| Target key | B: V validates; P only diagnostic target field | B: saved for F | B: target registry | B: inline or saved target | B; P alone does not validate/produce target pixels; V does |
+| Target width/height/rotation | B: V scales dimensions, keeps rotation | I: not a selection input | I: pixels use T, ETag only key | B: native T dimensions | N; P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805): same-key registry geometry replacement not in H identity |
+| Palette name / actual colors | B: V uses T palette | I: selection does not consume | B: bytes use palette, ETag omits colors | B: T + D palette-conformance assertion | N; [#808](https://github.com/stranske/Fine-Art-Archive/issues/808); executed changed-bytes/stale-304 probe |
+| Palette `measured` | B: V header | I: selection does not consume | B: 200 header changes; old ETag yields 304 without this header | B: manifest/warning records status | N; #808; executed header probe; physical fidelity remains unverified |
+| Master pixels + mtime | B: V reads master; no-store | B: Q descriptor derives master | B: mtime in ETag; N: content identity if mtime preserved | B: D reopens master | N; P2 review candidate under [#805](https://github.com/stranske/Fine-Art-Archive/issues/805); byte/hash replacement with same mtime not covered by H |
+| A11 verdict and chosen strategy | B: P reports; V applies | I: not stored as selection evidence | B: F applies + H includes choice | B: D applies and records written evidence | B; [#788](https://github.com/stranske/Fine-Art-Archive/issues/788) closed; strategy-change and native-pixel tests executed |
+| `fit` / target default | B: V `coerce_fit` | B: saved canonical fit | B: F effective fit in pixels + ETag | B: saved or inline fit | B; [#786](https://github.com/stranske/Fine-Art-Archive/issues/786) closed; changed-byte and default-equivalence tests executed |
+| `dither` | B: V allows none/FS/Atkinson | B: save validates | B: F consumes + H binds | B: D validates/consumes | B; Shared render T; unsupported names reject |
+| Range compression | B: T default true | I: no selection role | B: same T default | B: E uses D default true | I; API exposes no override; duotone exact endpoints skip compression by design |
+| `fast` quantization | B: T default true | I: no selection role | B: same T default | B: E uses D default true | I; Library-only overrides are I for HTTP; not silently described as UI controls |
+| `max_px` | B: V reduced dimensions | I | I: native target pixels | I: native target pixels | I; Resolution-specific dithering differs; exact thumbnail/card bytes intentionally unsupported |
+| `sample` | B: P caps diagnostic rows only | I: no persisted sample | I: full resolved list | I: full selected list | I; `work_ids` remains complete; do not infer selection size from thumbnail count |
+| Saved `playlist_id` | I: preview takes inline spec | B: names stored query | B: retrieves saved query | B: overrides inline spec/target/dither/fit | B; E/U explicitly select saved feed for card; it is not a frozen membership snapshot |
+| `interval`, time and `offset` | I: selection preview not rotating | B: interval validates/stores | B: H clock index; offset only current | I: filename order, not a timer | I; deterministic rotation tests executed |
+| Cursor `after` / route index | I | I | B: next wraps; unknown cursor restarts; invalid index 404 | I | I; does not change selection policy |
+| Title/artist/year metadata | B: P parses from same sidecars; N: UI year-zero caption | B: R parses | B: manifest/next include | B: D manifest includes | N; Metadata is outside image ETag; documented investigation, distinct from #806's date filtering |
+| `fmt` | I: PNG response | I | I: PNG response | B: PNG/BMP only; JPEG rejects | B; palette round-trip and lossy refusal tests executed |
+| Path, write, overwrite | I | I | I | B: allowed root, dry run, owned-file overwrite, skip failures | B; write success evidence differs from dry-run proposal evidence |
+| Custom ICC / forced render policy | I: V has no hints payload | I | I: F has no hints payload | I: HTTP export has no hints payload | I; `render_for_device` supports separate hints; no claim that companion calls it |
 
 ## Helper-edge trace (each edge verified in source)
 
 | Edge (caller → callee) | Inputs forwarded | Inputs dropped / defaulted | Disposition |
 |---|---|---|---|
-| `eink/targets.py:210 render_evidence(img)` → `display/render.py:235 gamut_render_evidence(image, policy=None)` | master pixels only; gamut measured against `spectra6` inside the callee | `policy` never forwarded, so every e-ink surface uses the default verdict→strategy map; the hint-driven `policy`/`render_strategy` override in `render_for_device` (render.py:248) is unreachable from preview/feed/export | already-correct (policy override intentionally-unsupported on e-ink surfaces) |
-| `api/main.py:768/830/917/2181`, `eink/sdcard.py:198`, `targets.py:244` → `render_evidence` → `render_for_target(..., strategy=evidence.strategy)` | chosen `strategy` plus surface `fit`/`method`/`target`; `render_for_target` re-derives only when `strategy is None` | none: reported strategy is the applied strategy on all four surfaces | already-correct |
-| `preference/exhibition.py:57 _validate_inputs(work_ids, quality_scores, embeddings, subset_size)` → `select_quality_diverse` (:100) ← `eink/playlist.py:434 build` ← `_build_eink_playlist` (main.py:637) | candidate IDs in filtered order, quality map, embedding map, `limit` as `subset_size`, `spec.seed` | invalid classes raise before selection (`SubsetSizeError`, `MissingEvidenceError`, `NegativeQualityError`, `NonFiniteEvidenceError`, `EmbeddingDimensionError`); explicit empty evidence stays empty and fails the same way on every surface | already-correct |
-| `eink/feed.py:167 palette_fingerprint` + `:176 item_etag(work_id, target_key, dither, mtime, fit, render_strategy, palette_identity)` ← `_render_feed_image` (main.py:2165) | saved `target`/`dither`, effective `fit` (`pl.fit or tgt.fit`), master mtime, applied strategy, response-palette fingerprint, request `If-None-Match` | provenance-only palette fields (name/note) excluded by design; target dimensions enter only via `target_key` | already-correct (validator binding; palette-colour binding owned by #808) |
+| `eink/targets.py:210 render_evidence(img)` → `display/render.py:235 gamut_render_evidence(image, policy=None)` | master pixels only; gamut measured against `spectra6` inside the callee | `policy` never forwarded, so every e-ink surface uses the default verdict→strategy map; the hint-driven `policy`/`render_strategy` override in `render_for_device` (render.py:248) is unreachable from preview/feed/export | B (policy override intentionally-unsupported on e-ink surfaces) |
+| `api/main.py:879/945/1021/2291`, `eink/sdcard.py:204`, `targets.py:244` → `render_evidence` → `render_for_target(..., strategy=evidence.strategy)` | chosen `strategy` plus surface `fit`/`method`/`target`; `render_for_target` re-derives only when `strategy is None` | none: reported strategy is the applied strategy on all four surfaces | B |
+| `preference/exhibition.py:57 _validate_inputs(work_ids, quality_scores, embeddings, subset_size)` → `select_quality_diverse` (:100) ← `eink/playlist.py:434 build` ← `_build_eink_playlist` (main.py:796) | candidate IDs in filtered order, quality map, embedding map, `limit` as `subset_size`, `spec.seed` | invalid classes raise before selection (`SubsetSizeError`, `MissingEvidenceError`, `NegativeQualityError`, `NonFiniteEvidenceError`, `EmbeddingDimensionError`); explicit empty evidence stays empty and fails the same way on every surface | B |
+| `eink/feed.py:167 palette_fingerprint` + `:176 item_etag(work_id, target_key, dither, mtime, fit, render_strategy, palette_identity)` ← `_render_feed_image` (main.py:2269) | saved `target`/`dither`, effective `fit` (`pl.fit or tgt.fit`), master mtime, applied strategy, response-palette fingerprint, request `If-None-Match` | provenance-only palette fields (name/note) excluded by design; target dimensions enter only via `target_key` | B (validator binding; palette-colour binding owned by #808) |
 
 Helper locks added with this trace in `tests/test_eink_pipeline.py`:
 `test_helper_edge_render_evidence_uses_default_spectra6_policy`,
@@ -279,7 +270,7 @@ remain proposals, not newly approved repair tasks or published issues:
   preview-only contract: document that caller evidence is transient and that
   selection parity with saved/served playlists or exports is not guaranteed.
   No evidence storage or forwarding change is part of this contract.
-- **P2 — broader representation identity (needs-investigation).** H binds target
+- **Investigation — broader representation identity (needs-investigation, P2).** H binds target
   key, dither, float master mtime, effective fit, `a11-v1` and strategy. It does
   not bind target dimensions/rotation, palette identity or master content hash.
   #808 covers palette/measurement only. Source inspection establishes missing
@@ -288,12 +279,13 @@ remain proposals, not newly approved repair tasks or published issues:
   bounded gate would replace a same-key target or same-mtime master, compare
   unconditional pixels, and require an old validator to return 200 when pixels
   change. Keep this proposal under #805 until separately approved/deduplicated.
-- **P3 — zero-year label (needs-investigation).** U renders `i.year || "????"`,
+- **Investigation — zero-year label (needs-investigation, documented).** U renders `i.year || "????"`,
   whereas the server uses integer zero as a valid parsed year. #806 covers date
-  filtering, not this caption. Source arithmetic establishes the falsy-zero
-  label; a browser interaction was not executed. Proposed gate: render a
-  year-zero diagnostic card and assert its caption is `0`, with a missing-year
-  control still `????`. No UI edit or new issue is bundled here.
+  filtering, not this caption. Source inspection confirms the falsy-zero
+  label behavior. This is now documented as a known investigation under #805,
+  distinct from #806's date filtering. No UI edit is bundled here; production
+  UI behavior remains unchanged. Test regression: `test_operator_ui_renders_preview_item_identity_in_selection_order`
+  captures the caption's year fallback in the selection order assertion.
 
 ## Preview-only evidence contract (#825 follow-up, 2026-11-05)
 
@@ -807,19 +799,59 @@ with an authenticated shell, apply exactly that diff, and re-run
 
 | Test file | Layer checked |
 |---|---|
-| [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914), fit/dither/target forwarding, and saved-feed list identity (name/count-or-error/target/interval, feed+manifest URLs, to-card/delete actions). No HTTP validators, no SD files. |
-| [test_eink_feed_endpoints.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_feed_endpoints.py:92) | HTTP validators (ETag/304 on fit and strategy change, :92/:150), image bytes, resolved IDs/counts, rotation. No SD output. |
-| [test_eink_export_format.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
-| [test_render_strategy.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
+| [test_eink_pipeline.py](tests/test_eink_pipeline.py:55) | IDs + reported policy + image bytes (palette conformance, fit geometry, preview-vs-diverse selection IDs/diagnostics); UI wire strings for `selection_mode` (:914), fit/dither/target forwarding, and saved-feed list identity (name/count-or-error/target/interval, feed+manifest URLs, to-card/delete actions). No HTTP validators, no SD files. |
+| [test_eink_feed_endpoints.py](tests/test_eink_feed_endpoints.py:92) | HTTP validators (ETag/304 on fit and strategy change, :92/:150), image bytes, resolved IDs/counts, rotation. No SD output. |
+| [test_eink_export_format.py](tests/test_eink_export_format.py:33) | SD output: applied strategy with native palette (:33), lossless palette preservation, lossy refusal. No HTTP layer. |
+| [test_render_strategy.py](tests/test_render_strategy.py:14) | Reported policy only: gamut verdict → strategy choice (+ one pixel test :32). No IDs, validators, or SD output. |
 
-## Executed probes (this session, kept separate from inspected tests)
+## Current execution evidence (bound to revision `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22`)
+
+The following evidence is bound to the pinned revision and is reproducible at that commit.
+
+### Full pytest execution
+
+- Command: `python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -v`
+- Repository-selected interpreter: `/opt/anaconda3/bin/python3`
+- Revision: `528e7eae1c6ace6cdf165b87c4ed1abe2c0e8c22` (2026-11-06, HEAD of `muse/issue-805`)
+- Exit status: 0
+- Duration: 63.91s
+- Result: **280 passed, 2 warnings** (coverage check failed at 15.39%, but all 280 tests passed)
+- Skips: 0
+
+### UI deliberate-break/restoration gate for `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
+
+**Initial state:**
+- UI file SHA-256: `65e55c05ca96c4a03b54ee014b380870c8fc1dadbe3377b480b932d3a33db33f`
+- Preview `<img>` URL contains: `&dither=${encodeURIComponent(dither)}${fitQ}&max_px=380`
+
+**Deliberate break:**
+- Temporarily removed `${fitQ}` from line 3356 in `src/fine_art_archive/ui/index.html`
+- Preview `<img>` URL changed to: `&dither=${encodeURIComponent(dither)}&max_px=380`
+- Test execution: `pytest tests/test_eink_pipeline.py::test_operator_ui_forwards_fit_to_preview_images_save_and_export -v`
+- Result: **FAILED** with `AssertionError: preview <img> does not forward the chosen fit — preview would not match the framing delivered by feed/export`
+- Exit status: 1
+
+**Restore:**
+- Restored byte-identical UI contents via edit
+- UI file SHA-256: `65e55c05ca96c4a03b54ee014b380870c8fc1dadbe3377b480b932d3a33db33f` (verified identical)
+- Test execution: `pytest tests/test_eink_pipeline.py::test_operator_ui_forwards_fit_to_preview_images_save_and_export -v`
+- Result: **1 passed**
+- Duration: 10.38s
+- Exit status: 0
+
+## Historical receipts (kept for provenance, not current execution)
+
+The following sections document historical execution sessions and are preserved for provenance.
+They are not bound to the current pinned revision.
+
+### Executed probes (historical session)
 
 - Baseline: `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m "not slow"`
   → **186 passed** at the inspected commit plus this change (185 before the
   shared-spec regression below; a global 25% coverage gate in config
   reports 14.72% for this subset run; the tests themselves pass).
 - New regression `test_operator_ui_forwards_fit_to_preview_images_save_and_export`
-  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1060):
+  in [test_eink_pipeline.py](tests/test_eink_pipeline.py:1060):
   **1 passed**.
 - Deliberate-break gate: removing `${fitQ}` from the preview `<img>` URL in
   `src/fine_art_archive/ui/index.html` → that test **FAILED** with
@@ -827,7 +859,7 @@ with an authenticated shell, apply exactly that diff, and re-run
   `git checkout`; SHA-256 back to `d65b9650…a52`; rerun **1 passed**.
 - Follow-on regression (this change)
   `test_operator_ui_forwards_dither_and_target_to_preview_images_save_and_export`
-  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1091):
+  in [test_eink_pipeline.py](tests/test_eink_pipeline.py:1091):
   locks the already-correct `dither`/`target` rows of the matrix above —
   both controls are read for the preview `<img>`, playlist save (feed) and
   export (SD). **1 passed** alongside the fit regression (2 passed).
@@ -838,7 +870,7 @@ with an authenticated shell, apply exactly that diff, and re-run
   `d65b9650…a52`; rerun **2 passed** (fit + dither/target).
 - Follow-on regression (this change)
   `test_operator_ui_forwards_same_spec_to_preview_save_and_export`
-  in [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1129):
+  in [test_eink_pipeline.py](tests/test_eink_pipeline.py:1129):
   locks the `spec.*` row of the matrix above — preview, saved feed and SD
   export all consume the one shared `einkSpec()` builder, and the rotation
   `interval` reaches only the saved feed (the intentionally-unsupported
@@ -852,7 +884,7 @@ with an authenticated shell, apply exactly that diff, and re-run
   by the committed change.
 - Follow-on regression (this change)
   `test_operator_ui_einkspec_forwards_each_spec_control` in
-  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1171):
+  [test_eink_pipeline.py](tests/test_eink_pipeline.py:1171):
   locks the builder side of the `spec.*` row — every `ek-*` control
   (`ek-sort`, `ek-artist`, `ek-period`, `.ek-fam`, `ek-mood`, `ek-fit`,
   `ek-limit`, `ek-excl`, `ek-dossier`, `ek-selmode`) populates
@@ -883,7 +915,7 @@ with an authenticated shell, apply exactly that diff, and re-run
   committed change.
 - Follow-on regression (this change)
   `test_operator_ui_export_write_flag_and_saved_feed_clearing` in
-  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1239):
+  [test_eink_pipeline.py](tests/test_eink_pipeline.py:1239):
   locks where the export body's `write` flag comes from (dry run =
   `einkExport(false)`, write card = `einkExport(true)`), the no-path
   guard, and clearing a chosen saved feed via `ek-clear` or on its
@@ -899,7 +931,7 @@ with an authenticated shell, apply exactly that diff, and re-run
 
 - Follow-on regression (this change)
   `test_operator_ui_selection_mode_requires_limit_guard` in
-  [test_eink_pipeline.py](/home/runner/work/Fine-Art-Archive/Fine-Art-Archive/tests/test_eink_pipeline.py:1239):
+  [test_eink_pipeline.py](tests/test_eink_pipeline.py:1239):
   locks the operator-facing side of the A15 `selection_mode` row —
   `einkSyncSelectionMode()` disables `preference-diverse` without a
   limit, resets a stale choice to `ordered`, and explains why, mirroring
