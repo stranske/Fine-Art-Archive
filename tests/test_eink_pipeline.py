@@ -2296,9 +2296,9 @@ def test_operator_ui_renders_preview_and_delivery_counts():
         "export result does not render the card's written count — dry-run "
         "and write would be indistinguishable from a partial card"
     )
-    assert "would write ${d.written} file(s)" in ui, (
-        "export dry run does not render the planned file count"
-    )
+    assert (
+        "would write ${d.written} file(s)" in ui
+    ), "export dry run does not render the planned file count"
     assert (
         ui.count("${d.selected}") == 2
     ), "selected count must come from the preview and export responses, once each"
