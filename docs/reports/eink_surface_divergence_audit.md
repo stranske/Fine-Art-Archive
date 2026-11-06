@@ -738,6 +738,29 @@ logs need authentication) rather than guess: run
 with an authenticated shell, apply exactly that diff, and re-run
 `python3 -m pytest tests/test_eink_pipeline.py -q --no-cov`.
 
+Autofix follow-up (Gate run 42227063469, PR #868, head
+`79b610f`): same shell block in this session (`bwrap: loopback:
+Failed RTM_NEWADDR: Operation not permitted`), so Black still
+could not be executed locally and no local pass is claimed. A
+full line-by-line audit of the one changed Python file against
+Black 26.10.1 rules (line-length 100, assert test-first
+splitting, implicit-concat handling, magic trailing commas,
+2026 stable style) isolated two remaining candidate deviations,
+both now fixed in `tests/test_eink_pipeline.py`: the
+saved-feed-override banner assert carried its two-part message
+concatenated on the `),` line (merged to the single string that
+fits in 100 columns), and the `d.palette_measured` count assert
+wrapped its message in parentheses where the test-wrapped form
+with the merged message fits in 100 columns (now
+`assert (ui.count(...) == 1), "palette disclosure ... once"`).
+Both edits preserve the exact asserted string values, so test
+behaviour is unchanged. If the gate is still red after this
+change, the next attempt must capture the actual Black diff
+first (job logs need authentication) rather than guess: run
+`python3 -m black --check --diff tests/test_eink_pipeline.py`
+with an authenticated shell, apply exactly that diff, and re-run
+`python3 -m pytest tests/test_eink_pipeline.py -q --no-cov`.
+
 ## Per-instance dispositions
 
 1. **already-correct — the three scope-named defects at this commit.** A15

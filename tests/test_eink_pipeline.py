@@ -1825,10 +1825,9 @@ def test_operator_ui_discloses_estimated_palette_on_export():
     )
     # The warning must be tied to the export response, not shown (or hidden)
     # unconditionally: the ternary on d.palette_measured is the disclosure.
-    assert ui.count("d.palette_measured") == 1, (
-        "palette disclosure must come from the export response's "
-        "palette_measured flag exactly once"
-    )
+    assert (
+        ui.count("d.palette_measured") == 1
+    ), "palette disclosure must come from the export response's palette_measured flag exactly once"
 
 
 def test_operator_ui_discloses_no_master_works_in_preview():
@@ -2668,7 +2667,7 @@ def test_operator_ui_discloses_saved_feed_overrides_filters_on_export():
     ), "banner does not name the saved feed the card will deliver"
     assert (
         "filters above are ignored." in ui
-    ), "banner does not disclose that the filter spec is overridden " "by the saved feed on export"
+    ), "banner does not disclose that the filter spec is overridden by the saved feed on export"
     assert (
         '<a href="#" id="ek-clear">use filters instead</a>' in ui
     ), "no way back from the saved-feed override to the filter spec"
