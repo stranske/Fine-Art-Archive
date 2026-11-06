@@ -28,4 +28,29 @@ Historical audit text and execution claims are preserved in
 [the pre-salvage revision](https://github.com/stranske/Fine-Art-Archive/blob/18629a6e4d329e72efe1719698b2b77022fe59f8/docs/reports/eink_surface_divergence_audit.md).
 Those receipts are historical, not validation of this narrowed head.
 
-Validation receipts for this subset follow after execution.
+## Validation — 2026-11-06
+
+Test revision: `72729e6b3ddcac2d1027fd4c0d048936334ae9a7`.
+The following documentation-only receipt update does not change those tests.
+Selected interpreter: `/opt/anaconda3/bin/python3` (Python 3.12, the owner-directed
+fallback; the project declares Python >=3.13, so supported-runtime validation
+remains CI's responsibility).
+
+- `/opt/anaconda3/bin/python3 -m pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py`:
+  **268 passed**, 2 warnings, 80.98 seconds; **exit 1** because default coverage
+  was **15.14%**, below the repository-wide **25%** floor. This focused run is
+  not a passing coverage gate; the full suite was not run locally.
+- `/opt/anaconda3/bin/python3 -m pytest --no-cov -q tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs tests/test_eink_pipeline.py::test_enumerated_eink_surface_inputs_match_backend_signatures tests/test_eink_feed_endpoints.py::test_export_inline_spec_target_dither_fit_without_playlist_id tests/test_eink_feed_endpoints.py::test_export_saved_playlist_overrides_inline_target_dither_fit`:
+  **7 passed**, 1 warning, 17.65 seconds; **exit 0**. Coverage disabled explicitly.
+- Deliberate break at `60aa7bc`: removed only preview `${fitQ}`; ran
+  `/opt/anaconda3/bin/python3 -m pytest --no-cov -q 'tests/test_eink_pipeline.py::test_ui_preview_save_and_export_carry_the_same_inputs[cover]'`.
+  **1 failed**, exit **1**, with the missing `fit=cover` URL assertion.
+  Restored the original bytes and repeated the command: **1 passed**, exit **0**.
+  Restored UI SHA-256:
+  `65e55c05ca96c4a03b54ee014b380870c8fc1dadbe3377b480b932d3a33db33f`.
+  This producer and UI source are unchanged at the test revision above.
+- Focused Ruff and Black checks on both test files: exit **0**; Black warned
+  about the local 3.12 runtime versus the configured 3.13 target.
+
+The final diff contains no `src/` changes or dependency-pin changes. CI and
+review evidence must be checked against the pushed head before merge.
