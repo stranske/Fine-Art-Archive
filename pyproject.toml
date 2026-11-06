@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
 authors = [
-    {name = "Tim Stranske", email = "tim@stranskemo.com"},
+    {name = "Tim Stranske"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
