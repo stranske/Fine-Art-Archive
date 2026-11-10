@@ -119,6 +119,13 @@ This is a blocked-run receipt, not a passing result: task #883-4 stays open
 until the command above is run under a working interpreter and this section
 is replaced with its actual exit code and coverage outcome.
 
+Re-attempted in the Muse keepalive session for PR #884 with the exact
+command above (`-m 'not slow'`, `--no-cov`): the launcher failed identically
+before pytest started (`bwrap: loopback: Failed RTM_NEWADDR: Operation not
+permitted`, exit 1). Exit code: not obtained. Coverage: not measured.
+Task #883-4 stays open; `tests/test_eink_audit_report.py` now pins this
+blocked-state contract so the receipt cannot be read as a pass.
+
 ## Historical receipts (historical, not current validation)
 
 Everything in this section is a dated receipt from an earlier revision. It

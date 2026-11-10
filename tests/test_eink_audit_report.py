@@ -84,3 +84,21 @@ def test_audit_report_records_current_validation_receipt():
     assert "Exit code:" in current
     assert "Coverage:" in current
     assert "Inspected source revision: `" in current
+
+
+def test_audit_report_current_validation_never_claims_unrun_success():
+    text = _report()
+    current = text.split("## Current validation", 1)[1].split("## Historical receipts", 1)[0]
+
+    # A blocked run and a passing run are the only two honest states for
+    # task #883-4. A blocked receipt must keep the task explicitly open,
+    # record that coverage was not measured, and carry no passed-count
+    # claim; a completed receipt must name exit code 0. This stops a
+    # future edit from quietly upgrading an unrun suite into a success.
+    if "not obtained" in current:
+        assert "stays open" in current
+        assert "Coverage: not measured" in current
+        assert not re.search(r"\b\d+ passed\b", current)
+    else:
+        assert re.search(r"Exit code:\s*`?0`?", current)
+        assert "Coverage: not measured" not in current
