@@ -79,9 +79,7 @@ def test_audit_report_records_current_validation_receipt():
     # that records a failed or blocked run must say so in those fields, so
     # this test never turns an unrun suite into a passing one.
     assert "## Current validation" in text
-    current = text.split("## Current validation", 1)[1].split(
-        "## Historical receipts", 1
-    )[0]
+    current = text.split("## Current validation", 1)[1].split("## Historical receipts", 1)[0]
     assert "pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py" in current
     assert "Exit code:" in current
     assert "Coverage:" in current
