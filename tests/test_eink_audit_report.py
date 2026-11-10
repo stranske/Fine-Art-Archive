@@ -14,10 +14,7 @@ from pathlib import Path
 
 from fine_art_archive.eink import PlaylistSpec
 
-REPORT = (
-    Path(__file__).resolve().parents[1]
-    / "docs/reports/eink_surface_divergence_audit.md"
-)
+REPORT = Path(__file__).resolve().parents[1] / "docs/reports/eink_surface_divergence_audit.md"
 
 DISPOSITIONS = (
     "already-correct",
