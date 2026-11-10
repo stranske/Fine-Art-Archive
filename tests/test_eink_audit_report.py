@@ -68,3 +68,21 @@ def test_audit_report_matrix_and_classification_are_reproducible():
 
     # Historical receipts are labelled historical, never current validation.
     assert "## Historical receipts (historical, not current validation)" in text
+
+
+def test_audit_report_records_current_validation_receipt():
+    text = _report()
+
+    # Task #883-4: the broad e-ink run must have its own current receipt,
+    # separate from the historical receipts, naming the exact command, the
+    # exit code and the coverage outcome. Presence is pinned here; a receipt
+    # that records a failed or blocked run must say so in those fields, so
+    # this test never turns an unrun suite into a passing one.
+    assert "## Current validation" in text
+    current = text.split("## Current validation", 1)[1].split(
+        "## Historical receipts", 1
+    )[0]
+    assert "pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py" in current
+    assert "Exit code:" in current
+    assert "Coverage:" in current
+    assert "Inspected source revision: `" in current

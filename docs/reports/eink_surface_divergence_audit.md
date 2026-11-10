@@ -104,6 +104,21 @@ equivalence, HTTP validators, physical-card transport or panel appearance.
 UI request parity alone does not establish preview versus saved-export
 selection parity.
 
+## Current validation
+
+Inspected source revision: `0127357f8cf3d98b9e760b3076d3ef1252d5b00e`
+(same revision anchored at the top of this report).
+
+- Command: `pytest tests/test_eink_pipeline.py tests/test_eink_feed_endpoints.py -m 'not slow'`
+- Exit code: not obtained — the runner failed before pytest started
+  (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, launcher
+  exit 1), in both a direct attempt and an independent agent attempt.
+- Coverage: not measured, for the same reason.
+
+This is a blocked-run receipt, not a passing result: task #883-4 stays open
+until the command above is run under a working interpreter and this section
+is replaced with its actual exit code and coverage outcome.
+
 ## Historical receipts (historical, not current validation)
 
 Everything in this section is a dated receipt from an earlier revision. It
