@@ -806,3 +806,53 @@ def test_the_review_page_says_so_before_it_shows_a_single_count() -> None:
     assert "decisions_sources" in page
     assert "everything below is" in page and "over-counted" in page
     assert page.index("${banner}") < page.index("${d.total_drainable}")
+
+
+@pytest.mark.parametrize("bad_line", ["null", "[]", '"text"', "42", "true"])
+def test_work_decisions_skip_non_object_lines(tmp_path: Path, bad_line: str) -> None:
+    """A valid-JSON non-object line must not crash the decisions loader.
+
+    ``_artist_decisions`` already skips such lines; ``load_work_decisions``
+    called ``rec.get`` unguarded, so one stray ``null``/array line in the
+    append-only record raised ``AttributeError`` and broke every gate that
+    reads work decisions. Valid records around the bad line still load, and
+    the last decision for a work still wins.
+    """
+    path = tmp_path / "work_decisions.jsonl"
+    path.write_text(
+        "\n".join(
+            [
+                json.dumps({"work_qid": "Q1", "decision": "keep"}),
+                bad_line,
+                json.dumps({"work_qid": "Q2", "decision": "reject"}),
+                json.dumps({"work_qid": "Q1", "decision": "force"}),
+                json.dumps({"work_qid": "Q3", "decision": "bogus"}),
+                "{not json",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert gates.load_work_decisions(path) == {"Q1": "force", "Q2": "reject"}
+
+
+def test_held_index_skips_non_object_sidecars(monkeypatch, tmp_path: Path) -> None:
+    """Non-object sidecars / artist blocks must not crash the held index."""
+    works = tmp_path / "works"
+    fixtures = {
+        "valid": {"artist": {"canonical": {"wikidata_q": "Q123"}}, "title": "Held"},
+        "array": [],
+        "artist-list": {"artist": []},
+        "canonical-string": {"artist": {"canonical": "QBAD", "wikidata_q": "Q456"}},
+    }
+    for name, payload in fixtures.items():
+        path = works / name / "meta.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(store, "WORKS", works)
+    index = gates._held_by_artist_index()
+    assert index is not None
+    assert {qid: [h["id"] for h in held] for qid, held in index.items()} == {
+        "Q123": ["valid"],
+        "Q456": ["canonical-string"],
+    }

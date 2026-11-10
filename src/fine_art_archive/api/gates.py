@@ -430,8 +430,14 @@ def _held_by_artist_index() -> dict[str, list[dict[str, str]]] | None:
             meta = json.loads(Path(path).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
+        if not isinstance(meta, dict):
+            continue
         artist = meta.get("artist") or {}
-        qid = (artist.get("canonical") or {}).get("wikidata_q") or artist.get("wikidata_q")
+        if not isinstance(artist, dict):
+            continue
+        canonical = artist.get("canonical")
+        qid = canonical.get("wikidata_q") if isinstance(canonical, dict) else None
+        qid = qid or artist.get("wikidata_q")
         title = meta.get("title") or ""
         wid = meta.get("id") or Path(path).parent.name
         if not qid:
@@ -807,6 +813,8 @@ def load_work_decisions(path: Path | None = None) -> dict[str, str]:
         try:
             rec = json.loads(line)
         except json.JSONDecodeError:
+            continue
+        if not isinstance(rec, dict):
             continue
         qid, decision = rec.get("work_qid"), rec.get("decision")
         if qid and decision in {"keep", "reject", "force"}:
