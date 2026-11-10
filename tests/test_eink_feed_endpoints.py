@@ -838,10 +838,14 @@ def test_export_inline_spec_target_dither_fit_without_playlist_id(
     )
     assert exported.status_code == 200, exported.text
     assert exported.json()["target"] == "generic-mono-1bit"
+    assert exported.json()["selected"] == 1
+    assert exported.json()["written"] == 1
+    assert [row["work_id"] for row in exported.json()["render_evidence"]] == [wid]
     manifest = json.loads((card / "playlist.json").read_text())
     assert manifest["render"]["dither"] == "atkinson"
     assert manifest["render"]["fit"] == "cover"
     assert [item["work_id"] for item in manifest["items"]] == [wid]
+    assert all((card / item["file"]).is_file() for item in manifest["items"])
 
 
 def test_export_saved_playlist_overrides_inline_target_dither_fit(
@@ -856,9 +860,16 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
     monkeypatch.setattr(api_main, "EINK_EXPORT_ROOTS", [tmp_path])
     wid = "exp-saved-wid"
     _work(archive, wid, title="Saved precedence")
+    wid2 = "exp-saved-wid-2"
+    _work(archive, wid2, title="Saved precedence two")
     inline_wid = "exp-inline-only"
     _work(archive, inline_wid, title="Inline only")
-    for work_id, tag in ((wid, "selection:saved"), (inline_wid, "selection:inline")):
+    saved_ids = {wid, wid2}
+    for work_id, tag in (
+        (wid, "selection:saved"),
+        (wid2, "selection:saved"),
+        (inline_wid, "selection:inline"),
+    ):
         metadata = archive / work_id / "meta.json"
         row = json.loads(metadata.read_text())
         row["subject"] = {"content_tags": [{"id": tag}]}
@@ -888,10 +899,18 @@ def test_export_saved_playlist_overrides_inline_target_dither_fit(
     )
     assert exported.status_code == 200, exported.text
     assert exported.json()["target"] == "gooddisplay-315-diy"
+    # Complete delivered membership: the response counts, the render
+    # evidence, the on-card manifest and the files on the card all name
+    # exactly the saved selection — never the inline-only work.
+    assert exported.json()["selected"] == len(saved_ids)
+    assert exported.json()["written"] == len(saved_ids)
+    assert {row["work_id"] for row in exported.json()["render_evidence"]} == saved_ids
     manifest = json.loads((card / "playlist.json").read_text())
     assert manifest["render"]["dither"] == "floyd-steinberg"
     assert manifest["render"]["fit"] == "contain"
-    assert [item["work_id"] for item in manifest["items"]] == [wid]
+    assert {item["work_id"] for item in manifest["items"]} == saved_ids
+    assert inline_wid not in {item["work_id"] for item in manifest["items"]}
+    assert all((card / item["file"]).is_file() for item in manifest["items"])
 
 
 def test_year_zero_lower_bound_agrees_across_preview_saved_feed_and_export(
