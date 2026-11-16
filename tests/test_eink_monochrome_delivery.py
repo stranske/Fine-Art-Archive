@@ -355,7 +355,9 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
 def test_duotone_contain_letterbox_wide_master_on_portrait_target():
     from fine_art_archive.eink.targets import render_for_target
 
-    target = eink.RenderTarget("portrait-letterbox", "Portrait", 180, 320, "spectra6", fit="contain")
+    target = eink.RenderTarget(
+        "portrait-letterbox", "Portrait", 180, 320, "spectra6", fit="contain"
+    )
     master = _portrait_luminance_master(400, 300, 60, 170)
     rendered = render_for_target(master, target, fit="contain", strategy="duotone", method="none")
     tw, th = target.size
