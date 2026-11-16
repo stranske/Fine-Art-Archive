@@ -1,0 +1,17 @@
+Deliberate break (median over letterboxed canvas, no artwork-only split):
+  python3 -m pytest tests/test_eink_monochrome_delivery.py::test_duotone_contain_letterbox_does_not_set_threshold -q --no-cov
+  -> FAILED: assert palette.white in artwork; artwork pixels were only palette.black
+
+After revert (artwork-only median + contain letterbox pinned to palette.white):
+  -> PASSED
+
+Full file:
+  python3 -m pytest tests/test_eink_monochrome_delivery.py -q --no-cov
+  -> 46 passed (includes test_padded_canvas_median_would_blacken_contain_artwork)
+
+HTTP preview (scaled max_px=900 on gooddisplay-315-diy):
+  test_preview_duotone_contain_matches_library_on_gooddisplay_panel -> PASSED
+
+Deliberate-break gate (no source mutation):
+  python3 -m pytest tests/test_eink_monochrome_delivery.py::test_padded_canvas_median_would_blacken_contain_artwork -q --no-cov
+  -> PASSED (documents padded-canvas median collapsing artwork to one ink)

@@ -177,10 +177,10 @@ def coerce_fit(value: str | None) -> FitMode | None:
     raise ValueError(f"unknown fit mode {value!r}; expected one of {_FIT_MODES}")
 
 
-def fit_to_target(
+def _fit_scaled_rgb(
     img: Image.Image, target: RenderTarget, fit: FitMode | None = None
-) -> Image.Image:
-    """Resize/crop `img` to the target's pixel dimensions."""
+) -> tuple[Image.Image, FitMode, int, int]:
+    """Resize/crop-source to target geometry; return scaled RGB plus mode and size."""
     mode = fit or target.fit
     src = img.convert("RGB")
     if target.rotate:
@@ -188,23 +188,40 @@ def fit_to_target(
     tw, th = target.size
 
     if mode == "stretch":
-        return src.resize((tw, th), Image.Resampling.LANCZOS)
+        return src.resize((tw, th), Image.Resampling.LANCZOS), mode, tw, th
 
     sw, sh = src.size
     scale = (max if mode == "cover" else min)(tw / sw, th / sh)
     new = (max(1, round(sw * scale)), max(1, round(sh * scale)))
-    src = src.resize(new, Image.Resampling.LANCZOS)
+    return src.resize(new, Image.Resampling.LANCZOS), mode, tw, th
 
+
+def _assemble_fitted(
+    scaled: Image.Image,
+    mode: FitMode,
+    tw: int,
+    th: int,
+    pad_rgb: tuple[int, int, int],
+) -> Image.Image:
+    if mode == "stretch":
+        return scaled
     if mode == "cover":
-        left = (src.width - tw) // 2
-        top = (src.height - th) // 2
-        return src.crop((left, top, left + tw, top + th))
-
+        left = (scaled.width - tw) // 2
+        top = (scaled.height - th) // 2
+        return scaled.crop((left, top, left + tw, top + th))
     # contain: letterbox in the panel's REAL white, so the bars read as paper
     # rather than as a bright surround the panel cannot actually produce.
-    canvas = Image.new("RGB", (tw, th), target.palette.white)
-    canvas.paste(src, ((tw - src.width) // 2, (th - src.height) // 2))
+    canvas = Image.new("RGB", (tw, th), pad_rgb)
+    canvas.paste(scaled, ((tw - scaled.width) // 2, (th - scaled.height) // 2))
     return canvas
+
+
+def fit_to_target(
+    img: Image.Image, target: RenderTarget, fit: FitMode | None = None
+) -> Image.Image:
+    """Resize/crop `img` to the target's pixel dimensions."""
+    src, mode, tw, th = _fit_scaled_rgb(img, target, fit)
+    return _assemble_fitted(src, mode, tw, th, target.palette.white)
 
 
 def render_evidence(img: Image.Image) -> RenderEvidence:
@@ -244,7 +261,8 @@ def render_for_target(
         strategy = render_evidence(img).strategy
     if strategy not in {"color", "grayscale", "duotone"}:
         raise ValueError(f"invalid render strategy: {strategy!r}")
-    out = fit_to_target(img, target, fit=fit)
+    scaled, mode, tw, th = _fit_scaled_rgb(img, target, fit=fit)
+    out = _assemble_fitted(scaled, mode, tw, th, target.palette.white)
     palette = target.palette
     if strategy != "color":
         out = ImageOps.grayscale(out).convert("RGB")
@@ -255,11 +273,20 @@ def render_for_target(
         palette = Palette(name=f"{palette.name}-{strategy}", colours=colours)
         if strategy == "duotone":
             levels = np.asarray(out)[:, :, 0]
-            threshold = 128.0 if levels.min() == levels.max() else float(np.median(levels))
+            # Letterbox bars are panel white; they must not pull the median split.
+            artwork = np.asarray(ImageOps.grayscale(scaled)) if mode == "contain" else levels
+            threshold = 128.0 if artwork.min() == artwork.max() else float(np.median(artwork))
             light = levels >= threshold
             pixels = np.empty((*levels.shape, 3), dtype=np.uint8)
             pixels[light] = palette.white
             pixels[~light] = palette.black
+            if mode == "contain":
+                x = (tw - scaled.width) // 2
+                y = (th - scaled.height) // 2
+                pixels[:y, :] = palette.white
+                pixels[y + scaled.height :, :] = palette.white
+                pixels[y : y + scaled.height, :x] = palette.white
+                pixels[y : y + scaled.height, x + scaled.width :] = palette.white
             out = Image.fromarray(pixels)
     if compress_range and strategy != "duotone":
         # The median split already selected exact native endpoints.
