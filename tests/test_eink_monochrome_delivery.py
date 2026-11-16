@@ -34,6 +34,27 @@ def _pixels(image):
     return set(image.convert("RGB").getdata())
 
 
+def _contain_artwork_box(master_size, target_size):
+    mw, mh = master_size
+    tw, th = target_size
+    scale = min(tw / mw, th / mh)
+    sw = max(1, round(mw * scale))
+    sh = max(1, round(mh * scale))
+    x = (tw - sw) // 2
+    y = (th - sh) // 2
+    return x, y, x + sw, y + sh
+
+
+def _portrait_luminance_master(width, height, top_lum, bottom_lum):
+    master = Image.new("RGB", (width, height))
+    split = height // 2
+    for y in range(height):
+        level = top_lum if y < split else bottom_lum
+        for x in range(width):
+            master.putpixel((x, y), (level, level, level))
+    return master
+
+
 def _assert_pixels(image, target, strategy):
     assert image.size == target.size
     present = _pixels(image)
@@ -170,6 +191,63 @@ def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strat
         assert rendered.tobytes() == images[0] == images[1] == images[2]
 
 
+def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_path, monkeypatch):
+    """Preview, feed, and SD card share duotone pixels when contain letterboxes."""
+    client, works, _ = delivery
+    panel = eink.RenderTarget(
+        "letterbox-panel", "Letterbox panel", 320, 180, "spectra6", fit="contain"
+    )
+    monkeypatch.setitem(eink.TARGETS, panel.key, panel)
+    directory = works / "duotone-letterbox"
+    directory.mkdir()
+    (directory / "meta.json").write_text(
+        json.dumps({"work_id": "duotone-letterbox", "title": "duotone-letterbox"})
+    )
+    master_path = directory / "master.jpeg"
+    portrait = _portrait_luminance_master(300, 400, 60, 170)
+    portrait.paste((255, 0, 255), (0, 0, 30, 400))
+    assert gamut_render_evidence(portrait).strategy == "duotone"
+    portrait.save(master_path, format="PNG")
+    preview = client.post("/eink/playlist/preview", json={"target": panel.key})
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["items"][0]["render_strategy"] == "duotone"
+    saved = client.post(
+        "/eink/playlists",
+        json={"name": "Letterbox", "target": panel.key, "dither": "none", "fit": "contain"},
+    )
+    assert saved.status_code == 200, saved.text
+    playlist_id = saved.json()["id"]
+    routes = [
+        f"/works/duotone-letterbox/eink_preview?target={panel.key}&dither=none&fit=contain",
+        f"/feed/{playlist_id}/image/0",
+        f"/feed/{playlist_id}/current",
+    ]
+    images = []
+    rendered_image = None
+    for route in routes:
+        response = client.get(route)
+        assert response.status_code == 200, response.text
+        rendered_image = Image.open(io.BytesIO(response.content))
+        _assert_pixels(rendered_image, panel, "duotone")
+        assert response.headers["X-Render-Strategy"] == "duotone"
+        images.append(rendered_image.tobytes())
+    x0, y0, x1, y1 = _contain_artwork_box(portrait.size, panel.size)
+    artwork = {rendered_image.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
+    assert panel.palette.black in artwork
+    assert panel.palette.white in artwork
+    card = tmp_path / "card"
+    exported = client.post(
+        "/eink/playlist/export",
+        json={"playlist_id": playlist_id, "path": str(card), "write": True},
+    )
+    assert exported.status_code == 200, exported.text
+    manifest = json.loads((card / "playlist.json").read_text())
+    item = manifest["items"][0]
+    with Image.open(card / item["file"]) as rendered:
+        _assert_pixels(rendered, panel, "duotone")
+        assert rendered.tobytes() == images[0] == images[1] == images[2]
+
+
 @pytest.mark.parametrize("route", ["image/0", "current"])
 def test_strategy_change_invalidates_feed_even_with_same_master_mtime(delivery, route):
     client, works, target = delivery
@@ -235,6 +313,25 @@ def test_duotone_uniform_luminance_uses_midpoint_threshold():
         uniform = Image.new("RGB", (8, 8), (level, level, level))
         rendered = render_for_target(uniform, target, strategy="duotone", method="none")
         assert _pixels(rendered) == {expected}
+
+
+def test_duotone_contain_letterbox_does_not_set_threshold():
+    from fine_art_archive.eink.targets import get_target, render_for_target
+
+    target = get_target("gooddisplay-315-diy")
+    master = _portrait_luminance_master(300, 400, 60, 170)
+    rendered = render_for_target(master, target, fit="contain", strategy="duotone", method="none")
+    tw, th = target.size
+    x0, y0, x1, y1 = _contain_artwork_box(master.size, (tw, th))
+    artwork = {rendered.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
+    assert target.palette.black in artwork
+    assert target.palette.white in artwork
+    assert rendered.getpixel((0, th // 2)) == target.palette.white
+    assert rendered.getpixel((tw - 1, th // 2)) == target.palette.white
+
+    uniform = Image.new("RGB", (300, 400), (200, 200, 200))
+    all_white = render_for_target(uniform, target, fit="contain", strategy="duotone", method="none")
+    assert _pixels(all_white) == {target.palette.white}
 
 
 @pytest.mark.parametrize("route", ["image/0", "current"])
