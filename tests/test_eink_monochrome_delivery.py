@@ -332,8 +332,12 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
     artwork = {rendered.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
     assert target.palette.black in artwork
     assert target.palette.white in artwork
-    assert rendered.getpixel((0, th // 2)) == target.palette.white
-    assert rendered.getpixel((tw - 1, th // 2)) == target.palette.white
+    for x in range(x0):
+        for y in (0, th // 2, th - 1):
+            assert rendered.getpixel((x, y)) == target.palette.white
+    for x in range(x1, tw):
+        for y in (0, th // 2, th - 1):
+            assert rendered.getpixel((x, y)) == target.palette.white
 
     uniform = Image.new("RGB", (300, 400), (200, 200, 200))
     all_white = render_for_target(uniform, target, fit="contain", strategy="duotone", method="none")
