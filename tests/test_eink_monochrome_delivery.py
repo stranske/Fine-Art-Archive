@@ -344,6 +344,22 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
     assert _pixels(all_white) == {target.palette.white}
 
 
+def test_padded_canvas_median_would_blacken_contain_artwork():
+    """Deliberate-break gate: median over letterboxed fit_to_target loses duotone split."""
+    from fine_art_archive.eink.targets import fit_to_target, get_target
+    from PIL import ImageOps
+
+    target = get_target("gooddisplay-315-diy")
+    master = _portrait_luminance_master(300, 400, 60, 170)
+    letterboxed = fit_to_target(master, target, fit="contain")
+    levels = np.asarray(ImageOps.grayscale(letterboxed))
+    padded_threshold = float(np.median(levels))
+    x0, y0, x1, y1 = _contain_artwork_box(master.size, target.size)
+    artwork = levels[y0:y1, x0:x1]
+    assert padded_threshold > artwork.max()
+    assert not np.any(artwork >= padded_threshold)
+
+
 @pytest.mark.parametrize("route", ["image/0", "current"])
 def test_changed_policy_invalidates_cached_strategy(delivery, monkeypatch, route):
     from fine_art_archive.eink import render_strategy

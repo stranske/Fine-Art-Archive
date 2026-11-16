@@ -7,4 +7,8 @@ After revert (artwork-only median + contain letterbox pinned to palette.white):
 
 Full file:
   python3 -m pytest tests/test_eink_monochrome_delivery.py -q --no-cov
-  -> 44 passed
+  -> 45 passed (includes test_padded_canvas_median_would_blacken_contain_artwork)
+
+Deliberate-break gate (no source mutation):
+  python3 -m pytest tests/test_eink_monochrome_delivery.py::test_padded_canvas_median_would_blacken_contain_artwork -q --no-cov
+  -> PASSED (documents padded-canvas median collapsing artwork to one ink)
