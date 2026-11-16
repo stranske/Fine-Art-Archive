@@ -193,6 +193,8 @@ def test_companion_feed_and_sd_apply_reported_strategy(delivery, tmp_path, strat
 
 def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_path, monkeypatch):
     """Preview, feed, and SD card share duotone pixels when contain letterboxes."""
+    from fine_art_archive.eink.targets import render_for_target
+
     client, works, _ = delivery
     panel = eink.RenderTarget(
         "letterbox-panel", "Letterbox panel", 320, 180, "spectra6", fit="contain"
@@ -208,6 +210,9 @@ def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_pat
     portrait.paste((255, 0, 255), (0, 0, 30, 400))
     assert gamut_render_evidence(portrait).strategy == "duotone"
     portrait.save(master_path, format="PNG")
+    library_render = render_for_target(
+        portrait, panel, fit="contain", strategy="duotone", method="none"
+    )
     preview = client.post("/eink/playlist/preview", json={"target": panel.key})
     assert preview.status_code == 200, preview.text
     assert preview.json()["items"][0]["render_strategy"] == "duotone"
@@ -230,6 +235,7 @@ def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_pat
         rendered_image = Image.open(io.BytesIO(response.content))
         _assert_pixels(rendered_image, panel, "duotone")
         assert response.headers["X-Render-Strategy"] == "duotone"
+        assert rendered_image.tobytes() == library_render.tobytes()
         images.append(rendered_image.tobytes())
     x0, y0, x1, y1 = _contain_artwork_box(portrait.size, panel.size)
     artwork = {rendered_image.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
