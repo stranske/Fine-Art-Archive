@@ -352,6 +352,53 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
     assert _pixels(all_white) == {target.palette.white}
 
 
+def test_preview_duotone_contain_matches_library_on_gooddisplay_panel(delivery):
+    """HTTP preview must match render_for_target at the preview endpoint's scaled target."""
+    from fine_art_archive.eink.targets import get_target, render_for_target
+
+    client, works, _ = delivery
+    panel = get_target("gooddisplay-315-diy")
+    max_px = 900
+    scale = min(1.0, max_px / max(panel.width, panel.height))
+    preview_target = eink.RenderTarget(
+        key=panel.key,
+        label=panel.label,
+        width=max(8, int(panel.width * scale)),
+        height=max(8, int(panel.height * scale)),
+        palette_name=panel.palette_name,
+        fit=panel.fit,
+        rotate=panel.rotate,
+    )
+    directory = works / "duotone-gooddisplay"
+    directory.mkdir()
+    (directory / "meta.json").write_text(
+        json.dumps({"work_id": "duotone-gooddisplay", "title": "duotone-gooddisplay"})
+    )
+    master = _portrait_luminance_master(300, 400, 60, 170)
+    master.paste((255, 0, 255), (0, 0, 30, 400))
+    assert gamut_render_evidence(master).strategy == "duotone"
+    master.save(directory / "master.jpeg", format="PNG")
+    library = render_for_target(
+        master, preview_target, fit="contain", strategy="duotone", method="none"
+    )
+
+    response = client.get(
+        f"/works/duotone-gooddisplay/eink_preview"
+        f"?target={panel.key}&dither=none&fit=contain&max_px={max_px}"
+    )
+
+    assert response.status_code == 200, response.text
+    preview = Image.open(io.BytesIO(response.content))
+    assert preview.size == preview_target.size
+    assert response.headers["X-Render-Strategy"] == "duotone"
+    assert preview.tobytes() == library.tobytes()
+    tw, th = preview_target.size
+    x0, y0, x1, y1 = _contain_artwork_box(master.size, (tw, th))
+    artwork = {preview.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
+    assert panel.palette.black in artwork
+    assert panel.palette.white in artwork
+
+
 def test_padded_canvas_median_would_blacken_contain_artwork():
     """Deliberate-break gate: median over letterboxed fit_to_target loses duotone split."""
     from PIL import ImageOps

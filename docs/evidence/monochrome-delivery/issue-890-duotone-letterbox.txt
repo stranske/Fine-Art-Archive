@@ -7,7 +7,10 @@ After revert (artwork-only median + contain letterbox pinned to palette.white):
 
 Full file:
   python3 -m pytest tests/test_eink_monochrome_delivery.py -q --no-cov
-  -> 45 passed (includes test_padded_canvas_median_would_blacken_contain_artwork)
+  -> 46 passed (includes test_padded_canvas_median_would_blacken_contain_artwork)
+
+HTTP preview (scaled max_px=900 on gooddisplay-315-diy):
+  test_preview_duotone_contain_matches_library_on_gooddisplay_panel -> PASSED
 
 Deliberate-break gate (no source mutation):
   python3 -m pytest tests/test_eink_monochrome_delivery.py::test_padded_canvas_median_would_blacken_contain_artwork -q --no-cov
