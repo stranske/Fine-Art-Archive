@@ -254,7 +254,6 @@ def render_for_target(
         strategy = render_evidence(img).strategy
     if strategy not in {"color", "grayscale", "duotone"}:
         raise ValueError(f"invalid render strategy: {strategy!r}")
-    scaled, mode, tw, th = _fit_scaled_rgb(img, target, fit=fit)
     out = fit_to_target(img, target, fit=fit)
     palette = target.palette
     if strategy != "color":
@@ -266,20 +265,11 @@ def render_for_target(
         palette = Palette(name=f"{palette.name}-{strategy}", colours=colours)
         if strategy == "duotone":
             levels = np.asarray(out)[:, :, 0]
-            # Letterbox bars are panel white; they must not pull the median split.
-            artwork = np.asarray(ImageOps.grayscale(scaled)) if mode == "contain" else levels
-            threshold = 128.0 if artwork.min() == artwork.max() else float(np.median(artwork))
+            threshold = 128.0 if levels.min() == levels.max() else float(np.median(levels))
             light = levels >= threshold
             pixels = np.empty((*levels.shape, 3), dtype=np.uint8)
             pixels[light] = palette.white
             pixels[~light] = palette.black
-            if mode == "contain":
-                x = (tw - scaled.width) // 2
-                y = (th - scaled.height) // 2
-                pixels[:y, :] = palette.white
-                pixels[y + scaled.height :, :] = palette.white
-                pixels[y : y + scaled.height, :x] = palette.white
-                pixels[y : y + scaled.height, x + scaled.width :] = palette.white
             out = Image.fromarray(pixels)
     if compress_range and strategy != "duotone":
         # The median split already selected exact native endpoints.
