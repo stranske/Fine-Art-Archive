@@ -1,6 +1,8 @@
-Reconciled task checkboxes for PR #891 (issue #890). Live `gh`/connector body update was not available in this runner (`GH_TOKEN` length 0).
+Reconciled task checkboxes for PR #891 (issue #890). Live `gh`/connector body update was not available in this runner (`GH_TOKEN` length 0). Paste the **Additional PR tasks** block below into the PR description so progress reads 9/9.
 
-### Tasks
+Verified 2026-11-16: `python3 -m pytest tests/test_eink_monochrome_delivery.py -q --no-cov` → 45 passed.
+
+### Tasks (reconcile Additional PR tasks on PR #891)
 - [x] `src/fine_art_archive/eink/targets.py:247-262` — compute duotone threshold/uniform fallback from artwork pixels only (threshold before compositing, or mask the pasted region from `fit_to_target:180-207`), keep letterbox exactly `palette.white`
 - [x] `tests/test_eink_monochrome_delivery.py` — add library regression + extend HTTP/card parity case with an aspect-mismatched master
 - [x] Named test `tests/test_eink_monochrome_delivery.py::test_duotone_contain_letterbox_does_not_set_threshold` passes

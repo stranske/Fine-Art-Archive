@@ -258,6 +258,7 @@ def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_pat
     item = manifest["items"][0]
     with Image.open(card / item["file"]) as rendered:
         _assert_pixels(rendered, panel, "duotone")
+        assert rendered.tobytes() == library_render.tobytes()
         assert rendered.tobytes() == images[0] == images[1] == images[2]
 
 
