@@ -267,10 +267,7 @@ def render_for_target(
         if strategy == "duotone":
             levels = np.asarray(out)[:, :, 0]
             # Letterbox bars are panel white; they must not pull the median split.
-            if mode == "contain":
-                artwork = np.asarray(ImageOps.grayscale(scaled))
-            else:
-                artwork = levels
+            artwork = np.asarray(ImageOps.grayscale(scaled)) if mode == "contain" else levels
             threshold = 128.0 if artwork.min() == artwork.max() else float(np.median(artwork))
             light = levels >= threshold
             pixels = np.empty((*levels.shape, 3), dtype=np.uint8)
