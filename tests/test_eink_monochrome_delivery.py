@@ -346,8 +346,9 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
 
 def test_padded_canvas_median_would_blacken_contain_artwork():
     """Deliberate-break gate: median over letterboxed fit_to_target loses duotone split."""
-    from fine_art_archive.eink.targets import fit_to_target, get_target
     from PIL import ImageOps
+
+    from fine_art_archive.eink.targets import fit_to_target, get_target
 
     target = get_target("gooddisplay-315-diy")
     master = _portrait_luminance_master(300, 400, 60, 170)
