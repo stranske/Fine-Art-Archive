@@ -196,25 +196,32 @@ def _fit_scaled_rgb(
     return src.resize(new, Image.Resampling.LANCZOS), mode, tw, th
 
 
+def _assemble_fitted(
+    scaled: Image.Image,
+    mode: FitMode,
+    tw: int,
+    th: int,
+    pad_rgb: tuple[int, int, int],
+) -> Image.Image:
+    if mode == "stretch":
+        return scaled
+    if mode == "cover":
+        left = (scaled.width - tw) // 2
+        top = (scaled.height - th) // 2
+        return scaled.crop((left, top, left + tw, top + th))
+    # contain: letterbox in the panel's REAL white, so the bars read as paper
+    # rather than as a bright surround the panel cannot actually produce.
+    canvas = Image.new("RGB", (tw, th), pad_rgb)
+    canvas.paste(scaled, ((tw - scaled.width) // 2, (th - scaled.height) // 2))
+    return canvas
+
+
 def fit_to_target(
     img: Image.Image, target: RenderTarget, fit: FitMode | None = None
 ) -> Image.Image:
     """Resize/crop `img` to the target's pixel dimensions."""
     src, mode, tw, th = _fit_scaled_rgb(img, target, fit)
-
-    if mode == "stretch":
-        return src
-
-    if mode == "cover":
-        left = (src.width - tw) // 2
-        top = (src.height - th) // 2
-        return src.crop((left, top, left + tw, top + th))
-
-    # contain: letterbox in the panel's REAL white, so the bars read as paper
-    # rather than as a bright surround the panel cannot actually produce.
-    canvas = Image.new("RGB", (tw, th), target.palette.white)
-    canvas.paste(src, ((tw - src.width) // 2, (th - src.height) // 2))
-    return canvas
+    return _assemble_fitted(src, mode, tw, th, target.palette.white)
 
 
 def render_evidence(img: Image.Image) -> RenderEvidence:
@@ -255,7 +262,7 @@ def render_for_target(
     if strategy not in {"color", "grayscale", "duotone"}:
         raise ValueError(f"invalid render strategy: {strategy!r}")
     scaled, mode, tw, th = _fit_scaled_rgb(img, target, fit=fit)
-    out = fit_to_target(img, target, fit=fit)
+    out = _assemble_fitted(scaled, mode, tw, th, target.palette.white)
     palette = target.palette
     if strategy != "color":
         out = ImageOps.grayscale(out).convert("RGB")

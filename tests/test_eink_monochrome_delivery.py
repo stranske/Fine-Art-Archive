@@ -352,6 +352,25 @@ def test_duotone_contain_letterbox_does_not_set_threshold():
     assert _pixels(all_white) == {target.palette.white}
 
 
+def test_duotone_contain_letterbox_wide_master_on_portrait_target():
+    from fine_art_archive.eink.targets import render_for_target
+
+    target = eink.RenderTarget("portrait-letterbox", "Portrait", 180, 320, "spectra6", fit="contain")
+    master = _portrait_luminance_master(400, 300, 60, 170)
+    rendered = render_for_target(master, target, fit="contain", strategy="duotone", method="none")
+    tw, th = target.size
+    x0, y0, x1, y1 = _contain_artwork_box(master.size, (tw, th))
+    artwork = {rendered.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
+    assert target.palette.black in artwork
+    assert target.palette.white in artwork
+    for y in range(y0):
+        for x in range(tw):
+            assert rendered.getpixel((x, y)) == target.palette.white
+    for y in range(y1, th):
+        for x in range(tw):
+            assert rendered.getpixel((x, y)) == target.palette.white
+
+
 def test_preview_duotone_contain_matches_library_on_gooddisplay_panel(delivery):
     """HTTP preview must match render_for_target at the preview endpoint's scaled target."""
     from fine_art_archive.eink.targets import get_target, render_for_target
