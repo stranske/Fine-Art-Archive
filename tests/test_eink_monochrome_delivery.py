@@ -237,10 +237,17 @@ def test_companion_feed_and_sd_duotone_contain_aspect_mismatch(delivery, tmp_pat
         assert response.headers["X-Render-Strategy"] == "duotone"
         assert rendered_image.tobytes() == library_render.tobytes()
         images.append(rendered_image.tobytes())
+    tw, th = panel.size
     x0, y0, x1, y1 = _contain_artwork_box(portrait.size, panel.size)
     artwork = {rendered_image.getpixel((x, y)) for y in range(y0, y1) for x in range(x0, x1)}
     assert panel.palette.black in artwork
     assert panel.palette.white in artwork
+    for x in range(x0):
+        for y in (0, th // 2, th - 1):
+            assert rendered_image.getpixel((x, y)) == panel.palette.white
+    for x in range(x1, tw):
+        for y in (0, th // 2, th - 1):
+            assert rendered_image.getpixel((x, y)) == panel.palette.white
     card = tmp_path / "card"
     exported = client.post(
         "/eink/playlist/export",
