@@ -18,10 +18,15 @@ emits the frozen worst-offender prose that is not present in the payload.
 ## Revert PASS
 
 With the paragraph removed and collision clusters rendered only from
-`coll['worst']` (classification defaulting to `unknown`), the named test passes:
+`coll['worst']` (classification defaulting to `unknown`, or taken from the
+payload when present), the named test passes:
 
 ```text
 $ python3 -m pytest tests/test_weekly_review_thumb_paths.py::test_collision_section_reports_only_payload_evidence -q -o addopts=
 .
 1 passed
+
+$ python3 -m pytest tests/test_weekly_review_thumb_paths.py -q -o addopts=
+....................
+20 passed
 ```

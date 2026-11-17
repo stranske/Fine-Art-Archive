@@ -413,8 +413,8 @@ def test_collision_section_reports_only_payload_evidence(
 ) -> None:
     """Collision evidence must come from the payload, not frozen Q547923/50-sidecar prose."""
 
-    def worst_cluster(n: int) -> dict:
-        return {
+    def worst_cluster(n: int, *, classification: str | None = None) -> dict:
+        cluster = {
             "qid": "Q123456",
             "label": "Synthetic collision work",
             "n": n,
@@ -424,6 +424,9 @@ def test_collision_section_reports_only_payload_evidence(
                 {"wid": "wid-b", "title": "Work B", "master": ""},
             ],
         }
+        if classification is not None:
+            cluster["classification"] = classification
+        return cluster
 
     data = _collision_review_payload(
         {
@@ -440,6 +443,28 @@ def test_collision_section_reports_only_payload_evidence(
     assert "Q123456" in collision_block
     assert "on <b>2</b> sidecars" in collision_block
     assert "(classification: unknown)" in collision_block
+    assert "(classification: subject_misassignment)" not in collision_block
+
+    classified = worst_cluster(2, classification="subject_misassignment")
+    data_classified = _collision_review_payload(
+        {
+            "qids_on_multiple": 1,
+            "extra_assignments": 1,
+            "worst": [classified],
+        }
+    )
+    (tmp_path / "classified").mkdir()
+    doc_classified = render_document(
+        renderer, data_classified, tmp_path / "classified", monkeypatch
+    )
+    classified_block = doc_classified[
+        doc_classified.index('id="qid_collisions"') : doc_classified.index(
+            "</section>", doc_classified.index('id="qid_collisions"')
+        )
+    ]
+    assert "(classification: subject_misassignment)" in classified_block
+    assert "(classification: unknown)" not in classified_block
+
     assert "Q547923" not in collision_block
     assert "50 sidecars" not in collision_block
     assert "Raising of Lazarus" not in collision_block
