@@ -387,6 +387,110 @@ def test_builder_uses_valid_raw_artist_qid_when_canonical_qid_is_invalid() -> No
     assert builder._artist_qid(meta) == "Q42"
 
 
+def _collision_review_payload(collisions: dict) -> dict:
+    """Minimal weekly review JSON that renders only the collision decision card."""
+    return {
+        "ungranted": {"total": 0, "by_grant": {}},
+        "candidates": {
+            "top": [],
+            "frontier_total": 0,
+            "by_status": {"screened": 0, "review": 0, "rejected": 0},
+            "latest_run": {"ts": f"{DATE}T00:00:00Z", "raw_by_generator": {}, "added": 0},
+        },
+        "unpromoted": [],
+        "collisions": collisions,
+        "allowed_p31": {
+            "definitions": [{"file": "config/allowed_p31.json", "classes": []}],
+            "dropped": {"qid": "Q93184"},
+        },
+        "live_works": 1,
+        "grants": {"standing_acquisition": ["G55"]},
+    }
+
+
+def test_collision_section_reports_only_payload_evidence(
+    renderer: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Collision evidence must come from the payload, not frozen Q547923/50-sidecar prose."""
+
+    def worst_cluster(n: int, *, classification: str | None = None) -> dict:
+        cluster = {
+            "qid": "Q123456",
+            "label": "Synthetic collision work",
+            "n": n,
+            "wikidata_url": "https://www.wikidata.org/wiki/Q123456",
+            "examples": [
+                {"wid": "wid-a", "title": "Work A", "master": ""},
+                {"wid": "wid-b", "title": "Work B", "master": ""},
+            ],
+        }
+        if classification is not None:
+            cluster["classification"] = classification
+        return cluster
+
+    data = _collision_review_payload(
+        {
+            "qids_on_multiple": 1,
+            "extra_assignments": 1,
+            "worst": [worst_cluster(2)],
+        }
+    )
+    doc = render_document(renderer, data, tmp_path, monkeypatch)
+    collision_block = doc[
+        doc.index('id="qid_collisions"') : doc.index("</section>", doc.index('id="qid_collisions"'))
+    ]
+
+    assert "Q123456" in collision_block
+    assert "on <b>2</b> sidecars" in collision_block
+    assert "(classification: unknown)" in collision_block
+    assert "(classification: subject_misassignment)" not in collision_block
+
+    classified = worst_cluster(2, classification="subject_misassignment")
+    data_classified = _collision_review_payload(
+        {
+            "qids_on_multiple": 1,
+            "extra_assignments": 1,
+            "worst": [classified],
+        }
+    )
+    (tmp_path / "classified").mkdir()
+    doc_classified = render_document(
+        renderer, data_classified, tmp_path / "classified", monkeypatch
+    )
+    classified_block = doc_classified[
+        doc_classified.index('id="qid_collisions"') : doc_classified.index(
+            "</section>", doc_classified.index('id="qid_collisions"')
+        )
+    ]
+    assert "(classification: subject_misassignment)" in classified_block
+    assert "(classification: unknown)" not in classified_block
+
+    assert "Q547923" not in collision_block
+    assert "Q488841" not in collision_block
+    assert "50 sidecars" not in collision_block
+    assert "Raising of Lazarus" not in collision_block
+
+    data_large = _collision_review_payload(
+        {
+            "qids_on_multiple": 1,
+            "extra_assignments": 4,
+            "worst": [worst_cluster(5)],
+        }
+    )
+    (tmp_path / "large").mkdir()
+    doc_large = render_document(renderer, data_large, tmp_path / "large", monkeypatch)
+    assert "on <b>5</b> sidecars" in doc_large
+    assert "on <b>2</b> sidecars" not in doc_large
+
+    data_clear = _collision_review_payload(
+        {"qids_on_multiple": 0, "extra_assignments": 0, "worst": []}
+    )
+    (tmp_path / "clear").mkdir()
+    doc_clear = render_document(renderer, data_clear, tmp_path / "clear", monkeypatch)
+    assert 'id="qid_collisions"' not in doc_clear
+    assert "audit_duplicate_decisions.py" not in doc_clear
+
+
 def test_collision_totals_are_not_capped_with_display_rows(tmp_path: Path) -> None:
     builder = load_builder()
     sidecars = []
