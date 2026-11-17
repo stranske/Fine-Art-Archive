@@ -42,3 +42,16 @@ list), `python3 -m pytest tests/test_weekly_review_thumb_paths.py::test_collisio
 
 After revert, the named test and full file pass (`20 passed`) on HEAD `950eb66`. The regression now
 also asserts `Q488841` and the full frozen prose are absent from the collision card.
+
+## Re-verified (keepalive 2026-11-17, post-reconciliation)
+
+Restored the same hardcoded paragraph immediately after the three-way taxonomy list in
+`coll_body` (`scripts/render_weekly_review.py:352`). The named test failed:
+
+```text
+$ python3 -m pytest tests/test_weekly_review_thumb_paths.py::test_collision_section_reports_only_payload_evidence -q -o addopts=
+1 failed — assert "Q547923" not in collision_block
+```
+
+After revert (and a brief maintainer comment that collision evidence must stay payload-driven),
+the named test and full file pass (`20 passed`) on the new commit.

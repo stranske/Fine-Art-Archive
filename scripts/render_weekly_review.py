@@ -330,6 +330,8 @@ side is often your Meural display crop, and the pair may be master + crop rather
 Discovery and acquisition otherwise read the same canonical set.</p>"""
 
     # ---------- 6. work Q-ID collisions
+    # Cluster rows and counts come only from coll["worst"] and coll totals; do not
+    # embed historical worst-offender Q-IDs or sidecar counts in this card body.
     crows = []
     for c in coll["worst"]:
         ex = "".join(f"""<figure class="cellw">{thumb(x['master'], x['title'])}

@@ -2,10 +2,10 @@ Refs #893
 
 Remove the frozen Q547923 / 50-sidecar worst-offender paragraph from the weekly review collision decision card. Collision clusters, counts, and classifications now render exclusively from the weekly review JSON payload (`coll['qids_on_multiple']`, `coll['extra_assignments']`, `coll['worst']`); the decision card is omitted when `qids_on_multiple` is zero.
 
-Validation (2026-11-17, branch `cursor/issue-893` @ `2820525`):
+Validation (2026-11-17, branch `cursor/issue-893`):
 
 - `python3 -m pytest tests/test_weekly_review_thumb_paths.py::test_collision_section_reports_only_payload_evidence -q -o addopts=` — pass
-- Deliberate break at `scripts/render_weekly_review.py` (restored hardcoded Q547923 paragraph after the taxonomy list) — named test fails on `assert "Q547923" not in collision_block`; reverted — pass
+- Deliberate break at `scripts/render_weekly_review.py:352` (restored hardcoded Q547923 / 50-sidecar paragraph after the taxonomy list) — named test fails on `assert "Q547923" not in collision_block`; reverted — pass
 - `python3 -m pytest tests/test_weekly_review_thumb_paths.py -q -o addopts=` — 20 passed
 
 Deliberate-break receipts: `docs/evidence/issue-893-collision-card-deliberate-break.md`
