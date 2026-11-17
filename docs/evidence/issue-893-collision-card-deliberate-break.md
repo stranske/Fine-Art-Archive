@@ -34,3 +34,11 @@ $ python3 -m pytest tests/test_weekly_review_thumb_paths.py -q -o addopts=
 ## Re-verified (keepalive 2026-11-17)
 
 Deliberate break restored the same paragraph immediately after the three-way taxonomy list; the named test failed again on `assert "Q547923" not in collision_block`. After revert, the named test and full file (`20 passed`) succeeded on HEAD `2820525`.
+
+## Re-verified (keepalive 2026-11-17, Q488841 assertion)
+
+With the frozen Q547923 paragraph restored at `scripts/render_weekly_review.py` (after the taxonomy
+list), `python3 -m pytest tests/test_weekly_review_thumb_paths.py::test_collision_section_reports_only_payload_evidence -q -o addopts=` failed on `assert "Q547923" not in collision_block` (1 failed).
+
+After revert, the named test and full file pass (`20 passed`). The regression now also asserts
+`Q488841` and the full frozen prose are absent from the collision card.

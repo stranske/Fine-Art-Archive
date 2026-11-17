@@ -466,6 +466,7 @@ def test_collision_section_reports_only_payload_evidence(
     assert "(classification: unknown)" not in classified_block
 
     assert "Q547923" not in collision_block
+    assert "Q488841" not in collision_block
     assert "50 sidecars" not in collision_block
     assert "Raising of Lazarus" not in collision_block
 
