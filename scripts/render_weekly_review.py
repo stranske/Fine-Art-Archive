@@ -335,9 +335,11 @@ Discovery and acquisition otherwise read the same canonical set.</p>"""
         ex = "".join(f"""<figure class="cellw">{thumb(x['master'], x['title'])}
 <figcaption><span class="dim">{e(x['title'])}</span><br>
 <span class="mono dim">{e(x['wid'])}</span></figcaption></figure>""" for x in c["examples"])
+        classification = e(c.get("classification") or "unknown")
         crows.append(f"""<div class="collblk">
   <h4><a href="{e(c['wikidata_url'])}" target="_blank" class="mono">{e(c['qid'])}</a>
-  — "{e(c['label'])}" on <b>{c['n']}</b> sidecars</h4>
+  — "{e(c['label'])}" on <b>{c['n']}</b> sidecars
+  <span class="dim">(classification: {classification})</span></h4>
   <div class="grid">{ex}</div>
 </div>""")
     coll_body = f"""
@@ -349,10 +351,6 @@ three want opposite remedies, which is why this is a decision and not a fix:</p>
 <li><b>A series Q-ID on each member</b> — wants a <code>part_of</code> relation, not dedup.</li>
 <li><b>A subject Q-ID mistaken for a work Q-ID</b> — wants a write-time validation rule.</li>
 </ol>
-<p>The worst offender is case 3, which I got wrong when I filed the issue and corrected after lookup:
-<code>Q547923</code> is <b>"The Raising of Lazarus"</b>, sitting on 50 sidecars including a Giotto
-<em>Lamentation</em> detail — a different scene entirely. Precedent: G40 found <code>Q488841</code>,
-"adoration of the Magi", in the same field.</p>
 {''.join(crows)}
 <p class="warn">Any dedup arising from this must run <code>scripts/audit_duplicate_decisions.py</code>
 first.</p>"""
