@@ -30,3 +30,7 @@ $ python3 -m pytest tests/test_weekly_review_thumb_paths.py -q -o addopts=
 ....................
 20 passed
 ```
+
+## Re-verified (keepalive 2026-11-17)
+
+Deliberate break restored the same paragraph immediately after the three-way taxonomy list; the named test failed again on `assert "Q547923" not in collision_block`. After revert, the named test and full file (`20 passed`) succeeded on HEAD `2820525`.
