@@ -24,6 +24,7 @@ from fine_art_archive.api import store as api_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAIN_PY = REPO_ROOT / "src" / "fine_art_archive" / "api" / "main.py"
+GUIDE_PATHS = (REPO_ROOT / "AGENTS.md", REPO_ROOT / "CLAUDE.md")
 
 # Repo-relative script paths only. The lookbehind drops `Claude Project/scripts/x.py`
 # and friends: those name a different tree, and asserting them against this repo
@@ -48,6 +49,27 @@ def test_every_script_named_in_the_api_module_exists() -> None:
     assert not missing, (
         f"{MAIN_PY.name} names {len(missing)} script(s) that do not exist: "
         f"{', '.join(missing)}. Operator-facing text must only name real artifacts."
+    )
+
+
+def test_agents_and_claude_guides_name_only_real_scripts() -> None:
+    named_by_guide: dict[str, list[str]] = {}
+    for guide_path in GUIDE_PATHS:
+        source = guide_path.read_text(encoding="utf-8")
+        assert source, f"could not read {guide_path}; the check below would be vacuous"
+
+        named = _named_scripts(source)
+        assert named, f"{guide_path.name} should name at least one repo-relative scripts/*.py path"
+        missing = [path for path in named if not (REPO_ROOT / path).is_file()]
+        assert not missing, (
+            f"{guide_path.name} names {len(missing)} script(s) that do not exist: "
+            f"{', '.join(missing)}. Guide text must only name real artifacts."
+        )
+        named_by_guide[guide_path.name] = named
+
+    assert named_by_guide["AGENTS.md"] == named_by_guide["CLAUDE.md"], (
+        "AGENTS.md and CLAUDE.md drifted on repo-relative script references: "
+        f"{named_by_guide['AGENTS.md']} != {named_by_guide['CLAUDE.md']}"
     )
 
 

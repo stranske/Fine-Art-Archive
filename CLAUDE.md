@@ -183,8 +183,8 @@ The archive is not the only place originals live. Three reasons this is mandator
 Content-based search, because filenames in the Meural set are meaningless:
 
 ```bash
-.faa-venv/bin/python3 scripts/visual_find_in_unindexed.py <reference_image> \
-    --dirs ~/Library/CloudStorage/Dropbox/Pictures/Archive/references/meural --topk 12
+.faa-venv/bin/python3 scripts/visual_dedupe.py embed-archive
+.faa-venv/bin/python3 scripts/visual_dedupe.py match <work_id> --topk 12
 ```
 
 Cosine guide: `>=0.90` likely the same work, `0.80-0.90` near/related, lower unrelated.
@@ -215,7 +215,7 @@ the Law*. Search on artist plus subject words, then confirm identity on the iden
 non-zero.** A tool that cannot see the library answers exactly like a library that does not hold
 the work. Record which roots were searched and how many files each contributed, every time.
 
-`visual_find_in_unindexed.py` globs its `--dirs` live (it does **not** consult a cached index).
+The unindexed-directory visual search tool globs its `--dirs` live (it does **not** consult a cached index).
 Its default pointed at `Art/Others Photos/` until 2026-09-02; the reorg had emptied that directory
 and moved its ~697 Meural exports to `Archive/references/meural/`, so every default run scanned
 zero files. The default now covers both roots, prints per-directory coverage, and **exits 2 with
@@ -226,10 +226,10 @@ Two embedding banks are separately stale, and they fail differently:
 
 | Bank | State (2026-09-02) | Consequence |
 |---|---|---|
-| `dinov2_embed_cache.npz` (`Art/works/`) | 3,411 embeddings vs 3,507 works on disk | The newest ~96 works are invisible to `promote_acquisitions.py --visual-gate`, so a duplicate of a recent acquisition is not caught. Rebuild before trusting that gate. |
+| `dinov2_embed_cache.npz` (`Art/works/`) | 3,411 embeddings vs 3,507 works on disk | The newest ~96 works are invisible to visual duplicate gating (`scripts/visual_dedupe.py match`), so a duplicate of a recent acquisition is not caught. Rebuild before trusting that gate. |
 | `dinov2_unindexed_cache.npz` (Meural set) | 725 embeddings, 0 of their recorded paths resolve | The **vectors are still valid**, so detection works; only the reported filenames are stale and point into the pre-reorg tree. A hit here is real — go looking for the file under its new root. |
 
-Rebuild with `build_unindexed_embed_cache.py` / `embed_cache_maintenance.py`. See the standing
+Rebuild the archive embedding cache with `.faa-venv/bin/python3 scripts/visual_dedupe.py embed-archive` (unindexed Meural cache maintenance runs in the local Cowork workspace outside this repo). See the standing
 rule that a check narrower than its own claim is a defect report, not a negative result.
 
 ## Useful References
