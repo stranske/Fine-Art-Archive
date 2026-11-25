@@ -7,8 +7,9 @@ executor did not exist — the failure was silent because the only thing that
 would have caught it was someone typing the command.
 
 Prose in a docstring does not catch that a second time; a check does. These
-tests read the API module's own text, pull every repo-relative `scripts/*.py`
-path out of it, and require each one to resolve on disk.
+tests read the API module's own text and the repo-level operator guides
+(`AGENTS.md`, `CLAUDE.md`), pull every repo-relative `scripts/*.py` path out of
+them, and require each one to resolve on disk.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from fine_art_archive.api import store as api_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAIN_PY = REPO_ROOT / "src" / "fine_art_archive" / "api" / "main.py"
+GUIDE_PATHS = (REPO_ROOT / "AGENTS.md", REPO_ROOT / "CLAUDE.md")
 
 # Repo-relative script paths only. The lookbehind drops `Claude Project/scripts/x.py`
 # and friends: those name a different tree, and asserting them against this repo
@@ -49,6 +51,55 @@ def test_every_script_named_in_the_api_module_exists() -> None:
         f"{MAIN_PY.name} names {len(missing)} script(s) that do not exist: "
         f"{', '.join(missing)}. Operator-facing text must only name real artifacts."
     )
+
+
+def _assert_guides_name_only_real_scripts(guide_paths: tuple[Path, ...], repo_root: Path) -> None:
+    named_by_guide: dict[str, list[str]] = {}
+    for guide_path in guide_paths:
+        source = guide_path.read_text(encoding="utf-8")
+        assert source, f"could not read {guide_path}; the check below would be vacuous"
+
+        named = _named_scripts(source)
+        assert named, f"{guide_path.name} should name at least one repo-relative scripts/*.py path"
+        missing = [path for path in named if not (repo_root / path).is_file()]
+        assert not missing, (
+            f"{guide_path.name} names {len(missing)} script(s) that do not exist: "
+            f"{', '.join(missing)}. Guide text must only name real artifacts."
+        )
+        named_by_guide[guide_path.name] = named
+
+    assert named_by_guide["AGENTS.md"] == named_by_guide["CLAUDE.md"], (
+        "AGENTS.md and CLAUDE.md drifted on repo-relative script references: "
+        f"{named_by_guide['AGENTS.md']} != {named_by_guide['CLAUDE.md']}"
+    )
+
+
+def test_agents_and_claude_guides_name_only_real_scripts() -> None:
+    _assert_guides_name_only_real_scripts(GUIDE_PATHS, REPO_ROOT)
+
+
+def test_guide_script_guard_rejects_missing_script_and_guide_drift(tmp_path: Path) -> None:
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    (scripts_dir / "real_tool.py").write_text("# real\n", encoding="utf-8")
+    (scripts_dir / "other_tool.py").write_text("# real\n", encoding="utf-8")
+
+    agents = tmp_path / "AGENTS.md"
+    claude = tmp_path / "CLAUDE.md"
+    agents.write_text("Run `scripts/real_tool.py`.\n", encoding="utf-8")
+    claude.write_text("Run `scripts/real_tool.py`.\n", encoding="utf-8")
+    _assert_guides_name_only_real_scripts((agents, claude), tmp_path)
+
+    agents.write_text(
+        "Run `scripts/real_tool.py` and `scripts/does_not_exist.py`.\n", encoding="utf-8"
+    )
+    with pytest.raises(AssertionError, match=r"scripts/does_not_exist\.py"):
+        _assert_guides_name_only_real_scripts((agents, claude), tmp_path)
+
+    agents.write_text("Run `scripts/real_tool.py`.\n", encoding="utf-8")
+    claude.write_text("Run `scripts/other_tool.py`.\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="drifted on repo-relative script references"):
+        _assert_guides_name_only_real_scripts((agents, claude), tmp_path)
 
 
 def test_the_regex_finds_the_paths_it_is_supposed_to_find() -> None:
