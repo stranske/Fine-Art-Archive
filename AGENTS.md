@@ -180,7 +180,12 @@ The archive is not the only place originals live. Three reasons this is mandator
 
 ### How
 
-Content-based search, because filenames in the Meural set are meaningless:
+Content-based search against the `Art/works/` archive embedding cache (`dinov2_embed_cache.npz`):
+
+1. Place the query image in `staging_acquisitions/<work_id>/` as `master.<ext>` or a `.jpg`/`.jpeg`
+   file (when the full original is unavailable, place the low-resolution reference there instead —
+   do not require or download the full master just to search).
+2. Refresh the archive cache and rank the staged work against `Art/works/`:
 
 ```bash
 .faa-venv/bin/python3 scripts/visual_dedupe.py embed-archive
@@ -189,10 +194,17 @@ Content-based search, because filenames in the Meural set are meaningless:
 
 Cosine guide: `>=0.90` likely the same work, `0.80-0.90` near/related, lower unrelated.
 
+**Scope limit:** `scripts/visual_dedupe.py` embeds and searches only `Art/works/`. Unindexed
+Meural directory search (`Pictures/Archive/references/meural/`) is not implemented in this
+repository's `scripts/` tree (it runs via local workspace tooling outside this repo), so a "no
+match" from `scripts/visual_dedupe.py match` cannot detect a Meural-only counterpart and must not
+be reported as a library-wide negative.
+
 **When the original is the thing that is lost, you have no reference image to search with.** Fetch
-a LOW-RES reference (a thumbnail or a scaled rendition) first, search with that, and download the
-full master only if nothing matches. Do not download the master "to search with" — that is the
-acquisition you were trying to avoid.
+a LOW-RES reference (a thumbnail or a scaled rendition) first, place it in
+`staging_acquisitions/<work_id>/` as `master.<ext>` or a `.jpg`/`.jpeg` file, search with that,
+and download the full master only if nothing matches. Do not download the master "to search with" —
+that is the acquisition you were trying to avoid.
 
 ### A visual match is not proof you already hold it
 
@@ -215,12 +227,15 @@ the Law*. Search on artist plus subject words, then confirm identity on the iden
 non-zero.** A tool that cannot see the library answers exactly like a library that does not hold
 the work. Record which roots were searched and how many files each contributed, every time.
 
-The unindexed-directory visual search tool globs its `--dirs` live (it does **not** consult a cached index).
-Its default pointed at `Art/Others Photos/` until 2026-09-02; the reorg had emptied that directory
-and moved its ~697 Meural exports to `Archive/references/meural/`, so every default run scanned
-zero files. The default now covers both roots, prints per-directory coverage, and **exits 2 with
-`SEARCHED NOTHING` rather than reporting an empty result** — a distinct code from 1 ("could not
-embed the reference"), so a caller cannot confuse them.
+The external unindexed-directory visual search tool (maintained in the local Cowork workspace
+outside this repository and not available under `scripts/` here) globs its target directories live
+rather than consulting a cached index. Historically (until 2026-09-02), its default pointed at
+`Art/Others Photos/` after the reorg had emptied that directory and moved its ~697 Meural exports
+to `Archive/references/meural/`, so default runs scanned zero files until the defaults were updated
+to cover both roots, report per-directory coverage, and exit non-zero (`SEARCHED NOTHING`) instead
+of returning an empty match list. From this repository, unindexed Meural search is unavailable
+unless you run that external local workspace tool; if Meural was not searched, record that gap
+explicitly rather than reporting a library-wide "no match".
 
 Two embedding banks are separately stale, and they fail differently:
 
